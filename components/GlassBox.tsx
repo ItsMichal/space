@@ -1,8 +1,15 @@
 'use client'
 
+import {
+  motion,
+  MotionValue,
+  useMotionValue,
+  useSpring,
+  useTransform,
+} from 'framer-motion'
 import Image from 'next/image'
 
-import React, { ReactNode, useEffect, useState } from 'react'
+import React, { ReactNode } from 'react'
 
 type GlassBoxProps = {
   children?: ReactNode
@@ -10,159 +17,141 @@ type GlassBoxProps = {
 }
 
 //Helper function for timeless geometric easing
-function ease(orig_val: number, new_val: number, factor = 0.1): number {
-  return orig_val * (1 - factor) + new_val * factor
-}
+// function ease(orig_val: number, new_val: number, factor = 0.1): number {
+//   return orig_val * (1 - factor) + new_val * factor
+// }
 
 //TODO: optimize perf further. done for now
-export function GlassBoxSimple({ children, className }: GlassBoxProps) {
-  const [lightPoint, setPoint] = useState([0, 0])
-  const [lightIntensity, setLightIntesity] = useState(0)
-  const [rotation, setRotation] = useState([0, 0])
-  const [inBox, setInBox] = useState(false)
-  const [is3d, set3d] = useState(false)
+export function GlassBoxAnim({ children, className }: GlassBoxProps) {
+  const x_pos: MotionValue<number> = useMotionValue(0)
+  const y_pos: MotionValue<number> = useMotionValue(0)
+  const width: MotionValue<number> = useMotionValue(1)
+  const height: MotionValue<number> = useMotionValue(1)
+  const inBox: MotionValue<number> = useMotionValue(0)
 
-  //   const [sizeFactor, setSizeFactor] = useState([1, 1])
+  // const scaleFactor = useTransform(inBox, [0, 1], [1, 1.05])
+  // const scaleSpring = useSpring(scaleFactor)
 
-  //TODO: escape the ease stuff to a timer func instead so you don't have to keep moving
-  // const light = useMove(
-  //   (state) => {
-  //     // if (
-  //     //   !(state.currentTarget as HTMLElement).classList.contains(
-  //     //     'glass-hoverable'
-  //     //   )
-  //     // )
-  //     //   return
+  const tiltAmplitude = 10
 
-  //     if (state.type == 'pointerleave') {
-  //       setInBox(false)
-  //     } else {
-  //       if (!inBox || !is3d) {
-  //         setInBox(true)
-  //         set3d(true)
-  //       }
-  //       // const newX = (state.event as unknown as React.PointerEvent).nativeEvent
-  //       //   .offsetX
-  //       // const newY = (state.event as unknown as React.PointerEvent).nativeEvent
-  //       const newX =
-  //         state.values[0] - (state.currentTarget as HTMLElement).offsetLeft
-  //       const newY =
-  //         state.values[1] - (state.currentTarget as HTMLElement).offsetTop
-  //       const width = (state.currentTarget as HTMLElement).offsetWidth
-  //       const height = (state.currentTarget as HTMLElement).offsetHeight
-  //       handleXYEvent(newX, newY, width, height)
-  //     }
-  //   },
-  //   { from: [0, 0] }
-  // )
-
-  // const onMouseOver = (e: React.MouseEvent<HTMLDivElement>) => {
-  //   if (inBox && e.currentTarget.classList.contains('glass-hoverable')) {
-  //     const newX = e.pageX - e.currentTarget.getBoundingClientRect().left
-  //     const newY = e.pageY - e.currentTarget.getBoundingClientRect().top
-  //     const width = e.currentTarget.offsetWidth
-  //     const height = e.currentTarget.offsetHeight
-  //     handleXYEvent(newX, newY, width, height)
-  //   }
-  // }
-
-  // function handleXYEvent(
-  //   newX: number,
-  //   newY: number,
-  //   width: number,
-  //   height: number
-  // ) {
-  //   //holy ugly typescript
-  //   const light_factor = 1
-  //   const x_factor = ease(lightPoint[0], newX, light_factor)
-  //   const y_factor = ease(lightPoint[1], newY, light_factor)
-  //   setPoint([newX, newY])
-  //   // setPoint([x_factor, y_factor])
-  //   setLightIntesity(ease(lightIntensity, 1, light_factor))
-
-  //   const x_axis = 2 * (x_factor / width) - 1
-  //   const y_axis = 2 * (y_factor / height) - 1
-  //   const amplitude = 3
-  //   setRotation([
-  //     ease(rotation[0], -y_axis * amplitude, 0.05),
-  //     ease(rotation[1], x_axis * amplitude, 0.05),
-  //   ])
-  // }
-
-  //TODO: Take a look into this for performance issues
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const margin = 0.05
-      if (!inBox) {
-        let doneUpdating = true
-        if (lightIntensity > margin) {
-          setLightIntesity((lightIntensity) => lightIntensity * 0.9)
-          doneUpdating = false
-        }
-        if (Math.abs(rotation[0]) > margin || Math.abs(rotation[1]) > margin) {
-          setRotation((rotation) => [
-            ease(rotation[0], 0),
-            ease(rotation[1], 0),
-          ])
-          doneUpdating = false
-        }
-        if (doneUpdating) {
-          set3d(false) //turn off 3d for performance
-        }
-      }
-    }, 100)
-    return () => {
-      clearInterval(interval)
+  const x_rot = useTransform(
+    [inBox, y_pos, height],
+    ([inBox_cur, y_pos_cur, height_cur]) => {
+      return (
+        -(inBox_cur as number) *
+        tiltAmplitude *
+        (2 * ((y_pos_cur as number) / (height_cur as number)) - 1)
+      )
     }
-  }, [])
+  )
+
+  const y_rot = useTransform(
+    [inBox, x_pos, width],
+    ([inBox_cur, x_pos_cur, width_cur]) => {
+      return (
+        (inBox_cur as number) *
+        tiltAmplitude *
+        (2 * ((x_pos_cur as number) / (width_cur as number)) - 1)
+      )
+    }
+  )
+  const x_rot_spring = useSpring(x_rot)
+  const y_rot_spring = useSpring(y_rot)
+
+  const onMouseOver = (e: React.MouseEvent<HTMLDivElement>) => {
+    const nx_pos = e.pageX - e.currentTarget.getBoundingClientRect().left
+    const ny_pos = e.pageY - e.currentTarget.getBoundingClientRect().top
+    const nwidth = e.currentTarget.offsetWidth
+    const nheight = e.currentTarget.offsetHeight
+
+    const threshold = 2
+    const dx_pos = Math.abs(nx_pos - x_pos.get())
+    const dy_pos = Math.abs(ny_pos - y_pos.get())
+    const dwidth = Math.abs(nwidth - width.get())
+    const dheight = Math.abs(nheight - height.get())
+
+    if (
+      dx_pos < threshold &&
+      dy_pos < threshold &&
+      dwidth < threshold &&
+      dheight < threshold
+    )
+      return
+
+    if (
+      x_pos.isAnimating() ||
+      y_pos.isAnimating() ||
+      width.isAnimating() ||
+      height.isAnimating()
+    )
+      return
+
+    if (e.currentTarget.classList.contains('glass-hoverable')) {
+      x_pos.set(e.clientX - e.currentTarget.getBoundingClientRect().left)
+      y_pos.set(e.clientY - e.currentTarget.getBoundingClientRect().top)
+      width.set(e.currentTarget.offsetWidth)
+      height.set(e.currentTarget.offsetHeight)
+    }
+  }
 
   return (
-    <div
+    <motion.div
       className={'w-full glass-hoverable ' + className}
-      style={
-        {
-          // perspective: is3d ? `2000px` : undefined,
-          // transformStyle: is3d ? 'preserve-3d' : undefined,
-          // transition: 'transform 0.1s ease-in-out 0s',
-          // transform: inBox ? 'scale(1.05)' : undefined,
-        }
-      }
+      style={{
+        perspective: `2000px`,
+        willChange: 'contents',
+      }}
+      whileHover={{
+        scale: 1.02,
+      }}
+      whileTap={{
+        scale: 1.02,
+      }}
+      transition={{
+        type: 'spring',
+      }}
+      onMouseMove={onMouseOver}
       onMouseEnter={() => {
-        setInBox(true)
-        set3d(true)
+        inBox.set(1)
       }}
       onMouseLeave={() => {
-        setInBox(false)
+        inBox.set(0)
       }}
-      // onMouseMove={onMouseOver}
-      // {...light()}
     >
-      <div
+      <motion.div
         className="glass-card overflow-hidden h-full w-full "
         style={{
-          zIndex: is3d ? '10000' : '-10',
-          // transform: is3d
-          //   ? `rotateX(${rotation[0]}deg) rotateY(${rotation[1]}deg)  `
-          //   : undefined,
+          rotateX: x_rot_spring,
+          rotateY: y_rot_spring,
+          translate: 'translate3d(0,0,0)',
+          transformStyle: 'preserve-3d',
+        }}
+        whileTap={{
+          rotateX: 10,
         }}
       >
         <div
           className="absolute top-0 bottom-0 right-0 left-0 z-10"
           style={{
-            backgroundImage: `radial-gradient(circle at ${lightPoint[0]}px ${
-              lightPoint[1]
-            }px, rgba(255,255,255,${
-              0.13 * lightIntensity
-            }) 10px, rgba(255,255,255,${
-              0.02 * lightIntensity
-            }) 200px, rgba(255,255,255,${0.005 * lightIntensity}) 300px)`,
-            backgroundBlendMode: 'luminosity',
+            transformStyle: 'preserve-3d',
+
+            // backgroundImage: `radial-gradient(circle at ${lightPoint[0]}px ${
+            //   lightPoint[1]
+            // }px, rgba(255,255,255,${
+            //   0.13 * lightIntensity
+            // }) 10px, rgba(255,255,255,${
+            //   0.02 * lightIntensity
+            // }) 200px, rgba(255,255,255,${0.005 * lightIntensity}) 300px)`,
+            // backgroundBlendMode: 'luminosity',
             pointerEvents: 'none',
-            touchAction: 'none',
+            // touchAction: 'none',
           }}
         ></div>
         <div
-          className="drop-shadow-md w-full h-full"
+          className="w-full h-full"
+          style={{
+            transformStyle: 'preserve-3d',
+          }}
           //   style={{
           //     transform: is3d
           //       ? `translateX(${rotation[1] * sizeFactor[0]}px) translateY(${
@@ -171,10 +160,11 @@ export function GlassBoxSimple({ children, className }: GlassBoxProps) {
           //       : undefined,
           //   }}
         >
+          {/* <p>hello</p> */}
           {children}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }
 
@@ -192,22 +182,22 @@ export function GlassBoxContent({
   children,
 }: GlassBoxContentProps) {
   return (
-    <GlassBoxSimple className="w-full">
+    <GlassBoxAnim className="w-full ">
+      <>{image && <BGColorImage src={image}></BGColorImage>}</>
+
       <div className="flex-nowrap flex flex-col">
         <div className="overflow-clip flex-shrink min-h-full">
           <>
             {image != undefined && <GlassBoxImage src={image}></GlassBoxImage>}
           </>
         </div>
-        <div className="rounded-t-none flex-1 before:rounded-t-none px-[3vh] py-[1.5vh] w-fit">
-          <>{image && <BGColorImage src={image}></BGColorImage>}</>
-
+        <div className="rounded-t-none flex-1 before:rounded-t-none px-[3vh] py-[1.5vh] w-full z-10">
           <h1 className="font-title text-3xl">{title}</h1>
           <p className="font-paragraph text-lg mt-2">{description}</p>
           <>{children && <div className="mt-4">{children}</div>}</>
         </div>
       </div>
-    </GlassBoxSimple>
+    </GlassBoxAnim>
   )
 }
 
@@ -218,10 +208,12 @@ type GlassBoxImageProps = {
 function BGColorImage({ src }: GlassBoxImageProps) {
   return (
     <div
-      className="absolute bottom-0 left-0 right-0 top-0 translate-y-36 blur-xl   -z-10 "
+      className="absolute top-[6vh] left-0 right-0 "
       style={{
         pointerEvents: 'none',
         touchAction: 'none',
+        transform: 'translateZ(-10px)',
+        filter: 'blur(4vh)',
       }}
     >
       <Image

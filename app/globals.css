@@ -19,20 +19,25 @@ html {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-start-rgb));
   background: black;
-  background: 
-  linear-gradient(-45deg,  #3edddddc, #3063c2dc, #4c1f61dc);
+  /* background:  */
+  /* linear-gradient(-45deg,  #3edddddc, #3063c2dc, #4c1f61dc); */
   /* url("data:image/svg+xml,%3Csvg viewBox='0 0 335 335' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2' numOctaves='6' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); */
 
 	/* url("data:image/svg+xml,<svg viewBox='0 0 3000 3000' xmlns='http://www.w3.org/2000/svg'><filter id='noiseFilter'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='5' stitchTiles='stitch'/></filter><rect style='mix-blend-mode: soft-light' fill='transparent' width='500%' height='500%' filter='url(%23noiseFilter)'/></svg>"); */
-
-	background-size: 400% 400%;
-	animation: gradient 30s ease infinite;
-  /* background-image: url('../public/bg.jpeg'); */
-  background-position: 50% 0;
+	/* background-size: 400% 400%; */
+	/* animation: gradient 30s ease infinite; */
+  background-image: url('../public/bg.jpeg');
+  /* background-position: 50% 0; */
   background-size: minmax(auto, 100vw) minmax(auto, 100vh);
   scroll-behavior: smooth;
  
 }
+
+body{
+  width: 100%;
+  overflow-x: hidden
+}
+
 @keyframes gradient {
 	0% {
 		background-position: 0% 50%;
@@ -52,12 +57,11 @@ html {
     position: relative;
     border-radius: 3vh;
 
-    filter: drop-shadow(0 4px 3px rgb(0 0 0 / 0.07)) drop-shadow(0 2px 2px rgb(0 0 0 / 0.06));
+    /* filter: drop-shadow(0 4px 3px rgb(0 0 0 / 0.07)) drop-shadow(0 2px 2px rgb(0 0 0 / 0.06)); */
     box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     background: rgba(0, 0, 0, 0.2);
     background-blend-mode: luminosity;
     backdrop-filter: blur(6vh);
-   
   }
 
   .glass-btn {
@@ -65,7 +69,7 @@ html {
     position: relative;
     border-radius: 1vh;
 
-    filter: drop-shadow(0 4px 3px rgb(0 0 0 / 0.07)) drop-shadow(0 2px 2px rgb(0 0 0 / 0.06));
+    /* filter: drop-shadow(0 4px 3px rgb(0 0 0 / 0.07)) drop-shadow(0 2px 2px rgb(0 0 0 / 0.06)); */
     box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     background: rgba(0, 0, 0, 0.2);
     background-blend-mode: luminosity;
@@ -103,7 +107,7 @@ html {
     right:0;
     bottom: 0;
     border-radius: 3vh;
-    border: 1.6px solid transparent;
+    border: 2px solid transparent;
     background: linear-gradient(170deg, rgba(255,255,255, 0.4), rgba(255,255,255, 0.01) 40%, rgba(255,255,255, 0.01) 60%, rgba(255,255,255,0.1)) border-box;
     mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
     mask-composite: exclude;

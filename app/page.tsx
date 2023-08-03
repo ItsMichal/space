@@ -64,6 +64,84 @@ export default function Home() {
         description="I'm building this site in public on github! Come check it out and don't (or do) judge it too harshly"
         image={GHPic.src}
       ></GlassBoxContent>
+      <GlassBoxContent
+        title="Resume"
+        description="Direct link to my full-stack resume"
+        image={ResumePic.src}
+      >
+        <a
+          href="https://linkedin.com/m/mbodzianowski"
+          target="_blank"
+          rel="noreferrer"
+          className="glass-btn w-fit p-4 font-paragraph"
+          style={{
+            zIndex: '1',
+          }}
+        >
+          LinkedIn
+        </a>
+      </GlassBoxContent>
+      <GlassBoxContent
+        title="Hit me up on LinkedIn"
+        description="See more of my work here for now"
+        image={LIPic.src}
+      >
+        <a
+          href="https://linkedin.com/m/mbodzianowski"
+          target="_blank"
+          rel="noreferrer"
+          className="glass-btn w-fit p-4 font-paragraph"
+          style={{
+            zIndex: '1',
+          }}
+        >
+          LinkedIn
+        </a>
+      </GlassBoxContent>
+      <GlassBoxContent
+        title="My Github"
+        description="I'm building this site in public on github! Come check it out and don't (or do) judge it too harshly"
+        image={GHPic.src}
+      ></GlassBoxContent>
+      <GlassBoxContent
+        title="Resume"
+        description="Direct link to my full-stack resume"
+        image={ResumePic.src}
+      >
+        <a
+          href="https://linkedin.com/m/mbodzianowski"
+          target="_blank"
+          rel="noreferrer"
+          className="glass-btn w-fit p-4 font-paragraph"
+          style={{
+            zIndex: '1',
+          }}
+        >
+          LinkedIn
+        </a>
+      </GlassBoxContent>
+      <GlassBoxContent
+        title="Hit me up on LinkedIn"
+        description="See more of my work here for now"
+        image={LIPic.src}
+      >
+        <a
+          href="https://linkedin.com/m/mbodzianowski"
+          target="_blank"
+          rel="noreferrer"
+          className="glass-btn w-fit p-4 font-paragraph"
+          style={{
+            zIndex: '1',
+          }}
+        >
+          LinkedIn
+        </a>
+      </GlassBoxContent>
+      <GlassBoxContent
+        title="My Github"
+        description="I'm building this site in public on github! Come check it out and don't (or do) judge it too harshly"
+        image={GHPic.src}
+      ></GlassBoxContent>
     </>
   )
 }
