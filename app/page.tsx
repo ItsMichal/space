@@ -16,8 +16,6 @@ export default function Home() {
           </p>
           <h1 className="text-xl font-title">TODO</h1>
           <ul>
-            <li>☑ fun visionOS panels</li>
-            <li>☐ threejs background to make the visionOS pop</li>
             <li>☐ SEO + optimization</li>
             <li>☐ Notion CMS</li>
             <li>☐ Animation</li>
@@ -25,13 +23,14 @@ export default function Home() {
           </ul>
         </div>
       </GlassBoxContent>
+
       <GlassBoxContent
         title="Resume"
         description="Direct link to my full-stack resume"
         image={ResumePic.src}
       >
         <a
-          href="https://linkedin.com/m/mbodzianowski"
+          href="/BodzianowskiResume.pdf"
           target="_blank"
           rel="noreferrer"
           className="glass-btn w-fit p-4 font-paragraph"
@@ -39,7 +38,7 @@ export default function Home() {
             zIndex: '1',
           }}
         >
-          LinkedIn
+          PDF
         </a>
       </GlassBoxContent>
       <GlassBoxContent
@@ -63,14 +62,9 @@ export default function Home() {
         title="My Github"
         description="I'm building this site in public on github! Come check it out and don't (or do) judge it too harshly"
         image={GHPic.src}
-      ></GlassBoxContent>
-      <GlassBoxContent
-        title="Resume"
-        description="Direct link to my full-stack resume"
-        image={ResumePic.src}
       >
         <a
-          href="https://linkedin.com/m/mbodzianowski"
+          href="https://github.com/itsMichal"
           target="_blank"
           rel="noreferrer"
           className="glass-btn w-fit p-4 font-paragraph"
@@ -78,70 +72,9 @@ export default function Home() {
             zIndex: '1',
           }}
         >
-          LinkedIn
+          GitHub
         </a>
       </GlassBoxContent>
-      <GlassBoxContent
-        title="Hit me up on LinkedIn"
-        description="See more of my work here for now"
-        image={LIPic.src}
-      >
-        <a
-          href="https://linkedin.com/m/mbodzianowski"
-          target="_blank"
-          rel="noreferrer"
-          className="glass-btn w-fit p-4 font-paragraph"
-          style={{
-            zIndex: '1',
-          }}
-        >
-          LinkedIn
-        </a>
-      </GlassBoxContent>
-      <GlassBoxContent
-        title="My Github"
-        description="I'm building this site in public on github! Come check it out and don't (or do) judge it too harshly"
-        image={GHPic.src}
-      ></GlassBoxContent>
-      <GlassBoxContent
-        title="Resume"
-        description="Direct link to my full-stack resume"
-        image={ResumePic.src}
-      >
-        <a
-          href="https://linkedin.com/m/mbodzianowski"
-          target="_blank"
-          rel="noreferrer"
-          className="glass-btn w-fit p-4 font-paragraph"
-          style={{
-            zIndex: '1',
-          }}
-        >
-          LinkedIn
-        </a>
-      </GlassBoxContent>
-      <GlassBoxContent
-        title="Hit me up on LinkedIn"
-        description="See more of my work here for now"
-        image={LIPic.src}
-      >
-        <a
-          href="https://linkedin.com/m/mbodzianowski"
-          target="_blank"
-          rel="noreferrer"
-          className="glass-btn w-fit p-4 font-paragraph"
-          style={{
-            zIndex: '1',
-          }}
-        >
-          LinkedIn
-        </a>
-      </GlassBoxContent>
-      <GlassBoxContent
-        title="My Github"
-        description="I'm building this site in public on github! Come check it out and don't (or do) judge it too harshly"
-        image={GHPic.src}
-      ></GlassBoxContent>
     </>
   )
 }
