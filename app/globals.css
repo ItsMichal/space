@@ -26,7 +26,7 @@ html {
 	/* url("data:image/svg+xml,<svg viewBox='0 0 3000 3000' xmlns='http://www.w3.org/2000/svg'><filter id='noiseFilter'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='5' stitchTiles='stitch'/></filter><rect style='mix-blend-mode: soft-light' fill='transparent' width='500%' height='500%' filter='url(%23noiseFilter)'/></svg>"); */
 	/* background-size: 400% 400%; */
 	/* animation: gradient 30s ease infinite; */
-  background-image: url('../public/bg.jpeg');
+  /* background-image: url('../public/bg.jpeg'); */
   /* background-position: 50% 0; */
   background-size: minmax(auto, 100vw) minmax(auto, 100vh);
   scroll-behavior: smooth;
@@ -59,9 +59,9 @@ body{
 
     /* filter: drop-shadow(0 4px 3px rgb(0 0 0 / 0.07)) drop-shadow(0 2px 2px rgb(0 0 0 / 0.06)); */
     box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.1);
     background-blend-mode: luminosity;
-    backdrop-filter: blur(6vh);
+    backdrop-filter: blur(1vh);
   }
 
   .glass-btn {
@@ -73,7 +73,7 @@ body{
     box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     background: rgba(0, 0, 0, 0.2);
     background-blend-mode: luminosity;
-    backdrop-filter: blur(6vh);
+    backdrop-filter: blur(5px);
    
   }
 

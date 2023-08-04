@@ -4,6 +4,7 @@ import localFont from 'next/font/local'
 import React, { StrictMode } from 'react'
 import { GlassBoxAnim } from '@/components/GlassBox'
 import AnimLogo from '@/components/AnimLogo'
+import { ShadedBackground } from '@/components/BGAnim'
 
 const paragraphFont = localFont({
   src: '../public/fonts/newmexica.otf',
@@ -36,6 +37,9 @@ export default function RootLayout({
           <meta name="theme-color" content="#000000"></meta>
         </head>
         <body>
+          <div className="fixed top-0 left-0 bottom-0 right-0 inset-0 w-screen h-screen z-[-1]">
+            <ShadedBackground></ShadedBackground>
+          </div>
           <div className="flex flex-col overflow-visible h-[100vh]">
             <div className="lg:flex-1"></div>
             <div
@@ -43,6 +47,12 @@ export default function RootLayout({
                 'lg:container auto-rows-min px-2 lg:px-4 py-4  lg:mx-auto mb-16 grid grid-cols-1 gap-4 lg:grid-cols-3'
               }
             >
+              <div className="w-full h-[66vh] lg:hidden text-center font-paragraph flex flex-col ">
+                <div className="flex-1"></div>
+                <p className="bg-black/40 w-fit p-2 mx-auto text-xl backdrop-blur-sm rounded-lg animate-pulse">
+                  ↓ Swipe Down ↓
+                </p>
+              </div>
               <div className="w-full h-full lg:col-span-2">
                 <GlassBoxAnim className="h-full w-full">
                   <div className="flex flex-col h-full w-full">
@@ -54,16 +64,16 @@ export default function RootLayout({
                       <div className={`font-title`}>
                         <h1
                           className={
-                            'text-[2.4rem] lg:text-[6rem] leading-none'
+                            'text-[2.4rem] lg:text-[6rem] leading-none select-none lg:select-auto'
                           }
                         >
                           Michal
-                          <p className="text-[1.2rem] lg:text-[3rem]">
+                          <p className="text-[1.2rem] lg:text-[3rem] select-none lg:select-auto">
                             Bodzianowski
                           </p>
                         </h1>
                         <h2
-                          className={`font-paragraph text-[1.5rem] lg:text-[3rem]`}
+                          className={`font-paragraph text-[1.5rem] lg:text-[3rem] select-none lg:select-auto`}
                         >
                           WEB / XR / MORE
                         </h2>
