@@ -47,7 +47,7 @@ export default function Home() {
         image={LIPic.src}
       >
         <a
-          href="https://linkedin.com/m/mbodzianowski"
+          href="https://linkedin.com/in/mbodzianowski"
           target="_blank"
           rel="noreferrer"
           className="glass-btn w-fit p-4 font-paragraph"
