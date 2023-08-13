@@ -3,6 +3,7 @@
 import {
   motion,
   MotionValue,
+  useMotionTemplate,
   useMotionValue,
   useSpring,
   useTransform,
@@ -119,46 +120,33 @@ export function GlassBoxAnim({ children, className }: GlassBoxProps) {
       }}
     >
       <motion.div
-        className="glass-card overflow-hidden h-full w-full "
+        className="glass-card h-full w-full group"
         style={{
           rotateX: x_rot_spring,
           rotateY: y_rot_spring,
           translate: 'translate3d(0,0,0)',
           transformStyle: 'preserve-3d',
         }}
-        whileTap={{
-          rotateX: 10,
-        }}
       >
-        <div
-          className="absolute top-0 bottom-0 right-0 left-0 z-10"
+        <motion.div
+          className="absolute -inset-px rounded-[3vh]  z-10 opacity-0 group-hover:opacity-100 duration-300"
           style={{
             transformStyle: 'preserve-3d',
-
-            // backgroundImage: `radial-gradient(circle at ${lightPoint[0]}px ${
-            //   lightPoint[1]
-            // }px, rgba(255,255,255,${
-            //   0.13 * lightIntensity
-            // }) 10px, rgba(255,255,255,${
-            //   0.02 * lightIntensity
-            // }) 200px, rgba(255,255,255,${0.005 * lightIntensity}) 300px)`,
-            // backgroundBlendMode: 'luminosity',
+            backgroundImage: useMotionTemplate`radial-gradient(circle at ${x_pos}px ${y_pos}px, rgba(255,255,255,${
+              0.13 * 1
+            }) 30px, rgba(255,255,255,${0.02 * 1}) 300px, rgba(255,255,255,${
+              0.005 * 1
+            }) 500px)`,
+            backgroundBlendMode: 'luminosity',
             pointerEvents: 'none',
-            // touchAction: 'none',
+            touchAction: 'none',
           }}
-        ></div>
+        ></motion.div>
         <div
           className="w-full h-full"
           style={{
             transformStyle: 'preserve-3d',
           }}
-          //   style={{
-          //     transform: is3d
-          //       ? `translateX(${rotation[1] * sizeFactor[0]}px) translateY(${
-          //           -rotation[0] * sizeFactor[1]
-          //         }px)`
-          //       : undefined,
-          //   }}
         >
           {/* <p>hello</p> */}
           {children}
@@ -214,6 +202,8 @@ function BGColorImage({ src }: GlassBoxImageProps) {
         touchAction: 'none',
         transform: 'translateZ(-10px)',
         filter: 'blur(4vh)',
+        maxHeight: '20vh',
+        overflow: 'hidden',
       }}
     >
       <Image
