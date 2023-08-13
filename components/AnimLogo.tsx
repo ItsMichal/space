@@ -81,8 +81,9 @@ export default function AnimLogo() {
       animate={'visible'}
       viewBox="-1 -1 350.92 236.02"
       style={{
-        width: 'auto',
+        width: '100%',
         height: '100%',
+        objectFit: 'contain',
       }}
     >
       <motion.path

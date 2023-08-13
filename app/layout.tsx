@@ -44,13 +44,13 @@ export default function RootLayout({
             <div className="lg:flex-1"></div>
             <div
               className={
-                'lg:container auto-rows-min px-2 lg:px-4 py-4  lg:mx-auto mb-16 grid grid-cols-1 gap-4 lg:grid-cols-3'
+                'xl:container auto-rows-min px-2 lg:px-4 py-4  lg:mx-auto mb-16 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'
               }
             >
-              <div className="w-full h-[66vh] lg:hidden text-center font-paragraph flex flex-col ">
+              <div className="w-full h-[66vh] md:hidden text-center font-paragraph flex flex-col ">
                 <div className="flex-1"></div>
                 <p className="bg-black/40 w-fit p-2 mx-auto text-xl backdrop-blur-sm rounded-lg animate-pulse">
-                  ↓ Swipe Down ↓
+                  Swipe up! 🚀
                 </p>
               </div>
               <div className="w-full h-full lg:col-span-2">
@@ -58,7 +58,7 @@ export default function RootLayout({
                   <div className="flex flex-col h-full w-full">
                     <div className="flex-grow"></div>
                     <header className="p-4 flex flex-row gap-4 justify-center w-full  ">
-                      <div className="h-[5rem] min-w-[4rem] w-fit lg:h-[11rem] my-auto border-r border-r-white/50 pr-4">
+                      <div className="h-[5rem] min-w-[4rem] overflow-hidden w-fit lg:h-[11rem] my-auto border-r border-r-white/50 pr-4">
                         <AnimLogo></AnimLogo>
                       </div>
                       <div className={`font-title`}>
