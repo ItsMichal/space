@@ -34,7 +34,7 @@ const ContourShadedPlane = () => {
       u_colorB: { value: new Color('#6DF7F5') },
       u_colorC: { value: new Color('#1A041B') },
       u_colorD: { value: new Color('#150C64') },
-      u_noiseScale: { value: 0.04 },
+      u_noiseScale: { value: 0.006 },
     }),
     []
   )
@@ -54,8 +54,8 @@ const ContourShadedPlane = () => {
           //   5, 5, 500, 500,
           size.width,
           size.height,
-          Math.ceil(size.width / 32),
-          Math.ceil(size.height / 32),
+          Math.ceil(size.width / 64),
+          Math.ceil(size.height / 64),
         ]}
       />
 
