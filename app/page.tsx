@@ -16,10 +16,9 @@ export default function Home() {
           </p>
           <h1 className="text-xl font-title">TODO</h1>
           <ul>
-            <li>☐ SEO + optimization</li>
             <li>☐ Notion CMS</li>
-            <li>☐ Animation</li>
-            <li>☐ more</li>
+            <li>☐ SEO</li>
+            <li>☐ Polish 🇵🇱</li>
           </ul>
         </div>
       </GlassBoxContent>

@@ -148,7 +148,6 @@ export function GlassBoxAnim({ children, className }: GlassBoxProps) {
             transformStyle: 'preserve-3d',
           }}
         >
-          {/* <p>hello</p> */}
           {children}
         </div>
       </motion.div>
@@ -170,7 +169,7 @@ export function GlassBoxContent({
   children,
 }: GlassBoxContentProps) {
   return (
-    <GlassBoxAnim className="w-full ">
+    <GlassBoxAnim className="w-full overflow-hidden">
       <>{image && <BGColorImage src={image}></BGColorImage>}</>
 
       <div className="flex-nowrap flex flex-col">
@@ -196,7 +195,7 @@ type GlassBoxImageProps = {
 function BGColorImage({ src }: GlassBoxImageProps) {
   return (
     <div
-      className="absolute top-[6vh] left-0 right-0 "
+      className="absolute top-[6vh]  inset-0 "
       style={{
         pointerEvents: 'none',
         touchAction: 'none',
@@ -216,7 +215,7 @@ function BGColorImage({ src }: GlassBoxImageProps) {
           width: '100%',
           height: 'auto',
           backgroundBlendMode: 'luminosity',
-          opacity: 0.8,
+          opacity: 0.7,
         }}
         alt="woo"
       ></Image>
