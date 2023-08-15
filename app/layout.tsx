@@ -5,6 +5,7 @@ import React, { StrictMode } from 'react'
 import { GlassBoxAnim } from '@/components/GlassBox'
 import AnimLogo from '@/components/AnimLogo'
 import { ShadedBackground } from '@/components/BGAnim'
+import { Footer } from '@/components/Footer'
 
 const paragraphFont = localFont({
   src: '../public/fonts/newmexica.otf',
@@ -84,6 +85,13 @@ export default function RootLayout({
                 </GlassBoxAnim>
               </div>
               {children}
+              <div className="w-full h-full md:col-span-2 lg:col-span-3">
+                <div className="flex flex-col h-full w-full">
+                  <div className="flex-grow"></div>
+                  <Footer></Footer>
+                  <div className="flex-grow"></div>
+                </div>
+              </div>
             </div>
             <div className="lg:flex-1"></div>
           </div>
