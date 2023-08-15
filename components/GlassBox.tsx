@@ -227,7 +227,9 @@ function GlassBoxImage({ src }: GlassBoxImageProps) {
   return (
     <div
       className="w-full overflow-hidden rounded-t-[3vh]"
-      style={{ willChange: 'transform', maxHeight: '20vh' }}
+      style={{
+        willChange: 'transform',
+      }}
     >
       <Image
         className="backfa"
@@ -237,7 +239,10 @@ function GlassBoxImage({ src }: GlassBoxImageProps) {
         height={0}
         style={{
           width: '100%',
+          aspectRatio: '3 / 2',
           height: 'auto',
+          objectFit: 'cover',
+          objectPosition: 'top left',
           backgroundBlendMode: 'luminosity',
           opacity: 0.9,
         }}
