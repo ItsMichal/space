@@ -76,7 +76,7 @@ export default function RootLayout({
                         <h2
                           className={`font-paragraph text-[1.5rem] lg:text-[3rem] select-none lg:select-auto`}
                         >
-                          WEB / XR / MORE
+                          Creative Developer
                         </h2>
                       </div>
                     </header>

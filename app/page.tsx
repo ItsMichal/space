@@ -10,16 +10,12 @@ export default function Home() {
       <GlassBoxContent image="/michal.png" title="About" description="">
         <div className="font-paragraph">
           <p className=" text-lg">
-            Hi I&apos;m Michal Bodzianowski, a creative developer, (motor)sports
-            enthusiast, and content(?) creator. Welcome to my website! I&apos;m
-            currently in the process of rebuilding it but fr this time.
+            {`Hello, I'm Michal. I'm a Creative Developer with experience in AI, XR, and Web, specializing in taking projects from 0 to 1.`}
           </p>
-          <h1 className="text-xl font-title">TODO</h1>
-          <ul>
-            <li>☐ Notion CMS</li>
-            <li>☐ SEO</li>
-            <li>☐ Polish 🇵🇱</li>
-          </ul>
+          <p className="mt-2">
+            {`I run Halmic Ltd, a studio providing creative development services. I'm also an applied researcher at the University of Colorado's SHINE Lab, where I work on human-AI interaction, focusing on education.
+            `}
+          </p>
         </div>
       </GlassBoxContent>
 

@@ -30,11 +30,13 @@ const ContourShadedPlane = () => {
   const uniforms = useMemo(
     () => ({
       u_time: { value: 0.0 },
-      u_colorA: { value: new Color('#F2EA72') },
-      u_colorB: { value: new Color('#6DF7F5') },
-      u_colorC: { value: new Color('#1A041B') },
-      u_colorD: { value: new Color('#150C64') },
-      u_noiseScale: { value: 0.006 },
+      u_colorA: { value: new Color('#e4c5e6') },
+      u_colorB: { value: new Color('#c9fffe') },
+      u_colorC: { value: new Color('#110a12') },
+      u_colorD: { value: new Color('#131314') },
+      u_timeScale: { value: 0.005 },
+      u_noiseScale: { value: 0.0035 },
+      u_mouse: { value: { x: 0.0, y: 0.0 } },
     }),
     []
   )
@@ -45,6 +47,8 @@ const ContourShadedPlane = () => {
       ;(shaderMat.current as ShaderMaterial).uniforms.u_time.value =
         clock.getElapsedTime()
     }
+
+    //get mouse position on screen
   })
 
   return (
@@ -54,8 +58,8 @@ const ContourShadedPlane = () => {
           //   5, 5, 500, 500,
           size.width,
           size.height,
-          Math.ceil(size.width / 64),
-          Math.ceil(size.height / 64),
+          Math.ceil(size.width / 8),
+          Math.ceil(size.height / 8),
         ]}
       />
 

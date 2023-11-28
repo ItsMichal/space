@@ -23,7 +23,7 @@ vec3 grad2(vec2 uv, float t){
 void main() {
   float interval = 20.0;
   float steps = 3.0;
-  float width = 3.0;
+  float width = 1.0;
   float subWidth = 2.0;
 
   float mainEdge = abs(fract(vDisplacement*interval) - 0.5);
@@ -31,8 +31,9 @@ void main() {
   float mainMinBorder = max(0.0, width-1.0);
   float mainMaxBorder = max(1.0, width);
   float mainBorderSize = mainMaxBorder-mainMinBorder;
+  // - (mainThick*mainMinBorder))/(mainThick*(mainBorderSize)),
   float mainColor = clamp(
-    (mainEdge - (mainThick*mainMinBorder))/(mainThick*(mainBorderSize)),
+    (mainEdge*2.0),
     0.0,
     1.0
   );
@@ -48,7 +49,7 @@ void main() {
     1.0
   );
 
-  float invertBoth = (1.0-mainColor)*0.75 + (1.0-subColor)*0.25;
+  float invertBoth = (1.0-subColor)*0.75 + (1.0-mainColor)*0.25;
   float finalColor = clamp(invertBoth, 0.0, 1.0) ;
   
   gl_FragColor = vec4(grad(vUv, u_time*0.5)*finalColor + grad2(vUv, -u_time*0.1)*(1.0-finalColor), 1.0);  
@@ -60,6 +61,7 @@ void main() {
 export const bgVertShader = `
 
 uniform float u_time;
+uniform float u_timeScale;
 uniform float u_noiseScale;
 
 varying vec2 vUv;
@@ -111,7 +113,7 @@ float fbm(vec3 x) {
 void main() {
   vec4 modelPosition = modelMatrix * vec4(position, 1.0);
 
-  float timeScale = u_time * 0.01;
+  float timeScale = u_time * u_timeScale;
   vec3 noisyBoi = vec3(modelPosition.x * u_noiseScale, modelPosition.y * u_noiseScale, timeScale);
 
 
@@ -125,6 +127,10 @@ void main() {
   
   float offset = scale*noise;
 
+  //flatten the closer to modelPosition.x is to 0
+
+  offset *= min(1.0, abs(modelPosition.x*0.0005));
+    
   modelPosition.y += offset*0.5;
 
   //this is for if we ever do 3d -> //vec3 newPos = vec3(position.x, position.y+vDisplacement, position.z); //= position + normal * (vDisplacement*3.0);
