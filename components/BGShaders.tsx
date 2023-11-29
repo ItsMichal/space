@@ -63,6 +63,7 @@ export const bgVertShader = `
 uniform float u_time;
 uniform float u_timeScale;
 uniform float u_noiseScale;
+uniform float u_middleParting;
 
 varying vec2 vUv;
 varying float vDisplacement;
@@ -118,7 +119,7 @@ void main() {
 
 
   float scale = max(
-    mix(0.01, 
+    mix(0.02, 
       -0.15*cos(timeScale*5.0) + 0.25, 
       min(timeScale*1.25, 1.0))
     , 0.0);
@@ -129,7 +130,7 @@ void main() {
 
   //flatten the closer to modelPosition.x is to 0
 
-  offset *= min(1.0, abs(modelPosition.x*0.0005));
+  offset *= min(1.0, abs(modelPosition.x*0.0005) + u_middleParting);
     
   modelPosition.y += offset*0.5;
 

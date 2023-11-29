@@ -34,7 +34,9 @@ const ContourShadedPlane = () => {
       u_colorB: { value: new Color('#c9fffe') },
       u_colorC: { value: new Color('#110a12') },
       u_colorD: { value: new Color('#131314') },
-      u_timeScale: { value: 0.005 },
+      u_timeScale:
+        size.width > size.height ? { value: 0.005 } : { value: 0.01 },
+      u_middleParting: { value: size.width / size.height > 1 ? 0.0 : 0.55 },
       u_noiseScale: { value: 0.0035 },
       u_mouse: { value: { x: 0.0, y: 0.0 } },
     }),
