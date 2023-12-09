@@ -15,6 +15,7 @@ import React, { ReactNode } from 'react'
 type GlassBoxProps = {
   children?: ReactNode
   className?: string
+  scale?: number
 }
 
 //Helper function for timeless geometric easing
@@ -23,7 +24,11 @@ type GlassBoxProps = {
 // }
 
 //TODO: optimize perf further. done for now
-export function GlassBoxAnim({ children, className }: GlassBoxProps) {
+export function GlassBoxAnim({
+  children,
+  className,
+  scale = 1.0,
+}: GlassBoxProps) {
   const x_pos: MotionValue<number> = useMotionValue(0)
   const y_pos: MotionValue<number> = useMotionValue(0)
   const width: MotionValue<number> = useMotionValue(1)
@@ -33,7 +38,7 @@ export function GlassBoxAnim({ children, className }: GlassBoxProps) {
   // const scaleFactor = useTransform(inBox, [0, 1], [1, 1.05])
   // const scaleSpring = useSpring(scaleFactor)
 
-  const tiltAmplitude = 10
+  const tiltAmplitude = 10 * scale
 
   const x_rot = useTransform(
     [inBox, y_pos, height],
@@ -103,10 +108,10 @@ export function GlassBoxAnim({ children, className }: GlassBoxProps) {
         willChange: 'contents',
       }}
       whileHover={{
-        scale: 1.02,
+        scale: 1 + 0.02 * scale,
       }}
       whileTap={{
-        scale: 1.02,
+        scale: 1 + 0.02 * scale,
       }}
       transition={{
         type: 'spring',
@@ -155,11 +160,93 @@ export function GlassBoxAnim({ children, className }: GlassBoxProps) {
   )
 }
 
+export function GlassBoxStatic({ children, className }: GlassBoxProps) {
+  const x_pos: MotionValue<number> = useMotionValue(0)
+  const y_pos: MotionValue<number> = useMotionValue(0)
+  const width: MotionValue<number> = useMotionValue(1)
+  const height: MotionValue<number> = useMotionValue(1)
+  const inBox: MotionValue<number> = useMotionValue(0)
+
+  const onMouseOver = (e: React.MouseEvent<HTMLDivElement>) => {
+    const nx_pos = e.pageX - e.currentTarget.getBoundingClientRect().left
+    const ny_pos = e.pageY - e.currentTarget.getBoundingClientRect().top
+    const nwidth = e.currentTarget.offsetWidth
+    const nheight = e.currentTarget.offsetHeight
+
+    const threshold = 2
+    const dx_pos = Math.abs(nx_pos - x_pos.get())
+    const dy_pos = Math.abs(ny_pos - y_pos.get())
+    const dwidth = Math.abs(nwidth - width.get())
+    const dheight = Math.abs(nheight - height.get())
+
+    if (
+      dx_pos < threshold &&
+      dy_pos < threshold &&
+      dwidth < threshold &&
+      dheight < threshold
+    )
+      return
+
+    if (
+      x_pos.isAnimating() ||
+      y_pos.isAnimating() ||
+      width.isAnimating() ||
+      height.isAnimating()
+    )
+      return
+
+    if (e.currentTarget.classList.contains('glass-hoverable')) {
+      x_pos.set(e.clientX - e.currentTarget.getBoundingClientRect().left)
+      y_pos.set(e.clientY - e.currentTarget.getBoundingClientRect().top)
+      width.set(e.currentTarget.offsetWidth)
+      height.set(e.currentTarget.offsetHeight)
+    }
+  }
+
+  return (
+    <motion.div
+      className={'w-full glass-hoverable ' + className}
+      style={{
+        perspective: `2000px`,
+        willChange: 'contents',
+      }}
+      transition={{
+        type: 'spring',
+      }}
+      onMouseMove={onMouseOver}
+      onMouseEnter={() => {
+        inBox.set(1)
+      }}
+      onMouseLeave={() => {
+        inBox.set(0)
+      }}
+    >
+      <motion.div className="glass-card h-full w-full group">
+        <motion.div
+          className="absolute -inset-px rounded-[3vh]  z-10 opacity-0 group-hover:opacity-100 duration-300"
+          style={{
+            transformStyle: 'preserve-3d',
+            backgroundImage: useMotionTemplate`radial-gradient(circle at ${x_pos}px ${y_pos}px, rgba(255,255,255,${
+              0.13 * 1
+            }) 30px, rgba(255,255,255,${0.02 * 1}) 300px, rgba(255,255,255,${
+              0.005 * 1
+            }) 500px)`,
+            backgroundBlendMode: 'luminosity',
+            pointerEvents: 'none',
+            touchAction: 'none',
+          }}
+        ></motion.div>
+        <div className="w-full h-full">{children}</div>
+      </motion.div>
+    </motion.div>
+  )
+}
 type GlassBoxContentProps = {
   image?: string
   title: string
   description: string
   children?: ReactNode
+  className?: string
 }
 
 export function GlassBoxContent({
@@ -167,9 +254,10 @@ export function GlassBoxContent({
   title,
   description,
   children,
+  className,
 }: GlassBoxContentProps) {
   return (
-    <GlassBoxAnim className="w-full overflow-hidden">
+    <GlassBoxAnim className={'w-full overflow-hidden ' + className}>
       <>{image && <BGColorImage src={image}></BGColorImage>}</>
 
       <div className="flex-nowrap flex flex-col">

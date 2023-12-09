@@ -42,6 +42,18 @@ body{
 
 
 @layer components {
+  .notion-h-title {
+    @apply text-2xl font-bold font-title;
+  }
+
+  .notion-text {
+    @apply text-lg; 
+  }
+
+  .notion-collection-page-properties>.notion-collection-row {
+    @apply border-0
+  }
+
   .glass-card {
     display: flow-root;
     position: relative;

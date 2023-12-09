@@ -1,3 +1,6 @@
+import 'react-notion-x/src/styles.css'
+import 'prismjs/themes/prism-tomorrow.css'
+import 'katex/dist/katex.min.css'
 import './globals.css'
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
