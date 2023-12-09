@@ -8,13 +8,17 @@ import { Twitter } from 'next/dist/lib/metadata/types/twitter-types'
 
 export const revalidate = 3600 // revalidate the data at most every hour
 
-export async function generateMetadata({
-  params: { slug },
-  parent,
-}: {
-  params: { slug: string }
+type Props = {
+  params: {
+    slug: string
+  }
+}
+
+export async function generateMetadata(
+  { params }: Props,
   parent: ResolvingMetadata
-}): Promise<Metadata> {
+): Promise<Metadata> {
+  const { slug } = params
   const project = await resolveSlug(slug)
   const newMetadata = await parent
 
@@ -72,11 +76,8 @@ export async function generateMetadata({
   }
 }
 
-export default async function Page({
-  params: { slug },
-}: {
-  params: { slug: string }
-}) {
+export default async function Page({ params }: Props) {
+  const { slug } = params
   const project = await resolveSlug(slug)
   if (project == PageError.NOT_FOUND) {
     //redirect to 404
