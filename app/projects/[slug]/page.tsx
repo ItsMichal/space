@@ -5,6 +5,7 @@ import { GlassBoxContent, GlassBoxStatic } from '@/components/GlassBox'
 import Link from 'next/link'
 import { Metadata, ResolvingMetadata } from 'next'
 import { Twitter } from 'next/dist/lib/metadata/types/twitter-types'
+import { MoveLeft } from 'lucide-react'
 
 export const revalidate = 3600 // revalidate the data at most every hour
 
@@ -115,7 +116,15 @@ export default async function Page({ params }: Props) {
   return (
     <>
       <ClientNotionHeader pageMetadata={project} />
-      <GlassBoxStatic className="w-full col-span-3">
+      <GlassBoxStatic className="w-full md:col-span-2 lg:col-span-3">
+        <Link href={'/'} className="w-full flex flex-row opacity-50">
+          <div className="flex-1"></div>
+          <MoveLeft size={'2rem'} className="scale-125  mt-3" />
+          <div className="text-lg font-title p-4 mx-auto">Back to Home</div>
+          <div className="flex-1"></div>
+        </Link>
+      </GlassBoxStatic>
+      <GlassBoxStatic className="w-full md:col-span-2 lg:col-span-3">
         <ClientNotion
           baseUrl="/projects"
           recordMap={item}
@@ -123,7 +132,7 @@ export default async function Page({ params }: Props) {
           darkMode={true}
         />
       </GlassBoxStatic>
-      <GlassBoxStatic className="w-full col-span-3">
+      <GlassBoxStatic className="w-full md:col-span-2 lg:col-span-3">
         <Link href={'/'} className="w-full flex flex-row">
           <div className="flex-1"></div>
           <div className="text-lg font-title p-4 mx-auto">Back to Home</div>

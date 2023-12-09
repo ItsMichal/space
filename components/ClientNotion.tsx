@@ -88,6 +88,23 @@ export default function ClientNotion({
   )
 }
 
+function ClientNotionTags({ tags }: { tags: string[] | undefined }) {
+  if (!tags) {
+    return <></>
+  }
+  return (
+    <div className="flex flex-row flex-wrap w-full">
+      {tags.map((tag, index) => {
+        return (
+          <div key={index} className="glass-btn p-2 m-1 rounded-lg text-sm">
+            {tag}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export function ClientNotionHeader({
   pageMetadata,
   baseUrl,
@@ -109,20 +126,7 @@ export function ClientNotionHeader({
                 : undefined
             }
           >
-            {pageMetadata.tags && (
-              <div className="flex flex-row flex-wrap w-full">
-                {pageMetadata.tags.map((tag, index) => {
-                  return (
-                    <div
-                      key={index}
-                      className="bg-gray-200 p-2 m-1 rounded-lg text-sm"
-                    >
-                      {tag}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+            <ClientNotionTags tags={pageMetadata.tags} />
             <div className="flex w-full">
               <div className="flex-1"></div>
               <div className="flex flex-row gap-2 opacity-80 text-sm uppercase">
@@ -133,7 +137,7 @@ export function ClientNotionHeader({
         </Link>
       ) : (
         <GlassBoxContent
-          className={'col-span-1'}
+          className={'col-span-1  w-full'}
           title={pageMetadata.title}
           description={pageMetadata.description}
           image={
@@ -141,7 +145,9 @@ export function ClientNotionHeader({
               ? notionImageUrlResolver(pageMetadata.imageUrl)
               : undefined
           }
-        />
+        >
+          <ClientNotionTags tags={pageMetadata.tags} />
+        </GlassBoxContent>
       )}
     </>
   )

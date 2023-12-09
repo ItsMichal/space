@@ -54,7 +54,7 @@ export default async function Page({}) {
           />
         )
       })}
-      <GlassBoxStatic className="w-full col-span-3">
+      <GlassBoxStatic className="w-full md:col-span-2 lg:col-span-3">
         <Link href={'/'} className="w-full flex flex-row">
           <div className="flex-1"></div>
           <div className="text-lg font-title p-4 mx-auto">Back to Home</div>

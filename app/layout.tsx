@@ -52,7 +52,7 @@ export default function RootLayout({
                 'xl:container auto-rows-min px-2 lg:px-4 py-4  lg:mx-auto mb-16 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'
               }
             >
-              <div className="w-full h-[66vh] md:hidden text-center font-paragraph flex flex-col ">
+              <div className="w-full h-[66vh] md:hidden text-center font-paragraph flex flex-col col-span-1">
                 <div className="flex-1"></div>
                 <p className="bg-black/40 w-fit p-2 mx-auto text-xl backdrop-blur-sm rounded-lg animate-pulse">
                   Swipe up! 🚀

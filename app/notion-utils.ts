@@ -63,7 +63,9 @@ export const getPageMetadata = cache(async (pageId: string) => {
 
   const descKey = getPropertyKeyFromValue('Description', recordMap)
   const slugKey = getPropertyKeyFromValue('Slug', recordMap)
-  console.log(slugKey, recordMap.block[pageId])
+  const tagKey = getPropertyKeyFromValue('Tags', recordMap)
+
+  console.log(tagKey, recordMap.block[pageId].value.properties[tagKey!])
   return {
     title:
       page.value && page.value.properties && page.value.properties.title
@@ -83,7 +85,13 @@ export const getPageMetadata = cache(async (pageId: string) => {
       page.value.properties[slugKey]
         ? page.value.properties[slugKey][0][0]
         : pageId,
-    tags: [],
+    tags:
+      page.value &&
+      page.value.properties &&
+      tagKey != undefined &&
+      page.value.properties[tagKey]
+        ? page.value.properties[tagKey][0][0].split(',')
+        : [],
     imageUrl:
       page.value.hasOwnProperty('format') &&
       page.value.format.hasOwnProperty('page_cover')

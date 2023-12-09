@@ -6,6 +6,7 @@ import GHPic from '../public/tempgh.png'
 import { getProjects } from './notion-utils'
 import { ClientNotionHeader } from '@/components/ClientNotion'
 import { MoveRight } from 'lucide-react'
+import Link from 'next/link'
 
 export default async function Home() {
   const projects = await getProjects()
@@ -23,17 +24,19 @@ export default async function Home() {
           </p>
         </div>
       </GlassBoxContent>
-      <GlassBoxStatic className="w-full col-span-3">
-        <div className="w-full flex flex-row pt-6 px-6">
-          <h1 className="font-title text-3xl ">Recent Projects</h1>
-          <div className="flex-1"></div>
-          <div className="flex flex-row gap-4 opacity-50 animate-pulse">
-            <div className="mt-0.5">click for more</div>
-            <MoveRight size={'2rem'} />
+      <GlassBoxStatic className="w-full overflow-hidden md:col-span-2 lg:col-span-3 ">
+        <Link href={'/projects'}>
+          <div className="w-full flex flex-row pt-6 px-6">
+            <h1 className="font-title text-3xl ">Recent Projects</h1>
+            <div className="flex-1"></div>
+            <div className="flex flex-row gap-4 opacity-50 animate-pulse">
+              <div className="mt-0.5">click for more</div>
+              <MoveRight size={'2rem'} />
+            </div>
           </div>
-        </div>
-        <div className="grid grid-cols-3 gap-4 p-4">
-          {projects.map((project, index) => {
+        </Link>
+        <div className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+          {projects.slice(0, 6).map((project, index) => {
             return (
               <ClientNotionHeader
                 key={index}
