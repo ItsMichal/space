@@ -26,5 +26,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: 'https://michal.us/projects/project-mountaintop',
       lastModified: new Date(),
     },
+    {
+        url: 'https://michal.us/projects/frogchamp-ai-chat-stream',
+      lastModified: new Date(),
+    },
+    {
+        url: 'https://michal.us/projects/realtime-ai-f1-comentator',
+      lastModified: new Date(),
+    },
   ]
 }
