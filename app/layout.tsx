@@ -39,9 +39,9 @@ export const metadata: Metadata = {
   },
   icons: [
     {
-      url : 'https://michal.us/favicon.ico',
-      sizes : '16x16',
-      type : 'image/x-icon'
+      url : 'https://michal.us/icon.svg',
+      sizes : 'any',
+      type : 'image/svg+xml'
     },
   ],
   verification: undefined,
@@ -75,7 +75,6 @@ export default function RootLayout({
         <head>
           <meta name="theme-color" content="#000000"></meta>
           <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <link rel="icon" href="/favicon.ico" />
         </head>
         <body>
           <div className="fixed top-0 left-0 bottom-0 right-0 inset-0 w-screen h-screen z-[-1]">
