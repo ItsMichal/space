@@ -6,10 +6,9 @@ import dynamic from 'next/dynamic'
 import { ExtendedRecordMap } from 'notion-types'
 import Image from 'next/image'
 import Link from 'next/link'
-
 import { defaultMapImageUrl } from 'react-notion-x'
 import { Block } from 'notion-types'
-import { PageMetadata } from '@/app/notion-utils'
+import { PageMetadata} from '@/app/notion-utils'
 import { GlassBoxContent } from './GlassBox'
 import { MoveRight } from 'lucide-react'
 
@@ -23,7 +22,7 @@ export const notionImageUrlResolver = ({
   if (url.indexOf('unsplash') === 0) {
     return url
   } else {
-    const result = defaultMapImageUrl(url, block)
+    const result = defaultMapImageUrl(url, block )
     console.log(block)
     return result ? result : undefined
   }
@@ -117,7 +116,7 @@ export function ClientNotionHeader({
       {baseUrl ? (
         <Link href={baseUrl + pageMetadata.slug}>
           <GlassBoxContent
-            className={'col-span-1'}
+            className={'col-span-1 h-full flex flex-col'}
             title={pageMetadata.title}
             description={pageMetadata.description}
             image={
@@ -126,13 +125,20 @@ export function ClientNotionHeader({
                 : undefined
             }
           >
-            <ClientNotionTags tags={pageMetadata.tags} />
-            <div className="flex w-full">
+            <div className='flex flex-col h-full'>
               <div className="flex-1"></div>
-              <div className="flex flex-row gap-2 opacity-80 text-sm uppercase">
-                <MoveRight size={'2rem'} className="scale-125 opacity-75" />
+
+              <ClientNotionTags tags={pageMetadata.tags} />
+              
+              <div className="flex w-full">
+                
+                <div className="flex-1"></div>
+                <div className="flex flex-row gap-2 opacity-80 text-sm uppercase">
+                  <MoveRight size={'2rem'} className="scale-125 opacity-75" />
+                </div>
               </div>
             </div>
+
           </GlassBoxContent>
         </Link>
       ) : (

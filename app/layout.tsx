@@ -22,9 +22,37 @@ const titleFont = localFont({
 })
 
 export const metadata: Metadata = {
-  title: 'michal "halmic"',
+  title: 'michal "halmic" bodzianowski',
   description:
-    'Michal "Halmic" Bodzianowski is a developer in the Web, XR, and Artificial Intelligence spaces.',
+    `Hello, I'm Michal. I'm a Creative Developer with experience in AI, XR, and Web, specializing in taking projects from 0 to 1.`,
+  robots: 'follow, index',
+  alternates: undefined,
+  twitter: {
+    card: 'summary_large_image',
+    site: '@itsmichal',
+    creator: '@itsmichal',
+    images: [
+      {
+        url: 'https://michal.us/michal.png',
+      },
+    ],
+  },
+
+  verification: undefined,
+  appleWebApp: undefined,
+  other: undefined,
+  openGraph: {
+    title: 'michal "halmic" bodzianowski',
+    description:
+      `Hello, I'm Michal. I'm a Creative Developer with experience in AI, XR, and Web, specializing in taking projects from 0 to 1.`,
+    images: [
+      {
+        url: 'https://michal.us/michal.png',
+      },
+    ],
+  },
+  
+
 }
 
 export default function RootLayout({

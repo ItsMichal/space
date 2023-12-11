@@ -1,4 +1,9 @@
-import { PageError, getNotionPageById, resolveSlug } from '../../notion-utils'
+import {
+  PageError,
+  defaultMapImageUrl,
+  getNotionPageById,
+  resolveSlug,
+} from '../../notion-utils'
 import * as React from 'react'
 import ClientNotion, { ClientNotionHeader } from '@/components/ClientNotion'
 import { GlassBoxContent, GlassBoxStatic } from '@/components/GlassBox'
@@ -26,7 +31,7 @@ export async function generateMetadata(
   if (project == PageError.EXTERNAL_PAGE || project == PageError.NOT_FOUND) {
     return {
       ...newMetadata,
-      title: 'Error :(',
+      title: 'Error :( - Michal',
       description: "This page doesn't exist...",
       //dont index
       robots: 'noindex, nofollow',
@@ -48,7 +53,7 @@ export async function generateMetadata(
 
   return {
     ...newMetadata,
-    title: project.title ? project.title : 'Untitled',
+    title: project.title ? project.title + ' by Michal' : 'Untitled - Michal Bodzianowski',
     description: project.description ? project.description : '',
     robots: 'follow, index',
     alternates: undefined,
@@ -58,7 +63,7 @@ export async function generateMetadata(
       handle: '@itsmichal',
       images: [
         {
-          url: project ? project.imageUrl?.url : '',
+          url: project.imageUrl ? defaultMapImageUrl(project.imageUrl) : '',
         },
       ],
     } as Twitter,
@@ -70,7 +75,7 @@ export async function generateMetadata(
       description: project ? project.description : "This page doesn't exist...",
       images: [
         {
-          url: project.imageUrl?.url ? project.imageUrl.url : '',
+          url: project.imageUrl ? defaultMapImageUrl(project.imageUrl)! : '',
         },
       ],
     },

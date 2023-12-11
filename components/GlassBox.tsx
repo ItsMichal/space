@@ -260,16 +260,16 @@ export function GlassBoxContent({
     <GlassBoxAnim className={'w-full overflow-hidden ' + className}>
       <>{image && <BGColorImage src={image}></BGColorImage>}</>
 
-      <div className="flex-nowrap flex flex-col">
-        <div className="overflow-clip flex-shrink min-h-full">
+      <div className="flex-nowrap flex flex-col h-full">
+        <div className="overflow-clip flex-shrink">
           <>
             {image != undefined && <GlassBoxImage src={image}></GlassBoxImage>}
           </>
         </div>
-        <div className="rounded-t-none flex-1 before:rounded-t-none px-[3vh] py-[1.5vh] w-full z-10">
+        <div className="rounded-t-none flex-1 flex flex-col before:rounded-t-none px-[3vh] py-[1.5vh] w-full z-10">
           <h1 className="font-title text-3xl">{title}</h1>
           <p className="font-paragraph text-lg mt-2">{description}</p>
-          <>{children && <div className="mt-4">{children}</div>}</>
+          <>{children && <div className="mt-4 flex-1 ">{children}</div>}</>
         </div>
       </div>
     </GlassBoxAnim>

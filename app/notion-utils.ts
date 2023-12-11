@@ -23,6 +23,68 @@ export enum PageError {
   EXTERNAL_PAGE = 'External page detected',
 }
 
+export const defaultMapImageUrl = ({
+  url,
+  block,
+}: {
+  url: string
+  block: Block
+}): string | null => {
+  if (!url) {
+    return null
+  }
+
+  if (url.startsWith('data:')) {
+    return url
+  }
+
+  // more recent versions of notion don't proxy unsplash images
+  if (url.startsWith('https://images.unsplash.com')) {
+    return url
+  }
+
+  try {
+    const u = new URL(url)
+
+    if (
+      u.pathname.startsWith('/secure.notion-static.com') &&
+      u.hostname.endsWith('.amazonaws.com')
+    ) {
+      if (
+        u.searchParams.has('X-Amz-Credential') &&
+        u.searchParams.has('X-Amz-Signature') &&
+        u.searchParams.has('X-Amz-Algorithm')
+      ) {
+        // if the URL is already signed, then use it as-is
+        return url
+      }
+    }
+  } catch {
+    // ignore invalid urls
+  }
+
+  if (url.startsWith('/images')) {
+    url = `https://www.notion.so${url}`
+  }
+
+  url = `https://www.notion.so${
+    url.startsWith('/image') ? url : `/image/${encodeURIComponent(url)}`
+  }`
+
+  const notionImageUrlV2 = new URL(url)
+  let table = block.parent_table === 'space' ? 'block' : block.parent_table
+  if (table === 'collection' || table === 'team') {
+    table = 'block'
+  }
+  notionImageUrlV2.searchParams.set('table', table)
+  notionImageUrlV2.searchParams.set('id', block.id)
+  notionImageUrlV2.searchParams.set('cache', 'v2')
+
+  url = notionImageUrlV2.toString()
+
+  return url
+}
+
 export const getNotionPageById = cache(async (id: string) => {
   return await notion.getPage(id)
 })
@@ -139,16 +201,6 @@ export const getProjects = cache(async () => {
 })
 
 export const resolveSlug = cache(async (slug: string) => {
-  //Try projects first
-  //   const projects = await slugToProject(slug)
-  //   if (projects) {
-  //     const page = await getPageMetadata(
-  //       projects.notionPage,
-  //       await getNotionPageById(projects.notionPage)
-  //     )
-
-  //     return page
-  //   }
   //Try pages next
   try {
     const pages = await getNotionPageById(slug)
@@ -163,14 +215,13 @@ export const resolveSlug = cache(async (slug: string) => {
           false
         )
       ) {
-        console.log('HISSS HEATHEN')
         return PageError.EXTERNAL_PAGE
       }
 
       return (await getPageMetadata(slug)) as PageMetadata
     }
   } catch (e) {
-    console.log(e)
+    console.log((e as Error).message)
   }
 
   //Try project lookup

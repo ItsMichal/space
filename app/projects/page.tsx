@@ -8,7 +8,7 @@ import { ClientNotionHeader } from '@/components/ClientNotion'
 export const revalidate = 3600 // revalidate the data at most every hour
 
 export const metadata: Metadata = {
-  title: 'Projects',
+  title: 'Projects by Michal Bodzianowski',
   description: 'A list of projects built by Michal Bodzianowski',
   robots: 'follow, index',
   alternates: undefined,
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     creator: '@itsmichal',
     images: [
       {
-        url: 'https://michal.us/michal.png',
+        url: 'https://michal.us/preview.png',
       },
     ],
   },
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     description: 'A list of projects built by Michal Bodzianowski',
     images: [
       {
-        url: 'https://michal.us/michal.png',
+        url: 'https://michal.us/preview.png',
       },
     ],
   },
