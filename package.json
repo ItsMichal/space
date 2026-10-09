@@ -16,8 +16,6 @@
     "@eslint/eslintrc": "^3.3.7",
     "@opennextjs/cloudflare": "^1.20.10",
     "@react-spring/web": "^10.1.2",
-    "@react-three/drei": "^10.7.9",
-    "@react-three/fiber": "^9.8.1",
     "@use-gesture/react": "^10.3.1",
     "autoprefixer": "^10.6.1",
     "eslint": "^9.39.5",
@@ -42,7 +40,6 @@
     "sharp": "^0.35.5",
     "shiki": "^4.5.0",
     "tailwindcss": "^3.4.19",
-    "three": "^0.186.1",
     "typescript": "^5.9.3",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.1.0"
@@ -54,7 +51,6 @@
     "@types/node": "^22.20.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "@types/three": "^0.186.0",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.9.9",
     "wrangler": "^4.149.0"
