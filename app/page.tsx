@@ -5,6 +5,7 @@ import { GlassButton } from '@/components/glass/GlassButton'
 import { NameHeader } from '@/components/site/NameHeader'
 import { ProjectList } from '@/components/site/ProjectList'
 import { JsonLd } from '@/components/seo/JsonLd'
+import { profile } from '@/content/profile'
 import { homeMetadata, personJsonLd, websiteJsonLd } from '@/lib/seo'
 
 export const metadata = homeMetadata()
@@ -19,10 +20,10 @@ export default function Home() {
     <div className="mx-auto max-w-content px-space-4 md:px-space-8">
       <JsonLd data={[personJsonLd, websiteJsonLd]} />
       <NameHeader
-        eyebrow="halmic · creative developer"
-        first="Michal"
-        last="Bodzianowski"
-        role="Creative developer. AI, XR and the web, taking projects from 0 to 1."
+        first={profile.firstName}
+        last={profile.lastName}
+        role={profile.role}
+        intro={profile.intro}
       />
 
       <section id="work" aria-labelledby="work-h" className="mt-space-16 md:mt-space-24">
@@ -45,14 +46,21 @@ export default function Home() {
         <h2 id="about-h" className={h2}>
           About
         </h2>
-        <div className="max-w-[56ch] space-y-space-4 text-body">
-          <p>
-            {`Hello, I'm Michal. I'm a Creative Developer with experience in AI, XR, and Web, specializing in taking projects from 0 to 1.`}
-          </p>
-          <p className="text-ink-muted">
-            {`I run Halmic Ltd, a studio providing creative development services. I'm also an applied researcher at the University of Colorado's SHINE Lab, where I work on human-AI interaction, focusing on education.`}
-          </p>
+        <div className="max-w-[60ch] space-y-space-4 font-serif text-[20px] leading-[1.55] md:text-[22px]">
+          <p>{profile.about[0]}</p>
+          <p className="text-ink-muted">{profile.about[1]}</p>
         </div>
+        <ul aria-label="Experience" className="mt-space-8 max-w-[56ch] divide-y divide-hairline border-y border-hairline">
+          {profile.experience.map((e) => (
+            <li key={e.company} className="flex flex-col gap-space-1 py-space-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-space-4">
+              <span className="font-serif text-[18px] font-medium">
+                {e.company}
+                <span className="font-normal text-ink-muted"> · {e.role}</span>
+              </span>
+              {'years' in e ? <span className="font-serif text-body text-ink-muted">{e.years}</span> : null}
+            </li>
+          ))}
+        </ul>
         <div className="mt-space-8 flex flex-wrap gap-space-3">
           <GlassButton href="/BodzianowskiResume.pdf" icon={<FileText aria-hidden />}>
             Resume

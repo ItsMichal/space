@@ -2,7 +2,7 @@
 title: "Frogchamp"
 slug: frogchamp-ai-chat-stream
 kind: project
-description: "Superpowering livestreamers chats using AI and beautiful data visualizations"
+description: "A streamer dashboard, currently on hold, that uses LLMs and data visualization to show realtime chat behavior and sentiment."
 date: 2023-12-11
 tags: ["TypeScript", "Web", "AI/ML"]
 cover: /media/frogchamp-ai-chat-stream/cover.webp

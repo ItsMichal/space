@@ -2,7 +2,7 @@
 title: "AI Crofty"
 slug: realtime-ai-f1-comentator
 kind: project
-description: "A realtime commentator/race engineer for F1 23 by sending UDP packet data through OpenAI and TiktokTTS, with a Discord bot interface"
+description: "A realtime F1 23 commentator and race engineer that turns game telemetry into speech with OpenAI and TikTok TTS, with a Discord bot interface."
 date: 2023-12-11
 tags: ["TypeScript", "AI/ML", "Game Dev"]
 cover: /media/realtime-ai-f1-comentator/cover.png

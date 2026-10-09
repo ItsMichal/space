@@ -2,11 +2,12 @@
 // Safe to import from server components, route handlers and (statically) from the root layout.
 import type { Metadata } from 'next'
 import { siteConfig } from '@/site.config'
+import { profile } from '@/content/profile'
 import type { Post, PostKind } from '@/lib/content/types'
 
 export const SITE_URL = siteConfig.url.replace(/\/$/, '')
 export const SITE_NAME = siteConfig.title
-export const AUTHOR_NAME = 'Michal Bodzianowski'
+export const AUTHOR_NAME = profile.name
 export const DEFAULT_OG_IMAGE = '/michal.png'
 
 /** Pass to `metadata.metadataBase` in the root layout so relative URLs resolve to https://michal.us. */
@@ -42,9 +43,13 @@ export const personJsonLd = {
   '@type': 'Person',
   '@id': `${SITE_URL}/#person`,
   name: AUTHOR_NAME,
+  alternateName: profile.asciiName,
   url: SITE_URL,
   image: absoluteUrl(DEFAULT_OG_IMAGE),
-  jobTitle: 'Creative Developer',
+  jobTitle: profile.jobTitle,
+  worksFor: profile.worksFor.map((o) => ({ '@type': 'Organization', ...o })),
+  alumniOf: profile.alumniOf.map((name) => ({ '@type': 'CollegeOrUniversity', name })),
+  knowsAbout: [...profile.knowsAbout],
   description: siteConfig.description,
   sameAs: [siteConfig.github, siteConfig.linkedin, `https://twitter.com/${siteConfig.twitter.replace(/^@/, '')}`],
 }
@@ -63,7 +68,7 @@ export const websiteJsonLd = {
 export function homeMetadata(): Metadata {
   return {
     alternates: { canonical: SITE_URL },
-    openGraph: { type: 'profile', url: SITE_URL, siteName: SITE_NAME, firstName: 'Michal', lastName: 'Bodzianowski' },
+    openGraph: { type: 'profile', url: SITE_URL, siteName: SITE_NAME, firstName: profile.firstName, lastName: profile.lastName },
   }
 }
 

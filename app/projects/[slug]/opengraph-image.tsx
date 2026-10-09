@@ -5,7 +5,7 @@ export const dynamic = 'force-static'
 export const dynamicParams = false
 export const size = OG_SIZE
 export const contentType = OG_CONTENT_TYPE
-export const alt = 'Project by Michal Bodzianowski'
+export const alt = 'Project by Michał Bodzianowski'
 
 export function generateStaticParams() {
   return getPostsByKind('project').map((p) => ({ slug: p.slug }))

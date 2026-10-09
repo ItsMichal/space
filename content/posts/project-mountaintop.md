@@ -2,7 +2,7 @@
 title: "Project Mountaintop"
 slug: project-mountaintop
 kind: project
-description: "A rhythm game revolving around the concept of hiking!"
+description: "A Unity rhythm game about hiking, played with custom Arduino hiking-pole controllers."
 date: 2023-12-09
 tags: ["Unity", "Arduino", "Game Dev", "C#"]
 cover: /media/project-mountaintop/cover.webp

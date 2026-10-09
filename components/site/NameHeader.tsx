@@ -17,7 +17,7 @@ export function NameHeader({ eyebrow, first, last, role, intro }: Props) {
         <span className="block">{last}</span>
       </h1>
       <p className="mt-space-6 max-w-[56ch] text-body text-ink-muted">{role}</p>
-      {intro ? <p className="mt-space-3 max-w-[56ch] text-body text-ink-muted">{intro}</p> : null}
+      {intro ? <p className="mt-space-4 max-w-[34ch] font-serif text-[22px] leading-[1.4] text-ink md:text-[26px]">{intro}</p> : null}
     </header>
   )
 }

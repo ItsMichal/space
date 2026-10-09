@@ -1,6 +1,8 @@
+import { profile } from '@/content/profile'
+
 export const siteConfig = {
-  title: 'Michal Bodzianowski',
-  description: 'Creative developer working across AI, XR and the web, taking projects from 0 to 1.',
+  title: profile.name,
+  description: profile.description,
   url: 'https://michal.us',
   twitter: '@itsMichal',
   github: 'https://github.com/ItsMichal',

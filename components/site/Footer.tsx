@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { siteConfig } from '@/site.config'
+import { profile } from '@/content/profile'
 import { HalmicMark } from './HalmicMark'
 
 const linkCls = 'text-ink-muted transition-colors duration-150 hover:text-accent'
@@ -13,7 +14,7 @@ export function Footer() {
             <HalmicMark height={24} />
           </Link>
           <span className="font-mono text-meta text-ink-muted">
-            © {new Date().getFullYear()} Michal Bodzianowski
+            © {new Date().getFullYear()} {profile.name}
           </span>
         </div>
         <nav aria-label="Elsewhere" className="flex gap-space-6 text-body-strong">

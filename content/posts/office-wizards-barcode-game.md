@@ -2,7 +2,7 @@
 title: "Office Wizards"
 slug: office-wizards-barcode-game
 kind: project
-description: "Turning Barcode Scanners and Printers to a Competitive Wizardry Game"
+description: "A competitive wizard game played with barcode scanners and printers, built with Unity and Arduino."
 date: 2023-03-08
 updated: 2023-12-09
 tags: ["Unity", "Arduino", "Game Dev"]

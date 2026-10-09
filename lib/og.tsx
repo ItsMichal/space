@@ -68,7 +68,7 @@ export function renderPostOg(post: Post) {
             fontSize: 26,
           }}
         >
-          <div style={{ display: 'flex' }}>Michal Bodzianowski</div>
+          <div style={{ display: 'flex' }}>Michał Bodzianowski</div>
           <div style={{ display: 'flex', color: MUTED }}>michal.us</div>
         </div>
       </div>

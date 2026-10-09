@@ -11,8 +11,8 @@ Paper is the visual system for michal.us: a white, flat, editorial page with a l
 
 - Write in first person, plainly, a little playful — the site already says *"don't (or do) judge it too harshly"*. Keep that voice.
 - Sentence case everywhere: headings, buttons, nav. The only uppercase is the `label` style (eyebrows, presence count).
-- The name is written **Michal Bodzianowski**; the nickname **halmic** is always lowercase. The studio is **Halmic Ltd**.
-- Role line: *Creative developer* — AI, XR and the web, taking projects from 0 to 1.
+- The name is written **Michał Bodzianowski**; the nickname **halmic** is always lowercase. The studio is **Halmic Ltd**.
+- Role line: *Creative developer.* AI, XR and the web.
 - No emoji in titles or UI. Project titles in the old CMS carried emoji (🏔️ Project Mountaintop); drop them in Paper.
 - Dates and tags are meta: set them in `meta` (mono), joined with ` · `.
 
