@@ -2,7 +2,7 @@
 title: "Starlink Order Flow"
 slug: spacex-starlink-order-flow
 kind: project
-description: "I rewrote Starlink.com’s Order Flow in React from Scratch. Here’s some notes on how our team and I did it."
+description: "How my team and I rewrote the Starlink.com order flow from scratch in React."
 date: 2025-06-04
 tags: ["Web", "TypeScript", "Next.js"]
 cover: /media/spacex-starlink-order-flow/cover.webp

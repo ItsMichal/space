@@ -2,7 +2,7 @@
 title: "Starlink.com"
 slug: spacex-starlink-general-projects
 kind: project
-description: "In addition to larger work, I've worked on everything from security fixes, marketing efforts, DB migrations, and all the fun things that come from a truly full-stack, total ownership role"
+description: "Smaller full-stack projects from my time on the Consumer Platform team at Starlink, from security fixes to database migrations."
 date: 2025-06-04
 tags: ["Web", "TypeScript", "Next.js"]
 cover: /media/spacex-starlink-general-projects/cover.webp

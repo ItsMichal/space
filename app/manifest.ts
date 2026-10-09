@@ -1,8 +1,9 @@
 import type { MetadataRoute } from 'next'
+import { profile } from '@/content/profile'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Michal Bodzianowski',
+    name: profile.name,
     short_name: 'michal',
     start_url: '/',
     display: 'browser',

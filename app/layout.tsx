@@ -6,16 +6,17 @@ import LidarBackground from '@/components/lidar/LidarBackground'
 import { NavBar } from '@/components/site/NavBar'
 import { Footer } from '@/components/site/Footer'
 import { siteMetadata } from '@/lib/seo'
+import { profile } from '@/content/profile'
 
 const sans = Schibsted_Grotesk({
-  subsets: ['latin'],
+  subsets: ['latin', 'latin-ext'],
   weight: ['400', '500', '600', '700'],
   display: 'swap',
   variable: '--font-schibsted',
 })
 
 const serif = Newsreader({
-  subsets: ['latin'],
+  subsets: ['latin', 'latin-ext'],
   style: ['normal', 'italic'],
   axes: ['opsz'],
   display: 'swap',
@@ -23,7 +24,7 @@ const serif = Newsreader({
 })
 
 const mono = IBM_Plex_Mono({
-  subsets: ['latin'],
+  subsets: ['latin', 'latin-ext'],
   weight: ['400', '500'],
   display: 'swap',
   variable: '--font-plex-mono',
@@ -39,17 +40,17 @@ export const viewport: Viewport = {
   ],
 }
 
-const DESCRIPTION =
-  "Hello, I'm Michal. I'm a Creative Developer with experience in AI, XR, and Web, specializing in taking projects from 0 to 1."
+const DESCRIPTION = profile.description
+const TITLE = `${profile.name} — ${profile.titleTagline}`
 
 export const metadata: Metadata = {
   ...siteMetadata,
-  title: { default: 'Michal Bodzianowski — Creative Developer', template: '%s — Michal Bodzianowski' },
+  title: { default: TITLE, template: `%s — ${profile.name}` },
   description: DESCRIPTION,
   robots: { index: true, follow: true },
   openGraph: {
     ...siteMetadata.openGraph,
-    title: 'Michal Bodzianowski — Creative Developer',
+    title: TITLE,
     description: DESCRIPTION,
     images: [{ url: '/michal.png' }],
   },

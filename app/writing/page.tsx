@@ -4,8 +4,8 @@ import { ProjectList } from '@/components/site/ProjectList'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { listJsonLd, listMetadata } from '@/lib/seo'
 
-const TITLE = 'Writing — Michal Bodzianowski'
-const DESCRIPTION = 'Articles, dev logs and notes by Michal Bodzianowski.'
+const TITLE = 'Writing — Michał Bodzianowski'
+const DESCRIPTION = 'Articles, dev logs and notes by Michał Bodzianowski.'
 
 export const metadata: Metadata = listMetadata('article', TITLE, DESCRIPTION)
 

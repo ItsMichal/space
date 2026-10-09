@@ -2,7 +2,7 @@
 title: "JIA Webapp"
 slug: jia-webapp
 kind: project
-description: "Building an app that allows LLMs to assist students and educators, from model, to backend, to frontend"
+description: "A web app that lets an LLM agent help students with worksheet problems, built for CU Boulder's iSAT institute."
 date: 2023-12-09
 updated: 2023-12-11
 tags: ["TypeScript", "AWS", "AI/ML"]
