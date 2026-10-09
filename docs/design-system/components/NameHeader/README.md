@@ -1,5 +1,5 @@
 # NameHeader
 
-The home page hero: the full name in `display-name`, two lines, flush left, with the role line beneath. It replaces the old glass card and logo lockup.
+The home page hero: the full name in `display-name`, two lines, flush left, followed by one `intro` paragraph in Newsreader. No label above it.
 
-**Consumer provides** first name, last name, the role line and an optional one-sentence intro. Name in `ink`; role in `body` `ink-muted`; an `eyebrow` above with location or status ("Boulder, CO — available for work"). Sits directly on `paper` over the lidar field — no container, no glass. 56px on phones, 112px from 1024px.
+**Consumer provides** first name (Michał), last name and the intro sentence. Name in `ink`, intro in `ink`. Pairs with the lidar portrait on desktop (side by side) and on phones (stacked, deliberate at 375px). Sits directly on `paper` — no container, no glass. Scales from 56px on phones to 112px from 1024px.

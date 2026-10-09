@@ -1,5 +1,5 @@
 # PresenceChip
 
-A small glass pill showing how many people are on the site right now, as overlapping dots in their presence colors.
+Overlapping dots in the nav showing who is reading right now — color only, no count text.
 
-**Consumer provides** the list of current visitors' `presence-*` tokens (max 5 dots shown, then "+N") and the count. Label in `label` style: "1 here" when alone, "3 here now" otherwise. Your own dot comes first and carries a 2px `ink` ring. Lives inside NavBar on desktop; alone bottom-left on phones.
+**Consumer provides** the current visitors' `presence-*` tokens (max 5 dots, then a sixth neutral `dot` for more). Your own dot comes first with a moss (`accent`) ring. On hover or focus a small glass popover says, in serif `meta`, *You and two others are reading this — Reykjavík, Berlin.* An accessible label carries the same sentence; count changes are announced politely, never pointer moves. Lives inside NavBar, merging with the nav pill as liquid glass.
