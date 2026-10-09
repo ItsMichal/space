@@ -3,7 +3,7 @@ import type { PostFrontmatter, PostKind } from '@/lib/content/types'
 import type { JSONContent } from './types'
 
 export const SITE_URL = 'https://michal.us'
-export const TITLE_SUFFIX = ' by Michal' // PostPage.postMetadata appends this to <title>
+export const TITLE_SUFFIX = ' — Michał Bodzianowski' // lib/seo postTitle() appends this to <title>
 export const FALLBACK_OG_IMAGE = '/michal.png'
 export const BASE_PATH: Record<PostKind, string> = { project: '/projects', article: '/writing' }
 
@@ -55,7 +55,7 @@ export function analyzeSeo(fm: PostFrontmatter, stats: DocStats): SeoCheck[] {
   // <title>
   const titleLen = fullTitle(fm.title).length
   if (!fm.title.trim()) add('title', 'error', 'Add a title.')
-  else if (titleLen > 60) add('title', 'warn', `Page title is ${titleLen} characters including " by Michal"; Google cuts it off after about 60.`)
+  else if (titleLen > 60) add('title', 'warn', `Page title is ${titleLen} characters including the name suffix; Google cuts it off after about 60.`)
   else add('title', 'ok', `Page title is ${titleLen}/60 characters.`)
 
   // description
