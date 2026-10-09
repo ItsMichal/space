@@ -14,7 +14,7 @@ export default function Home() {
   return (
     <div className="mx-auto max-w-content px-space-4 md:px-space-8">
       <NameHeader
-        eyebrow="Boulder, CO — available for work"
+        eyebrow="halmic · creative developer"
         first="Michal"
         last="Bodzianowski"
         role="Creative developer. AI, XR and the web, taking projects from 0 to 1."
