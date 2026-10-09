@@ -23,8 +23,8 @@ export const ShadedBackground = ({
 }
 
 const ContourShadedPlane = () => {
-  const mesh = useRef<Mesh>()
-  const shaderMat = useRef<ShaderMaterial>()
+  const mesh = useRef<Mesh>(null)
+  const shaderMat = useRef<ShaderMaterial>(null)
   const { size } = useThree()
 
   const uniforms = useMemo(

@@ -2,9 +2,9 @@
 
 import React from 'react'
 
-import { motion } from 'framer-motion'
+import { motion, type Variants } from 'framer-motion'
 
-const draw = {
+const draw: Variants = {
   hidden: { pathLength: 0, opacity: 0 },
   visible: (i: number) => {
     const delay = 1 + i * 0.1
@@ -16,7 +16,7 @@ const draw = {
       transition: {
         pathLength: {
           delay,
-          type: 'spring',
+          type: 'spring' as const,
           duration: 1.5,
         },
         stroke: {
@@ -26,13 +26,13 @@ const draw = {
         },
         fill: {
           delay: delay + 0.5,
-          type: 'spring',
+          type: 'spring' as const,
           duration: 1.5,
           bounce: 0,
         },
         opacity: {
           delay,
-          type: 'spring',
+          type: 'spring' as const,
           duration: 0.2,
         },
       },
@@ -48,7 +48,7 @@ const draw = {
       transition: {
         pathLength: {
           delay: delay + 0.1,
-          type: 'spring',
+          type: 'spring' as const,
           duration: 0.4,
         },
         stroke: {
@@ -58,13 +58,13 @@ const draw = {
         },
         fill: {
           delay: delay,
-          type: 'spring',
+          type: 'spring' as const,
           duration: 0.2,
           bounce: 0,
         },
         opacity: {
           delay: delay + 1.8,
-          type: 'spring',
+          type: 'spring' as const,
           duration: 0.1,
         },
       },
