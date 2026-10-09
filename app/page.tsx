@@ -1,100 +1,65 @@
-import { GlassBoxContent, GlassBoxStatic } from '@/components/GlassBox'
-import React from 'react'
-import ResumePic from '../public/ResumePix.png'
-import LIPic from '../public/templi.png'
-import GHPic from '../public/tempgh.png'
+import { ArrowUpRight, FileText } from 'lucide-react'
 import { getPostsByKind } from '@/lib/content'
-import { MoveRight } from 'lucide-react'
-import Link from 'next/link'
+import { siteConfig } from '@/site.config'
+import { GlassButton } from '@/components/glass/GlassButton'
+import { NameHeader } from '@/components/site/NameHeader'
+import { ProjectList } from '@/components/site/ProjectList'
+
+const h2 = 'mb-space-8 text-[32px] font-semibold leading-[1.1] tracking-[-0.02em]'
 
 export default function Home() {
   const projects = getPostsByKind('project')
+  const articles = getPostsByKind('article')
 
   return (
-    <>
-      <GlassBoxContent image="/michal.png" title="About" description="">
-        <div className="font-paragraph">
-          <p className=" text-lg">
+    <div className="mx-auto max-w-content px-space-4 md:px-space-8">
+      <NameHeader
+        eyebrow="Boulder, CO — available for work"
+        first="Michal"
+        last="Bodzianowski"
+        role="Creative developer. AI, XR and the web, taking projects from 0 to 1."
+      />
+
+      <section id="work" aria-labelledby="work-h" className="mt-space-16 md:mt-space-24">
+        <h2 id="work-h" className={h2}>
+          Selected work
+        </h2>
+        <ProjectList posts={projects} base="/projects" />
+      </section>
+
+      {articles.length > 0 ? (
+        <section id="writing" aria-labelledby="writing-h" className="mt-space-16">
+          <h2 id="writing-h" className={h2}>
+            Writing
+          </h2>
+          <ProjectList posts={articles} base="/writing" />
+        </section>
+      ) : null}
+
+      <section id="about" aria-labelledby="about-h" className="mt-space-16">
+        <h2 id="about-h" className={h2}>
+          About
+        </h2>
+        <div className="max-w-[56ch] space-y-space-4 text-body">
+          <p>
             {`Hello, I'm Michal. I'm a Creative Developer with experience in AI, XR, and Web, specializing in taking projects from 0 to 1.`}
           </p>
-          <p className="mt-2">
-            {`I run Halmic Ltd, a studio providing creative development services. I'm also an applied researcher at the University of Colorado's SHINE Lab, where I work on human-AI interaction, focusing on education.
-            `}
+          <p className="text-ink-muted">
+            {`I run Halmic Ltd, a studio providing creative development services. I'm also an applied researcher at the University of Colorado's SHINE Lab, where I work on human-AI interaction, focusing on education.`}
           </p>
         </div>
-      </GlassBoxContent>
-      <GlassBoxStatic className="w-full overflow-hidden md:col-span-2 lg:col-span-3 ">
-        <Link href={'/projects'}>
-          <div className="w-full flex flex-row pt-6 px-6">
-            <h1 className="font-title text-3xl ">Recent Projects</h1>
-            <div className="flex-1"></div>
-            <div className="flex flex-row gap-4 opacity-50 animate-pulse">
-              <div className="mt-0.5">click for more</div>
-              <MoveRight size={'2rem'} />
-            </div>
-          </div>
-        </Link>
-        <div className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-          {projects.slice(0, 6).map((project) => (
-            <Link key={project.slug} href={`/projects/${project.slug}`}>
-              <h2 className="font-title text-xl">{project.title}</h2>
-              <p className="font-paragraph">{project.description}</p>
-            </Link>
-          ))}
+        <div className="mt-space-8 flex flex-wrap gap-space-3">
+          <GlassButton href="/BodzianowskiResume.pdf" icon={<FileText aria-hidden />}>
+            Resume
+          </GlassButton>
+          <GlassButton href={siteConfig.github} icon={<ArrowUpRight aria-hidden />}>
+            GitHub
+          </GlassButton>
+          <GlassButton href={siteConfig.linkedin} icon={<ArrowUpRight aria-hidden />}>
+            LinkedIn
+          </GlassButton>
         </div>
-      </GlassBoxStatic>
-
-      <GlassBoxContent
-        title="Resume"
-        description="Direct link to my full-stack resume"
-        image={ResumePic.src}
-      >
-        <a
-          href="/BodzianowskiResume.pdf"
-          target="_blank"
-          rel="noreferrer"
-          className="glass-btn w-fit p-4 font-paragraph"
-          style={{
-            zIndex: '1',
-          }}
-        >
-          PDF
-        </a>
-      </GlassBoxContent>
-      <GlassBoxContent
-        title="Hit me up on LinkedIn"
-        description="See more of my work here for now"
-        image={LIPic.src}
-      >
-        <a
-          href="https://linkedin.com/in/mbodzianowski"
-          target="_blank"
-          rel="noreferrer"
-          className="glass-btn w-fit p-4 font-paragraph"
-          style={{
-            zIndex: '1',
-          }}
-        >
-          LinkedIn
-        </a>
-      </GlassBoxContent>
-      <GlassBoxContent
-        title="My Github"
-        description="I'm building this site in public on github! Come check it out and don't (or do) judge it too harshly"
-        image={GHPic.src}
-      >
-        <a
-          href="https://github.com/itsMichal"
-          target="_blank"
-          rel="noreferrer"
-          className="glass-btn w-fit p-4 font-paragraph"
-          style={{
-            zIndex: '1',
-          }}
-        >
-          GitHub
-        </a>
-      </GlassBoxContent>
-    </>
+      </section>
+    </div>
   )
 }
