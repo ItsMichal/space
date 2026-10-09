@@ -3,13 +3,12 @@ import React from 'react'
 import ResumePic from '../public/ResumePix.png'
 import LIPic from '../public/templi.png'
 import GHPic from '../public/tempgh.png'
-import { getProjects } from './notion-utils'
-import { ClientNotionHeader } from '@/components/ClientNotion'
+import { getPostsByKind } from '@/lib/content'
 import { MoveRight } from 'lucide-react'
 import Link from 'next/link'
 
-export default async function Home() {
-  const projects = await getProjects()
+export default function Home() {
+  const projects = getPostsByKind('project')
 
   return (
     <>
@@ -36,15 +35,12 @@ export default async function Home() {
           </div>
         </Link>
         <div className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-          {projects.slice(0, 6).map((project, index) => {
-            return (
-              <ClientNotionHeader
-                key={index}
-                pageMetadata={project}
-                baseUrl={'projects/'}
-              />
-            )
-          })}
+          {projects.slice(0, 6).map((project) => (
+            <Link key={project.slug} href={`/projects/${project.slug}`}>
+              <h2 className="font-title text-xl">{project.title}</h2>
+              <p className="font-paragraph">{project.description}</p>
+            </Link>
+          ))}
         </div>
       </GlassBoxStatic>
 
