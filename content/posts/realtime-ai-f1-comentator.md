@@ -1,0 +1,23 @@
+---
+title: "AI Crofty"
+slug: realtime-ai-f1-comentator
+kind: project
+description: "A realtime commentator/race engineer for F1 23 by sending UDP packet data through OpenAI and TiktokTTS, with a Discord bot interface"
+date: 2023-12-11
+tags: ["TypeScript", "AI/ML", "Game Dev"]
+cover: /media/realtime-ai-f1-comentator/cover.png
+coverAlt: "AI Crofty cover image"
+priority: 5
+---
+
+## AI Croft- F1 Game Commentator that provides commentary in realtime
+
+I built a pipeline that takes UDP packet data meant for steering wheels, converts it into TypeScript objects, then translates it into natural language with a tuned prompt that gets sent to gpt-3.5-turbo (finetuning in the future?). Finally, gets sent to Tiktok’s open TTS api, which is then ffmpeg'd and piped into a discord bot which controls settings and reports race results.
+
+First demo was done in one night, then tested and tuned over a race league with my friends.
+
+Full in-depth overview and open sourcing are my next steps.
+
+### Demo (Funny Moment)
+
+::youtube{id="Qt-6oOMb4NQ"}
