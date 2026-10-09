@@ -1,0 +1,21 @@
+<!-- @dsCard group="Navigation" height=150 -->
+<div class="wrap">
+  <nav class="lg lg--pill nav" id="nav" aria-label="Main">
+    <a href="#" aria-current="page">Work</a>
+    <a href="#">Writing</a>
+    <a href="#">About</a>
+    <span class="sep" aria-hidden="true"></span>
+    <span class="presence"><span class="presence__dots"><i class="presence__dot" style="background:var(--presence-1)"></i><i class="presence__dot" style="background:var(--presence-3)"></i><i class="presence__dot" style="background:var(--presence-5)"></i></span>3 here</span>
+  </nav>
+</div>
+<style>
+  .wrap { display: flex; justify-content: center; padding: 44px 16px; background: var(--paper);
+    background-image: radial-gradient(var(--dot) 1.2px, transparent 1.4px); background-size: 12px 12px; }
+  .nav { display: flex; align-items: center; gap: 4px; padding: 6px; }
+  .nav a { padding: 8px 14px; border-radius: 999px; color: var(--ink-muted); text-decoration: none; font: 500 15px/20px var(--font-sans); }
+  .nav a:hover { color: var(--ink); }
+  .nav a[aria-current="page"] { color: var(--ink); background: var(--paper-raised); }
+  .sep { width: 1px; height: 20px; background: var(--hairline); margin: 0 6px; }
+  .nav .presence { color: var(--ink-muted); padding-right: 10px; }
+</style>
+<script>requestAnimationFrame(function () { Paper.liquidGlass(document.getElementById('nav'), { bezel: 16 }); });</script>
