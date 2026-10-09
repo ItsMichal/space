@@ -4,6 +4,10 @@ import { siteConfig } from '@/site.config'
 import { GlassButton } from '@/components/glass/GlassButton'
 import { NameHeader } from '@/components/site/NameHeader'
 import { ProjectList } from '@/components/site/ProjectList'
+import { JsonLd } from '@/components/seo/JsonLd'
+import { homeMetadata, personJsonLd, websiteJsonLd } from '@/lib/seo'
+
+export const metadata = homeMetadata()
 
 const h2 = 'mb-space-8 text-[32px] font-semibold leading-[1.1] tracking-[-0.02em]'
 
@@ -13,6 +17,7 @@ export default function Home() {
 
   return (
     <div className="mx-auto max-w-content px-space-4 md:px-space-8">
+      <JsonLd data={[personJsonLd, websiteJsonLd]} />
       <NameHeader
         eyebrow="halmic · creative developer"
         first="Michal"

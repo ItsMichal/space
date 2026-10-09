@@ -1,6 +1,3 @@
-import 'react-notion-x/src/styles.css'
-import 'prismjs/themes/prism-tomorrow.css'
-import 'katex/dist/katex.min.css'
 import './globals.css'
 import type { Metadata, Viewport } from 'next'
 import { IBM_Plex_Mono, Newsreader, Schibsted_Grotesk } from 'next/font/google'
@@ -8,6 +5,7 @@ import React, { StrictMode } from 'react'
 import LidarBackground from '@/components/lidar/LidarBackground'
 import { NavBar } from '@/components/site/NavBar'
 import { Footer } from '@/components/site/Footer'
+import { siteMetadata } from '@/lib/seo'
 
 const sans = Schibsted_Grotesk({
   subsets: ['latin'],
@@ -41,35 +39,21 @@ export const viewport: Viewport = {
   ],
 }
 
+const DESCRIPTION =
+  "Hello, I'm Michal. I'm a Creative Developer with experience in AI, XR, and Web, specializing in taking projects from 0 to 1."
+
 export const metadata: Metadata = {
-  title: 'michal "halmic" bodzianowski',
-  description:
-    `Hello, I'm Michal. I'm a Creative Developer with experience in AI, XR, and Web, specializing in taking projects from 0 to 1.`,
-  robots: 'follow, index',
-  alternates: undefined,
-  twitter: {
-    card: 'summary_large_image',
-    site: '@itsmichal',
-    creator: '@itsmichal',
-    images: [
-      {
-        url: 'https://michal.us/michal.png',
-      },
-    ],
-  },
-  verification: undefined,
-  appleWebApp: undefined,
-  other: undefined,
+  ...siteMetadata,
+  title: { default: 'Michal Bodzianowski — Creative Developer', template: '%s — Michal Bodzianowski' },
+  description: DESCRIPTION,
+  robots: { index: true, follow: true },
   openGraph: {
-    title: 'michal "halmic" bodzianowski',
-    description:
-      `Hello, I'm Michal. I'm a Creative Developer with experience in AI, XR, and Web, specializing in taking projects from 0 to 1.`,
-    images: [
-      {
-        url: 'https://michal.us/michal.png',
-      },
-    ],
+    ...siteMetadata.openGraph,
+    title: 'Michal Bodzianowski — Creative Developer',
+    description: DESCRIPTION,
+    images: [{ url: '/michal.png' }],
   },
+  twitter: { ...siteMetadata.twitter, images: ['/michal.png'] },
 }
 
 export default function RootLayout({
