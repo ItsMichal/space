@@ -34,7 +34,7 @@ export function ArticleLayout({
   children,
 }: Props) {
   return (
-    <article className="mx-auto max-w-content px-space-4 pb-space-16 pt-[120px] md:px-space-8 md:pt-[160px]">
+    <article data-post className="mx-auto max-w-content px-space-4 pb-space-16 pt-[120px] md:px-space-8 md:pt-[160px]">
       <header className="max-w-[900px]">
         <p className="eyebrow mb-space-4">
           {kind} · {readingMinutes} min read

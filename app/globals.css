@@ -480,3 +480,8 @@ body {
     }
   }
 }
+
+/* Dim the lidar field behind long-form reading (canvas lives in <body>, so set it there). */
+body:has(article[data-post]) {
+  --lidar-opacity: 0.4;
+}
