@@ -9,7 +9,6 @@ import { GlassBoxAnim } from '@/components/GlassBox'
 import AnimLogo from '@/components/AnimLogo'
 import { ShadedBackground } from '@/components/BGAnim'
 import { Footer } from '@/components/Footer'
-import { SpeedInsights } from '@vercel/speed-insights/next'
 
 const paragraphFont = localFont({
   src: '../public/fonts/newmexica.otf',
@@ -134,7 +133,6 @@ export default function RootLayout({
             </div>
             <div className="lg:flex-1"></div>
           </div>
-          <SpeedInsights />
         </body>
       </html>
     </StrictMode>
