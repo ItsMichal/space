@@ -22,9 +22,9 @@ function loadFonts() {
   return fonts
 }
 
-const PAPER = '#f6f5f1'
-const INK = '#141416'
-const MUTED = '#6b6a66'
+const PAPER = '#f4f1e8'
+const INK = '#18211b'
+const MUTED = '#525c4f'
 
 export function renderPostOg(post: Post) {
   const len = post.title.length

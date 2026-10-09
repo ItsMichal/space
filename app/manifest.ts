@@ -6,8 +6,8 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: 'michal',
     start_url: '/',
     display: 'browser',
-    background_color: '#f6f5f1',
-    theme_color: '#f6f5f1',
+    background_color: '#f4f1e8',
+    theme_color: '#f4f1e8',
     icons: [
       {
         src: '/icons/icon-192.png',

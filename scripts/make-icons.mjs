@@ -21,10 +21,10 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const LOGO_VIEWBOX_W = 349.92
 const LOGO_VIEWBOX_H = 235.02
 
-const PAPER = '#f6f5f1'
-const INK = '#141416'
-const DARK_PAPER = '#111113'
-const DARK_INK = '#ecebe6'
+const PAPER = '#f4f1e8'
+const INK = '#18211b'
+const DARK_PAPER = '#121612'
+const DARK_INK = '#ebe7da'
 
 // Pull the raw path data out of the source logo, untouched.
 const logoSvg = readFileSync(join(ROOT, 'public/logo.svg'), 'utf8')
