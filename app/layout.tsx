@@ -67,7 +67,7 @@ export default function RootLayout({
         lang="en"
         className={`${sans.variable} ${serif.variable} ${mono.variable}`}
       >
-        <body className="flex min-h-screen flex-col bg-paper font-sans text-ink">
+        <body className="flex min-h-screen flex-col font-sans text-ink">
           <a href="#main" className="skip-link">
             Skip to content
           </a>
