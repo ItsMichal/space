@@ -17,6 +17,10 @@ export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url)
     if (url.pathname === '/api/presence') {
+      // WebSocket only; origin allowlist + admission are enforced inside the DO.
+      if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') {
+        return new Response('Expected WebSocket upgrade', { status: 426, headers: { Upgrade: 'websocket' } })
+      }
       const stub = env.PRESENCE.get(env.PRESENCE.idFromName('global'))
       return stub.fetch(request)
     }
