@@ -134,11 +134,14 @@ export function writePost(
 ): { hash: string; mtimeMs: number } {
   const file = postFile(id)
   validateFrontmatter(id, input.frontmatter)
-  if (fs.existsSync(file) && !input.force) {
+  if (fs.existsSync(file)) {
     const current = hashOf(fs.readFileSync(file, 'utf8'))
-    if (input.baseHash && current !== input.baseHash) {
+    if (!input.force && input.baseHash && current !== input.baseHash) {
       throw new HttpError(409, 'The file changed on disk since it was loaded', { currentHash: current })
     }
+  } else if (input.baseHash && !input.force) {
+    // The editor had this file open, so it was deleted or renamed behind its back: never silently resurrect it.
+    throw new HttpError(409, 'The file no longer exists on disk (renamed or deleted)')
   }
   const raw = serializePost(input.frontmatter, input.body)
   atomicWrite(file, raw)

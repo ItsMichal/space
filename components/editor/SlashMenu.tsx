@@ -7,6 +7,7 @@ import { uiBus } from '@/lib/editor/ui-bus'
 export function SlashMenu() {
   const [state, setState] = useState<SlashState | null>(null)
   const [index, setIndex] = useState(0)
+  const [scrollTick, setScrollTick] = useState(0)
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null)
   const ref = useRef<HTMLDivElement>(null)
   const indexRef = useRef(0)
@@ -35,7 +36,19 @@ export function SlashMenu() {
     const below = rect.bottom + 8
     const top = below + height > window.innerHeight - 12 ? Math.max(12, rect.top - height - 8) : below
     setPos({ left: Math.min(rect.left, window.innerWidth - 300), top })
-  }, [state, index])
+  }, [state, index, scrollTick])
+
+  // Follow the caret when the page scrolls or resizes while the menu is open.
+  useEffect(() => {
+    if (!state) return
+    const bump = () => setScrollTick((n) => n + 1)
+    window.addEventListener('scroll', bump, true)
+    window.addEventListener('resize', bump)
+    return () => {
+      window.removeEventListener('scroll', bump, true)
+      window.removeEventListener('resize', bump)
+    }
+  }, [state])
 
   useEffect(() => {
     slashController.onKeyDown = (e) => {

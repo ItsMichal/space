@@ -4,8 +4,6 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { renderMarkdown } from '@/lib/content/render'
 import { SLUG_RE } from '@/lib/content/serialize'
-import { docStats } from '@/lib/editor/seo'
-import { markdownToDoc } from '@/lib/editor/markdown'
 import { HttpError, readPost } from '@/lib/editor/server/posts'
 
 export const dynamic = 'force-dynamic'
@@ -22,7 +20,7 @@ export default async function PreviewPost({ params }: { params: Promise<{ slug: 
   }
   const { frontmatter: fm, body } = post
   const content = await renderMarkdown(body)
-  const stats = docStats(markdownToDoc(body))
+  const readingMinutes = Math.max(1, Math.round(body.split(/\s+/).filter(Boolean).length / 220)) // same formula as lib/content
   return (
     <div className="ed-preview">
       <div className="ed-preview__bar">
@@ -33,14 +31,16 @@ export default async function PreviewPost({ params }: { params: Promise<{ slug: 
       </div>
       <article className="ed-page">
         <p className="ed-eyebrow">
-          {fm.kind === 'article' ? 'Writing' : 'Project'} · {stats.readingMinutes} min read
+          {fm.kind === 'article' ? 'Writing' : 'Project'} · {readingMinutes} min read
         </p>
         <h1 className="ed-title ed-title--static">{fm.title}</h1>
         {fm.cover ? (
-          <figure className="prose">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={fm.cover} alt={fm.coverAlt ?? ''} />
-          </figure>
+          <div className="prose">
+            <figure>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={fm.cover} alt={fm.coverAlt ?? ''} />
+            </figure>
+          </div>
         ) : null}
         <div className="prose ed-prose">{content}</div>
       </article>

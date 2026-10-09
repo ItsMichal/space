@@ -3,7 +3,7 @@ import type { Editor } from '@tiptap/core'
 import { TextSelection } from '@tiptap/pm/state'
 import { BubbleMenu } from '@tiptap/react/menus'
 import { Redo2, Undo2 } from 'lucide-react'
-import { Fragment, type ReactNode } from 'react'
+import { Fragment, useEffect, useState, type ReactNode } from 'react'
 import { contextBars, toolbarItems } from '@/lib/editor/extensions'
 import { Divider, IconButton, useEditorTick } from './ui'
 
@@ -52,10 +52,14 @@ export function Toolbar({ editor, end }: { editor: Editor; end: ReactNode }) {
 /** Floating selection bubble: items flagged `bubble: true` in the registry. */
 export function Bubble({ editor }: { editor: Editor }) {
   useEditorTick(editor)
+  // The article scrolls inside .ed-scroll, so the bubble must track that element rather than the window.
+  const [scroller, setScroller] = useState<HTMLElement | null>(null)
+  useEffect(() => setScroller(document.querySelector<HTMLElement>('.ed-scroll')), [])
+  if (!scroller) return null
   return (
     <BubbleMenu
       editor={editor}
-      options={{ placement: 'top', offset: 10 }}
+      options={{ placement: 'top', offset: 10, strategy: 'fixed', scrollTarget: scroller }}
       shouldShow={({ editor: e, state }) =>
         e.isEditable && !state.selection.empty && !e.isActive('codeBlock') && !e.isActive('image') && state.selection instanceof TextSelection
       }

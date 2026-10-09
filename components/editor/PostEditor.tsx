@@ -2,7 +2,6 @@
 import { EditorContent, useEditor } from '@tiptap/react'
 import { ArrowLeft, Eye, Focus, PanelRight, TriangleAlert } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { PostFrontmatter } from '@/lib/content/types'
 import { slugify } from '@/lib/content/serialize'
@@ -34,8 +33,9 @@ function ago(ms: number): string {
 type Props = { post: LoadedPost; allTags: string[]; otherSlugs: string[] }
 
 export function PostEditor({ post, allTags, otherSlugs }: Props) {
-  const router = useRouter()
-  const slug = post.id
+  const [slug, setSlug] = useState(post.id)
+  const slugRef = useRef(slug)
+  slugRef.current = slug
 
   const [fm, setFm] = useState<PostFrontmatter>(post.frontmatter)
   const [status, setStatus] = useState<Status>('idle')
@@ -58,30 +58,36 @@ export function PostEditor({ post, allTags, otherSlugs }: Props) {
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const statsTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const titleRef = useRef<HTMLTextAreaElement>(null)
+  const panelRef = useRef<HTMLElement>(null)
   const autoSlugRef = useRef(post.frontmatter.slug === slugify(post.frontmatter.title) || /^untitled(-\d+)?$/.test(post.frontmatter.slug))
 
   const extensions = useMemo(
     () =>
       buildTiptapExtensions({
         upload: async (file) => {
-          const res = await api.upload(slug, file)
+          const res = await api.upload(slugRef.current, file)
           uiBus.emit('toast', { message: `Saved ${Math.round(res.bytes / 1024)} KB${res.converted ? ' (optimised to webp)' : ''}` })
           return res.src
         },
       }),
-    [slug]
+    []
   )
 
   const editor = useEditor({
     extensions,
     content: useMemo(() => markdownToDoc(post.body), [post.body]),
     immediatelyRender: false,
-    editorProps: { attributes: { class: 'ed-prose prose', 'aria-label': 'Article body', spellcheck: 'true' } },
+    editorProps: { scrollThreshold: { top: 80, bottom: 240, left: 0, right: 0 }, scrollMargin: { top: 80, bottom: 240, left: 0, right: 0 }, attributes: { class: 'ed-prose prose', 'aria-label': 'Article body', spellcheck: 'true' } },
     onUpdate: ({ editor: e }) => {
       clearTimeout(statsTimer.current)
       statsTimer.current = setTimeout(() => setStats(docStats(e.getJSON())), 350)
     },
   })
+
+  // Handy for debugging in the console: window.__editor.getJSON()
+  useEffect(() => {
+    if (editor) (window as unknown as { __editor?: unknown }).__editor = editor
+  }, [editor])
 
   /* ------------------------------------------------------------------ saving */
   const save = useCallback(
@@ -97,7 +103,7 @@ export function PostEditor({ post, allTags, otherSlugs }: Props) {
       setStatus('saving')
       try {
         const body = docToMarkdown(editor.getJSON())
-        const res = await api.save(slug, { frontmatter: fmRef.current, body, baseHash: hashRef.current, force: opts.force })
+        const res = await api.save(slugRef.current, { frontmatter: fmRef.current, body, baseHash: hashRef.current, force: opts.force })
         hashRef.current = res.hash
         setSavedAt(Date.now())
         setError('')
@@ -117,7 +123,7 @@ export function PostEditor({ post, allTags, otherSlugs }: Props) {
         }
       }
     },
-    [editor, slug]
+    [editor]
   )
 
   const markDirty = useCallback(() => {
@@ -183,7 +189,7 @@ export function PostEditor({ post, allTags, otherSlugs }: Props) {
       window.removeEventListener('beforeunload', onUnload)
       window.removeEventListener('focus', onFocus)
     }
-  }, [save, slug, router])
+  }, [save, slug])
   /* -------------------------------------------------------------- actions */
   const published = !fm.draft
 
@@ -195,15 +201,40 @@ export function PostEditor({ post, allTags, otherSlugs }: Props) {
     })
   }
 
+  /** Rename the file (and its media folder) without leaving the page, so typing is never interrupted. */
   const applySlug = async (next: string) => {
+    if (!editor) return
     clearTimeout(timer.current)
-    if (savingRef.current) await new Promise((r) => setTimeout(r, 400))
-    await save()
+    while (savingRef.current) await new Promise((r) => setTimeout(r, 60)) // never rename mid-save
+    savingRef.current = true
+    const old = slugRef.current
     try {
-      await api.rename(slug, next)
-      router.replace(`/write/${next}`)
+      const body = docToMarkdown(editor.getJSON())
+      const saved = await api.save(old, { frontmatter: fmRef.current, body, baseHash: hashRef.current })
+      hashRef.current = saved.hash
+      const renamed = await api.rename(old, next)
+      hashRef.current = renamed.hash
+      // Media paths moved with the folder: point the open document and cover at the new location.
+      const tr = editor.state.tr
+      editor.state.doc.descendants((node, pos) => {
+        const src = node.type.name === 'image' ? (node.attrs.src as string | undefined) : undefined
+        if (src?.startsWith(`/media/${old}/`)) tr.setNodeMarkup(pos, undefined, { ...node.attrs, src: src.replace(`/media/${old}/`, `/media/${next}/`) })
+      })
+      if (tr.docChanged) editor.view.dispatch(tr.setMeta('addToHistory', false))
+      fmRef.current = renamed.frontmatter
+      setFm(renamed.frontmatter)
+      slugRef.current = next
+      setSlug(next)
+      window.history.replaceState(null, '', `/write/${next}`)
+      uiBus.emit('toast', { message: `Slug is now ${next}` })
     } catch (err) {
       uiBus.emit('toast', { message: err instanceof Error ? err.message : 'Rename failed', kind: 'error' })
+    } finally {
+      savingRef.current = false
+      if (queuedRef.current) {
+        queuedRef.current = false
+        timer.current = setTimeout(() => void save(), AUTOSAVE_MS)
+      }
     }
   }
 
@@ -302,10 +333,10 @@ export function PostEditor({ post, allTags, otherSlugs }: Props) {
         </main>
 
         {panelOpen ? (
-          <aside className="ed-panel" aria-label="Post settings">
+          <aside ref={panelRef} className="ed-panel" aria-label="Post settings">
             <div className="ed-tabs" role="tablist">
               {(['post', 'seo'] as const).map((t) => (
-                <button key={t} type="button" role="tab" aria-selected={tab === t} className={tab === t ? 'is-on' : ''} onClick={() => setTab(t)}>
+                <button key={t} type="button" role="tab" aria-selected={tab === t} className={tab === t ? 'is-on' : ''} onClick={() => (setTab(t), panelRef.current?.scrollTo({ top: 0 }))}>
                   {t === 'post' ? 'Post' : 'SEO'}
                 </button>
               ))}
