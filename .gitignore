@@ -38,4 +38,7 @@ next-env.d.ts
 .wrangler
 .dev.vars
 cloudflare-env.d.ts
+
+# writing tool trash (deleted posts are moved here, never hard-deleted)
+/content/.trash/
 .claude/worktrees/

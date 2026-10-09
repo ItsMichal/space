@@ -17,14 +17,25 @@ import { Embed } from '@/components/mdx/Embed'
 import { Callout } from '@/components/mdx/Callout'
 
 // Turn directive nodes into hast elements with custom tag names that we map to components.
+// Only leaf (`::name`) and container (`:::name`) directives are components; inline `:name` text
+// directives are not part of the content format and mostly appear by accident ("10:30"), so they
+// are turned back into the literal text they came from.
+type DirectiveNode = {
+  type: string
+  name?: string
+  attributes?: Record<string, string>
+  data?: Record<string, unknown>
+  children?: unknown[]
+}
 function remarkDirectiveToHast() {
   return (tree: Root) => {
-    visit(tree as never, (node: { type: string; name?: string; attributes?: Record<string, string>; data?: Record<string, unknown> }) => {
-      if (
-        node.type === 'leafDirective' ||
-        node.type === 'containerDirective' ||
-        node.type === 'textDirective'
-      ) {
+    visit(tree as never, 'textDirective', (node: DirectiveNode, index?: number, parent?: { children: unknown[] }) => {
+      if (!parent || index === undefined) return
+      parent.children.splice(index, 1, { type: 'text', value: `:${node.name}` }, ...(node.children ?? []))
+      return index + 1
+    })
+    visit(tree as never, (node: DirectiveNode) => {
+      if (node.type === 'leafDirective' || node.type === 'containerDirective') {
         const data = node.data || (node.data = {})
         data.hName = `mdx-${node.name}`
         data.hProperties = { ...(node.attributes || {}) }
