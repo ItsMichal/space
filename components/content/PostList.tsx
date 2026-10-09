@@ -7,8 +7,15 @@ export function PostList({ posts, base }: { posts: Post[]; base: string }) {
     <ul>
       {posts.map((p) => (
         <li key={p.slug}>
-          <Link href={`${base}/${p.slug}`}>{p.title}</Link>
-          <p>{p.description}</p>
+          <article>
+            <h2>
+              <Link href={`${base}/${p.slug}`}>{p.title}</Link>
+            </h2>
+            <p>{p.description}</p>
+            <p className="meta">
+              <time dateTime={p.date}>{p.date}</time>
+            </p>
+          </article>
         </li>
       ))}
     </ul>

@@ -2,12 +2,11 @@ import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {
-    remotePatterns: [
-      { protocol: 'https', hostname: '**.unsplash.com' },
-      { protocol: 'https', hostname: '**.notion.so' },
-      { protocol: 'https', hostname: '**.amazonaws.com' },
-    ],
+  async redirects() {
+    return [
+      // legacy slug from the old content/projects.ts list
+      { source: '/projects/barcode-game', destination: '/projects/office-wizards-barcode-game', permanent: true },
+    ]
   },
 }
 
