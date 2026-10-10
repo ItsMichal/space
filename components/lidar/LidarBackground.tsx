@@ -7,6 +7,7 @@ import { drawTrails } from './trails'
 import { createGLRenderer } from './renderer-gl'
 import { create2DRenderer } from './renderer-2d'
 import type { FieldColors, Renderer } from './field'
+import { notifyLidarFrame, registerLidarSource } from './tap'
 
 /**
  * Fixed full-viewport lidar field behind the page, plus visitor trails.
@@ -57,8 +58,10 @@ export default function LidarBackground() {
 
     const running = () => !document.hidden && onScreen && !disposed
 
-    const frame = (scan: boolean) =>
+    const frame = (scan: boolean) => {
       renderer!.draw({ t, scan, px, py, scrollY: window.scrollY, colors })
+      notifyLidarFrame() // glass engine may sample the canvas in this task (see ./tap)
+    }
 
     const drawTrailLayer = (now: number) => {
       tctx.setTransform(dpr, 0, 0, dpr, 0, 0)
@@ -164,10 +167,12 @@ export default function LidarBackground() {
       attributeFilter: ['class', 'data-theme', 'data-color-scheme', 'style'],
     })
 
+    registerLidarSource({ canvas: fieldCanvas, redraw: () => frame(!reduce) })
     resize()
     start()
 
     return () => {
+      registerLidarSource(null)
       disposed = true
       stop()
       onTrailActivity(null)
