@@ -48,14 +48,3 @@ Overall, it turned out to be a huge hit as an in-person attraction, which was th
 
 ::youtube{id="Gv-xMeMM8m4"}
 
-## Progress Blog
-
-I maintained a roughly maintained progress blog for this project. Please check it out
-
-- [First Steps - Week 1→2 Recap](/writing/mountaintop-first-steps-week-1-2-recap)
-- [Stay on Beat - Week 2→3 Recap](/writing/mountaintop-stay-on-beat-week-2-3-recap)
-- [Week 3→4 - Integration](/writing/mountaintop-week-3-4-integration)
-- [Week 4→5 - Deluxe Combos](/writing/mountaintop-week-4-5-deluxe-combos)
-- [Week 5→6 - SPAAAAACE!](/writing/mountaintop-week-5-6-spaaaaace)
-- [Danny Rankin - Mentor Extraordinaire](/writing/mountaintop-danny-rankin-mentor-extraordinaire)
-- [Week 6→7 - Rest Week](/writing/mountaintop-week-6-7-rest-week)

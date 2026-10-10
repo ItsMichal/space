@@ -49,8 +49,10 @@ function Row({ post, href }: { post: Post; href: string }) {
         {year(post)}
         <span className="wrow__mtags">{tags.slice(0, 2).map((t) => ` · ${t}`)}</span>
       </p>
-      <h3 className="wrow__title">{post.title}</h3>
-      <p className="wrow__desc">{post.description}</p>
+      <div className="wrow__body">
+        <h3 className="wrow__title">{post.title}</h3>
+        <p className="wrow__desc">{post.description}</p>
+      </div>
       <p className="wrow__tags">{tags.join(' · ')}</p>
       {post.cover ? (
         <div className="wrow__thumb">

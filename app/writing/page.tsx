@@ -28,7 +28,7 @@ export default function Page() {
         <ProjectList posts={posts} base="/writing" />
       ) : (
         <div className="max-w-[56ch] border-t border-hairline pt-space-8">
-          <p className="font-serif text-[21px] leading-[1.45]">Nothing here yet. The first essays are in the drafts folder.</p>
+          <p className="font-serif text-[21px] leading-[1.45]">Nothing here yet. The first essays are still being written.</p>
           <p className="mt-space-4 text-ink-muted">
             In the meantime, the longest thing I&rsquo;ve written is the build diary for{' '}
             {logs.length ? (
