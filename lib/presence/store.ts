@@ -1,4 +1,4 @@
-// Client-side presence store: a module singleton shared by the lidar canvas
+// Client-side presence store: a module singleton shared by the globe
 // (imperative, per-frame reads of trails) and React (via hooks/usePresence.ts).
 // Only membership changes notify React; pointer moves never do.
 

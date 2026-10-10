@@ -48,8 +48,7 @@ html {
 
 body {
   margin: 0;
-  /* Paper lives on <html> only: the lidar field is a fixed z-index:-1 layer in <body>, and an
-     opaque body background would paint over it. */
+  /* Paper and its grain live on <html>; an opaque body background would hide the grain. */
   background: transparent;
   color: var(--ink);
   font-family: var(--font-sans);
@@ -1172,9 +1171,4 @@ body {
       line-height: 30px;
     }
   }
-}
-
-/* Dim the lidar field behind long-form reading (canvas lives in <body>, so set it there). */
-body:has(article[data-post]) {
-  --lidar-opacity: 0.4;
 }

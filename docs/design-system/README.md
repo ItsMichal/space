@@ -1,4 +1,4 @@
-Paper is the visual system for michal.us: printed matter in a northern landscape. A birch-paper page, basalt ink, moss for the one living accent, a quiet lidar scan of Icelandic terrain behind it, and liquid glass reserved for the few things that float. Everyone reading at the same time is present — as a trail in the scan and a point on a small dotted globe — but never announced.
+Paper is the visual system for michal.us: printed matter in a northern landscape. A birch-paper page, basalt ink, moss for the one living accent, a botanical illustration and soft paper texture behind it (to be specified), and liquid glass reserved for the few things that float. Everyone reading at the same time is present — as a little ghost on a small globe — but never announced.
 
 ## Principles
 
@@ -55,11 +55,10 @@ A thin convex lens: refraction at the rim (squircle profile, Snell n = 1.5, slig
 - UI controls keep clean geometry for usability: pills, `radius-md` image corners, 1px hairlines, 44px targets.
 - Content is flat on paper: no cards, no drop shadows (glass's `shadow-glass` is the one exception).
 
-## Lidar field, globe & presence
+## Background, globe & presence
 
-- **Field:** a full-viewport point cloud of Icelandic terrain — basalt plateaus, fjord ridges, a flat glacier band — in `dot` and `ink-faint`, with a moss scanline every ~6s and, rarely, a faint glacier-colored aurora band far off. Calm and sparse; drops to 40% behind articles.
+- **Background:** the lidar field and pointer trails are scrapped. The replacement is a real public-domain botanical illustration with a soft paper/watercolor texture; an art-direction agent will specify it (`mood.md`). Until then the page is plain paper with grain.
 - **Globe:** a quiet globe where a Mii-style toy avatar of Michał greets visitors. Visitors appear as little ghosts in their `presence-*` color (city-level from Cloudflare; never IPs). One serif `meta` caption at most. Presence is felt, never counted: no live counters, no "N here now", no names, no chat, and no presence chip in the nav.
-- **Trails:** each visitor's pointer may leave a short fading trail in their color.
 - Still frames under `prefers-reduced-motion`. A fuller art direction (`mood.md`) will supersede the details here.
 
 ## Imagery
@@ -84,7 +83,7 @@ CSS tokens (defined in `app/globals.css`):
 | `--motion-fast` | 240ms — hover color, focus, small state changes |
 | `--motion-slow` | 900ms — reveals, image hover settle |
 | `--motion-slower` | 1400ms — featured imagery |
-| `--motion-ambient` | 8–20s loops (lidar scanline, aurora) |
+| `--motion-ambient` | 8–20s loops (slow illustration drift, if any) |
 | `--ease-out-soft` | `cubic-bezier(0.22, 1, 0.36, 1)` |
 | `--ease-in-out-soft` | `cubic-bezier(0.45, 0, 0.15, 1)` |
 

@@ -2,7 +2,6 @@ import './globals.css'
 import type { Metadata, Viewport } from 'next'
 import { IBM_Plex_Mono, Newsreader, Schibsted_Grotesk } from 'next/font/google'
 import React, { StrictMode } from 'react'
-import LidarBackground from '@/components/lidar/LidarBackground'
 import { NavBar } from '@/components/site/NavBar'
 import { ScrollReveal } from '@/components/site/ScrollReveal'
 import { Footer } from '@/components/site/Footer'
@@ -71,7 +70,6 @@ export default function RootLayout({
           <a href="#main" className="skip-link">
             Skip to content
           </a>
-          <LidarBackground />
           <NavBar />
           <ScrollReveal />
           <main id="main" className="relative flex-1">
