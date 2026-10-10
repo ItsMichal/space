@@ -16,7 +16,8 @@ const LAYERS = [
 
 const PAR = 0.82
 const SCALE = 0.55 // render resolution in canvas px per CSS px (content is soft; the page grain stays crisp)
-const QUIET_SELECTOR = 'main :is(h1,h2,h3,.work-feat__cap,.wrow,.name-intro,section p,section ul), footer'
+// Tight text blocks (measured with Range, so a full-width <p> only claims the width of its actual lines).
+const QUIET_SELECTOR = 'main :is(h1,h2,h3,p,li,.work-feat__cta), footer :is(p,a)'
 
 type Props = { paths?: string[] }
 
@@ -38,7 +39,7 @@ export function Backdrop({ paths = ['/'] }: Props) {
     const q = new URLSearchParams(location.search).get('backdrop')
     if (q === 'off' || q === 'css') return
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
-    const gl = canvas.getContext('webgl2', { alpha: false, antialias: false, depth: false, stencil: false, powerPreference: 'low-power' })
+    const gl = canvas.getContext('webgl2', { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, powerPreference: 'low-power' })
     if (!gl) return
 
     const compile = (type: number, src: string) => {
@@ -103,7 +104,7 @@ export function Backdrop({ paths = ['/'] }: Props) {
     const sr = parseInt(sky.slice(1, 3), 16) / 255
     const sg = parseInt(sky.slice(3, 5), 16) / 255
     const sb = parseInt(sky.slice(5, 7), 16) / 255
-    const skyTint: [number, number, number] = [0.9 + sr * 0.06, 0.94 + sg * 0.04, 0.97 + sb * 0.02]
+    const skyTint: [number, number, number] = [0.7 + sr * 0.25, 0.86 + sg * 0.12, 0.95 + sb * 0.05]
 
     // Anchors: [x fraction, viewport y at anchor, anchor scroll]. Recomputed on resize and when the page grows.
     let anchors: [number, number, number, number][] = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
@@ -133,6 +134,7 @@ export function Backdrop({ paths = ['/'] }: Props) {
     let t0 = performance.now()
     let ro: ResizeObserver | null = null
     const quiet = new Float32Array(32 * 4)
+    const range = document.createRange()
 
     const draw = (now: number) => {
       raf = 0
@@ -156,12 +158,30 @@ export function Backdrop({ paths = ['/'] }: Props) {
       let n = 0
       const els = document.querySelectorAll(QUIET_SELECTOR)
       for (let i = 0; i < els.length && n < 32; i++) {
-        const r = els[i].getBoundingClientRect()
-        if (r.bottom < -80 || r.top > vh + 80 || r.width < 4) continue
-        quiet[n * 4] = r.left - 8
-        quiet[n * 4 + 1] = r.top - 6
-        quiet[n * 4 + 2] = r.right + 8
-        quiet[n * 4 + 3] = r.bottom + 6
+        const box = els[i].getBoundingClientRect()
+        if (box.bottom < -80 || box.top > vh + 80 || box.width < 4) continue
+        // Union of the element's actual text line boxes: tight even when the element itself is full width.
+        let x0 = Infinity
+        let y0 = Infinity
+        let x1 = -Infinity
+        let y1 = -Infinity
+        const walker = document.createTreeWalker(els[i], NodeFilter.SHOW_TEXT)
+        for (let tn = walker.nextNode(); tn; tn = walker.nextNode()) {
+          if (!tn.textContent?.trim()) continue
+          range.selectNodeContents(tn)
+          const rs = range.getClientRects()
+          for (let k = 0; k < rs.length; k++) {
+            x0 = Math.min(x0, rs[k].left)
+            y0 = Math.min(y0, rs[k].top)
+            x1 = Math.max(x1, rs[k].right)
+            y1 = Math.max(y1, rs[k].bottom)
+          }
+        }
+        if (x1 <= x0) continue
+        quiet[n * 4] = x0 - 8
+        quiet[n * 4 + 1] = y0 - 6
+        quiet[n * 4 + 2] = x1 + 8
+        quiet[n * 4 + 3] = y1 + 6
         n++
       }
 
@@ -177,7 +197,7 @@ export function Backdrop({ paths = ['/'] }: Props) {
       gl.uniform3f(u.sky, skyTint[0], skyTint[1], skyTint[2])
       gl.uniform3f(u.key, LAYERS[0].key, LAYERS[1].key, LAYERS[2].key)
       LAYERS.forEach((L, i) => gl.uniform4f(u.c[i], L.crop[0], L.crop[1], L.crop[2], L.crop[3]))
-      gl.uniform1f(u.debug, S.debugZones ? 1 : 0)
+      gl.uniform1f(u.debug, q === 'raw' ? 2 : S.debugZones ? 1 : 0)
       gl.uniform1i(u.qn, n)
       gl.uniform4fv(u.q, quiet)
       for (let i = 0; i < 3; i++) {

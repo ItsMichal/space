@@ -1,6 +1,6 @@
 // Botanical backdrop. Original GLSL; techniques credited in docs/shaders/research.md.
-// The canvas is composited with CSS `mix-blend-mode: multiply` over the paper, so the shader outputs a "transmission"
-// colour (white = nothing). Blooms therefore dissolve into the paper instead of lying on it.
+// Premultiplied-alpha layers over the paper: blooms are alpha-composited with soft organic edges, so they dissolve into
+// the paper (and its grain) instead of lying on it.
 
 export const BACKDROP_VERT = /* glsl */ `#version 300 es
 void main() {
@@ -53,13 +53,13 @@ float fbm(vec2 p) {
   return 0.55 * vnoise(p) + 0.3 * vnoise(p * 2.1 + 5.2) + 0.15 * vnoise(p * 4.3 + 1.7);
 }
 
-// One bloom layer. Returns the transmission multiplier (1 = nothing).
-vec3 bloom(sampler2D t, vec4 A, vec4 crop, float key, float asp, float idx, vec2 frag, float quiet) {
+// One bloom layer. Returns straight rgb in .rgb and coverage in .a.
+vec4 bloom(sampler2D t, vec4 A, vec4 crop, float key, float asp, float idx, vec2 frag, float quiet) {
   float w = A.w * mix(0.8, 1.25, clamp(uSet.z * 0.5, 0.0, 1.0));
   float h = w * asp;
   vec2 c = vec2(A.x, A.y + (A.z - uScroll) * uPar);
   vec2 uv = (frag - c) / vec2(w, h) + 0.5;
-  if (uv.x < -0.2 || uv.x > 1.2 || uv.y < -0.2 || uv.y > 1.2) return vec3(1.0);
+  if (uv.x < -0.2 || uv.x > 1.2 || uv.y < -0.2 || uv.y > 1.2) return vec4(0.0);
 
   // Wind: bend grows away from the base (bottom of the frame), slow gust + small flutter + drifting noise.
   float wgt = pow(clamp(1.0 - uv.y, 0.0, 1.0), 1.3);
@@ -71,8 +71,8 @@ vec3 bloom(sampler2D t, vec4 A, vec4 crop, float key, float asp, float idx, vec2
   // Depth of field: golden-angle ring taps on top of a blurred mip level; wider toward the frame edge.
   vec2 q0 = uv - 0.5;
   float edge = clamp(length(q0 * 2.0), 0.0, 1.0);
-  float rad = (0.016 + 0.03 * edge) * uSet.y;
-  float lod = 2.6 + 2.2 * uSet.y;
+  float rad = (0.007 + 0.02 * edge) * uSet.y;
+  float lod = 0.7 + 1.9 * uSet.y;
   vec3 acc = vec3(0.0);
   for (int i = 0; i < 7; i++) {
     float a = float(i) * 2.39996;
@@ -93,9 +93,9 @@ vec3 bloom(sampler2D t, vec4 A, vec4 crop, float key, float asp, float idx, vec2
   a *= mix(1.0, smoothstep(0.1, 0.38, sat), key);
   col = mix(vec3(l), col, 0.85);
   // Low contrast wash: pull toward light, so the bloom reads as air and colour, never as an object.
-  col = mix(vec3(1.0), col, 0.78);
-  float k = a * 0.5 * uSet.x * quiet;
-  return mix(vec3(1.0), col, k);
+  col = mix(vec3(dot(col, vec3(0.299, 0.587, 0.114))), col, 1.18);
+  col = mix(col, vec3(1.0), 0.2);
+  return vec4(col, a * 0.55 * uSet.x * quiet);
 }
 
 void main() {
@@ -110,27 +110,33 @@ void main() {
     vec2 hs = (q.zw - q.xy) * 0.5;
     vec2 d = abs(frag - c) - hs;
     float sd = length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
-    zone = max(zone, 1.0 - smoothstep(0.0, 64.0, sd));
+    float zz = 1.0 - smoothstep(0.0, 110.0, sd);
+    zone = max(zone, zz * zz * (3.0 - 2.0 * zz));
   }
-  float quiet = 1.0 - 0.95 * zone;
+  float quiet = uDebug > 1.5 ? 1.0 : 1.0 - 0.92 * zone;
 
   // Sky and sun: a very faint morning wash at the top of the page, heavier toward the far (right) edge.
   float docY = frag.y + uScroll;
   float top = 1.0 - smoothstep(0.0, 1100.0, docY);
   float side = smoothstep(0.1, 1.0, frag.x / uView.x);
-  vec3 col = mix(vec3(1.0), uSky, 0.55 * top * (0.35 + 0.65 * side) * uSet.x);
+  vec4 acc = vec4(uSky, 0.26 * top * (0.3 + 0.7 * side) * uSet.x);
   float sun = exp(-pow(length((frag - vec2(uView.x * 0.92, 140.0 - uScroll * 0.5)) / vec2(uView.x * 0.55, 420.0)), 2.0));
-  col *= mix(vec3(1.0), vec3(1.0, 0.965, 0.9), sun * 0.6 * uSet.x);
+  acc = vec4(mix(acc.rgb, vec3(1.0, 0.93, 0.78), sun * 0.5), acc.a + sun * 0.12 * uSet.x);
 
-  col *= bloom(uT0, uA0, uC0, uKey.x, uAsp.x, 0.0, frag, quiet);
-  col *= bloom(uT1, uA1, uC1, uKey.y, uAsp.y, 1.0, frag, quiet);
-  col *= bloom(uT2, uA2, uC2, uKey.z, uAsp2, 2.0, frag, quiet);
+  vec4 b0 = bloom(uT0, uA0, uC0, uKey.x, uAsp.x, 0.0, frag, quiet);
+  vec4 b1 = bloom(uT1, uA1, uC1, uKey.y, uAsp.y, 1.0, frag, quiet);
+  vec4 b2 = bloom(uT2, uA2, uC2, uKey.z, uAsp2, 2.0, frag, quiet);
+  acc = vec4(mix(acc.rgb, b0.rgb, b0.a), acc.a + b0.a * (1.0 - acc.a));
+  acc = vec4(mix(acc.rgb, b1.rgb, b1.a), acc.a + b1.a * (1.0 - acc.a));
+  acc = vec4(mix(acc.rgb, b2.rgb, b2.a), acc.a + b2.a * (1.0 - acc.a));
+  vec3 col = acc.rgb;
+  float alpha = acc.a;
 
-  if (uDebug > 0.5) col = mix(col, col * vec3(1.0, 0.8, 0.8), zone * 0.8);
+  if (uDebug > 0.5) { col = mix(col, vec3(1.0, 0.5, 0.5), zone * 0.5); alpha = max(alpha, zone * 0.5); }
 
   // Anti-banding dither (interleaved gradient noise).
   float ign = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
   col += (ign - 0.5) / 255.0;
-  o = vec4(col, 1.0);
+  o = vec4(col * alpha, alpha);
 }
 `

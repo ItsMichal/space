@@ -1216,7 +1216,6 @@ body {
   height: 100lvh;
   z-index: -1;
   pointer-events: none;
-  mix-blend-mode: multiply;
   transition: opacity 1200ms var(--ease-in-out-soft);
 }
 .backdrop-css {
