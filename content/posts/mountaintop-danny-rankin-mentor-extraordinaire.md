@@ -6,7 +6,10 @@ description: "Playtest feedback from mentor Danny Rankin that shaped Project Mou
 date: 2023-02-23
 tags: ["Project Mountaintop"]
 cover: /media/mountaintop-danny-rankin-mentor-extraordinaire/cover.jpg
-coverAlt: "Danny Rankin - Mentor Extraordinaire cover image"
+coverAlt: "Abstract gradient fading from blue through red to pink"
+parent: project-mountaintop
+series: "Progress log"
+order: 6
 ---
 
 :::callout{type="warning"}

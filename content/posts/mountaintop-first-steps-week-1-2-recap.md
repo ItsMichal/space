@@ -7,7 +7,10 @@ date: 2023-01-19
 updated: 2023-02-02
 tags: ["Project Mountaintop", "Rhythm"]
 cover: /media/mountaintop-first-steps-week-1-2-recap/cover.webp
-coverAlt: "First Steps - Week 1→2 Recap cover image"
+coverAlt: "A DJ's hand on a mixing deck lit in red and purple"
+parent: project-mountaintop
+series: "Progress log"
+order: 1
 ---
 
 ## How hard can (re)creating a rhythm game be?

@@ -7,7 +7,10 @@ date: 2023-02-02
 updated: 2023-02-09
 tags: ["Project Mountaintop"]
 cover: /media/mountaintop-week-3-4-integration/cover.jpg
-coverAlt: "Week 3→4 - Integration cover image"
+coverAlt: "An astronaut on a spacewalk beside a solar array"
+parent: project-mountaintop
+series: "Progress log"
+order: 3
 ---
 
 ![Laptop running the Unity game next to an Arduino prototype wired to a breadboard](/media/mountaintop-week-3-4-integration/screenshot-2023-02-09-at-1-08-40-am-a310b5.webp)

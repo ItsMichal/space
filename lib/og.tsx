@@ -29,7 +29,7 @@ const MUTED = '#525c4f'
 export function renderPostOg(post: Post) {
   const len = post.title.length
   const fontSize = len > 70 ? 56 : len > 48 ? 68 : len > 28 ? 80 : 96
-  const eyebrow = `${SECTION[post.kind].eyebrow.toUpperCase()}  /  ${post.date.slice(0, 4)}`
+  const eyebrow = `${post.parent ? (post.series ?? 'Project') : SECTION[post.kind].eyebrow}  ·  ${post.date.slice(0, 4)}`
   return new ImageResponse(
     (
       <div
@@ -45,7 +45,7 @@ export function renderPostOg(post: Post) {
           padding: '72px 80px',
         }}
       >
-        <div style={{ display: 'flex', fontFamily: 'IBM Plex Mono', fontSize: 26, letterSpacing: 4, color: MUTED }}>
+        <div style={{ display: 'flex', fontFamily: 'IBM Plex Mono', fontSize: 26, color: MUTED }}>
           {eyebrow}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>

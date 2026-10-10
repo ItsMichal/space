@@ -35,6 +35,42 @@ describe('frontmatter serialisation', () => {
   })
 })
 
+describe('showcase + hierarchy fields', () => {
+  const rich: PostFrontmatter = {
+    ...base,
+    kind: 'project',
+    draft: undefined,
+    cover: '/media/x/cover.webp',
+    coverAlt: 'A thing',
+    coverFocus: '50% 30%',
+    featured: true,
+    parent: 'big-project',
+    series: 'Progress log',
+    order: 3,
+    role: 'Lead developer: "all of it"',
+    links: [{ label: 'Live: site', href: 'https://example.com/?a=1&b=2' }],
+    gallery: [
+      { src: '/media/x/a.webp', alt: 'Alt, with: punctuation' },
+      { src: '/media/x/b.png', alt: 'B', caption: 'Caption "quoted"' },
+    ],
+  }
+  it('round-trips every optional field', () => {
+    const { frontmatter } = parsePost(serializePost(rich, 'Body'), 'x')
+    expect(frontmatter).toEqual(rich)
+  })
+  it('is stable: serialising twice yields identical text', () => {
+    const once = serializePost(rich, 'Body')
+    const { frontmatter, body } = parsePost(once, 'x')
+    expect(serializePost(frontmatter, body)).toBe(once)
+  })
+  it('drops malformed links and gallery entries instead of throwing', () => {
+    const raw = '---\ntitle: T\nlinks:\n  - label: only label\n  - nope\ngallery:\n  - alt: no src\n---\n\nx\n'
+    const { frontmatter } = parsePost(raw, 't')
+    expect(frontmatter.links).toBeUndefined()
+    expect(frontmatter.gallery).toBeUndefined()
+  })
+})
+
 describe('slugify', () => {
   it('produces url-safe slugs', () => {
     expect(slugify('Hello, Wörld & Friends!')).toBe('hello-world-and-friends')

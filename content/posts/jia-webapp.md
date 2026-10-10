@@ -7,8 +7,12 @@ date: 2023-12-09
 updated: 2023-12-11
 tags: ["TypeScript", "AWS", "AI/ML"]
 cover: /media/jia-webapp/cover.webp
-coverAlt: "JIA Webapp cover image"
-priority: 4
+coverAlt: "JIA student worksheet beside an AI chat panel, with a confirm dialog and a new-message notice"
+priority: 6
+role: "Lead developer, SHINE Lab"
+links:
+  - label: "NSF AI Institute for Student-AI Teaming"
+    href: "https://www.colorado.edu/research/ai-institute/"
 ---
 
 :::callout{type="note"}
@@ -25,6 +29,6 @@ The JIA Webapp is the spear of this solution, and is currently being architected
 
 ### Photos
 
-![Early Prototype of One-Question-At-A-Time with Confirm Dialog](/media/jia-webapp/screenshot-2023-11-16-at-10-48-34-am-dc9e95.webp "Early Prototype of One-Question-At-A-Time with Confirm Dialog")
+![JIA student worksheet beside an AI chat panel, with a confirm dialog before submitting an answer](/media/jia-webapp/screenshot-2023-11-16-at-10-48-34-am-dc9e95.webp "Early Prototype of One-Question-At-A-Time with Confirm Dialog")
 
-![Early Prototype of One-Question-At-A-Time](/media/jia-webapp/screenshot-2023-11-16-at-1-57-57-am-86b259.webp "Early Prototype of One-Question-At-A-Time")
+![JIA student worksheet with a numbered question stepper and an open chat with the AI partner](/media/jia-webapp/screenshot-2023-11-16-at-1-57-57-am-86b259.webp "Early Prototype of One-Question-At-A-Time")

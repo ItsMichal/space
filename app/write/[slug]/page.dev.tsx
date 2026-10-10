@@ -13,7 +13,10 @@ export default async function EditPost({ params }: { params: Promise<{ slug: str
     const otherSlugs = listPosts()
       .filter((p) => p.id !== slug)
       .flatMap((p) => [p.id, p.slug])
-    return <PostEditor key={post.id} post={post} allTags={allTags()} otherSlugs={otherSlugs} />
+    const projects = listPosts()
+      .filter((p) => p.kind === 'project' && p.id !== slug)
+      .map((p) => ({ slug: p.slug, title: p.title }))
+    return <PostEditor key={post.id} post={post} allTags={allTags()} otherSlugs={otherSlugs} projects={projects} />
   } catch (err) {
     if (err instanceof HttpError && err.status === 404) notFound()
     throw err

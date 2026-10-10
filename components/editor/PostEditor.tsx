@@ -30,9 +30,9 @@ function ago(ms: number): string {
   return `${Math.floor(s / 3600)}h ago`
 }
 
-type Props = { post: LoadedPost; allTags: string[]; otherSlugs: string[] }
+type Props = { post: LoadedPost; allTags: string[]; otherSlugs: string[]; projects: { slug: string; title: string }[] }
 
-export function PostEditor({ post, allTags, otherSlugs }: Props) {
+export function PostEditor({ post, allTags, otherSlugs, projects }: Props) {
   const [slug, setSlug] = useState(post.id)
   const slugRef = useRef(slug)
   slugRef.current = slug
@@ -238,7 +238,7 @@ export function PostEditor({ post, allTags, otherSlugs }: Props) {
     }
   }
 
-  const livePath = `${fm.kind === 'article' ? '/writing' : '/projects'}/${slug}`
+  const livePath = fm.parent ? `/projects/${fm.parent}/${slug}` : `${fm.kind === 'article' ? '/writing' : '/projects'}/${slug}`
   const preview = async () => {
     await save()
     window.open(published ? livePath : `/write/${slug}/preview`, '_blank', 'noopener')
@@ -342,7 +342,7 @@ export function PostEditor({ post, allTags, otherSlugs }: Props) {
               ))}
             </div>
             {tab === 'post' ? (
-              <PostPanel key={slug} slug={slug} fm={fm} onChange={update} allTags={allTags} otherSlugs={otherSlugs} onApplySlug={(s) => void applySlug(s)} />
+              <PostPanel key={slug} slug={slug} fm={fm} onChange={update} allTags={allTags} otherSlugs={otherSlugs} projects={projects} onApplySlug={(s) => void applySlug(s)} />
             ) : (
               <SeoPanel fm={fm} stats={stats} />
             )}

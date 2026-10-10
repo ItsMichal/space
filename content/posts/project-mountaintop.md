@@ -6,8 +6,30 @@ description: "A rhythm game revolving around the concept of hiking!"
 date: 2023-12-09
 tags: ["Unity", "Arduino", "Game Dev", "C#"]
 cover: /media/project-mountaintop/cover.webp
-coverAlt: "Project Mountaintop cover image"
-priority: 2
+coverAlt: "Project Mountaintop title screen on a monitor, with a laptop running the game in front of it"
+coverFocus: "50% 30%"
+priority: 7
+featured: true
+role: "Game developer, UI/UX and music"
+links:
+  - label: "Watch the gameplay video"
+    href: "https://www.youtube.com/watch?v=Gv-xMeMM8m4"
+gallery:
+  - src: /media/mountaintop-week-4-5-deluxe-combos/screenshot-2023-02-15-at-2-50-18-pm-7b966d.png
+    alt: "Project Mountaintop gameplay with combo and score UI"
+    caption: "Combos and scoring, February 2023"
+  - src: /media/mountaintop-week-5-6-spaaaaace/screenshot-2023-02-23-at-1-20-16-am-376f5f.webp
+    alt: "An astronaut running over Earth with score, hit tallies and a combo counter"
+    caption: "The space-themed level"
+  - src: /media/mountaintop-week-3-4-integration/screenshot-2023-02-09-at-1-08-40-am-a310b5.webp
+    alt: "Laptop running the Unity game next to an Arduino prototype wired to a breadboard"
+    caption: "Arduino controller prototype next to the Unity build"
+  - src: /media/mountaintop-week-5-6-spaaaaace/screenshot-2023-02-23-at-12-32-47-am-6e307b.webp
+    alt: "Low-poly character rigged in Blender, holding two hiking poles in a T-pose"
+    caption: "The hiker rig in Blender"
+  - src: /media/mountaintop-first-steps-week-1-2-recap/488238f2-2c68-45eb-bb49-d11639b9a1d7-795fcc.webp
+    alt: "Hand-drawn sketch of a hiker running past ghosts toward a hit guide"
+    caption: "Week one concept sketch"
 ---
 
 ## Project Mountaintop

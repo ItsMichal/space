@@ -15,6 +15,8 @@ import type { Root } from 'hast'
 import { YouTube } from '@/components/mdx/YouTube'
 import { Embed } from '@/components/mdx/Embed'
 import { Callout } from '@/components/mdx/Callout'
+import { Picture } from '@/components/media/Picture'
+import { Zoomable } from '@/components/media/Zoomable'
 
 // Turn directive nodes into hast elements with custom tag names that we map to components.
 // Only leaf (`::name`) and container (`:::name`) directives are components; inline `:name` text
@@ -65,10 +67,15 @@ const components = {
   'mdx-callout': (p: Props & { children?: ReactNode }) => <Callout type={(p.type as string) ?? 'note'}>{p.children}</Callout>,
   img: (p: Props) => {
     const { src, alt, title } = p as { src?: string; alt?: string; title?: string }
+    if (!src) return null
+    const sizes = '(min-width: 768px) 720px, calc(100vw - 32px)'
     return (
       <figure>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt={alt ?? ''} loading="lazy" decoding="async" />
+        {src.startsWith('/media/') ? (
+          <Zoomable src={src} alt={alt ?? ''} sizes={sizes} caption={title} />
+        ) : (
+          <Picture src={src} alt={alt ?? ''} sizes={sizes} />
+        )}
         {title ? <figcaption>{title}</figcaption> : null}
       </figure>
     )

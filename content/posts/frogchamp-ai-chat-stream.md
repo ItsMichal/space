@@ -6,8 +6,12 @@ description: "Superpowering livestreamers chats using AI and beautiful data visu
 date: 2023-12-11
 tags: ["TypeScript", "Web", "AI/ML"]
 cover: /media/frogchamp-ai-chat-stream/cover.webp
-coverAlt: "Frogchamp cover image"
-priority: 6
+coverAlt: "Frogchamp dashboard in dark mode: a live stream beside an AI chat summary, an activity meter and a scrolling chat feed"
+priority: 8
+role: "Design and development"
+links:
+  - label: "frogchamp.co"
+    href: "https://frogchamp.co"
 ---
 
 ## Frogchamp- Superpowering Chat for Streamers

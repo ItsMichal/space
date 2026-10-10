@@ -20,7 +20,9 @@ export const SECTION: Record<PostKind, { base: string; label: string; eyebrow: s
   article: { base: '/writing', label: 'Writing', eyebrow: 'Article' },
 }
 
-export const postPath = (post: Pick<Post, 'kind' | 'slug'>) => `${SECTION[post.kind].base}/${post.slug}`
+/** Canonical path of a post: children live under their parent project. */
+export const postPath = (post: Pick<Post, 'kind' | 'slug' | 'parent'>) =>
+  post.parent ? `/projects/${post.parent}/${post.slug}` : `${SECTION[post.kind].base}/${post.slug}`
 export const postTitle = (title: string) => `${title} — ${AUTHOR_NAME}`
 
 /** Defaults the root layout can spread into its `metadata` export (RSS discovery, metadataBase, site-wide OG). */
@@ -119,9 +121,10 @@ export function postMetadata(post: Post): Metadata {
   }
 }
 
-export function postJsonLd(post: Post) {
+export function postJsonLd(post: Post, parent?: Pick<Post, 'title' | 'slug' | 'parent' | 'kind'>) {
   const url = absoluteUrl(postPath(post))
   const author = { '@type': 'Person', '@id': `${SITE_URL}/#person`, name: AUTHOR_NAME, url: SITE_URL }
+  const parentUrl = parent ? absoluteUrl(postPath(parent)) : undefined
   const common = {
     '@context': 'https://schema.org',
     '@id': `${url}#${post.kind === 'article' ? 'article' : 'work'}`,
@@ -132,7 +135,7 @@ export function postJsonLd(post: Post) {
     image: postImage(post),
     keywords: post.tags.join(', '),
     inLanguage: 'en-US',
-    isPartOf: { '@id': `${SITE_URL}/#website` },
+    isPartOf: parent ? { '@type': 'CreativeWork', '@id': `${parentUrl}#work`, name: parent.title, url: parentUrl } : { '@id': `${SITE_URL}/#website` },
     mainEntityOfPage: { '@type': 'WebPage', '@id': url },
     author,
   }
@@ -146,15 +149,19 @@ export function postJsonLd(post: Post) {
           publisher: author,
         }
       : { ...common, '@type': 'CreativeWork', name: post.title, creator: author }
-  const section = SECTION[post.kind]
-  return [
-    entity,
-    breadcrumbJsonLd([
-      { name: 'Home', path: '/' },
-      { name: section.label, path: section.base },
-      { name: post.title, path: postPath(post) },
-    ]),
-  ]
+  const crumbs = parent
+    ? [
+        { name: 'Home', path: '/' },
+        { name: 'Projects', path: '/projects' },
+        { name: parent.title, path: postPath(parent) },
+        { name: post.title, path: postPath(post) },
+      ]
+    : [
+        { name: 'Home', path: '/' },
+        { name: SECTION[post.kind].label, path: SECTION[post.kind].base },
+        { name: post.title, path: postPath(post) },
+      ]
+  return [entity, breadcrumbJsonLd(crumbs)]
 }
 
 export function listMetadata(kind: PostKind, title: string, description: string): Metadata {

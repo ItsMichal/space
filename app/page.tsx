@@ -1,9 +1,10 @@
 import { ArrowUpRight, FileText } from 'lucide-react'
-import { getPostsByKind } from '@/lib/content'
+import { getBlogPosts, getTopLevel } from '@/lib/content'
 import { siteConfig } from '@/site.config'
 import { GlassButton } from '@/components/glass/GlassButton'
 import { NameHeader } from '@/components/site/NameHeader'
 import { ProjectList } from '@/components/site/ProjectList'
+import { Showcase } from '@/components/work/Showcase'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { homeMetadata, personJsonLd, websiteJsonLd } from '@/lib/seo'
 
@@ -12,8 +13,8 @@ export const metadata = homeMetadata()
 const h2 = 'mb-space-8 text-[32px] font-semibold leading-[1.1] tracking-[-0.02em]'
 
 export default function Home() {
-  const projects = getPostsByKind('project')
-  const articles = getPostsByKind('article')
+  const projects = getTopLevel('project')
+  const articles = getBlogPosts()
 
   return (
     <div className="mx-auto max-w-content px-space-4 md:px-space-8">
@@ -29,7 +30,7 @@ export default function Home() {
         <h2 id="work-h" className={h2}>
           Selected work
         </h2>
-        <ProjectList posts={projects} base="/projects" />
+        <Showcase posts={projects} base="/projects" limit={5} />
       </section>
 
       {articles.length > 0 ? (

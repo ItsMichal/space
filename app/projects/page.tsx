@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
-import { getPostsByKind } from '@/lib/content'
-import { ProjectList } from '@/components/site/ProjectList'
+import { getTopLevel } from '@/lib/content'
+import { Showcase } from '@/components/work/Showcase'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { listJsonLd, listMetadata } from '@/lib/seo'
 
@@ -11,12 +11,12 @@ const DESCRIPTION =
 export const metadata: Metadata = listMetadata('project', TITLE, DESCRIPTION)
 
 export default function Page() {
-  const posts = getPostsByKind('project')
+  const posts = getTopLevel('project')
   return (
     <div className="mx-auto max-w-content px-space-4 pb-space-16 pt-[120px] md:px-space-8 md:pt-[160px]">
       <JsonLd data={listJsonLd('project', TITLE, posts)} />
       <h1 className="mb-space-12 text-[clamp(36px,11vw,56px)] font-semibold leading-none tracking-[-0.03em] md:text-display">Selected work</h1>
-      <ProjectList posts={posts} base="/projects" />
+      <Showcase posts={posts} base="/projects" priority />
     </div>
   )
 }

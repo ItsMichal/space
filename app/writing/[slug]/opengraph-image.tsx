@@ -1,4 +1,4 @@
-import { getPost, getPostsByKind } from '@/lib/content'
+import { getPost, getBlogPosts } from '@/lib/content'
 import { OG_CONTENT_TYPE, OG_SIZE, renderPostOg } from '@/lib/og'
 
 export const dynamic = 'force-static'
@@ -8,7 +8,7 @@ export const contentType = OG_CONTENT_TYPE
 export const alt = 'Article by Michal Bodzianowski'
 
 export function generateStaticParams() {
-  return getPostsByKind('article').map((p) => ({ slug: p.slug }))
+  return getBlogPosts().map((p) => ({ slug: p.slug }))
 }
 
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {

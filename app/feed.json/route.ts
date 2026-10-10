@@ -1,4 +1,4 @@
-import { getAllPosts } from '@/lib/content'
+import { getBlogPosts, getTopLevel } from '@/lib/content'
 import { AUTHOR_NAME, SITE_NAME, SITE_URL, absoluteUrl, postPath } from '@/lib/seo'
 import { siteConfig } from '@/site.config'
 
@@ -6,7 +6,7 @@ export const dynamic = 'force-static'
 
 // JSON Feed 1.1: https://www.jsonfeed.org/version/1.1/
 export function GET() {
-  const posts = getAllPosts().sort((a, b) => (b.updated ?? b.date).localeCompare(a.updated ?? a.date))
+  const posts = [...getBlogPosts(), ...getTopLevel('project')].sort((a, b) => (b.updated ?? b.date).localeCompare(a.updated ?? a.date))
   const feed = {
     version: 'https://jsonfeed.org/version/1.1',
     title: SITE_NAME,

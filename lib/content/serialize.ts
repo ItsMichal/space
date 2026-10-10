@@ -1,7 +1,7 @@
 // Pure helpers for (de)serialising a post file. No fs access, so it is safe in any runtime.
 // The key order and flow-style tags match the hand-written files in content/posts.
 import matter from 'gray-matter'
-import type { PostFrontmatter, PostKind } from './types'
+import type { GalleryItem, PostFrontmatter, PostKind, PostLink } from './types'
 
 const KEY_ORDER: (keyof PostFrontmatter)[] = [
   'title',
@@ -13,7 +13,15 @@ const KEY_ORDER: (keyof PostFrontmatter)[] = [
   'tags',
   'cover',
   'coverAlt',
+  'coverFocus',
   'priority',
+  'featured',
+  'parent',
+  'series',
+  'order',
+  'role',
+  'links',
+  'gallery',
   'draft',
   'canonical',
 ]
@@ -41,9 +49,24 @@ function entry(key: keyof PostFrontmatter, value: unknown): string | null {
     case 'date':
     case 'updated':
     case 'priority':
+    case 'order':
       return `${key}: ${value}`
     case 'draft':
-      return value ? 'draft: true' : null
+    case 'featured':
+      return value ? `${key}: true` : null
+    case 'links':
+      return (value as PostLink[]).length
+        ? `links:\n${(value as PostLink[]).map((l) => `  - label: ${scalar(l.label)}\n    href: ${scalar(l.href)}`).join('\n')}`
+        : null
+    case 'gallery':
+      return (value as GalleryItem[]).length
+        ? `gallery:\n${(value as GalleryItem[])
+            .map(
+              (g) =>
+                `  - src: ${scalar(g.src)}\n    alt: ${scalar(g.alt)}` + (g.caption ? `\n    caption: ${scalar(g.caption)}` : '')
+            )
+            .join('\n')}`
+        : null
     default:
       return `${key}: ${scalar(String(value))}`
   }
@@ -59,9 +82,20 @@ export function serializePost(fm: PostFrontmatter, body: string): string {
   return `${serializeFrontmatter(fm)}\n${body.trim()}\n`
 }
 
-export function parsePost(raw: string, fileSlug: string): { frontmatter: PostFrontmatter; body: string } {
-  const { data, content } = matter(raw)
-  const frontmatter: PostFrontmatter = {
+const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
+
+/** Normalises gray-matter `data` into typed frontmatter. Shared by the site loader and the writing tool. */
+export function frontmatterFromData(data: Record<string, unknown>, fileSlug: string): PostFrontmatter {
+  const links = (Array.isArray(data.links) ? data.links : [])
+    .filter((l) => isObj(l) && l.label && l.href)
+    .map((l) => ({ label: String((l as Record<string, unknown>).label), href: String((l as Record<string, unknown>).href) }))
+  const gallery = (Array.isArray(data.gallery) ? data.gallery : [])
+    .filter((g) => isObj(g) && g.src)
+    .map((g) => {
+      const o = g as Record<string, unknown>
+      return { src: String(o.src), alt: String(o.alt ?? ''), ...(o.caption ? { caption: String(o.caption) } : {}) }
+    })
+  return {
     title: String(data.title ?? fileSlug),
     slug: String(data.slug ?? fileSlug),
     kind: (data.kind === 'article' ? 'article' : 'project') as PostKind,
@@ -71,11 +105,23 @@ export function parsePost(raw: string, fileSlug: string): { frontmatter: PostFro
     ...(data.updated ? { updated: toIsoDate(data.updated) } : {}),
     ...(data.cover ? { cover: String(data.cover) } : {}),
     ...(data.coverAlt ? { coverAlt: String(data.coverAlt) } : {}),
+    ...(data.coverFocus ? { coverFocus: String(data.coverFocus) } : {}),
     ...(typeof data.priority === 'number' ? { priority: data.priority } : {}),
+    ...(data.featured ? { featured: true } : {}),
+    ...(data.parent ? { parent: String(data.parent) } : {}),
+    ...(data.series ? { series: String(data.series) } : {}),
+    ...(typeof data.order === 'number' ? { order: data.order } : {}),
+    ...(data.role ? { role: String(data.role) } : {}),
+    ...(links.length ? { links } : {}),
+    ...(gallery.length ? { gallery } : {}),
     ...(data.draft ? { draft: true } : {}),
     ...(data.canonical ? { canonical: String(data.canonical) } : {}),
   }
-  return { frontmatter, body: content.trim() }
+}
+
+export function parsePost(raw: string, fileSlug: string): { frontmatter: PostFrontmatter; body: string } {
+  const { data, content } = matter(raw)
+  return { frontmatter: frontmatterFromData(data, fileSlug), body: content.trim() }
 }
 
 export function slugify(input: string): string {
