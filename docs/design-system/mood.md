@@ -1,5 +1,7 @@
 # Mood: floral, Apple-clean, ephemeral, comfortable
 
+> **Round 2 supersedes parts of this document.** After the owner's review ("I don't think the floral implementation is good enough. It needs to be more in the background"): florals are now soft real flower photographs placed behind the page as luminous haze, never beside the text (see `botanical-backdrop.md`); the engravings below are dropped from the hero (kept at most as one tiny optional detail); the type is built around Michelangelus (see `type-michelangelus.md`, including the licence finding: installed-only, not web-embeddable without permission); the bar for every comp is in `benchmark.md`; and the three comps with a tenets scorecard and a recommendation (edge bloom, B) are in `comps-round2.md`. Everything about the lidar decision, motion rules, textures, shape language and image language below still stands.
+
 The owner's sentence: "floral, apple, clean, ephemeral yet cohesive, a mix of natural delight against a comfortable layout." Later additions folded in: very subtle, tasteful, slow motion; Apple's rules for interruption; a light Frutiger Aero feel; light-only landing; organic shapes instead of primitives; more serif; real botanical art (not drawn by us); the lidar look moves inside the images; a toy avatar greeting visitors on a quiet globe is the site's delight.
 
 Prototype: `/mood` (dev only, `app/mood/page.dev.tsx`, `components/mood/**`). Screenshots in the session scratchpad `shots/mood-*.jpg`.
