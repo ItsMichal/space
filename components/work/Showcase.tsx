@@ -28,7 +28,7 @@ function Feature({ post, href, priority }: { post: Post; href: string; priority:
       <div className="work-feat__cap">
         <p className="work-feat__meta">
           {meta}
-          <span className="work-feat__stack"> · {post.tags.slice(0, 3).join(' · ')}</span>
+          <span className="work-feat__stack"> · {post.tags.filter((t) => t !== 'Web').slice(0, 3).join(', ')}</span>
         </p>
         <h3 className="work-feat__title">{post.title}</h3>
         <p className="work-feat__desc">{post.description}</p>
