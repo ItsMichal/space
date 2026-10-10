@@ -131,8 +131,7 @@ export function Backdrop({ paths = ['/'] }: Props) {
     let raf = 0
     let last = 0
     let lastDraw = 0
-    let t0 = performance.now()
-    let ro: ResizeObserver | null = null
+    const t0 = performance.now()
     const quiet = new Float32Array(32 * 4)
     const range = document.createRange()
 
@@ -261,7 +260,7 @@ export function Backdrop({ paths = ['/'] }: Props) {
     window.addEventListener('resize', onResize, { passive: true })
     document.addEventListener('visibilitychange', onVis)
     const off = onBackdropChange(kick)
-    ro = new ResizeObserver(onResize)
+    const ro = new ResizeObserver(onResize)
     ro.observe(document.body)
     kick()
 
@@ -272,7 +271,7 @@ export function Backdrop({ paths = ['/'] }: Props) {
       window.removeEventListener('resize', onResize)
       document.removeEventListener('visibilitychange', onVis)
       off()
-      ro?.disconnect()
+      ro.disconnect()
       document.documentElement.removeAttribute('data-backdrop-gl')
       gl.getExtension('WEBGL_lose_context')?.loseContext()
     }
