@@ -70,13 +70,13 @@ float luma(vec3 c) { return dot(c, vec3(0.299, 0.587, 0.114)); }
 // along a torn, watercolor-like line that is different for every image.
 float edgeMask(vec2 px, vec2 off) {
   float m = min(uSize.x, uSize.y);
-  float F = clamp(m * 0.2, 22.0, 72.0);
+  float F = clamp(m * 0.3, 26.0, 120.0);
   float d = min(min(px.x, uSize.x - px.x), min(px.y, uSize.y - px.y));
-  float n = fbm(px / (F * 2.6) + off);
-  float w = (n - 0.5) * F * 1.5 + (vnoise(px / (F * 0.7) + off * 1.7) - 0.5) * F * 0.3;
+  float n = fbm(px / (F * 3.4) + off);
+  float w = (n - 0.5) * F * 1.1 + (vnoise(px / (F * 1.1) + off * 1.7) - 0.5) * F * 0.12;
   float t = (d + w) / F;
-  float a = smoothstep(0.08, 0.95, t);
-  return a * a * (3.0 - 2.0 * a) ;
+  float a = smoothstep(-0.05, 1.0, t);
+  return a * a * (3.0 - 2.0 * a);
 }
 
 // Keep photographs and dark UI screenshots comfortable on birch paper: tiny black lift, slight desaturation, a
@@ -110,17 +110,17 @@ vec4 stipple(vec2 px, float cs, float amt, float grow, float lod) {
       vec2 tuv = clamp((pos * cs) / uSize, 0.0, 1.0) * uCover.xy + uCover.zw;
       vec3 s = textureLod(uTex, tuv, lod).rgb;
       float dark = 1.0 - luma(s);
-      float exists = step(h2, clamp(dark * dark * 1.15 + 0.06, 0.0, 0.95));
-      float r = (0.17 + 0.2 * h3) * (0.6 + 0.9 * dark) * grow;
+      float exists = step(h2, clamp(dark * dark * 0.85 + 0.05, 0.0, 0.9));
+      float r = (0.1 + 0.16 * h3) * (0.55 + 0.75 * dark) * grow;
       float d = length(g - pos);
       float a = exists * (1.0 - smoothstep(r - aa, r + aa, d));
       if (a > best) {
         best = a;
-        col = mix(mix(uInk, uMoss, 0.42), s * 0.6, 0.45);
+        col = mix(mix(uInk, uMoss, 0.55), s * 0.7, 0.5);
       }
     }
   }
-  best *= amt;
+  best *= amt * 0.85;
   return vec4(col * best, best);
 }
 
@@ -181,7 +181,7 @@ void main() {
   float visDots = max(dots, band * 0.75);
   vec4 res = img;
   if (visDots > 0.002) {
-    float cs = clamp(uSize.x / 120.0, 4.5, 8.0);
+    float cs = clamp(uSize.x / 105.0, 5.0, 9.0);
     float texPerCss = float(textureSize(uTex, 0).x) * uCover.x / uSize.x;
     float lod = max(0.0, log2(cs * texPerCss));
     vec4 p = stipple(px, cs, visDots * (uVariant == 2 ? 0.7 : 1.0), 1.0 + 0.35 * rv, lod);
