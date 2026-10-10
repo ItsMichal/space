@@ -13,7 +13,7 @@ export function Footer() {
           <Link href="/" aria-label="halmic, home" className="rounded-sm">
             <HalmicMark height={24} />
           </Link>
-          <span className="font-mono text-meta text-ink-muted">
+          <span className="font-serif text-meta text-ink-muted">
             © {new Date().getFullYear()} {profile.name}
           </span>
         </div>

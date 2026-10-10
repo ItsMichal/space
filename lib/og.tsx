@@ -1,4 +1,4 @@
-// Shared renderer for generated Open Graph images (next/og). Paper background, ink title, sans eyebrow.
+// Shared renderer for generated Open Graph images (next/og). Paper background, ink title, sans kind line.
 // Only ever executed at build time: the routes that use it are statically generated.
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -29,7 +29,7 @@ const MUTED = '#525c4f'
 export function renderPostOg(post: Post) {
   const len = post.title.length
   const fontSize = len > 70 ? 56 : len > 48 ? 68 : len > 28 ? 80 : 96
-  const eyebrow = `${post.parent ? (post.series ?? 'Project') : SECTION[post.kind].eyebrow}  ·  ${post.date.slice(0, 4)}`
+  const kindLabel = `${post.parent ? (post.series ?? 'Project') : SECTION[post.kind].kindLabel}  ·  ${post.date.slice(0, 4)}`
   return new ImageResponse(
     (
       <div
@@ -46,14 +46,14 @@ export function renderPostOg(post: Post) {
         }}
       >
         <div style={{ display: 'flex', fontFamily: 'Schibsted Grotesk', fontSize: 28, color: MUTED }}>
-          {eyebrow}
+          {kindLabel}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', fontSize, lineHeight: 1.05, fontWeight: 600, letterSpacing: -2 }}>
             {post.title}
           </div>
           {post.tags.length ? (
-            <div style={{ display: 'flex', fontFamily: 'IBM Plex Mono', fontSize: 26, color: MUTED, marginTop: 32 }}>
+            <div style={{ display: 'flex', fontFamily: 'Schibsted Grotesk', fontSize: 26, color: MUTED, marginTop: 32 }}>
               {post.tags.slice(0, 5).join('  ·  ')}
             </div>
           ) : null}
@@ -64,7 +64,7 @@ export function renderPostOg(post: Post) {
             justifyContent: 'space-between',
             borderTop: `2px solid ${INK}`,
             paddingTop: 24,
-            fontFamily: 'IBM Plex Mono',
+            fontFamily: 'Schibsted Grotesk',
             fontSize: 26,
           }}
         >

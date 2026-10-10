@@ -8,7 +8,7 @@ const THUMB_SIZES = '(min-width: 768px) 176px, 104px'
 
 const year = (p: Post) => p.date.slice(0, 4)
 
-/** A featured project: full-bleed cinematic image, large title, mono spec line. */
+/** A featured project: full-bleed cinematic image, large title, serif spec line. */
 function Feature({ post, href, priority }: { post: Post; href: string; priority: boolean }) {
   const meta = [year(post), post.role].filter(Boolean).join(' · ')
   return (

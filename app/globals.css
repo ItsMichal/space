@@ -184,12 +184,6 @@ body {
   }
 
   /* ---------- Text helpers ---------- */
-  .eyebrow {
-    font: 500 11px/16px var(--font-mono);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-muted);
-  }
   .link {
     color: inherit;
     text-decoration: underline;
@@ -291,11 +285,6 @@ body {
     letter-spacing: 0.01em;
     color: var(--ink-muted);
   }
-  @media (max-width: 767px) {
-    .work-feat__stack {
-      display: none;
-    }
-  }
   .work-feat__title {
     font: 600 clamp(38px, 11vw, 64px) / 1 var(--font-sans);
     letter-spacing: -0.04em;
@@ -374,7 +363,7 @@ body {
     font-size: 15px;
     line-height: 22px;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
@@ -407,22 +396,20 @@ body {
     margin-top: var(--space-4);
   }
   @media (min-width: 768px) {
-    .work {
-      --work-gap: 160px;
-    }
     .work-feat__img {
       aspect-ratio: 21 / 9;
     }
     .work-feat__cap {
       grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
       column-gap: var(--space-8);
-      row-gap: var(--space-4);
+      row-gap: var(--space-3);
       margin-top: var(--space-8);
       align-items: start;
+      align-content: start;
     }
     .work-feat__title {
       grid-column: 1;
-      grid-row: 1 / span 2;
+      grid-row: 1 / span 3;
       font-size: clamp(56px, 6vw, 80px);
     }
     .work-feat__meta {
@@ -1031,9 +1018,7 @@ body {
     vertical-align: top;
   }
   .prose th {
-    font: 500 13px/20px var(--font-serif);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font: 600 15px/22px var(--font-serif);
     color: var(--ink-muted);
   }
   .prose .callout {

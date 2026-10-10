@@ -16,9 +16,9 @@ export const metadataBase = new URL(SITE_URL)
 export const absoluteUrl = (path: string) =>
   /^https?:\/\//.test(path) ? path : `${SITE_URL}${path.startsWith('/') ? '' : '/'}${path}`
 
-export const SECTION: Record<PostKind, { base: string; label: string; eyebrow: string }> = {
-  project: { base: '/projects', label: 'Projects', eyebrow: 'Project' },
-  article: { base: '/writing', label: 'Writing', eyebrow: 'Article' },
+export const SECTION: Record<PostKind, { base: string; label: string; kindLabel: string }> = {
+  project: { base: '/projects', label: 'Projects', kindLabel: 'Project' },
+  article: { base: '/writing', label: 'Writing', kindLabel: 'Article' },
 }
 
 /** Canonical path of a post: children live under their parent project. */
