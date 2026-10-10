@@ -16,7 +16,7 @@
 
 import { Glass } from './glass'
 import {
-  BOUNCE,
+  PRESS,
   FOLLOW,
   MORPH,
   RIM_PEAK,
@@ -308,19 +308,26 @@ class ShapeState {
         moving = true
       }
     }
-    go(this.cx, this.tcx, cfg)
-    go(this.cy, this.tcy, cfg)
+    if (this.tpress > 0.5) {
+      // direct manipulation: while a finger/cursor holds the glass it tracks 1:1 from the first frame
+      this.cx.x = this.tcx
+      this.cy.x = this.tcy
+      this.cx.v = this.cy.v = 0
+    } else {
+      go(this.cx, this.tcx, cfg)
+      go(this.cy, this.tcy, cfg)
+    }
     go(this.hx, this.thx, cfg)
     go(this.hy, this.thy, cfg)
     go(this.r, this.tr, cfg)
     go(this.mat, this.tmat, MORPH, 0.004)
-    go(this.press, this.tpress, FOLLOW, 0.004)
+    go(this.press, this.tpress, MORPH, 0.004)
     go(this.fold, this.tfold, MORPH, 0.004)
-    go(this.scale, this.tscale, BOUNCE, 0.0008)
+    go(this.scale, this.tscale, PRESS, 0.0008)
     if (this.soft && !moving) this.soft = false
-    // adaptive tone eases over ~150ms
+    // adaptive tone eases slowly (~400ms)
     if (Math.abs(this.dark - this.darkTarget) > 0.002) {
-      this.dark += (this.darkTarget - this.dark) * (1 - Math.exp(-dt / 0.09))
+      this.dark += (this.darkTarget - this.dark) * (1 - Math.exp(-dt / 0.16))
       moving = true
     } else this.dark = this.darkTarget
     return moving
@@ -365,7 +372,7 @@ class Member extends ShapeState {
       this.touchX = e.clientX - hr.left
       this.touchY = e.clientY - hr.top
       this.tpress = 1
-      this.tscale = env.reduceMotion ? 1 : 0.94
+      this.tscale = env.reduceMotion ? 1 : 0.975
       this.field.wake()
     }
     const move = (e: PointerEvent) => {
@@ -809,7 +816,7 @@ export class Field {
     m.hx = { ...g.hx }
     m.hy = { ...g.hy }
     m.r = { ...g.r }
-    m.mat = { x: Math.max(g.mat.x, 0.35), v: 0 }
+    m.mat = { ...g.mat } // keeps value and velocity: reversing a morph halfway continues smoothly
     m.soft = true
     for (const f of fields) f.dropGhost(g)
   }

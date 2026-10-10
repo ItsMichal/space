@@ -109,12 +109,37 @@ export type Spring = { x: number; v: number }
 
 export type SpringConfig = { stiffness: number; damping: number }
 
-/** Snappy, almost critically damped: geometry following the DOM. */
-export const FOLLOW: SpringConfig = { stiffness: 700, damping: 2 * Math.sqrt(700) * 0.95 }
-/** Softer with a hint of overshoot: matched-geometry morphs and materialisation. */
-export const MORPH: SpringConfig = { stiffness: 320, damping: 2 * Math.sqrt(320) * 0.74 }
-/** Under-damped: press release bounce. */
-export const BOUNCE: SpringConfig = { stiffness: 520, damping: 2 * Math.sqrt(520) * 0.42 }
+/** Geometry following the DOM: critically damped, no overshoot, ~80ms. Slowness lives in the layout transition. */
+export const FOLLOW: SpringConfig = { stiffness: 2200, damping: 2 * Math.sqrt(2200) }
+/** Matched-geometry morphs, materialise, crease decay: viscous, critically damped, settles in about 600ms. */
+export const MORPH: SpringConfig = { stiffness: 49, damping: 2 * Math.sqrt(49) }
+/** Press scale: critically damped, soft settle, no wobble. */
+export const PRESS: SpringConfig = { stiffness: 260, damping: 2 * Math.sqrt(260) }
+/** @deprecated kept for imports; identical to PRESS (the design has no bounce). */
+export const BOUNCE: SpringConfig = PRESS
+
+/**
+ * Spring from perceptual terms (WWDC18 "Designing Fluid Interfaces"): `response` is the time in seconds
+ * of one undamped period, `damping` the ratio (1 = critically damped, ~0.85 = a hint of bounce, used
+ * only when the user threw something).
+ */
+export function springFor(response: number, damping = 1): SpringConfig {
+  const w = (2 * Math.PI) / Math.max(response, 0.05)
+  return { stiffness: w * w, damping: 2 * damping * w }
+}
+
+/** Where a throw lands: velocity (px/s) projected with iOS-style deceleration (rate 0.998 per ms). */
+export function projectMomentum(velocity: number, rate = 0.998): number {
+  return (velocity / 1000) * (rate / (1 - rate))
+}
+
+/** Resistance beyond a limit: moves with the finger at first, then progressively less. */
+export function rubberBand(x: number, min: number, max: number, dim = 120): number {
+  if (x >= min && x <= max) return x
+  const over = x < min ? min - x : x - max
+  const damped = (1 - 1 / ((over * 0.55) / dim + 1)) * dim
+  return x < min ? min - damped : max + damped
+}
 
 /** Semi-implicit Euler with sub-steps; stable for dt up to ~50ms at these stiffnesses. */
 export function stepSpring(s: Spring, target: number, cfg: SpringConfig, dt: number): void {

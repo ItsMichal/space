@@ -14,7 +14,12 @@ import {
   glass,
   glassButton,
   motionNeedsGesture,
+  projectMomentum,
   resetGlassStats,
+  rubberBand,
+  springFor,
+  springSettled,
+  stepSpring,
   shapes,
   useGlassNamespace,
 } from '@/components/glass'
@@ -78,26 +83,90 @@ function Shapes() {
   )
 }
 
+/** Drag-and-throw blob: tracks the pointer 1:1, then carries its velocity into a spring that lands on the
+ *  momentum-projected spot, with a rubber band at the edges (Apple, Designing Fluid Interfaces). */
 function Merging() {
   const [spacing, setSpacing] = useState(40)
   const box = useRef<HTMLDivElement>(null)
-  const [pos, setPos] = useState({ x: 330, y: 70 })
-  const drag = useRef<{ dx: number; dy: number } | null>(null)
+  const blob = useRef<HTMLElement | null>(null)
+  const st = useRef({ x: 330, y: 70, vx: 0, vy: 0, tx: 330, ty: 70, drag: false, dx: 0, dy: 0, raf: 0, last: 0, lastMove: 0, damping: 1 })
+  const SIZE = 96
+
+  const paint = () => {
+    const s = st.current
+    if (blob.current) {
+      blob.current.style.left = `${s.x}px`
+      blob.current.style.top = `${s.y}px`
+    }
+  }
+
+  const loop = (now: number) => {
+    const s = st.current
+    s.raf = 0
+    const dt = Math.min((now - s.last) / 1000, 0.05)
+    s.last = now
+    if (s.drag) return
+    const cfg = springFor(0.55, s.damping)
+    const px = { x: s.x, v: s.vx }
+    const py = { x: s.y, v: s.vy }
+    stepSpring(px, s.tx, cfg, dt)
+    stepSpring(py, s.ty, cfg, dt)
+    s.x = px.x
+    s.vx = px.v
+    s.y = py.x
+    s.vy = py.v
+    paint()
+    if (springSettled(px, s.tx, 0.1) && springSettled(py, s.ty, 0.1)) {
+      s.x = s.tx
+      s.y = s.ty
+      paint()
+      return
+    }
+    s.raf = requestAnimationFrame(loop)
+  }
 
   const down = (e: RPointerEvent) => {
+    const s = st.current
     const r = box.current!.getBoundingClientRect()
-    drag.current = { dx: e.clientX - r.left - pos.x, dy: e.clientY - r.top - pos.y }
-    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+    cancelAnimationFrame(s.raf) // interrupt a flight mid-air: grab it where it is, velocity discarded
+    s.raf = 0
+    s.drag = true
+    s.dx = e.clientX - r.left - s.x
+    s.dy = e.clientY - r.top - s.y
+    s.vx = s.vy = 0
+    s.lastMove = performance.now()
+    ;(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId)
   }
   const move = (e: RPointerEvent) => {
-    if (!drag.current) return
+    const s = st.current
+    if (!s.drag) return
     const r = box.current!.getBoundingClientRect()
-    setPos({
-      x: Math.max(0, Math.min(r.width - 96, e.clientX - r.left - drag.current.dx)),
-      y: Math.max(0, Math.min(r.height - 96, e.clientY - r.top - drag.current.dy)),
-    })
+    const nx = e.clientX - r.left - s.dx
+    const ny = e.clientY - r.top - s.dy
+    const now = performance.now()
+    const dt = Math.max((now - s.lastMove) / 1000, 0.001)
+    // low-passed velocity estimate, px/s
+    s.vx = s.vx * 0.6 + ((rubberBand(nx, 0, r.width - SIZE) - s.x) / dt) * 0.4
+    s.vy = s.vy * 0.6 + ((rubberBand(ny, 0, r.height - SIZE) - s.y) / dt) * 0.4
+    s.lastMove = now
+    s.x = rubberBand(nx, 0, r.width - SIZE)
+    s.y = rubberBand(ny, 0, r.height - SIZE)
+    paint()
   }
-  const up = () => (drag.current = null)
+  const up = () => {
+    const s = st.current
+    if (!s.drag) return
+    s.drag = false
+    const r = box.current!.getBoundingClientRect()
+    if (performance.now() - s.lastMove > 90) s.vx = s.vy = 0
+    // project the throw, clamp inside the box, carry the velocity into the spring
+    s.tx = Math.min(Math.max(s.x + projectMomentum(s.vx), 0), r.width - SIZE)
+    s.ty = Math.min(Math.max(s.y + projectMomentum(s.vy), 0), r.height - SIZE)
+    s.damping = Math.hypot(s.vx, s.vy) > 400 ? 0.85 : 1 // a hint of bounce only when the user threw it
+    s.last = performance.now()
+    s.raf = requestAnimationFrame(loop)
+  }
+  useEffect(() => () => cancelAnimationFrame(st.current.raf), [])
 
   return (
     <>
@@ -110,16 +179,17 @@ function Merging() {
           <Glass className="absolute left-6 top-8 grid h-24 w-48 place-items-center text-body-strong" shape={shapes.rect(40)}>fixed shape</Glass>
           <Glass className="absolute left-60 top-40 grid size-24 place-items-center text-body-strong" shape="circle">fixed</Glass>
           <Glass
+            ref={blob}
             effect={glass.regular.tint('var(--accent)').interactive()}
             shape="circle"
             className="absolute grid size-24 cursor-grab touch-none select-none place-items-center text-body-strong active:cursor-grabbing"
-            style={{ left: pos.x, top: pos.y }}
+            style={{ left: 330, top: 70 }}
             onPointerDown={down}
             onPointerMove={move}
             onPointerUp={up}
             onPointerCancel={up}
           >
-            drag me
+            throw me
           </Glass>
         </GlassEffectContainer>
       </div>
@@ -156,7 +226,17 @@ function Morph() {
             ))
           : null}
       </div>
-      <p className="text-body text-ink">tap the sparkle: the badges morph out of it and back (glassEffectID in one namespace)</p>
+      <div className="flex flex-wrap items-center gap-space-4">
+        <p className="text-body text-ink">tap the sparkle: the badges morph out of it and back (glassEffectID in one namespace)</p>
+        <GlassButton
+          onClick={() => {
+            // interruption test: five toggles 140ms apart; each retargets from the current shape and velocity
+            for (let i = 0; i < 5; i++) setTimeout(() => setOpen((o) => !o), i * 140)
+          }}
+        >
+          toggle rapidly
+        </GlassButton>
+      </div>
     </GlassEffectContainer>
   )
 }
@@ -305,7 +385,7 @@ export function GlassDemo() {
       <Section title="Shapes">
         <Shapes />
       </Section>
-      <Section title="Container: shapes merge within spacing" note="Drag the green blob toward the others. They fuse around half the spacing and pull apart again.">
+      <Section title="Container: shapes merge within spacing" note="Throw the green blob toward the others (grab it mid-flight to interrupt). Shapes fuse around half the spacing and pull apart again.">
         <Merging />
       </Section>
       <Section title="glassEffectID morph">

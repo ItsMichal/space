@@ -91,7 +91,6 @@ export function GlassEffectContainer({
 
   useIsoLayoutEffect(() => {
     handle.current?.update(opts)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spacing, engine, bezel, refraction, blur, saturate])
 
   const setRef = useCallback(
@@ -196,7 +195,6 @@ export function Glass({
   const shapeKey = typeof shape === 'string' ? shape : `r${shape.cornerRadius}`
   useIsoLayoutEffect(() => {
     handle.current?.update(cfgRef.current)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effect.key, shapeKey, id, namespace, unionId, tr, appearance])
 
   const setRef = useCallback(

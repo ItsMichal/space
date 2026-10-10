@@ -9,7 +9,7 @@
  *                handler to opt in. Until then iOS falls back to scroll-driven light drift.
  *   scroll       a slow drift so static pages still feel lit
  *
- * Everything is smoothed with a critically damped spring and fans out to subscribed fields.
+ * Everything is heavily smoothed (exponential, ~0.45s) and fans out to subscribed fields.
  */
 
 export type LightState = {
@@ -67,7 +67,8 @@ function kick() {
 
 function step() {
   raf = 0
-  const f = reduced ? 1 : 0.16
+  // heavy smoothing: the highlight drifts, it never snaps (time constant ~0.45s at 60Hz)
+  const f = reduced ? 1 : 0.04
   const dx = target.x - state.x
   const dy = target.y - state.y
   if (Math.abs(dx) + Math.abs(dy) < 0.002) {

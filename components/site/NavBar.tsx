@@ -32,20 +32,33 @@ function MenuIcon({ open }: { open: boolean }) {
 export function NavBar() {
   const pathname = usePathname()
   const ns = useGlassNamespace('nav')
-  const [scrolled, setScrolled] = useState(false)
+  const rowRef = useRef<HTMLDivElement | null>(null)
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLElement | null>(null)
 
+  // Scroll-linked, never scroll-jacking: a passive listener reads scrollY and eases the gap between the
+  // pill and the presence shape toward a position-derived target (16px at the top, 4px by 160px down,
+  // where the container's smooth union fuses them). No pinning, no snapping, nothing prevents default.
   useEffect(() => {
+    const row = rowRef.current
+    if (!row) return
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)')
     let raf = 0
-    const read = () => {
+    let current = -1
+    const target = () => Math.min(Math.max(window.scrollY / 160, 0), 1)
+    const apply = (p: number) => row.style.setProperty('gap', `${16 - 12 * p}px`)
+    const tick = () => {
       raf = 0
-      setScrolled(window.scrollY > 32)
+      const t = target()
+      current = current < 0 || reduce.matches ? t : current + (t - current) * 0.06
+      if (Math.abs(t - current) < 0.002) current = t
+      apply(current)
+      if (current !== t) raf = requestAnimationFrame(tick)
     }
     const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(read)
+      if (!raf) raf = requestAnimationFrame(tick)
     }
-    read()
+    tick()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => {
       window.removeEventListener('scroll', onScroll)
@@ -89,8 +102,8 @@ export function NavBar() {
       ref={rootRef}
     >
       <div
-        className="flex w-full max-w-[640px] items-start justify-center transition-[gap] duration-300 ease-out sm:w-auto sm:max-w-none"
-        style={{ gap: scrolled ? 4 : 16 }}
+        ref={rowRef}
+        className="flex w-full max-w-[640px] items-start justify-center gap-4 sm:w-auto sm:max-w-none"
       >
         <GlassFold
           as="nav"

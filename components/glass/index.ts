@@ -2,7 +2,7 @@
  * Liquid Glass for the web. SwiftUI -> here is mapped in ./README.md.
  */
 export { Glass as GlassEffect, glass } from './glass'
-export { shapes, type GlassShape } from './geometry'
+export { shapes, springFor, springSettled, stepSpring, projectMomentum, rubberBand, type GlassShape, type Spring, type SpringConfig } from './geometry'
 export {
   Glass,
   GlassEffectContainer,
