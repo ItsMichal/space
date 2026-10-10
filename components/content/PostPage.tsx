@@ -1,25 +1,46 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { getPost } from '@/lib/content'
+import { getChildren, getPost } from '@/lib/content'
 import { renderMarkdown } from '@/lib/content/render'
 import { ArticleLayout } from '@/components/site/ArticleLayout'
+import { PostNav } from '@/components/content/PostNav'
 import type { PostKind } from '@/lib/content/types'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { postJsonLd, postMetadata as buildPostMetadata } from '@/lib/seo'
 
-export function postMetadata(kind: PostKind, slug: string): Metadata {
+/** Resolve a post and make sure it is being served at its canonical place (right kind, right parent). */
+function resolve(kind: PostKind, slug: string, parent?: string) {
   const post = getPost(slug)
-  if (!post || post.kind !== kind) return {}
-  return buildPostMetadata(post)
+  if (!post || post.kind !== kind || (post.parent ?? undefined) !== parent) return undefined
+  return post
 }
 
-export async function PostPage({ kind, slug }: { kind: PostKind; slug: string }) {
-  const post = getPost(slug)
-  if (!post || post.kind !== kind) notFound()
+export function postMetadata(kind: PostKind, slug: string, parent?: string): Metadata {
+  const post = resolve(kind, slug, parent)
+  if (!post) return {}
+  const meta = buildPostMetadata(post)
+  // Projects with a progress log / sub-pieces advertise their own feed.
+  if (!post.parent && getChildren(post.slug).length) {
+    meta.alternates = {
+      ...meta.alternates,
+      types: { 'application/rss+xml': [{ url: `/projects/${post.slug}/feed.xml`, title: `${post.title} — updates` }] },
+    }
+  }
+  return meta
+}
+
+export async function PostPage({ kind, slug, parent }: { kind: PostKind; slug: string; parent?: string }) {
+  const post = resolve(kind, slug, parent)
+  if (!post) notFound()
+  const parentPost = post.parent ? getPost(post.parent) : undefined
+  if (post.parent && !parentPost) notFound()
   const body = await renderMarkdown(post.body)
+  const children = post.parent ? [] : getChildren(post.slug)
+  const siblings = post.parent ? getChildren(post.parent) : []
+  const at = siblings.findIndex((s) => s.slug === post.slug)
   return (
     <>
-      <JsonLd data={postJsonLd(post)} />
+      <JsonLd data={postJsonLd(post, parentPost)} />
       <ArticleLayout
         title={post.title}
         description={post.description}
@@ -29,7 +50,21 @@ export async function PostPage({ kind, slug }: { kind: PostKind; slug: string })
         readingMinutes={post.readingMinutes}
         cover={post.cover}
         coverAlt={post.coverAlt}
+        coverFocus={post.coverFocus}
+        role={post.role}
+        links={post.links}
+        gallery={post.gallery}
         kind={kind}
+        back={parentPost ? { href: `/projects/${parentPost.slug}`, label: parentPost.title, series: post.series } : undefined}
+        after={
+          <PostNav
+            parent={parentPost}
+            items={children}
+            prev={at > 0 ? siblings[at - 1] : undefined}
+            next={at >= 0 ? siblings[at + 1] : undefined}
+            position={at >= 0 ? { n: at + 1, of: siblings.length } : undefined}
+          />
+        }
       >
         {body}
       </ArticleLayout>

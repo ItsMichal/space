@@ -6,8 +6,9 @@ description: "A realtime F1 23 commentator and race engineer that turns game tel
 date: 2023-12-11
 tags: ["TypeScript", "AI/ML", "Game Dev"]
 cover: /media/realtime-ai-f1-comentator/cover.png
-coverAlt: "AI Crofty cover image"
-priority: 5
+coverAlt: "Discord messages from the A.I. Croft bot commentating the Abu Dhabi Grand Prix, with a lap table of drivers and gaps"
+priority: 9
+role: "Solo build"
 ---
 
 ## AI Croft- F1 Game Commentator that provides commentary in realtime

@@ -6,7 +6,10 @@ description: "Week 6 to 7 of Project Mountaintop was mostly a recovery week."
 date: 2023-03-21
 tags: ["Project Mountaintop"]
 cover: /media/mountaintop-week-6-7-rest-week/cover.jpg
-coverAlt: "Week 6→7 - Rest Week cover image"
+coverAlt: "Woodblock print of Mount Fuji above a hillside with travelers and pack horses"
+parent: project-mountaintop
+series: "Progress log"
+order: 7
 ---
 
 Week 6→7 was mostly a recovery week.

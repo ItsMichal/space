@@ -7,7 +7,10 @@ date: 2023-02-16
 updated: 2023-02-23
 tags: ["Project Mountaintop", "Rhythm"]
 cover: /media/mountaintop-week-4-5-deluxe-combos/cover.webp
-coverAlt: "Week 4→5 - Deluxe Combos cover image"
+coverAlt: "A cheeseburger with fries and dipping sauce on a plate"
+parent: project-mountaintop
+series: "Progress log"
+order: 4
 ---
 
 ![Project Mountaintop gameplay with combo and score UI](/media/mountaintop-week-4-5-deluxe-combos/screenshot-2023-02-15-at-2-50-18-pm-7b966d.png "Is the vision coming through? 👀")

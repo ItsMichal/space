@@ -1,10 +1,10 @@
-import { getPostsByKind } from '@/lib/content'
+import { getBlogPosts } from '@/lib/content'
 import { PostPage, postMetadata } from '@/components/content/PostPage'
 
 export const dynamicParams = false
 
 export function generateStaticParams() {
-  return getPostsByKind('article').map((p) => ({ slug: p.slug }))
+  return getBlogPosts().map((p) => ({ slug: p.slug }))
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {

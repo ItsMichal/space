@@ -7,8 +7,22 @@ date: 2023-03-08
 updated: 2023-12-09
 tags: ["Unity", "Arduino", "Game Dev"]
 cover: /media/office-wizards-barcode-game/cover.webp
-coverAlt: "Office Wizards cover image"
-priority: 1
+coverAlt: "Playtesting Office Wizards: a laptop running the game, a barcode scanner in hand and printed barcode sheets on the table"
+priority: 5
+role: "Game developer"
+gallery:
+  - src: /media/office-wizards-barcode-game/img-7888-2435be.webp
+    alt: "A printer wrapped in moss and flowers, opened up as the game enclosure"
+    caption: "The printer enclosure"
+  - src: /media/office-wizards-barcode-game/img-7894-3fdde7.webp
+    alt: "Students playtesting around the mossy printer enclosure in a classroom"
+    caption: "Playtesting in class"
+  - src: /media/office-wizards-barcode-game/img-7822-3caafb.webp
+    alt: "Whiteboard sketch of the game UI: two players, health and stamina bars, attack cards and a central pole"
+    caption: "Early UI sketch"
+  - src: /media/office-wizards-barcode-game/img-7828-1c667e.webp
+    alt: "Arduino Nano on a breadboard with colorful jumper wires"
+    caption: "Controller hardware, work in progress"
 ---
 
 :::callout{type="warning"}

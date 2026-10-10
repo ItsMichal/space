@@ -7,7 +7,11 @@ date: 2023-02-16
 updated: 2023-02-23
 tags: ["Project Mountaintop"]
 cover: /media/mountaintop-week-5-6-spaaaaace/cover.webp
-coverAlt: "Week 5→6 - SPAAAAACE! cover image"
+coverAlt: "A starry night sky with the Milky Way, in portrait"
+coverFocus: "50% 35%"
+parent: project-mountaintop
+series: "Progress log"
+order: 5
 ---
 
 ![Project Mountaintop gameplay on a space theme: an astronaut running over Earth with score, hit tallies and a combo counter](/media/mountaintop-week-5-6-spaaaaace/screenshot-2023-02-23-at-1-20-16-am-376f5f.webp)

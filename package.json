@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/build-images.mjs",
     "dev": "next dev",
+    "images": "node scripts/build-images.mjs",
+    "prebuild": "node scripts/build-images.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

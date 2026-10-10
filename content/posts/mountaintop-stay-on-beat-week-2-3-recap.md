@@ -7,10 +7,13 @@ date: 2023-01-30
 updated: 2023-02-02
 tags: ["Project Mountaintop"]
 cover: /media/mountaintop-stay-on-beat-week-2-3-recap/cover.webp
-coverAlt: "Stay on Beat - Week 2→3 Recap cover image"
+coverAlt: "Close-up of minified JavaScript source code"
+parent: project-mountaintop
+series: "Progress log"
+order: 2
 ---
 
-![A snapshot of where we ended up this week!](/media/mountaintop-stay-on-beat-week-2-3-recap/screenshot-2023-02-02-at-1-22-03-am-529950.webp "A snapshot of where we ended up this week!")
+![Project Mountaintop in play: glowing hit targets with Z and X key prompts, a 1x multiplier and a Perfect rating](/media/mountaintop-stay-on-beat-week-2-3-recap/screenshot-2023-02-02-at-1-22-03-am-529950.webp "A snapshot of where we ended up this week!")
 
 ## Where we left off…
 

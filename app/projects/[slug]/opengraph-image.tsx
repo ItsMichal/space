@@ -1,4 +1,4 @@
-import { getPost, getPostsByKind } from '@/lib/content'
+import { getPost, getTopLevel } from '@/lib/content'
 import { OG_CONTENT_TYPE, OG_SIZE, renderPostOg } from '@/lib/og'
 
 export const dynamic = 'force-static'
@@ -8,7 +8,7 @@ export const contentType = OG_CONTENT_TYPE
 export const alt = 'Project by Michał Bodzianowski'
 
 export function generateStaticParams() {
-  return getPostsByKind('project').map((p) => ({ slug: p.slug }))
+  return getTopLevel('project').map((p) => ({ slug: p.slug }))
 }
 
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {

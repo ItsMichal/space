@@ -1,4 +1,4 @@
-// Shared renderer for generated Open Graph images (next/og). Paper background, ink title, mono eyebrow.
+// Shared renderer for generated Open Graph images (next/og). Paper background, ink title, sans eyebrow.
 // Only ever executed at build time: the routes that use it are statically generated.
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -29,7 +29,7 @@ const MUTED = '#525c4f'
 export function renderPostOg(post: Post) {
   const len = post.title.length
   const fontSize = len > 70 ? 56 : len > 48 ? 68 : len > 28 ? 80 : 96
-  const eyebrow = `${SECTION[post.kind].eyebrow} · ${post.date.slice(0, 4)}`
+  const eyebrow = `${post.parent ? (post.series ?? 'Project') : SECTION[post.kind].eyebrow}  ·  ${post.date.slice(0, 4)}`
   return new ImageResponse(
     (
       <div

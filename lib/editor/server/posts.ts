@@ -126,6 +126,12 @@ function validateFrontmatter(id: string, fm: PostFrontmatter) {
   if (fm.updated && !/^\d{4}-\d{2}-\d{2}$/.test(fm.updated)) throw new HttpError(400, 'updated must be yyyy-mm-dd')
   if (!Array.isArray(fm.tags)) throw new HttpError(400, 'tags must be a list')
   if (fm.cover && !fm.cover.startsWith('/media/')) throw new HttpError(400, 'cover must live under /media/')
+  if (fm.parent) {
+    if (!SLUG_RE.test(fm.parent) || fm.parent === id) throw new HttpError(400, 'parent must be the slug of another project')
+    const parentFile = path.join(POSTS_DIR, `${fm.parent}.md`)
+    if (!fs.existsSync(parentFile)) throw new HttpError(400, `parent project "${fm.parent}" does not exist`)
+  }
+  for (const g of fm.gallery ?? []) if (!g.src.startsWith('/media/')) throw new HttpError(400, 'gallery images must live under /media/')
 }
 
 export function writePost(
@@ -192,6 +198,7 @@ export function renamePost(id: string, newSlug: string): PostFile {
     ...frontmatter,
     slug: newSlug,
     ...(frontmatter.cover ? { cover: rewrite(frontmatter.cover) } : {}),
+    ...(frontmatter.gallery ? { gallery: frontmatter.gallery.map((g) => ({ ...g, src: rewrite(g.src) })) } : {}),
   }
   const fromMedia = mediaDir(id)
   if (fs.existsSync(fromMedia)) {
@@ -201,6 +208,12 @@ export function renamePost(id: string, newSlug: string): PostFile {
   }
   atomicWrite(to, serializePost(next, rewrite(body)))
   fs.unlinkSync(from)
+  // Children (progress logs, sub-pieces) follow their parent to its new slug.
+  for (const f of fs.readdirSync(POSTS_DIR).filter((x) => x.endsWith('.md'))) {
+    const file = path.join(POSTS_DIR, f)
+    const child = parsePost(fs.readFileSync(file, 'utf8'), f.replace(/\.md$/, ''))
+    if (child.frontmatter.parent === id) atomicWrite(file, serializePost({ ...child.frontmatter, parent: newSlug }, child.body))
+  }
   return readPost(newSlug)
 }
 

@@ -1,7 +1,7 @@
 'use client'
 import { ImagePlus, TriangleAlert, X } from 'lucide-react'
 import { useId, useRef, useState } from 'react'
-import type { PostFrontmatter, PostKind } from '@/lib/content/types'
+import type { GalleryItem, PostFrontmatter, PostKind, PostLink } from '@/lib/content/types'
 import { SLUG_RE, slugify } from '@/lib/content/serialize'
 import { api } from '@/lib/editor/client/api'
 import { uiBus } from '@/lib/editor/ui-bus'
@@ -12,6 +12,7 @@ type Props = {
   onChange(patch: Partial<PostFrontmatter>): void
   allTags: string[]
   otherSlugs: string[]
+  projects: { slug: string; title: string }[]
   onApplySlug(slug: string): void
 }
 
@@ -76,11 +77,51 @@ function TagInput({ tags, all, onChange }: { tags: string[]; all: string[]; onCh
   )
 }
 
-export function PostPanel({ slug, fm, onChange, allTags, otherSlugs, onApplySlug }: Props) {
+function RowsEditor<T extends Record<string, string | undefined>>({
+  rows,
+  fields,
+  blank,
+  addLabel,
+  onChange,
+}: {
+  rows: T[]
+  fields: { key: keyof T & string; label: string; type?: string }[]
+  blank: T
+  addLabel: string
+  onChange(rows: T[]): void
+}) {
+  return (
+    <div className="ed-rows">
+      {rows.map((row, i) => (
+        <div key={i} className="ed-rowset">
+          {fields.map((f) => (
+            <input
+              key={f.key}
+              className="ed-input"
+              type={f.type ?? 'text'}
+              aria-label={`${f.label} ${i + 1}`}
+              placeholder={f.label}
+              value={row[f.key] ?? ''}
+              onChange={(e) => onChange(rows.map((r, j) => (j === i ? { ...r, [f.key]: e.target.value || (f.key === 'caption' ? undefined : '') } : r)))}
+            />
+          ))}
+          <button type="button" className="ed-btn-text" aria-label={`Remove row ${i + 1}`} onClick={() => onChange(rows.filter((_, j) => j !== i))}>
+            <X size={14} strokeWidth={1.5} />
+          </button>
+        </div>
+      ))}
+      <button type="button" className="ed-btn-text" onClick={() => onChange([...rows, blank])}>
+        {addLabel}
+      </button>
+    </div>
+  )
+}
+
+export function PostPanel({ slug, fm, onChange, allTags, otherSlugs, projects, onApplySlug }: Props) {
   const [slugDraft, setSlugDraft] = useState(fm.slug)
   const [busy, setBusy] = useState(false)
   const coverInput = useRef<HTMLInputElement>(null)
-  const ids = { desc: useId(), slug: useId(), date: useId(), updated: useId(), prio: useId(), canon: useId(), alt: useId(), kind: useId() }
+  const ids = { desc: useId(), slug: useId(), date: useId(), updated: useId(), prio: useId(), canon: useId(), alt: useId(), kind: useId(), parent: useId(), series: useId(), order: useId(), role: useId(), focus: useId() }
 
   const slugError = !slugDraft
     ? 'Slug is required.'
@@ -128,7 +169,49 @@ export function PostPanel({ slug, fm, onChange, allTags, otherSlugs, onApplySlug
         </div>
       </Field>
 
-      <Field label="Slug" htmlFor={ids.slug} hint={slugError ?? `${fm.kind === 'article' ? '/writing' : '/projects'}/${slugDraft}`}>
+      {fm.kind === 'article' || fm.parent ? (
+        <Field
+          label="Parent project"
+          htmlFor={ids.parent}
+          hint={
+            fm.parent
+              ? `Lives at /projects/${fm.parent}/${slugDraft} and is listed on that project, not in Writing.`
+              : 'None: this is a standalone post in Writing. Pick a project to make it part of its progress log.'
+          }
+        >
+          <select
+            id={ids.parent}
+            className="ed-select"
+            value={fm.parent ?? ''}
+            onChange={(e) => onChange({ parent: e.target.value || undefined, ...(e.target.value ? {} : { series: undefined, order: undefined }) })}
+          >
+            <option value="">None (blog post)</option>
+            {projects.map((p) => (
+              <option key={p.slug} value={p.slug}>
+                {p.title}
+              </option>
+            ))}
+          </select>
+        </Field>
+      ) : null}
+      {fm.parent ? (
+        <div className="ed-row ed-row--2">
+          <Field label="List heading" htmlFor={ids.series} hint="e.g. Progress log">
+            <input id={ids.series} className="ed-input" value={fm.series ?? ''} onChange={(e) => onChange({ series: e.target.value || undefined })} />
+          </Field>
+          <Field label="Order" htmlFor={ids.order} hint="Position in the list">
+            <input
+              id={ids.order}
+              type="number"
+              className="ed-input"
+              value={fm.order ?? ''}
+              onChange={(e) => onChange({ order: e.target.value === '' ? undefined : Number(e.target.value) })}
+            />
+          </Field>
+        </div>
+      ) : null}
+
+      <Field label="Slug" htmlFor={ids.slug} hint={slugError ?? `${fm.parent ? `/projects/${fm.parent}` : fm.kind === 'article' ? '/writing' : '/projects'}/${slugDraft}`}>
         <div className="ed-row">
           <input
             id={ids.slug}
@@ -211,6 +294,45 @@ export function PostPanel({ slug, fm, onChange, allTags, otherSlugs, onApplySlug
           <input id={ids.alt} className="ed-input" value={fm.coverAlt ?? ''} onChange={(e) => onChange({ coverAlt: e.target.value || undefined })} />
         </Field>
       ) : null}
+
+      {fm.cover ? (
+        <Field label="Cover focus" htmlFor={ids.focus} hint="Where cropped covers stay centred, e.g. 50% 30%">
+          <input id={ids.focus} className="ed-input ed-input--mono" value={fm.coverFocus ?? ''} onChange={(e) => onChange({ coverFocus: e.target.value || undefined })} />
+        </Field>
+      ) : null}
+
+      {fm.kind === 'project' ? (
+        <>
+          <Field label="Role" htmlFor={ids.role}>
+            <input id={ids.role} className="ed-input" value={fm.role ?? ''} onChange={(e) => onChange({ role: e.target.value || undefined })} />
+          </Field>
+          <Field label="Featured">
+            <label className="ed-switch">
+              <input type="checkbox" checked={Boolean(fm.featured)} onChange={(e) => onChange({ featured: e.target.checked ? true : undefined })} />
+              <span aria-hidden />
+              Show large in Selected work
+            </label>
+          </Field>
+        </>
+      ) : null}
+      <Field label="Links">
+        <RowsEditor<PostLink>
+          rows={fm.links ?? []}
+          fields={[{ key: 'label', label: 'Label' }, { key: 'href', label: 'https://', type: 'url' }]}
+          blank={{ label: '', href: '' }}
+          addLabel="Add link"
+          onChange={(links) => onChange({ links: links.length ? links : undefined })}
+        />
+      </Field>
+      <Field label="Gallery" hint="Images under /media. Alt text is required.">
+        <RowsEditor<GalleryItem>
+          rows={fm.gallery ?? []}
+          fields={[{ key: 'src', label: '/media/…' }, { key: 'alt', label: 'Alt text' }, { key: 'caption', label: 'Caption' }]}
+          blank={{ src: '', alt: '' }}
+          addLabel="Add image"
+          onChange={(gallery) => onChange({ gallery: gallery.length ? gallery : undefined })}
+        />
+      </Field>
 
       <div className="ed-row ed-row--2">
         <Field label="Priority" htmlFor={ids.prio} hint="Higher sorts first">

@@ -7,8 +7,13 @@ date: 2023-12-09
 updated: 2023-12-11
 tags: ["TypeScript", "AWS", "AI/ML", "DataViz"]
 cover: /media/isat-dashboard/cover.webp
-coverAlt: "iSAT Dashboard cover image"
-priority: 3
+coverAlt: "iSAT Interactive Display: a grid of per-team gauges and charts for noise, conversation and collaboration"
+coverFocus: "50% 0%"
+priority: 4
+role: "Developer, SHINE Lab"
+links:
+  - label: "Publications"
+    href: "https://www.colorado.edu/research/ai-institute/our-publications"
 ---
 
 ## Creating a Dashboard for NSFs iSAT
