@@ -6,6 +6,7 @@ import { NavBar } from '@/components/site/NavBar'
 import { ScrollReveal } from '@/components/site/ScrollReveal'
 import { Footer } from '@/components/site/Footer'
 import { ShaderCanvasProvider } from '@/components/shader-image'
+import { Backdrop } from '@/components/backdrop/Backdrop'
 import { siteMetadata } from '@/lib/seo'
 import { profile } from '@/content/profile'
 
@@ -74,6 +75,7 @@ export default function RootLayout({
           <NavBar />
           <ScrollReveal />
           <main id="main" className="relative flex-1">
+            <Backdrop />
             <ShaderCanvasProvider>{children}</ShaderCanvasProvider>
           </main>
           <Footer />
