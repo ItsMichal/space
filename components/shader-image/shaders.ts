@@ -72,8 +72,8 @@ float edgeMask(vec2 px, vec2 off) {
   float m = min(uSize.x, uSize.y);
   float F = clamp(m * 0.3, 26.0, 120.0);
   float d = min(min(px.x, uSize.x - px.x), min(px.y, uSize.y - px.y));
-  float n = fbm(px / (F * 3.4) + off);
-  float w = (n - 0.5) * F * 1.1 + (vnoise(px / (F * 1.1) + off * 1.7) - 0.5) * F * 0.12;
+  float n = fbm(px / min(F * 3.4, m * 0.6) + off);
+  float w = (n - 0.5) * F * 1.5 + (vnoise(px / (F * 1.1) + off * 1.7) - 0.5) * F * 0.12;
   float t = (d + w) / F;
   float a = smoothstep(-0.05, 1.0, t);
   return a * a * (3.0 - 2.0 * a);

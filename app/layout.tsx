@@ -75,7 +75,7 @@ export default function RootLayout({
           <NavBar />
           <ScrollReveal />
           <main id="main" className="relative flex-1">
-            <Backdrop />
+            <Backdrop paths={['/', '/shaders']} />
             <ShaderCanvasProvider>{children}</ShaderCanvasProvider>
           </main>
           <Footer />

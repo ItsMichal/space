@@ -34,6 +34,7 @@ uniform vec3 uSky;
 uniform vec4 uQ[32];       // quiet rects: x0 y0 x1 y1 (viewport CSS px)
 uniform int uQN;
 uniform float uDebug;
+uniform float uFeather;
 out vec4 o;
 
 uint pcg(uint v) {
@@ -110,7 +111,7 @@ void main() {
     vec2 hs = (q.zw - q.xy) * 0.5;
     vec2 d = abs(frag - c) - hs;
     float sd = length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
-    float zz = 1.0 - smoothstep(0.0, 110.0, sd);
+    float zz = 1.0 - smoothstep(0.0, uFeather, sd);
     zone = max(zone, zz * zz * (3.0 - 2.0 * zz));
   }
   float quiet = uDebug > 1.5 ? 1.0 : 1.0 - 0.92 * zone;

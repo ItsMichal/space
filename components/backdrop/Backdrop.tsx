@@ -65,7 +65,7 @@ export function Backdrop({ paths = ['/'] }: Props) {
     const u = {
       view: U('uView'), res: U('uRes'), time: U('uTime'), scroll: U('uScroll'), par: U('uPar'), set: U('uSet'),
       t: [U('uT0'), U('uT1'), U('uT2')], a: [U('uA0'), U('uA1'), U('uA2')], asp: U('uAsp'), asp2: U('uAsp2'),
-      sky: U('uSky'), c: [U('uC0'), U('uC1'), U('uC2')], key: U('uKey'), q: U('uQ[0]'), qn: U('uQN'), debug: U('uDebug'),
+      sky: U('uSky'), c: [U('uC0'), U('uC1'), U('uC2')], key: U('uKey'), q: U('uQ[0]'), qn: U('uQN'), debug: U('uDebug'), feather: U('uFeather'),
     }
 
     // Textures load lazily after first paint; the layer is simply absent until its texture is ready.
@@ -191,13 +191,14 @@ export function Backdrop({ paths = ['/'] }: Props) {
       gl.uniform1f(u.time, reduced ? 3 : (now - t0) / 1000)
       gl.uniform1f(u.scroll, st.value)
       gl.uniform1f(u.par, reduced ? 1 : PAR)
-      gl.uniform4f(u.set, S.intensity, S.blur, S.coverage, reduced ? 0 : S.sway)
+      gl.uniform4f(u.set, S.intensity * (vw < 700 ? 1.35 : 1), S.blur, S.coverage, reduced ? 0 : S.sway)
       gl.uniform2f(u.asp, LAYERS[0].asp, LAYERS[1].asp)
       gl.uniform1f(u.asp2, LAYERS[2].asp)
       gl.uniform3f(u.sky, skyTint[0], skyTint[1], skyTint[2])
       gl.uniform3f(u.key, LAYERS[0].key, LAYERS[1].key, LAYERS[2].key)
       LAYERS.forEach((L, i) => gl.uniform4f(u.c[i], L.crop[0], L.crop[1], L.crop[2], L.crop[3]))
       gl.uniform1f(u.debug, q === 'raw' ? 2 : S.debugZones ? 1 : 0)
+      gl.uniform1f(u.feather, vw < 700 ? 64 : 110)
       gl.uniform1i(u.qn, n)
       gl.uniform4fv(u.q, quiet)
       for (let i = 0; i < 3; i++) {

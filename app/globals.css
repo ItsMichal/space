@@ -1261,3 +1261,12 @@ html[data-backdrop-gl] .backdrop-css {
     transition: none;
   }
 }
+
+/* Dev lab (app/shaders): images fill their grid cell. */
+.shader-lab__img,
+.shader-lab__thumb {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
