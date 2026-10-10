@@ -4,6 +4,7 @@ import { IBM_Plex_Mono, Newsreader, Schibsted_Grotesk } from 'next/font/google'
 import React, { StrictMode } from 'react'
 import LidarBackground from '@/components/lidar/LidarBackground'
 import { NavBar } from '@/components/site/NavBar'
+import { ScrollReveal } from '@/components/site/ScrollReveal'
 import { Footer } from '@/components/site/Footer'
 import { siteMetadata } from '@/lib/seo'
 import { profile } from '@/content/profile'
@@ -34,11 +35,8 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  colorScheme: 'light dark',
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f4f1e8' },
-    { media: '(prefers-color-scheme: dark)', color: '#121612' },
-  ],
+  colorScheme: 'light',
+  themeColor: '#f4f1e8',
 }
 
 const DESCRIPTION = profile.description
@@ -75,6 +73,7 @@ export default function RootLayout({
           </a>
           <LidarBackground />
           <NavBar />
+          <ScrollReveal />
           <main id="main" className="relative flex-1">
             {children}
           </main>

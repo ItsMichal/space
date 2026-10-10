@@ -6,6 +6,7 @@ Paper is the visual system for michal.us: printed matter in a northern landscape
 - **Restraint, at scale.** Borrow the confidence of Apple and SpaceX product pages: very large type, generous space, one idea per screen, imagery allowed to be big. Remove anything that doesn't earn its place — labels, badges, counters, decoration.
 - **Flat page, floating glass.** Content sits directly on `paper` with no cards, boxes or shadows. Liquid glass is only for chrome that hovers: the nav, its presence dots, buttons, the editor toolbar, menus.
 - **Together, quietly.** Presence is felt, not reported. Visitors appear as trails and globe points in their `presence-*` color. No live counters, no "N here now", no names, no chat.
+- **Frutiger Aero, lightly.** Airy, glossy, sky-and-water optimism: light grounds, clear glass, a little living green and water-blue. Restrained to a hint, never skeuomorphic clutter.
 - **Best work first.** Order by significance, not date. Supporting material (progress logs, notes) lives underneath the thing it supports.
 
 ## Content fundamentals
@@ -18,7 +19,7 @@ Paper is the visual system for michal.us: printed matter in a northern landscape
 
 ## Color
 
-- **Birch** (light) is the default; **Basalt** (dark) follows `prefers-color-scheme` with the same roles.
+- **Birch** (light) is the default and the only theme on the landing page and index pages (`/`, `/projects`, `/writing`): a light, comforting first impression. **Basalt** (dark) exists only for reading — project pages, progress-log entries and blog posts — where it follows `prefers-color-scheme` with the same roles. Reading layouts opt in with `<html data-reading>` (set by `<ReadingTheme/>`, before first paint); dark tokens live under `:root[data-reading]` in the generated `tokens.css`. `viewport.themeColor` is light everywhere except reading pages.
 - Ground is `paper`; reading text is `ink`; secondary text is `ink-muted`. Those are the only text colors.
 - `ink-faint`, `dot` and `hairline` are for marks, never text.
 - `accent` is moss: link hover, the scanline, your own presence ring, at most one highlighted word per screen.
@@ -48,18 +49,24 @@ Mobile is first-class, designed at 375px before desktop: 44px tap targets, safe-
 
 A thin convex lens: refraction at the rim (squircle profile, Snell n = 1.5, slight RGB dispersion), frost (`glass-blur`), vibrancy (`glass-saturate`), `glass-tint`, a specular rim (`glass-rim` / `glass-edge`) and `shadow-glass` — the system's only drop shadow. Shapes inside one container merge liquidly when close and split when apart. Full refraction in Chromium; a finished frosted fallback everywhere else. Respect reduced motion, reduced transparency and increased contrast. Radii: `radius-lg` panels, `radius-pill` buttons and the nav.
 
+## Shape language
+
+- Decorative and presence elements avoid primitive shapes — no perfect circles, plain dots or hard rounded rectangles. Use blobby, floral, organic curves, hand-drawn strokes and real textures instead.
+- UI controls keep clean geometry for usability: pills, `radius-md` image corners, 1px hairlines, 44px targets.
+- Content is flat on paper: no cards, no drop shadows (glass's `shadow-glass` is the one exception).
+
 ## Lidar field, globe & presence
 
 - **Field:** a full-viewport point cloud of Icelandic terrain — basalt plateaus, fjord ridges, a flat glacier band — in `dot` and `ink-faint`, with a moss scanline every ~6s and, rarely, a faint glacier-colored aurora band far off. Calm and sparse; drops to 40% behind articles.
-- **Trails:** each visitor's pointer leaves a short fading trail of grid-snapped dots in their color.
-- **Globe:** a dotted Earth in the same point style, showing where current readers are (city-level, from Cloudflare; never IPs) with dotted arcs to you. One serif `meta` caption beneath — e.g. *Right now, from Reykjavík, Berlin and Denver.* Iceland is the default view when you're alone.
-- **Nav presence:** overlapping colored dots only, your own with a moss ring; a quiet serif popover on hover or focus. No count text.
-- Still frames under `prefers-reduced-motion`.
+- **Globe:** a quiet globe where a Mii-style toy avatar of Michał greets visitors. Visitors appear as little ghosts in their `presence-*` color (city-level from Cloudflare; never IPs). One serif `meta` caption at most. Presence is felt, never counted: no live counters, no "N here now", no names, no chat, and no presence chip in the nav.
+- **Trails:** each visitor's pointer may leave a short fading trail in their color.
+- Still frames under `prefers-reduced-motion`. A fuller art direction (`mood.md`) will supersede the details here.
 
-## Imagery & portrait
+## Imagery
 
 - Photos are natural and unfussy; backgrounds lean toward the palette. Every image has real alt text and a caption where it helps.
-- The portrait appears as a lidar point cloud that resolves into the photo — the same dot language as the field and globe — with the real image in the DOM for search and no-JS.
+- Covers are real images or absent: no stock art. Without a cover, layouts omit the image and the generated Open Graph card is used.
+- The lidar-portrait idea is cancelled; the avatar on the globe replaces it. Corners are `radius-md`, no borders, no shadows.
 
 ## Iconography
 
@@ -68,5 +75,42 @@ A thin convex lens: refraction at the rim (squircle profile, Snell n = 1.5, slig
 
 ## Motion
 
-- Springs for glass (press 0.97, hover 1.03); 120–200ms eases for color; content fades up 8px over 240ms on route change. Nothing else bounces.
-- Everything respects `prefers-reduced-motion`.
+**The law: incredibly subtle, tasteful and slow.** Apple-style scroll animation without scroll-jacking. Thoughtfulness in each texture. Simplicity with subtlety.
+
+CSS tokens (defined in `app/globals.css`):
+
+| Token | Value |
+| --- | --- |
+| `--motion-fast` | 240ms — hover color, focus, small state changes |
+| `--motion-slow` | 900ms — reveals, image hover settle |
+| `--motion-slower` | 1400ms — featured imagery |
+| `--motion-ambient` | 8–20s loops (lidar scanline, aurora) |
+| `--ease-out-soft` | `cubic-bezier(0.22, 1, 0.36, 1)` |
+| `--ease-in-out-soft` | `cubic-bezier(0.45, 0, 0.15, 1)` |
+
+Limits: max travel 12px, max scale delta 2%, opacity is the primary channel.
+
+Rules:
+- Nothing bounces, nothing loops fast, nothing moves more than a few pixels, one thing moves at a time. Ambient motion is slow enough to be noticed only on second look.
+- **No scroll-jacking.** Never intercept wheel or touch, no scroll snapping on the page, no pinned sections that hold the scroll, native momentum untouched.
+- **Scroll reveals** tie progress to scroll position with CSS scroll-driven animations (`animation-timeline: view()` / `scroll()`). Section headings, featured project blocks and index rows ease in over the first ~25% of their entry (opacity 0 to 1, 12px of travel). Featured images settle from 1.02 to 1 scale, clipped inside their frame, never moving layout. The home intro fades slightly as you scroll away. Where `view()` is unsupported, `<ScrollReveal/>` plays the same movement once via IntersectionObserver (rows stagger by at most 50ms). Opt in with the `.reveal` class.
+- **Route change:** content fades up 8px over 600ms. Hover color transitions 240ms.
+- **Glass:** press stays responsive; hover scale at most 1.015 on a slower spring (the glass component owns its internals).
+- **Reduced motion:** no transforms, no scale, instant opacity; state changes are instant cross-fades.
+
+### Fluid interaction
+
+Interactive motion follows Apple's principles:
+- **Interruptible and redirectable.** Any animation can be interrupted at any moment and retargets from its current on-screen value and velocity: never snap to the end state, never queue, never block input until it finishes. Stateful UI uses CSS transitions (they retarget from the computed value). JS-driven motion uses `lib/motion/spring.ts` (a velocity-aware spring, no dependency) and `useSpring`. Default is critically damped (ratio 1, response 0.4–0.6s); a hint of bounce (ratio about 0.85) only when the user imparted momentum, e.g. a fling.
+- **Instant response, 1:1 tracking.** Drags follow the finger from the first frame (only direction detection first). On release, project momentum from the release velocity to choose the destination (dismiss or stay) and carry that velocity into the settling spring.
+- **Reversible and spatially consistent.** Things return the way they came: the lightbox image grows from and returns to its thumbnail; the menu sheet folds back into the nav pill. A gesture can be reversed mid-flight.
+- **Input is never locked.** Buttons and links stay tappable during transitions; closing can begin while opening is in progress.
+- **Rubber-banding** instead of hard stops at drag limits. Scroll-jacking stays forbidden.
+
+## Textures
+
+Each texture has a reason; all are static, cheap and sit under content.
+- **Paper grain** — so flat color reads as paper, not screen. A 160px tiled noise (`public/textures/grain-*.png`) at about 4%, `multiply` on Birch and `soft-light` on Basalt, painted on `<html>` beneath everything, so never over images, text or glass. No filters, no animation.
+- **Hairlines** — 1px `hairline`, the quietest way to separate rows without boxes.
+- **Image edges** — `radius-md`, no borders, no shadows, so photos sit on the page like prints.
+- **Glass** — the only drop shadow, because only floating chrome should lift off the page.

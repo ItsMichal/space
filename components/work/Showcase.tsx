@@ -83,13 +83,13 @@ export function Showcase({ posts, base, limit, priority = false }: { posts: Post
     <div className="work">
       {blocks.map((b, i) =>
         'feature' in b ? (
-          <div key={b.feature.slug} className="work-feat-wrap">
+          <div key={b.feature.slug} className="work-feat-wrap reveal">
             <Feature post={b.feature} href={`${base}/${b.feature.slug}`} priority={priority && i === 0} />
           </div>
         ) : (
           <ul key={b.rows[0].slug} className="work-index">
-            {b.rows.map((p) => (
-              <li key={p.slug}>
+            {b.rows.map((p, j) => (
+              <li key={p.slug} className="reveal" style={{ ["--i" as string]: j }}>
                 <Row post={p} href={`${base}/${p.slug}`} />
               </li>
             ))}

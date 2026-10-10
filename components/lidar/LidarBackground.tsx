@@ -161,7 +161,7 @@ export default function LidarBackground() {
     const mo = new MutationObserver(refreshColors)
     mo.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class', 'data-theme', 'data-color-scheme', 'style'],
+      attributeFilter: ['class', 'data-theme', 'data-color-scheme', 'data-reading', 'style'],
     })
 
     resize()

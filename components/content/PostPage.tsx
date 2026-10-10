@@ -1,12 +1,22 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { notFound } from 'next/navigation'
 import { getChildren, getPost } from '@/lib/content'
 import { renderMarkdown } from '@/lib/content/render'
 import { ArticleLayout } from '@/components/site/ArticleLayout'
 import { PostNav } from '@/components/content/PostNav'
 import type { PostKind } from '@/lib/content/types'
+import { ReadingTheme } from '@/components/site/ReadingTheme'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { postJsonLd, postMetadata as buildPostMetadata } from '@/lib/seo'
+
+/** Reading pages follow the OS light/dark setting (everything else is Birch only). */
+export const readingViewport: Viewport = {
+  colorScheme: 'light dark',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f4f1e8' },
+    { media: '(prefers-color-scheme: dark)', color: '#121612' },
+  ],
+}
 
 /** Resolve a post and make sure it is being served at its canonical place (right kind, right parent). */
 function resolve(kind: PostKind, slug: string, parent?: string) {
@@ -40,6 +50,7 @@ export async function PostPage({ kind, slug, parent }: { kind: PostKind; slug: s
   const at = siblings.findIndex((s) => s.slug === post.slug)
   return (
     <>
+      <ReadingTheme />
       <JsonLd data={postJsonLd(post, parentPost)} />
       <ArticleLayout
         title={post.title}

@@ -1,5 +1,5 @@
 import { getBlogPosts } from '@/lib/content'
-import { PostPage, postMetadata } from '@/components/content/PostPage'
+import { PostPage, postMetadata, readingViewport } from '@/components/content/PostPage'
 
 export const dynamicParams = false
 
@@ -10,6 +10,8 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   return postMetadata('article', (await params).slug)
 }
+
+export const viewport = readingViewport
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   return <PostPage kind="article" slug={(await params).slug} />
