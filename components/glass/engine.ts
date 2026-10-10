@@ -41,7 +41,7 @@ import {
   wantSnapshot,
   type RGBA,
 } from './backdrop'
-import { GlassGL, type DrawParams } from './gl'
+import { GlassGL, type DrawParams, type MapTicket } from './gl'
 import { MAX_SHAPES } from './shaders'
 import { lightFor, subscribeLight } from './lighting'
 
@@ -58,6 +58,9 @@ export type MemberConfig = {
   transition: GlassTransition
   appearance: GlassAppearance
 }
+
+type PendingMap = { base: DrawParams; win: [number, number, number, number]; key: string; S: number; blur: number; sat: number }
+type MapMeta = { mx0: number; my0: number; mw: number; mh: number; S: number; blur: number; sat: number }
 
 export type FieldOptions = {
   spacing?: number
@@ -81,6 +84,8 @@ const env = {
   dpr: 1,
 }
 
+/** Minimum gap between displacement-map updates while animating (~30Hz). */
+const MAP_INTERVAL = 32
 const SVGNS = 'http://www.w3.org/2000/svg'
 let envEpoch = 0
 
@@ -122,6 +127,38 @@ function initEnv() {
   })
 }
 
+// ---------------------------------------------------------------- map worker
+
+let mapWorker: Worker | null | undefined
+let workerSeq = 0
+const workerPending = new Map<number, (blob: Blob | null) => void>()
+
+/** Renders displacement maps off the main thread (OffscreenCanvas + WebGL2). Null falls back to PBO readback. */
+function getMapWorker(): Worker | null {
+  if (mapWorker !== undefined) return mapWorker
+  try {
+    if (typeof OffscreenCanvas === 'undefined' || typeof Worker === 'undefined') throw new Error('no worker gl')
+    const w = new Worker(new URL('./map.worker.ts', import.meta.url), { type: 'module' })
+    const fail = () => {
+      mapWorker = null
+      w.terminate()
+      workerPending.forEach((cb) => cb(null))
+      workerPending.clear()
+    }
+    w.onmessage = (ev: MessageEvent<{ id: number; blob?: Blob; error?: string }>) => {
+      const cb = workerPending.get(ev.data.id)
+      workerPending.delete(ev.data.id)
+      if (ev.data.error) fail()
+      cb?.(ev.data.blob ?? null)
+    }
+    w.onerror = fail
+    mapWorker = w
+  } catch {
+    mapWorker = null
+  }
+  return mapWorker
+}
+
 // ---------------------------------------------------------------- shared GL + scheduler
 
 let gl: GlassGL | null = null
@@ -152,6 +189,8 @@ export type GlassStats = {
   frames: number
   mapGlMs: number
   mapEncodeMs: number
+  mapReadMs: number
+  mapLatencyMs: number
   surfaceMs: number
   updateMs: number
   maxMapMs: number
@@ -165,6 +204,8 @@ const stats: GlassStats = {
   frames: 0,
   mapGlMs: 0,
   mapEncodeMs: 0,
+  mapReadMs: 0,
+  mapLatencyMs: 0,
   surfaceMs: 0,
   updateMs: 0,
   maxMapMs: 0,
@@ -179,7 +220,7 @@ export function getGlassStats(): GlassStats {
 }
 
 export function resetGlassStats(): void {
-  Object.assign(stats, { frames: 0, mapGlMs: 0, mapEncodeMs: 0, surfaceMs: 0, updateMs: 0, maxMapMs: 0, lastMapMs: 0 })
+  Object.assign(stats, { frames: 0, mapGlMs: 0, mapEncodeMs: 0, mapReadMs: 0, mapLatencyMs: 0, surfaceMs: 0, updateMs: 0, maxMapMs: 0, lastMapMs: 0 })
 }
 
 function schedule() {
@@ -453,7 +494,14 @@ export class Field {
   private mapCanvas: HTMLCanvasElement | null = null
   private mctx: CanvasRenderingContext2D | null = null
   private mapCache = new Map<string, string>()
-  private mapCap = env.coarse ? 12000 : 22000
+  private tickets: MapTicket[] = []
+  private pendingMap: PendingMap | null = null
+  private lastMapAt = 0
+  private inflight = 0
+  private mapApplied = 0
+  private readBuf: Uint8ClampedArray<ArrayBuffer> | null = null
+  private mapIssueMs = 0
+  private mapCap = env.coarse ? 8000 : 16000
   private visible = true
   private io: IntersectionObserver | null = null
   private ro: ResizeObserver | null = null
@@ -586,7 +634,7 @@ export class Field {
       layer.appendChild(fx)
       this.buildFilter(layer)
       this.mapCanvas = document.createElement('canvas')
-      this.mctx = this.mapCanvas.getContext('2d')
+      this.mctx = this.mapCanvas.getContext('2d', { willReadFrequently: true })
     } else {
       this.releaseSnap = wantSnapshot(true, env.coarse ? 66 : 50)
       this.unsubSnap = onSnapshot(() => this.visible && this.invalidate())
@@ -844,6 +892,14 @@ export class Field {
       return false
     }
     this.readCss()
+    let pendingMaps = false
+    if (this.mode === 'svg') {
+      pendingMaps = this.pumpMaps(gl)
+      if (this.pendingMap) {
+        this.flushMap(gl, now)
+        pendingMaps = pendingMaps || this.pendingMap !== null
+      }
+    }
     const hr = this.host.getBoundingClientRect()
     const reduce = env.reduceMotion
     let moving = false
@@ -909,7 +965,7 @@ export class Field {
     }
     this.dirty = false
     this.lastSnapVersion = sv
-    if (moving) return true
+    if (moving || pendingMaps || this.tickets.length > 0 || this.inflight > 0) return true
     if (now < this.pollUntil) return true
     // sample mode refreshes on every new lidar snapshot (listener-driven)
     return false
@@ -1055,68 +1111,158 @@ export class Field {
     // ---- frost boxes (sample mode): backdrop blur per member, under the canvas
     if (this.mode === 'sample') this.updateFrost(shapes, c.blur, c.sat)
 
-    // ---- displacement map (svg mode)
+    // ---- displacement map (svg mode): rendered at most every MAP_INTERVAL ms, read back asynchronously
     if (this.mode === 'svg' && this.fx && this.feImage && this.mapCanvas && this.mctx && this.filterEl) {
       const pad = bezel + k * 0.25 + 3
       const mx0 = Math.floor(minX - pad)
       const my0 = Math.floor(minY - pad)
       const mw = Math.ceil(maxX + pad) - mx0
       const mh = Math.ceil(maxY + pad) - my0
-      // The PNG encode dominates map cost and scales with pixels, so the map is kept tiny and the cap
-      // adapts (down fast, up slowly) to hold gl + encode near 1.5ms. Bilinear upsampling by feImage
-      // keeps the lens smooth: the rim profile is low frequency.
-      const sc = Math.min(1, Math.sqrt(this.mapCap / (mw * mh)))
-      const pw = Math.max(2, Math.round(mw * sc))
-      const ph = Math.max(2, Math.round(mh * sc))
-      const key = `${mx0},${my0},${mw},${mh},${pw},${bezel},${k}|` + shapes.map((s) => `${Math.round(s.cx.x * 4)},${Math.round(s.cy.x * 4)},${Math.round(s.hx.x * 4)},${Math.round(s.hy.x * 4)},${Math.round(s.r.x * 2)},${Math.round(s.mat.x * 100)},${s.group}`).join(';')
-      let url = this.mapCache.get(key)
-      const fx = this.fx
-      const tm = performance.now()
-      if (!url) {
-        const mp: DrawParams = { ...base, pass: 0, win: [mx0, my0, mw, mh], px: pw / mw, sample: false }
-        const t1 = performance.now()
-        const my = gl.draw(mp, pw, ph)
-        if (this.mapCanvas.width !== pw || this.mapCanvas.height !== ph) {
-          this.mapCanvas.width = pw
-          this.mapCanvas.height = ph
-        }
-        this.mctx.globalCompositeOperation = 'copy'
-        this.mctx.drawImage(gl.canvas, 0, my, pw, ph, 0, 0, pw, ph)
-        const t2 = performance.now()
-        url = this.mapCanvas.toDataURL()
-        const t3 = performance.now()
-        if (this.mapCache.size > 24) this.mapCache.delete(this.mapCache.keys().next().value as string)
-        this.mapCache.set(key, url)
-        stats.mapGlMs += t2 - t1
-        stats.mapEncodeMs += t3 - t2
-        stats.lastMapMs = t3 - t1
-        stats.maxMapMs = Math.max(stats.maxMapMs, t3 - t1)
-        stats.mapPx = pw * ph
-        stats.frames++
-        const cost = t3 - t1
-        if (cost > 2.2) this.mapCap = Math.max(5000, this.mapCap * 0.78)
-        else if (cost < 1.0) this.mapCap = Math.min(env.coarse ? 20000 : 36000, this.mapCap * 1.04)
+      const clearAll = this.dominantClear(shapes)
+      const key =
+        `${mx0},${my0},${mw},${mh},${bezel},${k}|` +
+        shapes.map((s) => `${Math.round(s.cx.x * 4)},${Math.round(s.cy.x * 4)},${Math.round(s.hx.x * 4)},${Math.round(s.hy.x * 4)},${Math.round(s.r.x * 2)},${Math.round(s.mat.x * 100)},${s.group}`).join(';')
+      this.pendingMap = {
+        base,
+        win: [mx0, my0, mw, mh],
+        key,
+        S: c.refraction * Math.min(1, bezel / 24),
+        blur: clearAll ? c.blur / 8 : c.blur / 3,
+        sat: clearAll ? 1.2 : c.sat,
       }
-      fx.style.display = ''
-      fx.style.left = `${mx0}px`
-      fx.style.top = `${my0}px`
-      fx.style.width = `${mw}px`
-      fx.style.height = `${mh}px`
-      const f = this.filterEl
-      f.setAttribute('width', String(mw))
-      f.setAttribute('height', String(mh))
-      this.feImage.setAttribute('width', String(mw))
-      this.feImage.setAttribute('height', String(mh))
-      if (this.feImage.getAttribute('href') !== url) this.feImage.setAttribute('href', url)
-      const S = c.refraction * Math.min(1, bezel / 24)
-      this.feBlur?.setAttribute('stdDeviation', String(this.dominantClear(shapes) ? c.blur / 8 : c.blur / 3))
-      this.feDisp[0]?.setAttribute('scale', String(S * 1.06))
-      this.feDisp[1]?.setAttribute('scale', String(S))
-      this.feDisp[2]?.setAttribute('scale', String(S * 0.94))
-      this.feSat?.setAttribute('values', String(this.dominantClear(shapes) ? 1.2 : c.sat))
-      fx.style.backdropFilter = `url(#${this.filterId})`
-      stats.updateMs += performance.now() - tm - 0
+      this.flushMap(gl, performance.now())
     }
+  }
+
+  /** Issues the pending map if the interval allows; cached maps apply immediately. */
+  private flushMap(gl: GlassGL, now: number) {
+    const pm = this.pendingMap
+    if (!pm || !this.mctx || !this.mapCanvas) return
+    const [mx0, my0, mw, mh] = pm.win
+    const meta: MapMeta = { mx0, my0, mw, mh, S: pm.S, blur: pm.blur, sat: pm.sat }
+    const cached = this.mapCache.get(pm.key)
+    if (cached) {
+      this.applyMap(meta, cached)
+      this.pendingMap = null
+      return
+    }
+    if (this.tickets.length >= 3 || this.inflight >= 2 || now - this.lastMapAt < MAP_INTERVAL) return
+    // Tiny map: the lens profile is low frequency and feImage upsamples bilinearly. The cost is the
+    // GPU->CPU readback latency, not the pixel count, so the size is fixed.
+    const sc = Math.min(1, Math.sqrt(this.mapCap / (mw * mh)))
+    const pw = Math.max(2, Math.round(mw * sc))
+    const ph = Math.max(2, Math.round(mh * sc))
+    const t1 = performance.now()
+    const mp: DrawParams = { ...pm.base, pass: 0, win: pm.win, px: pw / mw, sample: false }
+    const worker = getMapWorker()
+    if (worker) {
+      const id = ++workerSeq
+      this.inflight++
+      workerPending.set(id, (blob) => {
+        this.inflight--
+        if (!blob) {
+          this.invalidate(true)
+          return
+        }
+        if (this.disposed || id < this.mapApplied) return
+        this.mapApplied = id
+        const url = URL.createObjectURL(blob)
+        this.cacheMap(pm.key, url)
+        this.applyMap(meta, url)
+        stats.mapLatencyMs += performance.now() - t1
+        if (this.pendingMap) this.invalidate()
+      })
+      worker.postMessage({ id, params: mp, w: pw, h: ph })
+      this.lastMapAt = now
+      this.pendingMap = null
+      const dt = performance.now() - t1
+      stats.mapGlMs += dt
+      stats.frames++
+      stats.mapPx = pw * ph
+      stats.lastMapMs = dt
+      stats.maxMapMs = Math.max(stats.maxMapMs, dt)
+      return
+    }
+    const ticket = gl.issueMap(mp, pw, ph, { ...meta, key: pm.key })
+    if (ticket) this.tickets.push(ticket)
+    this.lastMapAt = now
+    this.pendingMap = null
+    const dt = performance.now() - t1
+    stats.mapGlMs += dt
+    stats.frames++
+    stats.mapPx = pw * ph
+    this.mapIssueMs = dt
+  }
+
+  private cacheMap(key: string, url: string) {
+    if (this.mapCache.size > 24) {
+      const k = this.mapCache.keys().next().value as string
+      const old = this.mapCache.get(k)
+      this.mapCache.delete(k)
+      if (old?.startsWith('blob:')) setTimeout(() => URL.revokeObjectURL(old), 400)
+    }
+    this.mapCache.set(key, url)
+  }
+
+  private applyMap(m: MapMeta, url: string) {
+    const fx = this.fx
+    if (!fx || !this.feImage || !this.filterEl) return
+    fx.style.display = ''
+    fx.style.left = `${m.mx0}px`
+    fx.style.top = `${m.my0}px`
+    fx.style.width = `${m.mw}px`
+    fx.style.height = `${m.mh}px`
+    this.filterEl.setAttribute('width', String(m.mw))
+    this.filterEl.setAttribute('height', String(m.mh))
+    this.feImage.setAttribute('width', String(m.mw))
+    this.feImage.setAttribute('height', String(m.mh))
+    if (this.feImage.getAttribute('href') !== url) this.feImage.setAttribute('href', url)
+    this.feBlur?.setAttribute('stdDeviation', String(m.blur))
+    this.feDisp[0]?.setAttribute('scale', String(m.S * 1.06))
+    this.feDisp[1]?.setAttribute('scale', String(m.S))
+    this.feDisp[2]?.setAttribute('scale', String(m.S * 0.94))
+    this.feSat?.setAttribute('values', String(m.sat))
+    if (!fx.style.backdropFilter) fx.style.backdropFilter = `url(#${this.filterId})`
+  }
+
+  /** Picks up finished map readbacks (newest ready wins) and applies them. */
+  private pumpMaps(gl: GlassGL): boolean {
+    if (!this.tickets.length) return false
+    let ready = -1
+    for (let i = this.tickets.length - 1; i >= 0; i--) {
+      if (gl.isMapReady(this.tickets[i])) {
+        ready = i
+        break
+      }
+    }
+    if (ready < 0) return true
+    const t0 = performance.now()
+    const t = this.tickets[ready]
+    for (let i = 0; i <= ready; i++) {
+      if (i !== ready) gl.releaseMap(this.tickets[i])
+    }
+    this.tickets.splice(0, ready + 1)
+    const meta = t.meta as MapMeta & { key: string }
+    const need = t.w * t.h * 4
+    if (!this.readBuf || this.readBuf.length < need) this.readBuf = new Uint8ClampedArray(new ArrayBuffer(need))
+    const tr0 = performance.now()
+    gl.readMap(t, this.readBuf)
+    stats.mapReadMs += performance.now() - tr0
+    gl.releaseMap(t)
+    const mc = this.mapCanvas!
+    if (mc.width !== t.w || mc.height !== t.h) {
+      mc.width = t.w
+      mc.height = t.h
+    }
+    this.mctx!.putImageData(new ImageData(this.readBuf.subarray(0, need), t.w, t.h), 0, 0)
+    const url = mc.toDataURL()
+    this.cacheMap(meta.key, url)
+    this.applyMap(meta, url)
+    const cost = performance.now() - t0 + this.mapIssueMs
+    stats.mapEncodeMs += performance.now() - t0
+    stats.lastMapMs = cost
+    stats.maxMapMs = Math.max(stats.maxMapMs, cost)
+    return this.tickets.length > 0 || this.pendingMap !== null
   }
 
   private dominantClear(shapes: ShapeState[]): boolean {

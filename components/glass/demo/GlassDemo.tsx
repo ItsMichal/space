@@ -264,12 +264,12 @@ function FoldDemo() {
 }
 
 function Hud() {
-  const [s, setS] = useState({ frames: 0, mapMs: 0, glMs: 0, encMs: 0, surf: 0, mode: '' })
+  const [s, setS] = useState({ frames: 0, mapMs: 0, glMs: 0, readMs: 0, latMs: 0, encMs: 0, surf: 0, mode: '' })
   useEffect(() => {
     const id = setInterval(() => {
       const g = getGlassStats()
       const n = Math.max(g.frames, 1)
-      setS({ frames: g.frames, mapMs: (g.mapGlMs + g.mapEncodeMs) / n, glMs: g.mapGlMs / n, encMs: g.mapEncodeMs / n, surf: g.surfaceMs, mode: g.mode })
+      setS({ frames: g.frames, mapMs: (g.mapGlMs + g.mapEncodeMs) / n, glMs: g.mapGlMs / n, readMs: g.mapReadMs / n, latMs: g.mapLatencyMs / n, encMs: (g.mapEncodeMs - g.mapReadMs) / n, surf: g.surfaceMs, mode: g.mode })
     }, 500)
     return () => clearInterval(id)
   }, [])
@@ -280,7 +280,7 @@ function Hud() {
     <div className="mb-space-8 flex flex-wrap items-center gap-space-4 text-body text-ink-muted">
       <span>engine: {s.mode || 'n/a'}</span>
       <span>map frames: {s.frames}</span>
-      <span>map avg: {s.mapMs.toFixed(2)} ms (gl {s.glMs.toFixed(2)}, png {s.encMs.toFixed(2)})</span>
+      <span>map avg: {s.mapMs.toFixed(2)} ms (shader {s.glMs.toFixed(2)}, readback {s.readMs.toFixed(2)}, png {s.encMs.toFixed(2)}, latency {s.latMs.toFixed(1)})</span>
       <button type="button" className="link" onClick={resetGlassStats}>reset</button>
       {needsGesture ? (
         <button type="button" className="link" onClick={async () => setMotion(await enableGlassMotion())}>

@@ -145,7 +145,10 @@ Attr attrs(vec2 p) {
 
 vec2 winPos() {
   vec2 fc = gl_FragCoord.xy;
-  return uWin.xy + vec2(fc.x, uWinPx.y - fc.y) / uPx;
+  // the surface is copied with drawImage (top-down); the map is read back with readPixels (bottom-up),
+  // so pass 0 maps GL row 0 to the top of the image and no CPU flip is needed
+  float y = uPass == 0 ? fc.y : uWinPx.y - fc.y;
+  return uWin.xy + vec2(fc.x, y) / uPx;
 }
 
 vec3 bgAt(vec2 p) {

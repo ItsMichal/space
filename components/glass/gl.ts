@@ -49,17 +49,26 @@ const UNIFORMS = [
 
 type UName = (typeof UNIFORMS)[number]
 
+export type MapTicket = {
+  pbo: WebGLBuffer
+  fence: WebGLSync
+  w: number
+  h: number
+  meta: unknown
+}
+
 export class GlassGL {
-  readonly canvas: HTMLCanvasElement
+  readonly canvas: HTMLCanvasElement | OffscreenCanvas
   private gl: WebGL2RenderingContext
   private prog: WebGLProgram
   private loc = {} as Record<UName, WebGLUniformLocation | null>
   private tex: WebGLTexture | null = null
   private texVersion = -1
   private lost = false
+  private pboPool: WebGLBuffer[] = []
   onLost: (() => void) | null = null
 
-  private constructor(canvas: HTMLCanvasElement, gl: WebGL2RenderingContext, prog: WebGLProgram) {
+  private constructor(canvas: HTMLCanvasElement | OffscreenCanvas, gl: WebGL2RenderingContext, prog: WebGLProgram) {
     this.canvas = canvas
     this.gl = gl
     this.prog = prog
@@ -71,11 +80,12 @@ export class GlassGL {
     })
   }
 
-  static create(): GlassGL | null {
-    const canvas = document.createElement('canvas')
+  /** `factory` lets a worker supply an OffscreenCanvas; the default is a detached <canvas>. */
+  static create(factory?: () => HTMLCanvasElement | OffscreenCanvas): GlassGL | null {
+    const canvas = factory ? factory() : document.createElement('canvas')
     canvas.width = 64
     canvas.height = 64
-    const gl = canvas.getContext('webgl2', {
+    const gl = (canvas as HTMLCanvasElement).getContext('webgl2', {
       alpha: true,
       premultipliedAlpha: true,
       antialias: false,
@@ -130,6 +140,47 @@ export class GlassGL {
       this.canvas.width = nw
       this.canvas.height = nh
     }
+  }
+
+  /**
+   * Renders the displacement map and starts an asynchronous readback into a pixel buffer. Nothing
+   * blocks: the CPU only learns the pixels once the GPU fence signals, normally a frame later.
+   */
+  issueMap(p: DrawParams, wpx: number, hpx: number, meta: unknown): MapTicket | null {
+    const gl = this.gl
+    this.draw(p, wpx, hpx)
+    const pbo = this.pboPool.pop() ?? gl.createBuffer()
+    if (!pbo) return null
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, pbo)
+    gl.bufferData(gl.PIXEL_PACK_BUFFER, wpx * hpx * 4, gl.STREAM_READ)
+    gl.readPixels(0, 0, wpx, hpx, gl.RGBA, gl.UNSIGNED_BYTE, 0)
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null)
+    const fence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0)
+    if (!fence) {
+      this.pboPool.push(pbo)
+      return null
+    }
+    gl.flush()
+    return { pbo, fence, w: wpx, h: hpx, meta }
+  }
+
+  isMapReady(t: MapTicket): boolean {
+    const r = this.gl.clientWaitSync(t.fence, 0, 0)
+    return r === this.gl.ALREADY_SIGNALED || r === this.gl.CONDITION_SATISFIED
+  }
+
+  /** Copies the pixels out (top-down RGBA) and recycles the ticket. */
+  readMap(t: MapTicket, into: Uint8ClampedArray<ArrayBuffer>): void {
+    const gl = this.gl
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, t.pbo)
+    gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, into, 0, t.w * t.h * 4)
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null)
+  }
+
+  releaseMap(t: MapTicket): void {
+    this.gl.deleteSync(t.fence)
+    if (this.pboPool.length < 4) this.pboPool.push(t.pbo)
+    else this.gl.deleteBuffer(t.pbo)
   }
 
   uploadBackdrop(source: HTMLCanvasElement | null, version: number) {
