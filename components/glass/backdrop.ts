@@ -79,33 +79,43 @@ function averageGradient(img: string): number | null {
   return n ? sum / n : null
 }
 
+export type BackdropProbe = {
+  /** Luminance 0..1 of the first opaque thing behind, or null when nothing was found. */
+  lum: number | null
+  /** True when only the page itself (html/body, and so the lidar field) is behind: the sample path can refract it. */
+  plain: boolean
+}
+
 /**
- * Luminance (0..1) of whatever paints behind (x, y), skipping `skip`'s subtree.
+ * Probes whatever paints behind (x, y), skipping `skip`'s subtree.
  * Honours `data-glass-luminance="0..1"` on any ancestor of the backdrop for images / video.
- * Returns null when nothing opaque was found.
  */
-export function luminanceAt(x: number, y: number, skip: Element): number | null {
+export function probeBackdrop(x: number, y: number, skip: Element): BackdropProbe {
   const stack = document.elementsFromPoint(x, y)
   for (const el of stack) {
     if (skip.contains(el) || el.closest('[data-glass-container],[data-glass-member]')) continue
     const hint = el.closest('[data-glass-luminance]')?.getAttribute('data-glass-luminance')
     if (hint != null && hint !== '') {
       const v = parseFloat(hint)
-      if (Number.isFinite(v)) return Math.min(Math.max(v, 0), 1)
+      if (Number.isFinite(v)) return { lum: Math.min(Math.max(v, 0), 1), plain: false }
     }
     const cs = getComputedStyle(el)
+    const isRoot = el === document.documentElement || el === document.body
     const bg = cs.backgroundColor
     if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
       const c = canvasParse(bg)
-      if (c[3] > 0.6) return colorLuminance(c)
+      if (c[3] > 0.6) return { lum: colorLuminance(c), plain: isRoot }
     }
     const img = cs.backgroundImage
-    if (img && img !== 'none' && /gradient/.test(img)) {
+    if (img && img !== 'none' && /gradient|url\(/.test(img) && !isRoot) {
       const l = averageGradient(img)
-      if (l != null) return l
+      return { lum: l, plain: false }
+    }
+    if (el.tagName === 'IMG' || el.tagName === 'VIDEO' || el.tagName === 'CANVAS' && !el.closest('[aria-hidden]')) {
+      return { lum: null, plain: false }
     }
   }
-  return null
+  return { lum: null, plain: true }
 }
 
 // ---------------------------------------------------------------- lidar snapshot (sample path)

@@ -34,7 +34,7 @@ import {
   invalidateColors,
   onSnapshot,
   lidarOpacity,
-  luminanceAt,
+  probeBackdrop,
   resolveColor,
   snapshot,
   snapshotVersion,
@@ -223,6 +223,14 @@ export function resetGlassStats(): void {
   Object.assign(stats, { frames: 0, mapGlMs: 0, mapEncodeMs: 0, mapReadMs: 0, mapLatencyMs: 0, surfaceMs: 0, updateMs: 0, maxMapMs: 0, lastMapMs: 0 })
 }
 
+let engineOverride: GlassEngineMode | null = null
+
+/** Force a rendering path for every field (testing, or an in-app switch). Pass null to restore auto. */
+export function setGlassEngineOverride(mode: GlassEngineMode | null): void {
+  engineOverride = mode
+  fields.forEach((f) => f.envChanged())
+}
+
 function schedule() {
   if (!raf && typeof window !== 'undefined') raf = requestAnimationFrame(tick)
 }
@@ -279,6 +287,8 @@ class ShapeState {
   dark = 0
   darkTarget = 0
   darkBool = false
+  lens = 1
+  lensTarget = 1
   group = -1
   tint: RGBA = [0, 0, 0, 0]
   clear = 0
@@ -330,6 +340,10 @@ class ShapeState {
       this.dark += (this.darkTarget - this.dark) * (1 - Math.exp(-dt / 0.16))
       moving = true
     } else this.dark = this.darkTarget
+    if (Math.abs(this.lens - this.lensTarget) > 0.002) {
+      this.lens += (this.lensTarget - this.lens) * (1 - Math.exp(-dt / 0.2))
+      moving = true
+    } else this.lens = this.lensTarget
     return moving
   }
 
@@ -600,7 +614,7 @@ export class Field {
   }
 
   private resolveMode() {
-    const want = this.requested
+    const want = engineOverride ?? this.requested
     let mode: Field['mode']
     if (env.reduceTransparency || env.moreContrast || want === 'flat') mode = 'flat'
     else if (want === 'svg' || (want === 'auto' && env.chromium)) mode = 'svg'
@@ -980,15 +994,16 @@ export class Field {
 
   private probeTone(m: ShapeState, hr: DOMRect) {
     const eff = m.cfg.effect
+    const needLens = this.mode === 'sample'
+    const needTone = eff.variant !== 'clear' && m.cfg.appearance === 'auto'
+    const pr = needLens || needTone ? probeBackdrop(hr.left + m.cx.x, hr.top + m.cy.x, this.host) : null
+    // sample path: only refract when nothing but the page (and so the lidar field) is behind
+    if (needLens) m.lensTarget = pr?.plain ? 1 : 0
     let target: boolean
     if (eff.variant === 'clear') target = false
     else if (m.cfg.appearance === 'dark') target = true
     else if (m.cfg.appearance === 'light') target = false
-    else {
-      const lum = luminanceAt(hr.left + m.cx.x, hr.top + m.cy.x, this.host) ?? this.css.pageLum
-      target = flipTone(lum, m.darkBool)
-    }
-    // glass body tint is chosen by tone: dark glass over a dark page matches the dark theme token
+    else target = flipTone(pr?.lum ?? this.css.pageLum, m.darkBool)
     m.darkBool = target
     m.darkTarget = target ? 1 : 0
   }
@@ -999,7 +1014,7 @@ export class Field {
     for (const m of shapes) {
       s +=
         `${Math.round(m.cx.x * 8)},${Math.round(m.cy.x * 8)},${Math.round(m.hx.x * 8)},${Math.round(m.hy.x * 8)},${Math.round(m.r.x * 4)},` +
-        `${Math.round(m.mat.x * 200)},${Math.round(m.press.x * 100)},${Math.round(m.fold.x * 100)},${Math.round(m.dark * 40)},${m.group};` +
+        `${Math.round(m.mat.x * 200)},${Math.round(m.press.x * 100)},${Math.round(m.fold.x * 100)},${Math.round(m.dark * 40)},${Math.round(m.lens * 20)},${m.group};` +
         (m.press.x > 0.002 ? `${Math.round(m.touchX)},${Math.round(m.touchY)};` : '')
     }
     return s
@@ -1034,7 +1049,7 @@ export class Field {
       par.set([Math.max(m.r.x, 0), clamp(m.mat.x, 0, 1), m.group, m.dark], i * 4)
       tint.set(m.tint, i * 4)
       misc.set([m.clear, clamp(m.press.x, 0, 1), m.touchX, m.touchY], i * 4)
-      fold.set([m.creaseY, clamp(m.fold.x, 0, 1), 0, 0], i * 4)
+      fold.set([m.creaseY, clamp(m.fold.x, 0, 1), m.lens, 0], i * 4)
       minX = Math.min(minX, m.cx.x - m.hx.x)
       maxX = Math.max(maxX, m.cx.x + m.hx.x)
       minY = Math.min(minY, m.cy.x - m.hy.x)

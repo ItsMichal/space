@@ -16,6 +16,7 @@ import {
   motionNeedsGesture,
   projectMomentum,
   resetGlassStats,
+  setGlassEngineOverride,
   rubberBand,
   springFor,
   springSettled,
@@ -372,6 +373,12 @@ function Hud() {
 }
 
 export function GlassDemo() {
+  // ?engine=svg|sample|flat forces a rendering path (e.g. to preview the Safari path in Chromium)
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get('engine')
+    if (q === 'svg' || q === 'sample' || q === 'flat') setGlassEngineOverride(q)
+    return () => setGlassEngineOverride(null)
+  }, [])
   return (
     <div id="top" className="mx-auto max-w-content px-space-4 pb-space-24 pt-[120px] md:px-space-8">
       <h1 className="mb-space-2 text-heading">Glass</h1>

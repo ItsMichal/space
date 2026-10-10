@@ -108,10 +108,10 @@ float rimShift(float t) {
 }
 
 // materialise-weighted attributes of the nearest shapes
-struct Attr { vec4 tint; float dark; float clear; float mat; float glow; float fold; float foldY; };
+struct Attr { vec4 tint; float dark; float clear; float mat; float glow; float fold; float foldY; float lens; };
 
 Attr attrs(vec2 p) {
-  Attr a = Attr(vec4(0.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  Attr a = Attr(vec4(0.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
   float ws = 0.0;
   for (int i = 0; i < MAXN; i++) {
     if (i >= uN) break;
@@ -124,6 +124,7 @@ Attr attrs(vec2 p) {
     a.dark += w * uPar[i].w;
     a.clear += w * uMisc[i].x;
     a.mat += w * uPar[i].y;
+    a.lens += w * uFold[i].z;
     // touch illumination: starts under the finger, spreads over the shape and onto neighbours
     float pr = uMisc[i].y;
     if (pr > 0.001) {
@@ -139,7 +140,7 @@ Attr attrs(vec2 p) {
   }
   if (ws > 0.0) {
     a.tint = vec4(a.tint.a > 1e-4 ? a.tint.rgb / a.tint.a : vec3(0.0), a.tint.a / ws);
-    a.dark /= ws; a.clear /= ws; a.mat /= ws;
+    a.dark /= ws; a.clear /= ws; a.mat /= ws; a.lens /= ws;
   }
   return a;
 }
@@ -194,7 +195,7 @@ void main() {
     float mag = rimShift(t) / uPeak * a.mat;
     vec2 v = -gradient(p) * mag * uShift;
     vec3 c = vec3(bgAt(p + v * (1.0 + uDisp)).r, bgAt(p + v).g, bgAt(p + v * (1.0 - uDisp)).b);
-    float la = clamp(mag * 4.0, 0.0, 1.0);
+    float la = clamp(mag * 4.0, 0.0, 0.92) * a.lens;
     body = vec4(c * la, la);
   }
 
