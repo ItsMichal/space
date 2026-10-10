@@ -39,7 +39,7 @@ Dev showcase: `npm run dev`, open `/glass` (file `app/glass/page.dev.tsx`, not p
 
 Extras: `GlassFold` / `GlassFoldItem` (hinged menu, below), `enableGlassMotion()` (opt in to device-motion
 light on iOS), `springFor / projectMomentum / rubberBand` (the motion helpers the engine uses),
-`setGlassEngineOverride('svg' | 'sample' | 'flat' | null)`, `getGlassStats()`.
+`setGlassEngineOverride('svg' | 'frost' | 'flat' | null)`, `getGlassStats()`.
 
 `LiquidGlass` and `GlassButton` keep their old props and are thin wrappers (`shape="inherit"`, regular glass;
 `GlassButton` is interactive). A `LiquidGlass` inside a `GlassEffectContainer` joins that container's field
@@ -58,19 +58,18 @@ Field (one per container, or per lone glass element)
     svg engine (Chromium)   map pass in a worker (OffscreenCanvas + WebGL2) -> PNG blob -> <feImage>
                             <div class="glass-fx"> backdrop-filter: url(#filter)
                             filter: blur -> 3x feDisplacementMap (R/G/B dispersion) -> saturate -> clip by coverage
-    sample engine (Safari / Firefox / iOS)
-                            surface shader refracts a downscaled snapshot of the lidar canvas (n = 1.5 Snell,
-                            per-channel dispersion) over the rim only; interior stays see-through with a CSS
-                            backdrop blur box per member. Lens is skipped where something other than the page is
-                            behind (cards, images), so colours never lie.
+                            refracts whatever is really behind: paper, photos, botanical art, text
+    frost engine (Safari / Firefox / iOS)
+                            no backdrop lens exists in those engines, so the glass is finished as frosted glass:
+                            one CSS backdrop-blur box per member under the canvas, tint, adaptive tone, and the
+                            surface shader adds a rim bevel (light side lifts, far side sinks), two-lobed specular,
+                            water-drop gloss and soft shadow to suggest thickness
     flat                    CSS fallback (.lg in globals.css): SSR, no WebGL2, reduced transparency, more contrast
 ```
 
 * **Shapes** are rounded-rect SDFs combined with a polynomial smooth-min. The lens profile is a convex squircle
   rim `h(t) = (1 - (1 - t)^4)^(1/4)`, rays bend by Snell's law at n = 1.5; the same maths is in
   `geometry.ts` (unit tested) and `shaders.ts` (GLSL).
-* **Lidar tap**: `components/lidar/tap.ts` is an additive seam (the lidar canvas has no preserveDrawingBuffer,
-  so it can only be read in the task that drew it). `LidarBackground` calls `notifyLidarFrame()` after each draw.
 * **Idle costs nothing**: the loop runs only while something moves; fields off-screen sleep.
 * **Light**: pointer direction with heavy smoothing; `DeviceOrientation` attached automatically where no
   permission is needed (Android, desktop), never prompted on iOS (call `enableGlassMotion()` from a tap);
@@ -94,7 +93,7 @@ UI growing with the device instead of relaunching); no timings from Apple are kn
 
 | | Chromium (desktop, Android) | Safari / iOS | Firefox |
 | --- | --- | --- | --- |
-| Engine | svg: true backdrop refraction of everything | sample: lidar refraction, frost, specular | sample |
+| Engine | svg: true backdrop refraction of everything | frost: blur, tint, bevel, specular, gloss | frost |
 | WebGL2 | required for the engine | yes (15+) | yes |
 | Map worker (OffscreenCanvas GL) | yes, else main-thread PBO readback | not used | not used |
 | Device-motion light | automatic | after `enableGlassMotion()` in a tap | n/a |
@@ -116,5 +115,5 @@ sub-millisecond for the nav, a few hundred microseconds of JS submit. Idle: zero
 
 ## Known limits
 
-Up to 12 shapes per container. Safari can't refract arbitrary DOM (only the lidar field). Lens in the svg engine
+Up to 12 shapes per container. Safari and Firefox cannot refract the real backdrop (no `backdrop-filter: url()` support), so they get the frost finish without lensing. Lens in the svg engine
 lags the shape by about one map update during very fast motion. Glass shouldn't nest in glass.

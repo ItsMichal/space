@@ -33,19 +33,14 @@ export type DrawParams = {
   shadowCol: [number, number, number]
   glow: RGBA
   themeDark: number
-  sample: boolean
+  frost: boolean
   readback?: boolean
-  bgMap: [number, number, number, number]
-  paper: [number, number, number]
-  bgOpacity: number
-  shift: number
-  disp: number
 }
 
 const UNIFORMS = [
   'uPass', 'uN', 'uRect', 'uPar', 'uTint', 'uMisc', 'uFold', 'uK', 'uUnionK', 'uWin', 'uWinPx', 'uPx', 'uBezel',
   'uPeak', 'uLight', 'uLightK', 'uTintLight', 'uTintDark', 'uRim', 'uEdge', 'uShadow', 'uShadowCol', 'uGlow',
-  'uThemeDark', 'uReadback', 'uSample', 'uBg', 'uBgMap', 'uBgPaper', 'uBgOpacity', 'uShift', 'uDisp',
+  'uThemeDark', 'uReadback', 'uFrost',
 ] as const
 
 type UName = (typeof UNIFORMS)[number]
@@ -63,8 +58,6 @@ export class GlassGL {
   private gl: WebGL2RenderingContext
   private prog: WebGLProgram
   private loc = {} as Record<UName, WebGLUniformLocation | null>
-  private tex: WebGLTexture | null = null
-  private texVersion = -1
   private lost = false
   private pboPool: WebGLBuffer[] = []
   onLost: (() => void) | null = null
@@ -184,23 +177,6 @@ export class GlassGL {
     else this.gl.deleteBuffer(t.pbo)
   }
 
-  uploadBackdrop(source: HTMLCanvasElement | null, version: number) {
-    if (!source || version === this.texVersion) return
-    const gl = this.gl
-    if (!this.tex) {
-      this.tex = gl.createTexture()
-      gl.bindTexture(gl.TEXTURE_2D, this.tex)
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-    }
-    gl.bindTexture(gl.TEXTURE_2D, this.tex)
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true)
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source)
-    this.texVersion = version
-  }
-
   /**
    * Renders one pass. Returns the source y of the window in `canvas` (WebGL's origin is bottom-left,
    * so a window of height `hpx` lives at canvas.height - hpx).
@@ -236,17 +212,7 @@ export class GlassGL {
     gl.uniform4f(L.uGlow, ...p.glow)
     gl.uniform1f(L.uThemeDark, p.themeDark)
     gl.uniform1i(L.uReadback, p.readback ? 1 : 0)
-    gl.uniform1i(L.uSample, p.sample && this.tex ? 1 : 0)
-    if (p.sample && this.tex) {
-      gl.activeTexture(gl.TEXTURE0)
-      gl.bindTexture(gl.TEXTURE_2D, this.tex)
-      gl.uniform1i(L.uBg, 0)
-    }
-    gl.uniform4f(L.uBgMap, p.bgMap[0], p.bgMap[1], p.bgMap[2], p.bgMap[3])
-    gl.uniform3f(L.uBgPaper, ...p.paper)
-    gl.uniform1f(L.uBgOpacity, p.bgOpacity)
-    gl.uniform1f(L.uShift, p.shift)
-    gl.uniform1f(L.uDisp, p.disp)
+    gl.uniform1i(L.uFrost, p.frost ? 1 : 0)
     gl.drawArrays(gl.TRIANGLES, 0, 3)
     return this.canvas.height - hpx
   }

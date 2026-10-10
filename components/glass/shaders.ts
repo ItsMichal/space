@@ -2,7 +2,7 @@
  * GLSL for the glass field. One fragment shader, two entry points selected by uPass:
  *
  *   pass 0  displacement map  R,G = lens shift (0.5 = none), B = silhouette coverage, A = 1
- *   pass 1  surface           tint, lens (sample mode), specular rim, touch glow, fold crease, drop shadow
+ *   pass 1  surface           tint, frost bevel (no-lens engines), specular rim, touch glow, fold crease, drop shadow
  *
  * Every member shape is a rounded-rect SDF. They are combined with a polynomial smooth-min, so shapes
  * closer than `spacing` bleed into one another and separate again when they move apart. The lens
@@ -45,13 +45,7 @@ uniform vec3 uShadowCol;
 uniform vec4 uGlow;        // touch illumination colour
 uniform float uThemeDark;  // 1 when the page theme is dark
 uniform int uReadback;     // 1: pixels leave via readPixels (bottom-up rows), flip pass 0
-uniform int uSample;       // 1: refract uBg (Safari / Firefox path)
-uniform sampler2D uBg;
-uniform vec4 uBgMap;       // field->viewport offset xy (css), viewport size zw (css)
-uniform vec3 uBgPaper;     // page colour under the lidar canvas
-uniform float uBgOpacity;  // lidar wrapper opacity
-uniform float uShift;      // lens shift in css px at |v| = 1
-uniform float uDisp;       // chromatic dispersion, fraction of uShift
+uniform int uFrost;        // 1: no backdrop lens available (Safari / Firefox): fake thickness with a rim bevel
 
 out vec4 outColor;
 
@@ -108,10 +102,10 @@ float rimShift(float t) {
 }
 
 // materialise-weighted attributes of the nearest shapes
-struct Attr { vec4 tint; float dark; float clear; float mat; float glow; float fold; float foldY; float lens; };
+struct Attr { vec4 tint; float dark; float clear; float mat; float glow; float fold; float foldY; };
 
 Attr attrs(vec2 p) {
-  Attr a = Attr(vec4(0.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  Attr a = Attr(vec4(0.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
   float ws = 0.0;
   for (int i = 0; i < MAXN; i++) {
     if (i >= uN) break;
@@ -124,7 +118,6 @@ Attr attrs(vec2 p) {
     a.dark += w * uPar[i].w;
     a.clear += w * uMisc[i].x;
     a.mat += w * uPar[i].y;
-    a.lens += w * uFold[i].z;
     // touch illumination: starts under the finger, spreads over the shape and onto neighbours
     float pr = uMisc[i].y;
     if (pr > 0.001) {
@@ -140,7 +133,7 @@ Attr attrs(vec2 p) {
   }
   if (ws > 0.0) {
     a.tint = vec4(a.tint.a > 1e-4 ? a.tint.rgb / a.tint.a : vec3(0.0), a.tint.a / ws);
-    a.dark /= ws; a.clear /= ws; a.mat /= ws; a.lens /= ws;
+    a.dark /= ws; a.clear /= ws; a.mat /= ws;
   }
   return a;
 }
@@ -151,13 +144,6 @@ vec2 winPos() {
   // uReadback the map maps GL row 0 to the top of the image and no CPU flip is needed
   float y = (uPass == 0 && uReadback == 1) ? fc.y : uWinPx.y - fc.y;
   return uWin.xy + vec2(fc.x, y) / uPx;
-}
-
-vec3 bgAt(vec2 p) {
-  vec2 vp = p + uBgMap.xy;
-  vec2 uv = vp / uBgMap.zw;
-  vec4 s = texture(uBg, clamp(uv, vec2(0.001), vec2(0.999)));
-  return uBgPaper * (1.0 - s.a * uBgOpacity) + s.rgb * uBgOpacity;
 }
 
 void main() {
@@ -188,16 +174,7 @@ void main() {
   Attr a = attrs(p);
   float depth = max(-d, 0.0);
 
-  // lens (sample mode): refract the lidar texture across the rim only, interior stays see-through
   vec4 body = vec4(0.0);
-  if (uSample == 1 && depth < uBezel && cov > 0.0) {
-    float t = depth / uBezel;
-    float mag = rimShift(t) / uPeak * a.mat;
-    vec2 v = -gradient(p) * mag * uShift;
-    vec3 c = vec3(bgAt(p + v * (1.0 + uDisp)).r, bgAt(p + v).g, bgAt(p + v * (1.0 - uDisp)).b);
-    float la = clamp(mag * 4.0, 0.0, 0.92) * a.lens;
-    body = vec4(c * la, la);
-  }
 
   // body tint: adaptive light/dark, clear variant is nearly transparent
   vec4 base = mix(uTintLight, uTintDark, a.dark);
@@ -243,6 +220,15 @@ void main() {
   float gloss = exp(-depth / max(uBezel * 1.3, 6.0)) * max(-n.y, 0.0) * 0.16 * uLightK * (1.0 - 0.6 * a.dark) * (1.0 - 0.5 * a.clear);
   body.rgb += vec3(0.92, 0.97, 1.0) * gloss;
   body.a = clamp(body.a + gloss * 0.6, 0.0, 1.0);
+  if (uFrost == 1) {
+    // no lens without a real backdrop: suggest glass thickness with a bevel (light side lifts, far side sinks)
+    float bevel = exp(-depth / max(uBezel * 0.8, 5.0)) * dot(n, uLight);
+    vec3 lift = vec3(1.0) * max(bevel, 0.0) * 0.16 * (1.0 - 0.5 * a.clear);
+    vec4 sink = vec4(uEdge.rgb * max(-bevel, 0.0) * 0.5 * uEdge.a, max(-bevel, 0.0) * 0.5 * uEdge.a * 0.6);
+    body.rgb += lift;
+    body.a = clamp(body.a + max(bevel, 0.0) * 0.1, 0.0, 1.0);
+    body = sink + body * (1.0 - sink.a);
+  }
   body.a = clamp(max(body.a, rimI * uRim.a), 0.0, 1.0);
   float edgeI = band * (1.0 - clamp(spec, 0.0, 1.0)) * 0.7;
   vec4 ed = vec4(uEdge.rgb * edgeI * uEdge.a, edgeI * uEdge.a);

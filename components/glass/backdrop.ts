@@ -1,9 +1,7 @@
 /*
- * What is behind the glass: colour resolution, luminance probing for the adaptive light/dark flip,
- * and a cheap downscaled copy of the lidar canvas that the sample path refracts.
+ * What is behind the glass: colour resolution and luminance probing for the adaptive light/dark flip.
  */
 
-import { hasLidarSource, requestLidarRedraw, setLidarFrameListener } from '../lidar/tap'
 import { luminance } from './geometry'
 
 export type RGBA = [number, number, number, number]
@@ -79,126 +77,30 @@ function averageGradient(img: string): number | null {
   return n ? sum / n : null
 }
 
-export type BackdropProbe = {
-  /** Luminance 0..1 of the first opaque thing behind, or null when nothing was found. */
-  lum: number | null
-  /** True when only the page itself (html/body, and so the lidar field) is behind: the sample path can refract it. */
-  plain: boolean
-}
-
-/**
- * Probes whatever paints behind (x, y), skipping `skip`'s subtree.
- * Honours `data-glass-luminance="0..1"` on any ancestor of the backdrop for images / video.
- */
-export function probeBackdrop(x: number, y: number, skip: Element): BackdropProbe {
+export function probeBackdrop(x: number, y: number, skip: Element): number | null {
   const stack = document.elementsFromPoint(x, y)
   for (const el of stack) {
     if (skip.contains(el) || el.closest('[data-glass-container],[data-glass-member]')) continue
     const hint = el.closest('[data-glass-luminance]')?.getAttribute('data-glass-luminance')
     if (hint != null && hint !== '') {
       const v = parseFloat(hint)
-      if (Number.isFinite(v)) return { lum: Math.min(Math.max(v, 0), 1), plain: false }
+      if (Number.isFinite(v)) return Math.min(Math.max(v, 0), 1)
     }
     const cs = getComputedStyle(el)
     const isRoot = el === document.documentElement || el === document.body
     const bg = cs.backgroundColor
     if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
       const c = canvasParse(bg)
-      if (c[3] > 0.6) return { lum: colorLuminance(c), plain: isRoot }
+      if (c[3] > 0.6) return colorLuminance(c)
     }
     const img = cs.backgroundImage
     if (img && img !== 'none' && /gradient|url\(/.test(img) && !isRoot) {
       const l = averageGradient(img)
-      return { lum: l, plain: false }
+      if (l != null) return l
     }
     if (el.tagName === 'IMG' || el.tagName === 'VIDEO' || el.tagName === 'CANVAS' && !el.closest('[aria-hidden]')) {
-      return { lum: null, plain: false }
+      return null
     }
   }
-  return { lum: null, plain: true }
-}
-
-// ---------------------------------------------------------------- lidar snapshot (sample path)
-
-/** Scale of the snapshot relative to css px. Phones pay for few pixels, the lens only needs soft detail. */
-const SNAP_SCALE = 0.7
-const SNAP_MAX_W = 520
-
-let snap: HTMLCanvasElement | null = null
-let snapCtx: CanvasRenderingContext2D | null = null
-let snapVersion = 0
-let snapWanted = 0
-let lastSnap = 0
-let snapInterval = 50
-let lidarEl: HTMLCanvasElement | null = null
-
-export const snapshotVersion = () => snapVersion
-
-const snapSubs = new Set<() => void>()
-/** Called (inside the lidar frame task) whenever a fresh snapshot lands. */
-export function onSnapshot(fn: () => void): () => void {
-  snapSubs.add(fn)
-  return () => {
-    snapSubs.delete(fn)
-  }
-}
-
-export function snapshot(): HTMLCanvasElement | null {
-  return snapVersion > 0 ? snap : null
-}
-
-function onLidarFrame(canvas: HTMLCanvasElement) {
-  lidarEl = canvas
-  if (snapWanted <= 0) return
-  const now = performance.now()
-  if (now - lastSnap < snapInterval) return
-  lastSnap = now
-  const vw = Math.max(1, window.innerWidth)
-  const vh = Math.max(1, window.innerHeight)
-  const s = Math.min(SNAP_SCALE, SNAP_MAX_W / vw)
-  const w = Math.max(2, Math.round(vw * s))
-  const h = Math.max(2, Math.round(vh * s))
-  if (!snap) {
-    snap = document.createElement('canvas')
-    snapCtx = snap.getContext('2d', { willReadFrequently: false })
-  }
-  if (!snapCtx) return
-  if (snap.width !== w || snap.height !== h) {
-    snap.width = w
-    snap.height = h
-  }
-  snapCtx.clearRect(0, 0, w, h)
-  snapCtx.drawImage(canvas, 0, 0, w, h)
-  snapVersion++
-  snapSubs.forEach((f) => f())
-}
-
-/** Ref-counted: the lidar listener is only attached while some field needs the snapshot. */
-export function wantSnapshot(on: boolean, intervalMs = 50): () => void {
-  if (!on) return () => {}
-  snapWanted++
-  snapInterval = Math.min(snapInterval, intervalMs)
-  if (snapWanted === 1) {
-    setLidarFrameListener(onLidarFrame)
-    // still-frame lidar (reduced motion) would otherwise never reach us
-    if (hasLidarSource()) requestLidarRedraw()
-  }
-  let released = false
-  return () => {
-    if (released) return
-    released = true
-    snapWanted--
-    if (snapWanted <= 0) {
-      snapWanted = 0
-      setLidarFrameListener(null)
-    }
-  }
-}
-
-/** The lidar wrapper's opacity (the page fades the field behind articles). */
-export function lidarOpacity(): number {
-  const wrap = lidarEl?.parentElement
-  if (!wrap) return 1
-  const o = parseFloat(getComputedStyle(wrap).opacity)
-  return Number.isFinite(o) ? o : 1
+  return null
 }

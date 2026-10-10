@@ -10,7 +10,7 @@
  *     1. read member rects, step springs                                (cheap, no layout writes)
  *     2. surface pass  (WebGL2) -> drawImage into the visible canvas     tint, rim, glow, shadow, crease
  *     3. map pass      (WebGL2) -> 2D canvas -> PNG data URL -> feImage  Chromium only (svg engine)
- *        or lens pass inside (2) refracting the lidar snapshot           Safari / Firefox (sample engine)
+ *        or finished frost (no lens): backdrop blur boxes + rim bevel     Safari / Firefox / iOS (frost engine)
  *   idle: nothing runs.
  */
 
@@ -32,13 +32,8 @@ import {
 import {
   colorLuminance,
   invalidateColors,
-  onSnapshot,
-  lidarOpacity,
   probeBackdrop,
   resolveColor,
-  snapshot,
-  snapshotVersion,
-  wantSnapshot,
   type RGBA,
 } from './backdrop'
 import { GlassGL, type DrawParams, type MapTicket } from './gl'
@@ -47,7 +42,7 @@ import { lightFor, subscribeLight } from './lighting'
 
 export type GlassTransition = 'materialize' | 'matchedGeometry' | 'identity'
 export type GlassAppearance = 'auto' | 'light' | 'dark'
-export type GlassEngineMode = 'auto' | 'svg' | 'sample' | 'flat'
+export type GlassEngineMode = 'auto' | 'svg' | 'frost' | 'flat'
 
 export type MemberConfig = {
   effect: Glass
@@ -287,8 +282,6 @@ class ShapeState {
   dark = 0
   darkTarget = 0
   darkBool = false
-  lens = 1
-  lensTarget = 1
   group = -1
   tint: RGBA = [0, 0, 0, 0]
   clear = 0
@@ -340,10 +333,6 @@ class ShapeState {
       this.dark += (this.darkTarget - this.dark) * (1 - Math.exp(-dt / 0.16))
       moving = true
     } else this.dark = this.darkTarget
-    if (Math.abs(this.lens - this.lensTarget) > 0.002) {
-      this.lens += (this.lensTarget - this.lens) * (1 - Math.exp(-dt / 0.2))
-      moving = true
-    } else this.lens = this.lensTarget
     return moving
   }
 
@@ -528,29 +517,24 @@ export class Field {
   private ro: ResizeObserver | null = null
   private mo: MutationObserver | null = null
   private unsubLight: (() => void) | null = null
-  private releaseSnap: (() => void) | null = null
-  private unsubSnap: (() => void) | null = null
   private lastSig = ''
   private dirty = true
   private pollUntil = 0
   private lastProbe = 0
   private created = performance.now()
   private disposed = false
-  private lastSnapVersion = -1
   private cssEpoch = -1
   private css = {
     tintLight: [0.98, 0.976, 0.953, 0.44] as RGBA,
     tintDark: [0.106, 0.125, 0.106, 0.48] as RGBA,
     rim: [1, 1, 1, 0.95] as RGBA,
     edge: [0, 0, 0, 0.1] as RGBA,
-    paper: [0.96, 0.95, 0.91] as [number, number, number],
     blur: 10,
     sat: 1.6,
     refraction: 36,
     pageLum: 0.9,
     themeDark: 0,
   }
-  private onScroll = () => this.invalidate()
   private transitionEvt = () => {
     this.pollUntil = performance.now() + 700
     this.wake()
@@ -618,7 +602,7 @@ export class Field {
     let mode: Field['mode']
     if (env.reduceTransparency || env.moreContrast || want === 'flat') mode = 'flat'
     else if (want === 'svg' || (want === 'auto' && env.chromium)) mode = 'svg'
-    else mode = 'sample'
+    else mode = 'frost'
     if (mode !== 'flat' && !getGL()) mode = 'flat'
     this.setMode(mode)
   }
@@ -632,12 +616,6 @@ export class Field {
     stats.mode = mode
     const layer = this.layer!
     this.teardownLayerContents()
-    this.releaseSnap?.()
-    this.releaseSnap = null
-    this.unsubSnap?.()
-    this.unsubSnap = null
-    this.host.removeEventListener('scroll', this.onScroll)
-    window.removeEventListener('scroll', this.onScroll)
     this.host.setAttribute('data-glass-engine', mode)
     if (mode === 'flat') {
       this.applyLive()
@@ -657,9 +635,6 @@ export class Field {
       this.mapCanvas = document.createElement('canvas')
       this.mctx = this.mapCanvas.getContext('2d', { willReadFrequently: true })
     } else {
-      this.releaseSnap = wantSnapshot(true, env.coarse ? 66 : 50)
-      this.unsubSnap = onSnapshot(() => this.visible && this.invalidate())
-      window.addEventListener('scroll', this.onScroll, { passive: true })
     }
     layer.appendChild(surface)
     this.applyLive()
@@ -757,9 +732,6 @@ export class Field {
     this.ro?.disconnect()
     this.mo?.disconnect()
     this.unsubLight?.()
-    this.releaseSnap?.()
-    this.unsubSnap?.()
-    window.removeEventListener('scroll', this.onScroll)
     for (const t of ['transitionrun', 'transitionstart', 'transitionend', 'transitioncancel', 'animationstart', 'animationend', 'animationcancel'])
       this.host.removeEventListener(t, this.transitionEvt)
     this.members.forEach((m) => m.detachDom())
@@ -887,7 +859,6 @@ export class Field {
     const h = this.host
     const c = this.css
     const paper = resolveColor(h, 'var(--paper)', [0.96, 0.95, 0.91, 1])
-    c.paper = [paper[0], paper[1], paper[2]]
     c.pageLum = colorLuminance(paper)
     c.themeDark = c.pageLum < 0.25 ? 1 : 0
     c.tintLight = resolveColor(h, 'var(--glass-tint-light, rgba(251,249,243,.44))', c.tintLight)
@@ -978,43 +949,37 @@ export class Field {
 
     const shapes = list.length > MAX_SHAPES ? list.slice(0, MAX_SHAPES) : list
     const light = lightFor(hr.left + hr.width / 2, hr.top + hr.height / 2)
-    const sv = this.mode === 'sample' ? snapshotVersion() : 0
-    const sig = this.signature(shapes, hr, light, sv)
+    const sig = this.signature(shapes, hr, light)
     if (sig !== this.lastSig) {
       this.lastSig = sig
-      this.render(gl, shapes, hr, light, sv)
+      this.render(gl, shapes, hr, light)
     }
     this.dirty = false
-    this.lastSnapVersion = sv
     if (moving || pendingMaps || this.tickets.length > 0 || this.inflight > 0) return true
     if (now < this.pollUntil) return true
-    // sample mode refreshes on every new lidar snapshot (listener-driven)
     return false
   }
 
   private probeTone(m: ShapeState, hr: DOMRect) {
     const eff = m.cfg.effect
-    const needLens = this.mode === 'sample'
-    const needTone = eff.variant !== 'clear' && m.cfg.appearance === 'auto'
-    const pr = needLens || needTone ? probeBackdrop(hr.left + m.cx.x, hr.top + m.cy.x, this.host) : null
-    // sample path: only refract when nothing but the page (and so the lidar field) is behind
-    if (needLens) m.lensTarget = pr?.plain ? 1 : 0
     let target: boolean
     if (eff.variant === 'clear') target = false
     else if (m.cfg.appearance === 'dark') target = true
     else if (m.cfg.appearance === 'light') target = false
-    else target = flipTone(pr?.lum ?? this.css.pageLum, m.darkBool)
+    else {
+      const lum = probeBackdrop(hr.left + m.cx.x, hr.top + m.cy.x, this.host)
+      target = flipTone(lum ?? this.css.pageLum, m.darkBool)
+    }
     m.darkBool = target
     m.darkTarget = target ? 1 : 0
   }
 
-  private signature(shapes: ShapeState[], hr: DOMRect, light: { x: number; y: number; k: number }, sv: number): string {
-    let s = `${this.mode}|${envEpoch}|${(light.x * 60) | 0},${(light.y * 60) | 0}|${sv}|`
-    if (this.mode === 'sample') s += `${Math.round(hr.left)},${Math.round(hr.top)}|`
+  private signature(shapes: ShapeState[], hr: DOMRect, light: { x: number; y: number; k: number }): string {
+    let s = `${this.mode}|${envEpoch}|${(light.x * 60) | 0},${(light.y * 60) | 0}|`
     for (const m of shapes) {
       s +=
         `${Math.round(m.cx.x * 8)},${Math.round(m.cy.x * 8)},${Math.round(m.hx.x * 8)},${Math.round(m.hy.x * 8)},${Math.round(m.r.x * 4)},` +
-        `${Math.round(m.mat.x * 200)},${Math.round(m.press.x * 100)},${Math.round(m.fold.x * 100)},${Math.round(m.dark * 40)},${Math.round(m.lens * 20)},${m.group};` +
+        `${Math.round(m.mat.x * 200)},${Math.round(m.press.x * 100)},${Math.round(m.fold.x * 100)},${Math.round(m.dark * 40)},${m.group};` +
         (m.press.x > 0.002 ? `${Math.round(m.touchX)},${Math.round(m.touchY)};` : '')
     }
     return s
@@ -1022,7 +987,7 @@ export class Field {
 
   // ------------------------------------------------------------ rendering
 
-  private render(gl: GlassGL, shapes: ShapeState[], hr: DOMRect, light: { x: number; y: number; k: number }, sv: number) {
+  private render(gl: GlassGL, shapes: ShapeState[], hr: DOMRect, light: { x: number; y: number; k: number }) {
     const layer = this.layer
     if (!layer || !this.surface || !this.sctx) return
     if (!shapes.length) {
@@ -1049,7 +1014,7 @@ export class Field {
       par.set([Math.max(m.r.x, 0), clamp(m.mat.x, 0, 1), m.group, m.dark], i * 4)
       tint.set(m.tint, i * 4)
       misc.set([m.clear, clamp(m.press.x, 0, 1), m.touchX, m.touchY], i * 4)
-      fold.set([m.creaseY, clamp(m.fold.x, 0, 1), m.lens, 0], i * 4)
+      fold.set([m.creaseY, clamp(m.fold.x, 0, 1), 0, 0], i * 4)
       minX = Math.min(minX, m.cx.x - m.hx.x)
       maxX = Math.max(maxX, m.cx.x + m.hx.x)
       minY = Math.min(minY, m.cy.x - m.hy.x)
@@ -1063,7 +1028,6 @@ export class Field {
     // glassEffectUnion fuses shapes completely: wide enough to bridge the widest gap between members
     const unionK = Math.max(k, 36)
     const c = this.css
-    const refractPx = (c.refraction / 2) * Math.min(1, bezel / 24)
     const dark = c.themeDark
 
     const base: DrawParams = {
@@ -1089,12 +1053,7 @@ export class Field {
       shadowCol: dark ? [0, 0, 0] : [0.094, 0.129, 0.106],
       glow: dark ? [1, 1, 1, 0.3] : [1, 1, 1, 0.55],
       themeDark: dark,
-      sample: this.mode === 'sample',
-      bgMap: [hr.left, hr.top, window.innerWidth, window.innerHeight],
-      paper: c.paper,
-      bgOpacity: lidarOpacity(),
-      shift: refractPx,
-      disp: 0.06,
+      frost: this.mode === 'frost',
     }
 
     // ---- surface pass
@@ -1111,7 +1070,6 @@ export class Field {
     while (ww * wh * dpr * dpr > maxPx && dpr > 0.6) dpr *= 0.85
     const wpx = Math.max(1, Math.round(ww * dpr))
     const hpx = Math.max(1, Math.round(wh * dpr))
-    if (this.mode === 'sample') gl.uploadBackdrop(snapshot(), sv)
     const surf = this.surface
     if (surf.width !== wpx || surf.height !== hpx) {
       surf.width = wpx
@@ -1130,8 +1088,8 @@ export class Field {
     stats.surfaceMs += performance.now() - t0
     stats.surfacePx = wpx * hpx
 
-    // ---- frost boxes (sample mode): backdrop blur per member, under the canvas
-    if (this.mode === 'sample') this.updateFrost(shapes, c.blur, c.sat)
+    // ---- frost boxes (frost mode): backdrop blur per member, under the canvas
+    if (this.mode === 'frost') this.updateFrost(shapes, c.blur, c.sat)
 
     // ---- displacement map (svg mode): rendered at most every MAP_INTERVAL ms, read back asynchronously
     if (this.mode === 'svg' && this.fx && this.feImage && this.mapCanvas && this.mctx && this.filterEl) {
@@ -1175,7 +1133,7 @@ export class Field {
     const pw = Math.max(2, Math.round(mw * sc))
     const ph = Math.max(2, Math.round(mh * sc))
     const t1 = performance.now()
-    const mp: DrawParams = { ...pm.base, pass: 0, win: pm.win, px: pw / mw, sample: false }
+    const mp: DrawParams = { ...pm.base, pass: 0, win: pm.win, px: pw / mw, frost: false }
     const worker = getMapWorker()
     if (worker) {
       const id = ++workerSeq

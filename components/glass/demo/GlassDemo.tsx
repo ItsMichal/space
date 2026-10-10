@@ -374,10 +374,10 @@ function Hud() {
 }
 
 export function GlassDemo() {
-  // ?engine=svg|sample|flat forces a rendering path (e.g. to preview the Safari path in Chromium)
+  // ?engine=svg|frost|flat forces a rendering path (e.g. to preview the Safari path in Chromium)
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get('engine')
-    if (q === 'svg' || q === 'sample' || q === 'flat') setGlassEngineOverride(q)
+    if (q === 'svg' || q === 'frost' || q === 'flat') setGlassEngineOverride(q)
     return () => setGlassEngineOverride(null)
   }, [])
   return (

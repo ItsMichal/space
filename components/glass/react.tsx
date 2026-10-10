@@ -41,7 +41,7 @@ export function useGlassNamespace(name = 'glass'): GlassNamespace {
 export type GlassEffectContainerProps = HTMLAttributes<HTMLElement> & {
   /** `GlassEffectContainer(spacing:)`. Shapes closer than this start to blend; at about half of it they fuse. Default 24. */
   spacing?: number
-  /** Rendering path. 'auto' picks the SVG backdrop path on Chromium and the lidar-sampling path elsewhere. */
+  /** Rendering path. 'auto' picks the SVG backdrop-refraction path on Chromium and the finished frosted path elsewhere. */
   engine?: GlassEngineMode
   as?: ElementType
   /** Rim width in px. Default: median corner radius, clamped to 8..24. */
