@@ -7,7 +7,7 @@ import { JsonLd } from '@/components/seo/JsonLd'
 import { listJsonLd, listMetadata, postPath } from '@/lib/seo'
 
 const TITLE = 'Writing — Michał Bodzianowski'
-const DESCRIPTION = 'Essays and notes on building with AI, XR and the web, by Michał Bodzianowski.'
+const DESCRIPTION = 'Essays and notes on building with AI, the web and systems, by Michał Bodzianowski.'
 
 const base = listMetadata('article', TITLE, DESCRIPTION)
 export const metadata: Metadata = {
