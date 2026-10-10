@@ -5,6 +5,7 @@ import React, { StrictMode } from 'react'
 import { NavBar } from '@/components/site/NavBar'
 import { ScrollReveal } from '@/components/site/ScrollReveal'
 import { Footer } from '@/components/site/Footer'
+import { ShaderCanvasProvider } from '@/components/shader-image'
 import { siteMetadata } from '@/lib/seo'
 import { profile } from '@/content/profile'
 
@@ -73,7 +74,7 @@ export default function RootLayout({
           <NavBar />
           <ScrollReveal />
           <main id="main" className="relative flex-1">
-            {children}
+            <ShaderCanvasProvider>{children}</ShaderCanvasProvider>
           </main>
           <Footer />
         </body>

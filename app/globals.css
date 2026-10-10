@@ -1172,3 +1172,36 @@ body {
     }
   }
 }
+
+/* Shader images. Reason: photographs should melt into the paper, not sit in rectangles. The shared canvas draws the
+   treated frame; the real <img> stays for SEO, LCP and no-JS, wearing an organic mask until (and unless) GL takes
+   over. The canvas sits above page content but below the nav (z-50). */
+.shader-frame {
+  display: contents;
+}
+.shader-frame img {
+  -webkit-mask-image: var(--shader-mask);
+  mask-image: var(--shader-mask);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+.shader-frame[data-gl] img {
+  opacity: 0;
+  transition: opacity 180ms linear;
+}
+/* The frame's own rounded, tinted box would show through the feathered edge; the organic mask replaces it. */
+.work-feat__media:has(.shader-frame),
+.wrow__thumb:has(.shader-frame) {
+  background: transparent;
+  border-radius: 0;
+}
+.shader-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100lvh;
+  z-index: 1;
+  pointer-events: none;
+}
