@@ -4,7 +4,7 @@
  * draws tint, rim, shadow and lens instead.
  */
 :root {
-  --glass-tint-light: rgba(251, 249, 243, 0.44);
+  --glass-tint-light: rgba(246, 250, 248, 0.42); /* faint sky in the water */
   --glass-tint-dark: rgba(27, 32, 27, 0.34);
   --glass-fg-on-light: #18211b;
   --glass-fg-on-dark: #ebe7da;

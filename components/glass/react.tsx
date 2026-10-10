@@ -142,6 +142,7 @@ export type GlassProps = HTMLAttributes<HTMLElement> & {
 export function shapeRadiusCss(shape: GlassShape): string | undefined {
   if (shape === 'capsule' || shape === 'circle') return '9999px'
   if (shape === 'rect') return '0px'
+  if (shape === 'squircle') return '40%'
   if (shape === 'containerConcentric' || shape === 'inherit') return undefined
   return `${shape.cornerRadius}px`
 }

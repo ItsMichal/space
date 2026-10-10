@@ -75,6 +75,7 @@ function Shapes() {
     <GlassEffectContainer spacing={0} className="flex flex-wrap items-center gap-space-6">
       <Glass shape="capsule" className={label}>capsule</Glass>
       <Glass shape="circle" className="grid size-24 place-items-center text-body-strong">circle</Glass>
+      <Glass shape="squircle" className="grid size-24 place-items-center text-body-strong">squircle</Glass>
       <Glass shape={shapes.rect(0)} className="px-space-6 py-space-4 text-body-strong">rect</Glass>
       <Glass shape={shapes.rect(12)} className="px-space-6 py-space-4 text-body-strong">cornerRadius 12</Glass>
       <div className="rounded-[36px] bg-black/10 p-space-3">

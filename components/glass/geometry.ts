@@ -7,11 +7,12 @@
 
 /** SwiftUI `Shape` equivalents. `{ cornerRadius }` is `.rect(cornerRadius:)`. */
 /** 'inherit' takes the radius from the element's CSS border-radius (used by the LiquidGlass wrapper). */
-export type GlassShape = 'capsule' | 'circle' | 'rect' | 'containerConcentric' | 'inherit' | { cornerRadius: number }
+export type GlassShape = 'capsule' | 'circle' | 'squircle' | 'rect' | 'containerConcentric' | 'inherit' | { cornerRadius: number }
 
 export const shapes = {
   capsule: 'capsule',
   circle: 'circle',
+  squircle: 'squircle',
   rect: (cornerRadius = 0): GlassShape => ({ cornerRadius }),
   containerConcentric: 'containerConcentric',
 } as const
@@ -23,6 +24,8 @@ export const shapes = {
 export function resolveRadius(shape: GlassShape, w: number, h: number, concentricRadius = 0): number {
   const half = Math.min(w, h) / 2
   if (shape === 'capsule' || shape === 'circle') return half
+  // soft, organic silhouette: rounder than a rounded rect, calmer than a capsule
+  if (shape === 'squircle') return half * 0.74
   if (shape === 'rect') return 0
   if (shape === 'containerConcentric' || shape === 'inherit') return Math.min(Math.max(concentricRadius, 0), half)
   return Math.min(Math.max(shape.cornerRadius, 0), half)

@@ -239,6 +239,10 @@ void main() {
   rimI *= mix(1.0, 0.8, a.clear) * (1.0 - 0.4 * abs(a.dark - uThemeDark));
   vec3 rimC = uRim.rgb * (uRim.a * rimI);
   body.rgb += rimC;
+  // soft water-drop gloss: a faint sheen hugging the upper inner edge
+  float gloss = exp(-depth / max(uBezel * 1.3, 6.0)) * max(-n.y, 0.0) * 0.16 * uLightK * (1.0 - 0.6 * a.dark) * (1.0 - 0.5 * a.clear);
+  body.rgb += vec3(0.92, 0.97, 1.0) * gloss;
+  body.a = clamp(body.a + gloss * 0.6, 0.0, 1.0);
   body.a = clamp(max(body.a, rimI * uRim.a), 0.0, 1.0);
   float edgeI = band * (1.0 - clamp(spec, 0.0, 1.0)) * 0.7;
   vec4 ed = vec4(uEdge.rgb * edgeI * uEdge.a, edgeI * uEdge.a);

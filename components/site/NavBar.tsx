@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { GlassEffectContainer, GlassFold, GlassFoldItem, glass, useGlassNamespace } from '@/components/glass'
-import PresenceChip from '@/components/presence/PresenceChip'
 import { HalmicMark } from './HalmicMark'
 
 const links = [
@@ -24,47 +23,15 @@ function MenuIcon({ open }: { open: boolean }) {
 }
 
 /**
- * Floating nav. One GlassEffectContainer holds two shapes: the nav pill and the presence chip. At
- * rest they sit a hand apart; once the page scrolls they slide together and the container's smooth
- * union fuses them into one liquid shape. Below 640px the pill folds open into a menu sheet
- * (the whole row hinges down; 44px targets).
+ * Floating nav: a single glass pill inside a GlassEffectContainer (so extra shapes, such as a presence
+ * indicator, can be added later and will merge with it). Below 640px the pill folds open into a menu
+ * sheet that unfolds from, and folds back into, the pill (44px targets, safe-area aware).
  */
 export function NavBar() {
   const pathname = usePathname()
   const ns = useGlassNamespace('nav')
-  const rowRef = useRef<HTMLDivElement | null>(null)
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLElement | null>(null)
-
-  // Scroll-linked, never scroll-jacking: a passive listener reads scrollY and eases the gap between the
-  // pill and the presence shape toward a position-derived target (16px at the top, 4px by 160px down,
-  // where the container's smooth union fuses them). No pinning, no snapping, nothing prevents default.
-  useEffect(() => {
-    const row = rowRef.current
-    if (!row) return
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)')
-    let raf = 0
-    let current = -1
-    const target = () => Math.min(Math.max(window.scrollY / 160, 0), 1)
-    const apply = (p: number) => row.style.setProperty('gap', `${16 - 12 * p}px`)
-    const tick = () => {
-      raf = 0
-      const t = target()
-      current = current < 0 || reduce.matches ? t : current + (t - current) * 0.06
-      if (Math.abs(t - current) < 0.002) current = t
-      apply(current)
-      if (current !== t) raf = requestAnimationFrame(tick)
-    }
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(tick)
-    }
-    tick()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      if (raf) cancelAnimationFrame(raf)
-    }
-  }, [])
 
   useEffect(() => setOpen(false), [pathname])
 
@@ -102,8 +69,7 @@ export function NavBar() {
       ref={rootRef}
     >
       <div
-        ref={rowRef}
-        className="flex w-full max-w-[640px] items-start justify-center gap-4 sm:w-auto sm:max-w-none"
+        className="flex w-full max-w-[640px] items-start justify-center sm:w-auto sm:max-w-none"
       >
         <GlassFold
           as="nav"
@@ -157,9 +123,6 @@ export function NavBar() {
             </GlassFoldItem>
           ))}
         </GlassFold>
-        <div className={`pointer-events-auto shrink-0 ${open ? 'max-sm:hidden' : ''}`}>
-          <PresenceChip />
-        </div>
       </div>
     </GlassEffectContainer>
   )
