@@ -1,5 +1,5 @@
 import { getAllPosts } from '@/lib/content'
-import { PostPage, postMetadata } from '@/components/content/PostPage'
+import { PostPage, postMetadata, readingViewport } from '@/components/content/PostPage'
 
 export const dynamicParams = false
 
@@ -22,6 +22,8 @@ export async function generateMetadata({ params }: { params: Params }) {
   const { slug, child, kind } = await kindOf(params)
   return postMetadata(kind, child, slug)
 }
+
+export const viewport = readingViewport
 
 export default async function Page({ params }: { params: Params }) {
   const { slug, child, kind } = await kindOf(params)

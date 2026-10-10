@@ -6,9 +6,6 @@ description: "T9Hacks week: a space theme, a new UI, a Hans Zimmer beatmap made 
 date: 2023-02-16
 updated: 2023-02-23
 tags: ["Project Mountaintop"]
-cover: /media/mountaintop-week-5-6-spaaaaace/cover.webp
-coverAlt: "A starry night sky with the Milky Way, in portrait"
-coverFocus: "50% 35%"
 parent: project-mountaintop
 series: "Progress log"
 order: 5

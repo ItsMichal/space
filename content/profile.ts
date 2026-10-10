@@ -18,22 +18,23 @@ export const profile = {
   nickname: 'halmic',
   jobTitle: 'Creative developer',
   /** Hero role line. Keep it short so it sits on one or two lines at 375px. */
-  role: 'Creative developer. AI, XR and the web.',
+  role: 'Creative developer. AI, web and systems.',
   /** Hero intro paragraph. */
   intro: 'I take projects from 0 to 1.',
   /** Site-wide meta description, 155 characters or fewer. */
   description:
-    'Michał Bodzianowski is a creative developer working across AI, XR and the web, taking projects from 0 to 1.',
+    'Michał Bodzianowski is a creative developer with experience in AI, web and systems, taking projects from 0 to 1.',
   /** Page-title tagline: "<name> — <tagline>". */
   titleTagline: 'Creative developer',
   /** About section paragraphs, first person. */
   about: [
     "I like the first version of things. The rough prototype. The odd idea. The thing that has to exist before anyone can argue about it.",
-    "I run Halmic Ltd, a creative development studio. I'm also an applied researcher at the University of Colorado's SHINE Lab, working on human-AI interaction in education. I've worked on Starlink's Consumer Platform team too.",
+    "I run Halmic Ltd, a creative development studio. I'm also an applied researcher at the University of Colorado's SHINE Lab, working on human-AI interaction in education. I'm on Starlink's Consumer Platform team too.",
   ],
   worksFor: [
     { name: 'Halmic Ltd', url: 'https://halmic.co' },
     { name: 'SHINE Lab, University of Colorado Boulder' },
+    { name: 'Starlink', url: 'https://www.starlink.com' },
   ],
   alumniOf: ['University of Colorado Boulder'],
   knowsAbout: [
@@ -42,15 +43,15 @@ export const profile = {
     'Next.js',
     'Full-stack web development',
     'AI and machine learning integration',
-    'XR, VR and AR development',
-    'Unity',
+    'Platform engineering',
+    'Distributed web systems',
     'UI and UX design',
     'AWS',
   ],
   /** Compact home page Experience list, newest first. */
   experience: [
     { company: 'Halmic Ltd', role: 'Runs the studio' },
-    { company: 'Starlink', role: 'Consumer Platform web developer' },
+    { company: 'Starlink', role: 'Full-stack engineer, Consumer Platform', years: '2024 to now' },
     { company: 'SHINE Lab, CU Boulder', role: 'Full-stack developer', years: '2020 to now' },
     { company: 'AmedicaRx', role: 'Full-stack developer', years: '2022 to 2023' },
     { company: 'Windward Studios', role: 'Software development intern', years: '2019 to 2020' },

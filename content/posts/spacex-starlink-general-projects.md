@@ -11,6 +11,7 @@ coverFocus: "28% 60%"
 priority: 10
 featured: true
 role: "Full-stack engineer, Consumer Platform"
+years: "2024 – present"
 links:
   - label: "Starlink.com"
     href: "https://starlink.com"

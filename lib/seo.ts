@@ -137,7 +137,8 @@ export function postJsonLd(post: Post, parent?: Pick<Post, 'title' | 'slug' | 'p
     description: post.description,
     datePublished: post.date,
     dateModified: post.updated ?? post.date,
-    image: postImage(post),
+    // No cover: omit the image so crawlers use the generated opengraph-image card.
+    ...(post.cover ? { image: postImage(post) } : {}),
     keywords: post.tags.join(', '),
     inLanguage: 'en-US',
     isPartOf: parent ? { '@type': 'CreativeWork', '@id': `${parentUrl}#work`, name: parent.title, url: parentUrl } : { '@id': `${SITE_URL}/#website` },

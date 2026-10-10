@@ -11,8 +11,36 @@
   --font-mono: var(--font-plex-mono), ui-monospace, Menlo, monospace;
 }
 
+/* Motion law: incredibly subtle, tasteful and slow. Opacity is the primary channel; travel <= 12px; scale delta <= 2%.
+   Stateful UI uses CSS transitions (they retarget from the current value, so every change is interruptible). */
+:root {
+  --motion-fast: 240ms;
+  --motion-slow: 900ms;
+  --motion-slower: 1400ms;
+  --motion-ambient: 12s;
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-soft: cubic-bezier(0.45, 0, 0.15, 1);
+  --grain: url('/textures/grain-light.png');
+  --grain-blend: multiply;
+}
+:root[data-reading] {
+  --grain: url('/textures/grain-light.png');
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-reading] {
+    --grain: url('/textures/grain-dark.png');
+    --grain-blend: soft-light;
+  }
+}
+
+/* Texture: paper grain. Reason: so flat color reads as paper, not screen. A 160px static noise tile (about 4% in
+   Birch, multiply; soft-light in Basalt) painted on <html> beneath everything, so it never sits over images, text
+   or the glass. No animation, no filter, no repaint cost. */
 html {
-  background: var(--paper);
+  background-color: var(--paper);
+  background-image: var(--grain);
+  background-size: 160px 160px;
+  background-blend-mode: var(--grain-blend);
   scroll-behavior: smooth;
   scroll-padding-top: 96px;
   -webkit-text-size-adjust: 100%;
@@ -20,8 +48,7 @@ html {
 
 body {
   margin: 0;
-  /* Paper lives on <html> only: the lidar field is a fixed z-index:-1 layer in <body>, and an
-     opaque body background would paint over it. */
+  /* Paper and its grain live on <html>; an opaque body background would hide the grain. */
   background: transparent;
   color: var(--ink);
   font-family: var(--font-sans);
@@ -48,9 +75,9 @@ body {
   }
 }
 
-/* Route enter: content fades up 8px over 240ms (app/template.tsx re-mounts per navigation). */
+/* Route enter: content fades up 8px over 600ms (app/template.tsx re-mounts per navigation). */
 .page-enter {
-  animation: fade-up 240ms ease-out both;
+  animation: fade-up 600ms var(--ease-out-soft) both;
 }
 @keyframes fade-up {
   from {
@@ -68,6 +95,75 @@ body {
   }
 }
 
+/* Scroll reveals, the Apple way and without scroll-jacking: progress is tied to scroll position through CSS
+   scroll-driven animations (native scrolling is never touched). Elements ease in over the first ~25% of their entry:
+   opacity 0 to 1, 12px of travel. Where view() timelines are missing, <ScrollReveal> adds [data-in] once via
+   IntersectionObserver and the same movement plays as a one-shot transition. */
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes settle {
+  from {
+    scale: 1.02;
+  }
+  to {
+    scale: 1;
+  }
+}
+@keyframes intro-away {
+  to {
+    opacity: 0.35;
+  }
+}
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: reveal-in linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 25%;
+  }
+  /* A very slight scale settle on featured imagery, clipped inside its frame (.work-feat__media is overflow:hidden). */
+  .work-feat__img {
+    animation: settle linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 45%;
+  }
+  .name-intro {
+    animation: intro-away linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 40vh;
+  }
+}
+@supports not (animation-timeline: view()) {
+  html.js-reveal .reveal {
+    transition:
+      opacity var(--motion-slow) var(--ease-out-soft),
+      transform var(--motion-slow) var(--ease-out-soft);
+    transition-delay: calc(min(var(--i, 0), 4) * 50ms);
+  }
+  html.js-reveal .reveal:not([data-in]) {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .work-feat__img,
+  .name-intro {
+    animation: none !important;
+  }
+  html.js-reveal .reveal {
+    transition: opacity 1ms !important;
+    transform: none !important;
+  }
+}
+
 /* Skip link */
 .skip-link {
   position: fixed;
@@ -80,7 +176,7 @@ body {
   color: var(--paper);
   font-weight: 500;
   transform: translateY(-200%);
-  transition: transform 160ms ease;
+  transition: transform var(--motion-fast) var(--ease-out-soft);
 }
 .skip-link:focus {
   transform: none;
@@ -178,7 +274,7 @@ body {
     }
   }
   @media (prefers-reduced-transparency: reduce) and (prefers-color-scheme: dark) {
-    .lg {
+    :root[data-reading] .lg {
       --glass-tint: rgba(30, 30, 34, 0.9);
     }
   }
@@ -190,7 +286,7 @@ body {
     text-decoration-color: var(--hairline);
     text-underline-offset: 0.2em;
     text-decoration-thickness: 1px;
-    transition: color 120ms ease, text-decoration-color 120ms ease;
+    transition: color var(--motion-fast) var(--ease-out-soft), text-decoration-color var(--motion-fast) var(--ease-out-soft);
   }
   .link:hover {
     color: var(--accent);
@@ -210,7 +306,7 @@ body {
   .prow__title {
     font: 600 21px/1.25 var(--font-sans);
     letter-spacing: -0.01em;
-    transition: color 120ms ease;
+    transition: color var(--motion-fast) var(--ease-out-soft);
   }
   .prow__desc {
     color: var(--ink-muted);
@@ -273,7 +369,7 @@ body {
     height: auto;
     aspect-ratio: 1 / 1;
     object-fit: cover;
-    transition: transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition: transform var(--motion-slower) var(--ease-out-soft);
   }
   .work-feat__cap {
     display: grid;
@@ -288,7 +384,7 @@ body {
   .work-feat__title {
     font: 600 clamp(38px, 11vw, 64px) / 1 var(--font-sans);
     letter-spacing: -0.04em;
-    transition: color 120ms ease;
+    transition: color var(--motion-fast) var(--ease-out-soft);
   }
   .work-feat__desc {
     color: var(--ink-muted);
@@ -304,14 +400,14 @@ body {
     font: 500 15px/1 var(--font-sans);
   }
   .work-feat__cta svg {
-    transition: transform 200ms ease;
+    transition: transform var(--motion-fast) var(--ease-out-soft);
   }
   .work-feat:hover .work-feat__title,
   .work-feat:focus-visible .work-feat__title {
     color: var(--accent);
   }
   .work-feat:hover .work-feat__img {
-    transform: scale(1.02);
+    transform: scale(1.01);
   }
   .work-feat:hover .work-feat__cta svg {
     transform: translate(2px, -2px);
@@ -355,7 +451,7 @@ body {
   .wrow__title {
     font: 600 19px/1.25 var(--font-sans);
     letter-spacing: -0.01em;
-    transition: color 120ms ease;
+    transition: color var(--motion-fast) var(--ease-out-soft);
   }
   .wrow__desc {
     margin-top: 2px;
@@ -371,7 +467,7 @@ body {
     grid-area: thumb;
     align-self: center;
     overflow: hidden;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     background: var(--paper-sunk);
   }
   .wrow__img {
@@ -380,14 +476,14 @@ body {
     height: auto;
     aspect-ratio: 4 / 3;
     object-fit: cover;
-    transition: transform 400ms cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition: transform var(--motion-slow) var(--ease-out-soft);
   }
   .wrow:hover .wrow__title,
   .wrow:focus-visible .wrow__title {
     color: var(--accent);
   }
   .wrow:hover .wrow__img {
-    transform: scale(1.05);
+    transform: scale(1.02);
   }
   .work-more {
     display: flex;
@@ -473,7 +569,7 @@ body {
     height: auto;
     aspect-ratio: 4 / 3;
     object-fit: cover;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     background: var(--paper-sunk);
   }
   .hero--bleed {
@@ -557,7 +653,7 @@ body {
     object-fit: cover;
     width: 100%;
     height: auto;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     background: var(--paper-sunk);
   }
   .gallery__item figcaption {
@@ -627,7 +723,7 @@ body {
   }
   .postnav__t {
     font: 500 17px/1.3 var(--font-sans);
-    transition: color 120ms ease;
+    transition: color var(--motion-fast) var(--ease-out-soft);
   }
   .postnav__row:hover .postnav__t,
   .postnav__row:focus-visible .postnav__t {
@@ -665,7 +761,7 @@ body {
   }
   .postnav__st {
     font: 500 16px/1.3 var(--font-sans);
-    transition: color 120ms ease;
+    transition: color var(--motion-fast) var(--ease-out-soft);
   }
   .postnav__step:hover .postnav__st,
   .postnav__step:focus-visible .postnav__st {
@@ -703,14 +799,30 @@ body {
     padding: 0;
     border: 0;
     overflow: hidden;
-    background: var(--paper);
+    background: transparent;
     color: var(--ink);
   }
   .lb:not([open]) {
     display: none;
   }
   .lb::backdrop {
+    background: transparent;
+  }
+  /* Opacity of the paper sheet, the chrome and the image are driven by the open/drag springs (components/media/Lightbox). */
+  .lb__bg {
+    position: absolute;
+    inset: 0;
     background: var(--paper);
+    opacity: 0;
+  }
+  .lb__ui {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .lb__ui > * {
+    pointer-events: auto;
   }
   .lb__strip {
     position: absolute;
@@ -749,7 +861,7 @@ body {
     width: auto;
     height: auto;
     object-fit: contain;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     cursor: zoom-in;
     -webkit-user-select: none;
     user-select: none;
@@ -878,7 +990,7 @@ body {
     font-weight: 400;
     color: var(--ink-faint);
     opacity: 0;
-    transition: opacity 120ms ease;
+    transition: opacity var(--motion-fast) var(--ease-out-soft);
   }
   .prose :is(h2, h3, h4):hover > a::after,
   .prose :is(h2, h3, h4) > a:focus-visible::after {
@@ -893,7 +1005,7 @@ body {
     text-decoration-color: var(--accent);
     text-underline-offset: 0.18em;
     text-decoration-thickness: 1px;
-    transition: color 120ms ease;
+    transition: color var(--motion-fast) var(--ease-out-soft);
   }
   .prose a:hover {
     color: var(--accent);
@@ -979,8 +1091,8 @@ body {
     color: var(--shiki-light);
   }
   @media (prefers-color-scheme: dark) {
-    .prose [data-rehype-pretty-code-figure] span,
-    .prose code[data-theme] span {
+    :root[data-reading] .prose [data-rehype-pretty-code-figure] span,
+    :root[data-reading] .prose code[data-theme] span {
       color: var(--shiki-dark);
     }
   }
@@ -1059,9 +1171,4 @@ body {
       line-height: 30px;
     }
   }
-}
-
-/* Dim the lidar field behind long-form reading (canvas lives in <body>, so set it there). */
-body:has(article[data-post]) {
-  --lidar-opacity: 0.4;
 }

@@ -11,7 +11,7 @@ import { homeMetadata, personJsonLd, websiteJsonLd } from '@/lib/seo'
 
 export const metadata = homeMetadata()
 
-const h2 = 'mb-space-8 text-[32px] font-semibold leading-[1.1] tracking-[-0.02em]'
+const h2 = 'reveal mb-space-8 text-[32px] font-semibold leading-[1.1] tracking-[-0.02em]'
 
 export default function Home() {
   const projects = getTopLevel('project')
