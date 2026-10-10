@@ -34,6 +34,7 @@ export type DrawParams = {
   glow: RGBA
   themeDark: number
   sample: boolean
+  readback?: boolean
   bgMap: [number, number, number, number]
   paper: [number, number, number]
   bgOpacity: number
@@ -44,7 +45,7 @@ export type DrawParams = {
 const UNIFORMS = [
   'uPass', 'uN', 'uRect', 'uPar', 'uTint', 'uMisc', 'uFold', 'uK', 'uUnionK', 'uWin', 'uWinPx', 'uPx', 'uBezel',
   'uPeak', 'uLight', 'uLightK', 'uTintLight', 'uTintDark', 'uRim', 'uEdge', 'uShadow', 'uShadowCol', 'uGlow',
-  'uThemeDark', 'uSample', 'uBg', 'uBgMap', 'uBgPaper', 'uBgOpacity', 'uShift', 'uDisp',
+  'uThemeDark', 'uReadback', 'uSample', 'uBg', 'uBgMap', 'uBgPaper', 'uBgOpacity', 'uShift', 'uDisp',
 ] as const
 
 type UName = (typeof UNIFORMS)[number]
@@ -148,7 +149,7 @@ export class GlassGL {
    */
   issueMap(p: DrawParams, wpx: number, hpx: number, meta: unknown): MapTicket | null {
     const gl = this.gl
-    this.draw(p, wpx, hpx)
+    this.draw({ ...p, readback: true }, wpx, hpx)
     const pbo = this.pboPool.pop() ?? gl.createBuffer()
     if (!pbo) return null
     gl.bindBuffer(gl.PIXEL_PACK_BUFFER, pbo)
@@ -234,6 +235,7 @@ export class GlassGL {
     gl.uniform3f(L.uShadowCol, ...p.shadowCol)
     gl.uniform4f(L.uGlow, ...p.glow)
     gl.uniform1f(L.uThemeDark, p.themeDark)
+    gl.uniform1i(L.uReadback, p.readback ? 1 : 0)
     gl.uniform1i(L.uSample, p.sample && this.tex ? 1 : 0)
     if (p.sample && this.tex) {
       gl.activeTexture(gl.TEXTURE0)

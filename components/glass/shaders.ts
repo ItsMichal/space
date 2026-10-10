@@ -44,6 +44,7 @@ uniform vec4 uShadow;      // offset y, blur, alpha, 0
 uniform vec3 uShadowCol;
 uniform vec4 uGlow;        // touch illumination colour
 uniform float uThemeDark;  // 1 when the page theme is dark
+uniform int uReadback;     // 1: pixels leave via readPixels (bottom-up rows), flip pass 0
 uniform int uSample;       // 1: refract uBg (Safari / Firefox path)
 uniform sampler2D uBg;
 uniform vec4 uBgMap;       // field->viewport offset xy (css), viewport size zw (css)
@@ -145,9 +146,9 @@ Attr attrs(vec2 p) {
 
 vec2 winPos() {
   vec2 fc = gl_FragCoord.xy;
-  // the surface is copied with drawImage (top-down); the map is read back with readPixels (bottom-up),
-  // so pass 0 maps GL row 0 to the top of the image and no CPU flip is needed
-  float y = uPass == 0 ? fc.y : uWinPx.y - fc.y;
+  // drawImage copies (surface, worker map) are top-down; readPixels (PBO fallback) is bottom-up, so with
+  // uReadback the map maps GL row 0 to the top of the image and no CPU flip is needed
+  float y = (uPass == 0 && uReadback == 1) ? fc.y : uWinPx.y - fc.y;
   return uWin.xy + vec2(fc.x, y) / uPx;
 }
 

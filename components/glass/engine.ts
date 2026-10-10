@@ -1327,6 +1327,7 @@ export function attachContainer(host: HTMLElement, opts: FieldOptions): { update
  */
 export function attachMember(el: HTMLElement, cfg: MemberConfig, opts: FieldOptions = {}): Attached {
   initEnv()
+  if (process.env.NODE_ENV !== 'production') (window as unknown as { __glassFields?: Set<Field> }).__glassFields = fields
   const containerEl = el.parentElement?.closest<HTMLElement>('[data-glass-container]') ?? null
   let field: Field
   if (containerEl) {

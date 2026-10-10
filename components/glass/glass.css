@@ -5,7 +5,7 @@
  */
 :root {
   --glass-tint-light: rgba(251, 249, 243, 0.44);
-  --glass-tint-dark: rgba(27, 32, 27, 0.48);
+  --glass-tint-dark: rgba(27, 32, 27, 0.34);
   --glass-fg-on-light: #18211b;
   --glass-fg-on-dark: #ebe7da;
 }

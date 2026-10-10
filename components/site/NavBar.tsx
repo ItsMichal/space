@@ -79,7 +79,7 @@ export function NavBar() {
   return (
     <GlassEffectContainer
       as="header"
-      spacing={22}
+      spacing={16}
       className="pointer-events-none fixed inset-x-0 z-50 flex justify-center"
       style={{
         top: 'calc(env(safe-area-inset-top, 0px) + 12px)',
@@ -90,7 +90,7 @@ export function NavBar() {
     >
       <div
         className="flex w-full max-w-[640px] items-start justify-center transition-[gap] duration-300 ease-out sm:w-auto sm:max-w-none"
-        style={{ gap: scrolled ? 6 : 14 }}
+        style={{ gap: scrolled ? 4 : 16 }}
       >
         <GlassFold
           as="nav"
