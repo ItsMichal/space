@@ -1,0 +1,58 @@
+/* Per-comp backdrop placement. Coordinates are relative to .m2-stage (hero + start of Selected work). */
+.m2-stage {
+  position: relative;
+}
+.m2-hero {
+  min-height: 100svh;
+  padding-top: 112px;
+  padding-bottom: 72px;
+}
+@media (min-width: 768px) {
+  .m2-hero {
+    padding-top: 150px;
+    min-height: 92svh;
+  }
+}
+
+/* ===== A. Halo: a soft out-of-focus floral cloud behind the name, fading to paper ===== */
+.a-pink { width: 130vw; left: -34vw; top: 40px; opacity: 0.5; filter: blur(7px); }
+.a-lupine { width: 96vw; right: -34vw; top: 260px; opacity: 0.5; filter: blur(5px); }
+.a-sky { width: 80vw; right: -26vw; top: -30px; opacity: 0.55; filter: blur(3px); }
+.a-avens { width: 80vw; left: -26vw; top: 520px; opacity: 0.5; filter: blur(5px); }
+.a-quiet {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 900px;
+  background: radial-gradient(ellipse 70% 44% at 32% 34%, rgba(248, 246, 239, 0.8), rgba(248, 246, 239, 0) 78%);
+}
+@media (min-width: 768px) {
+  .a-pink { width: min(60vw, 960px); left: 12%; top: 40px; opacity: 0.46; filter: blur(8px); }
+  .a-lupine { width: min(48vw, 720px); right: -6%; top: 160px; opacity: 0.5; filter: blur(5px); }
+  .a-sky { width: min(34vw, 520px); right: 4%; top: -40px; opacity: 0.6; filter: blur(3px); }
+  .a-avens { width: min(36vw, 540px); left: -6%; top: 520px; opacity: 0.55; filter: blur(5px); }
+  .a-quiet { height: 1000px; background: radial-gradient(ellipse 52% 40% at 34% 30%, rgba(248, 246, 239, 0.82), rgba(248, 246, 239, 0) 80%); }
+}
+
+/* ===== B. Edge bloom: florals bleed in from the top-right corner and the page bottom, shallow focus ===== */
+.b-blossom-wrap { position: absolute; inset: 0; transform-origin: 100% 0; }
+.b-blossom { width: 112vw; right: -48vw; top: -150px; opacity: 0.85; filter: blur(1.5px); }
+.b-meadow { width: 170vw; left: -40vw; top: 82vh; opacity: 0.6; filter: blur(5px); }
+.b-lupine { width: 100vw; right: -50vw; top: 56vh; opacity: 0.55; filter: blur(9px); }
+@media (min-width: 768px) {
+  .b-blossom { width: min(50vw, 740px); right: -17%; top: -210px; opacity: 0.8; filter: blur(2px); }
+  .b-meadow { width: min(92vw, 1400px); left: -14%; top: 74vh; opacity: 0.62; filter: blur(5px); }
+  .b-lupine { width: min(46vw, 700px); right: -10%; top: 48vh; opacity: 0.56; filter: blur(10px); }
+}
+
+/* ===== C. Light and paper: almost nothing, a stronger wash, one tiny in-focus sprig ===== */
+.m2-v-c .m2-wash {
+  background:
+    radial-gradient(70% 55% at 90% 0%, rgba(255, 240, 205, 0.85), rgba(255, 240, 205, 0) 72%),
+    linear-gradient(180deg, rgba(214, 232, 240, 0.9) 0%, rgba(220, 235, 241, 0.4) 38%, rgba(220, 235, 241, 0) 70%);
+}
+.c-meadow { width: 140vw; right: -50vw; bottom: 4%; opacity: 0.2; filter: blur(14px); }
+.c-sprig { position: absolute; right: 0; top: -6px; width: 96px; height: auto; opacity: 0.95; transform: rotate(6deg); }
+@media (min-width: 768px) {
+  .c-meadow { width: min(70vw, 1000px); right: -10%; bottom: 6%; opacity: 0.22; }
+  .c-sprig { width: 150px; top: 2px; right: 6%; }
+}
