@@ -121,7 +121,7 @@ export function PostPanel({ slug, fm, onChange, allTags, otherSlugs, projects, o
   const [slugDraft, setSlugDraft] = useState(fm.slug)
   const [busy, setBusy] = useState(false)
   const coverInput = useRef<HTMLInputElement>(null)
-  const ids = { desc: useId(), slug: useId(), date: useId(), updated: useId(), prio: useId(), canon: useId(), alt: useId(), kind: useId(), parent: useId(), series: useId(), order: useId(), role: useId(), focus: useId() }
+  const ids = { desc: useId(), slug: useId(), date: useId(), updated: useId(), prio: useId(), canon: useId(), alt: useId(), kind: useId(), parent: useId(), series: useId(), order: useId(), role: useId(), years: useId(), focus: useId() }
 
   const slugError = !slugDraft
     ? 'Slug is required.'
@@ -305,6 +305,9 @@ export function PostPanel({ slug, fm, onChange, allTags, otherSlugs, projects, o
         <>
           <Field label="Role" htmlFor={ids.role}>
             <input id={ids.role} className="ed-input" value={fm.role ?? ''} onChange={(e) => onChange({ role: e.target.value || undefined })} />
+          </Field>
+          <Field label="Years (spec line)" htmlFor={ids.years}>
+            <input id={ids.years} className="ed-input" placeholder="2024 – present" value={fm.years ?? ''} onChange={(e) => onChange({ years: e.target.value || undefined })} />
           </Field>
           <Field label="Featured">
             <label className="ed-switch">

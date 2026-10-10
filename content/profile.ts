@@ -34,6 +34,7 @@ export const profile = {
   worksFor: [
     { name: 'Halmic Ltd', url: 'https://halmic.co' },
     { name: 'SHINE Lab, University of Colorado Boulder' },
+    { name: 'Starlink', url: 'https://www.starlink.com' },
   ],
   alumniOf: ['University of Colorado Boulder'],
   knowsAbout: [
@@ -50,7 +51,7 @@ export const profile = {
   /** Compact home page Experience list, newest first. */
   experience: [
     { company: 'Halmic Ltd', role: 'Runs the studio' },
-    { company: 'Starlink', role: 'Consumer Platform web developer' },
+    { company: 'Starlink', role: 'Full-stack engineer, Consumer Platform', years: '2024 to now' },
     { company: 'SHINE Lab, CU Boulder', role: 'Full-stack developer', years: '2020 to now' },
     { company: 'AmedicaRx', role: 'Full-stack developer', years: '2022 to 2023' },
     { company: 'Windward Studios', role: 'Software development intern', years: '2019 to 2020' },

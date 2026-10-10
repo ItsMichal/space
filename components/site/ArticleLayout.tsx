@@ -16,6 +16,7 @@ type Props = {
   coverAlt?: string
   coverFocus?: string
   role?: string
+  years?: string
   links?: PostLink[]
   gallery?: GalleryItem[]
   kind: 'project' | 'article'
@@ -43,6 +44,7 @@ export function ArticleLayout({
   coverAlt,
   coverFocus,
   role,
+  years,
   links,
   gallery,
   kind,
@@ -98,7 +100,7 @@ export function ArticleLayout({
         <dl className="facts" aria-label="Project facts">
           <div>
             <dt>Year</dt>
-            <dd>{date.slice(0, 4)}</dd>
+            <dd>{years ?? date.slice(0, 4)}</dd>
           </div>
           {role ? (
             <div>

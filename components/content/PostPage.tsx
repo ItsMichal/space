@@ -52,6 +52,7 @@ export async function PostPage({ kind, slug, parent }: { kind: PostKind; slug: s
         coverAlt={post.coverAlt}
         coverFocus={post.coverFocus}
         role={post.role}
+        years={post.years}
         links={post.links}
         gallery={post.gallery}
         kind={kind}

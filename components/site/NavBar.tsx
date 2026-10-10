@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LiquidGlass } from '@/components/glass/LiquidGlass'
-import PresenceChip from '@/components/presence/PresenceChip'
 import { HalmicMark } from './HalmicMark'
 
 const links = [
@@ -20,7 +19,7 @@ export function NavBar() {
         as="nav"
         pill
         aria-label="Main"
-        className="pointer-events-auto flex w-full max-w-[560px] items-center justify-between gap-space-3 py-space-2 pl-space-4 pr-space-2 sm:w-auto sm:max-w-none sm:justify-center sm:gap-space-6"
+        className="pointer-events-auto flex w-full max-w-[560px] items-center justify-between gap-space-3 py-space-2 px-space-5 sm:w-auto sm:max-w-none sm:justify-center sm:gap-space-6"
       >
         <Link href="/" aria-label="Home" className="rounded-sm text-ink">
           <HalmicMark height={18} />
@@ -43,7 +42,6 @@ export function NavBar() {
             )
           })}
         </ul>
-        <PresenceChip />
       </LiquidGlass>
     </header>
   )

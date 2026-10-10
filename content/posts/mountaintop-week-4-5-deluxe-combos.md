@@ -6,8 +6,6 @@ description: "MIDI-driven beatmaps, music, combos, SFX and the first standalone 
 date: 2023-02-16
 updated: 2023-02-23
 tags: ["Project Mountaintop", "Rhythm"]
-cover: /media/mountaintop-week-4-5-deluxe-combos/cover.webp
-coverAlt: "A cheeseburger with fries and dipping sauce on a plate"
 parent: project-mountaintop
 series: "Progress log"
 order: 4

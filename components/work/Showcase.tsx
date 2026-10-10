@@ -6,7 +6,7 @@ import { Picture } from '@/components/media/Picture'
 const FEAT_SIZES = '100vw'
 const THUMB_SIZES = '(min-width: 768px) 176px, 104px'
 
-const year = (p: Post) => p.date.slice(0, 4)
+const year = (p: Post) => p.years ?? p.date.slice(0, 4)
 
 /** A featured project: full-bleed cinematic image, large title, serif spec line. */
 function Feature({ post, href, priority }: { post: Post; href: string; priority: boolean }) {

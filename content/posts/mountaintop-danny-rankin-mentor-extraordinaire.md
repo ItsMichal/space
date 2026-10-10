@@ -5,8 +5,6 @@ kind: article
 description: "Playtest feedback from mentor Danny Rankin that shaped Project Mountaintop: the hiking pole controls, polish priorities and a six-input scheme."
 date: 2023-02-23
 tags: ["Project Mountaintop"]
-cover: /media/mountaintop-danny-rankin-mentor-extraordinaire/cover.jpg
-coverAlt: "Abstract gradient fading from blue through red to pink"
 parent: project-mountaintop
 series: "Progress log"
 order: 6

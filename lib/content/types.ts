@@ -24,6 +24,8 @@ export type PostFrontmatter = {
   /* Position among siblings (ascending); falls back to date. */
   order?: number
   role?: string
+  /* Display span for the spec line instead of the date's year, e.g. "2024 – present". */
+  years?: string
   links?: PostLink[]
   gallery?: GalleryItem[]
   draft?: boolean
