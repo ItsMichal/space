@@ -19,7 +19,7 @@ export function NavBar() {
         as="nav"
         pill
         aria-label="Main"
-        className="pointer-events-auto flex w-full max-w-[560px] items-center justify-between gap-space-3 py-space-2 px-space-5 sm:w-auto sm:max-w-none sm:justify-center sm:gap-space-6"
+        className="pointer-events-auto flex w-full max-w-[560px] items-center justify-between gap-space-3 py-space-2 px-space-4 sm:w-auto sm:max-w-none sm:justify-center sm:gap-space-6"
       >
         <Link href="/" aria-label="Home" className="rounded-sm text-ink">
           <HalmicMark height={18} />
