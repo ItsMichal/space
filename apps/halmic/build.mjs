@@ -11,10 +11,10 @@ const write = (p, s) => { fs.mkdirSync(path.dirname(path.join(here, 'public', p)
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const BUILD_DATE = new Date().toISOString().slice(0, 10);
 
-const parts = json('../brand/wordmark-parts.json');
-const videos = json('../content/videos.json');
-const games = json('../content/games.json').games;
-const cur = json('../content/curation.json');
+const parts = json('./brand/wordmark-parts.json');
+const videos = json('./content/videos.json');
+const games = json('./content/games.json').games;
+const cur = json('./content/curation.json');
 
 // ---- logos (inline, from the generated geometry) ----
 function wordmark(dir = 'c') {
@@ -22,14 +22,14 @@ function wordmark(dir = 'c') {
   const g = w.groups.map((l) => `<g class="ch ch-${l.ch}">${l.ds.map((d, i) => `<path${l.ch === 'i' && i === 1 ? ' class="idot"' : ''} d="${d}"/>`).join('')}</g>`).join('');
   return `<svg class="wordmark" viewBox="0 0 ${w.w} ${w.h}" role="img" aria-label="halmic" focusable="false"><title>halmic</title>${g}</svg>`;
 }
-const hbare = read('../brand/svg/hmark-2-bare.svg');
+const hbare = read('./brand/svg/hmark-2-bare.svg');
 const hv = hbare.match(/viewBox="([^"]+)"/)[1];
 const hpaths = [...hbare.matchAll(/<path d="([^"]+)"/g)].map((m) => `<path d="${m[1]}"/>`).join('');
 const mark = `<svg class="mark" viewBox="${hv}" aria-hidden="true" focusable="false">${hpaths}</svg>`;
 
 // ---- content ----
 const fmtDate = (iso) => new Date(iso).toLocaleDateString('en', { year: 'numeric', month: 'short' });
-const exclude = new Set(json('../content/videos.exclude.json').ids);
+const exclude = new Set(json('./content/videos.exclude.json').ids);
 const byId = Object.fromEntries(videos.videos.filter((v) => !exclude.has(v.id)).map((v) => [v.id, v]));
 const vc = cur.videos;
 const episodes = vc.series.episodes.map((id, i) => ({ ...byId[id], ep: i + 1 }));
@@ -96,8 +96,8 @@ const subs = {
 for (const d of ['videos', 'games']) { const dir = path.join(here, 'public', d); if (fs.existsSync(dir)) for (const e of fs.readdirSync(dir, { withFileTypes: true })) if (e.isDirectory()) fs.rmSync(path.join(dir, e.name), { recursive: true, force: true }); }
 fs.rmSync(path.join(here, 'public/design'), { recursive: true, force: true });
 fs.mkdirSync(path.join(here, 'public/brand'), { recursive: true });
-fs.copyFileSync(path.join(here, '../brand/svg/hmark-2-blue.svg'), path.join(here, 'public/favicon.svg'));
-for (const f of ['construction-c.svg', 'hmark-2-blue.svg']) fs.copyFileSync(path.join(here, '../brand/svg', f), path.join(here, 'public/brand', f));
+fs.copyFileSync(path.join(here, './brand/svg/hmark-2-blue.svg'), path.join(here, 'public/favicon.svg'));
+for (const f of ['construction-c.svg', 'hmark-2-blue.svg']) fs.copyFileSync(path.join(here, './brand/svg', f), path.join(here, 'public/brand', f));
 for (const f of fs.readdirSync(path.join(here, 'src')).filter((n) => n.endsWith('.html'))) {
   write(f, read(`src/${f}`).replace(/\{\{(\w+)\}\}/g, (_, k) => subs[k] ?? `MISSING:${k}`));
 }
