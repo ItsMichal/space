@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
-import { useEffect, useReducer, useRef, useState } from 'react'
+import { Fragment, useEffect, useReducer, useRef, useState } from 'react'
 import { clickTarget, initialRotation, INTERVAL, ROLL_MS, rotationReducer, slotOf } from '@/lib/motion/rotation'
 
 export type HookItem = { text: string; href: string }
@@ -144,10 +144,12 @@ export function HeroHook({ stem, items, label = 'Recent work' }: Props) {
             <li key={it.href} className="hook__item" data-slot={slotOf(s, i)} data-current={i === current ? '' : undefined}>
               <Link href={it.href} className="hook__link" tabIndex={i === current ? 0 : -1} data-hook-link>
                 {it.text.split(' ').map((w, k) => (
-                  <span key={k} className="hook__w" style={{ ['--w' as string]: k } as React.CSSProperties}>
-                    {k ? ' ' : ''}
-                    {w}
-                  </span>
+                  <Fragment key={k}>
+                    {k ? ' ' : null}
+                    <span className="hook__w" style={{ ['--w' as string]: k } as React.CSSProperties}>
+                      {w}
+                    </span>
+                  </Fragment>
                 ))}
                 <ArrowUpRight aria-hidden className="hook__arrow" size={'0.62em'} strokeWidth={1.4} />
               </Link>

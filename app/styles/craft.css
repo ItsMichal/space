@@ -13,7 +13,6 @@
   /* a soft spring with 1.5% follow-through, as a linear() easing */
   --craft-spring: linear(0, 0.12 6%, 0.42 16%, 0.72 28%, 0.9 40%, 0.99 52%, 1.016 62%, 1.012 74%, 1.003 86%, 1);
   --tendril-ink: #3d6a35;
-  --t-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 10' preserveAspectRatio='none'%3E%3Cpath fill='%233d6a35' d='M0 5.5C22 4.3 46 5.2 78 4.2S150 4.9 199 5.1L199 5.7C160 6.5 128 5.8 92 6.9S28 6.2 0 5.7Z'/%3E%3C/svg%3E");
 }
 @media (prefers-color-scheme: dark) {
   :root[data-reading] {
@@ -22,34 +21,39 @@
 }
 
 /* ---------- 1. Tendril underline ----------
-   A drawn line, not a rule: it starts hair-thin, swells, wobbles and tapers, three different hands by rotation of
-   the link's position. It grows from the left (slow, long tail) and withdraws to the right (quicker). A small curl
-   at the tip arrives after the line does. The static underline stays as the quiet "this is a link" cue. */
+   At rest a link carries one fine, quiet hand-drawn line (hairline weight, ink-muted). On hover or focus the moss tendril
+   draws on from the left (slow, long tail) while the resting line withdraws to the right, REPLACING it rather than
+   stacking. The strokes come from the motion-craft pen maths (scripts/build-tendrils.mjs, `makeStroke`, variable
+   width and seeded wobble). Wrapped links draw one stroke per line box (box-decoration-break: clone). A small curl
+   at the tip arrives after the line has landed. */
 .link,
 .prose a,
 .hook__link,
 .tendril {
-  --t-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 10' preserveAspectRatio='none'%3E%3Cpath fill='%233d6a35' d='M0 5.5C22 4.3 46 5.2 78 4.2S150 4.9 199 5.1L199 5.7C160 6.5 128 5.8 92 6.9S28 6.2 0 5.7Z'/%3E%3C/svg%3E");
-  background-image: var(--t-img);
-  background-repeat: no-repeat;
-  background-size: 0% 0.5em;
-  background-position: 100% calc(100% + 0.06em);
+  --t-moss: var(--t-moss-1);
+  --t-rest: var(--t-rest-1);
+  text-decoration: none;
+  background-image: var(--t-moss), var(--t-rest);
+  background-repeat: no-repeat, no-repeat;
+  /* rest: the quiet line fully drawn, the tendril not yet */
+  background-size: 0% 0.5em, 100% 0.5em;
+  background-position: 100% calc(100% + 0.07em), 0% calc(100% + 0.07em);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
   transition:
     background-size 520ms var(--craft-in),
     color var(--motion-ui) var(--craft-out);
 }
-.prose a:nth-of-type(3n + 2),
-.link:nth-of-type(3n + 2) {
-  --t-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 10' preserveAspectRatio='none'%3E%3Cpath fill='%233d6a35' d='M0 5.2C30 5.9 52 4.4 90 5.3S160 4.1 199 5.4L199 5.9C150 6.3 120 6.6 84 6.1S30 6.6 0 5.5Z'/%3E%3C/svg%3E");
-}
-.prose a:nth-of-type(3n),
-.link:nth-of-type(3n) {
-  --t-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 10' preserveAspectRatio='none'%3E%3Cpath fill='%233d6a35' d='M0 5.8C26 4.6 70 5.9 104 4.8S170 5.6 199 4.9L199 5.5C170 6.3 140 5.5 100 6.4S34 6.3 0 6Z'/%3E%3C/svg%3E");
+.prose a:nth-of-type(2n),
+.link:nth-of-type(2n) {
+  --t-moss: var(--t-moss-2);
+  --t-rest: var(--t-rest-2);
 }
 :root[data-reading] .link,
 :root[data-reading] .prose a,
 :root[data-reading] .hook__link {
-  --t-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 10' preserveAspectRatio='none'%3E%3Cpath fill='%239bc58a' d='M0 5.5C22 4.3 46 5.2 78 4.2S150 4.9 199 5.1L199 5.7C160 6.5 128 5.8 92 6.9S28 6.2 0 5.7Z'/%3E%3C/svg%3E");
+  --t-moss: var(--t-moss-dark-1);
+  --t-rest: var(--t-rest-dark-1);
 }
 .link:hover,
 .link:focus-visible,
@@ -59,8 +63,8 @@
 .hook__link:focus-visible,
 .tendril:hover,
 .tendril:focus-visible {
-  background-size: 100% 0.5em;
-  background-position: 0% calc(100% + 0.06em);
+  background-size: 100% 0.5em, 0% 0.5em;
+  background-position: 0% calc(100% + 0.07em), 100% calc(100% + 0.07em);
   transition:
     background-size 1100ms var(--craft-out),
     color var(--motion-ui) var(--craft-out);
@@ -69,11 +73,11 @@
 .link:active,
 .prose a:active,
 .hook__link:active {
-  background-size: 100% 0.5em;
-  background-position: 0% calc(100% + 0.06em);
+  background-size: 100% 0.5em, 0% 0.5em;
+  background-position: 0% calc(100% + 0.07em), 100% calc(100% + 0.07em);
   transition: background-size 420ms var(--craft-out);
 }
-/* the curl at the tip: a tiny hook that appears after the line has landed */
+/* the curl at the tip: a tiny hook that appears after the line has landed (single-line phrases, pointer devices) */
 .hook__link::after {
   content: '';
   display: inline-block;
@@ -90,18 +94,15 @@
   opacity: 0.9;
   transition: opacity 700ms var(--craft-out) 640ms;
 }
-.hook__arrow {
-  display: none;
-}
 .hook__link:focus-visible {
   outline: none;
 }
-.hook__link:focus-visible .hook__w {
-  text-decoration-thickness: 2px;
-  text-decoration-color: currentColor;
+/* the arrow shows only on the phrase on screen, and only on touch (pointer devices get the curl) */
+.hook__arrow {
+  display: none;
 }
 @media (hover: none) {
-  .hook__arrow {
+  .hook__item[data-current] .hook__arrow {
     display: inline-block;
   }
   .hook__link::after {
@@ -157,12 +158,7 @@
 .hook__item {
   transition: none;
 }
-/* text-decoration does not paint through inline-block children, so each word carries the quiet underline itself */
 .hook__w {
-  text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--ink) 28%, transparent);
-  text-underline-offset: 0.16em;
-  text-decoration-thickness: 1px;
   display: inline-block;
   white-space: pre;
   transform-origin: 0 100%;
@@ -266,7 +262,7 @@
   right: 0;
   top: -1px;
   height: 6px;
-  background: var(--t-img) no-repeat 100% 0 / 0% 6px;
+  background: var(--t-moss-1) no-repeat 100% 0 / 0% 6px;
   pointer-events: none;
   transition: background-size 640ms var(--craft-in);
 }
@@ -309,7 +305,3 @@
   }
 }
 
-/* only the phrase on screen shows its arrow (the others share the same grid cell) */
-.hook__item:not([data-current]) .hook__arrow {
-  display: none !important;
-}

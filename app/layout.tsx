@@ -1,4 +1,5 @@
 import './globals.css'
+import './styles/tendrils.css'
 import './styles/craft.css'
 import type { Metadata, Viewport } from 'next'
 import { IBM_Plex_Mono, Newsreader, Schibsted_Grotesk } from 'next/font/google'
