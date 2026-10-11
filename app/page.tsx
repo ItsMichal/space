@@ -22,6 +22,7 @@ const experience: TimelineItem[] = [...profile.experience]
     date: e.since,
     dateLabel: e.years,
     title: e.company,
+    label: 'short' in e ? e.short : undefined,
     summary: e.role,
   }))
 

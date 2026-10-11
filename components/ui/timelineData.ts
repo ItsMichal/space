@@ -5,6 +5,8 @@ export type TimelineItem = {
   /** What to show instead of the formatted date, e.g. "2020 to now". */
   dateLabel?: string
   title: string
+  /** Short form of the title for the scrub strip, where space is tight. The detail below always shows the full title. */
+  label?: string
   /** One line. */
   summary?: string
   image?: { src: string; alt: string }

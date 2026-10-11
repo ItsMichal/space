@@ -17,18 +17,18 @@ export function maskUrl(seed: number): string {
   const hit = cache.get(key)
   if (hit) return hit
   const rand = rng(key * 7919 + 13)
-  // Walk the rectangle perimeter (inset) and push points in/out a little: a hand-torn, low-frequency edge.
-  const n = 28
-  const inset = 2.2
+  // Walk the rectangle perimeter (inset) and push points in/out a little: a barely wandering edge, softly blurred (a watercolor fade, not a tear).
+  const n = 20
+  const inset = 1.8
   const pts: [number, number][] = []
   for (let i = 0; i < n; i++) {
     const t = i / n
     const side = Math.floor(t * 4)
     const u = t * 4 - side
-    const a = inset + (rand() - 0.5) * 1.4
-    const b = 100 - inset + (rand() - 0.5) * 1.4
+    const a = inset + (rand() - 0.5) * 0.3
+    const b = 100 - inset + (rand() - 0.5) * 0.3
     const k = inset + u * (100 - 2 * inset)
-    const j = (rand() - 0.5) * 1.4
+    const j = (rand() - 0.5) * 0.3
     const p: [number, number] = side === 0 ? [k, a + j] : side === 1 ? [b + j, k] : side === 2 ? [100 - k, b + j] : [a + j, 100 - k]
     pts.push(p)
   }
@@ -45,7 +45,7 @@ export function maskUrl(seed: number): string {
   }
   const svg =
     `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'>` +
-    `<filter id='b' x='-10%' y='-10%' width='120%' height='120%'><feGaussianBlur stdDeviation='1.1'/></filter>` +
+    `<filter id='b' x='-10%' y='-10%' width='120%' height='120%'><feGaussianBlur stdDeviation='1.5'/></filter>` +
     `<path d='${d}Z' fill='#fff' filter='url(#b)'/></svg>`
   const url = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
   cache.set(key, url)

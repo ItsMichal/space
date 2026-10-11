@@ -300,7 +300,7 @@ export function Timeline({ items, label, pitch = 120, initial, statusLabel, with
                 onClick={() => strip.goTo(i, 'tap')}
               >
                 <span className="tl-date">{itemDate(it, withDay)}</span>
-                <span className="tl-name">{it.title}</span>
+                <span className="tl-name">{it.label ?? it.title}</span>
               </button>
             ))}
           </div>

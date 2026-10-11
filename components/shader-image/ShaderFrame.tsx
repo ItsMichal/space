@@ -20,8 +20,17 @@ export function ShaderFrame({ seed, children, variant, intensity, speed, progres
 
   useEffect(() => {
     if (!canvas || !ref.current) return
-    handle.current = canvas.register(ref.current, latest.current)
+    const el = ref.current
+    // GL work waits for an idle moment after first paint, so text and the plain <img> are never delayed by shader setup.
+    const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback
+    const cic = (window as unknown as { cancelIdleCallback?: (n: number) => void }).cancelIdleCallback
+    const go = () => {
+      handle.current = canvas.register(el, latest.current)
+    }
+    const h = ric ? ric(go, { timeout: 1500 }) : window.setTimeout(go, 400)
     return () => {
+      if (ric) cic?.(h)
+      else clearTimeout(h)
       handle.current?.destroy()
       handle.current = null
     }

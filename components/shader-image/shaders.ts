@@ -68,19 +68,16 @@ float norm01(float x) { return smoothstep(0.22, 0.78, x); }
 
 float luma(vec3 c) { return dot(c, vec3(0.299, 0.587, 0.114)); }
 
-// Organic feathered edge: distance to the box, bent by low-frequency noise, so the photograph dissolves into paper
-// along a torn, watercolor-like line that is different for every image.
+// Feathered edge: a watercolor fade, not a tear. Distance to the box, nudged by very slow noise (a few pixels of
+// wander at most, so the line is never ragged), through a smootherstep whose flat tails leave no visible start or end
+// to the dissolve. Only the outer ~4 percent of each side fades, so the inner 88 percent of every dimension is whole.
 float edgeMask(vec2 px, vec2 off) {
   float m = min(uSize.x, uSize.y);
-  // Only the outer 3 to 5 percent dissolves: a confident photograph with a softly irregular edge. The wander is at most
-  // 0.4 of the feather width, so the picture is never bitten into: the inner 88 percent of each dimension is always whole.
-  float F = clamp(m * (uSize.x < 520.0 ? 0.05 : 0.04), 10.0, 26.0) * (1.0 + 0.35 * uBreath);
+  float F = clamp(m * 0.045, 12.0, 32.0) * (1.0 + 0.3 * uBreath);
   float d = min(min(px.x, uSize.x - px.x), min(px.y, uSize.y - px.y));
-  float n = fbm(px / max(F * 5.0, 40.0) + off);
-  float w = (n - 0.5) * F * 0.8 + (vnoise(px / (F * 1.3) + off * 1.7) - 0.5) * F * 0.2;
-  float t = (d + w) / F;
-  float a = smoothstep(-0.25, 1.0, t);
-  return a * a * (3.0 - 2.0 * a);
+  float w = (vnoise(px / (F * 9.0) + off) - 0.5) * F * 0.3;
+  float t = clamp((d + w) / F, 0.0, 1.0);
+  return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
 }
 
 // Keep photographs and dark UI screenshots comfortable on birch paper: tiny black lift, slight desaturation, a
