@@ -318,51 +318,6 @@
   overflow: hidden;
   pointer-events: none;
 }
-.atm-petal {
-  position: absolute;
-  top: -30px;
-  width: 22px;
-  height: 28px;
-  opacity: 0;
-  animation: atm-fall 10000ms linear both;
-}
-.atm-petal svg {
-  display: block;
-  animation: atm-sway 10000ms ease-in-out both;
-}
-@keyframes atm-fall {
-  0% {
-    transform: translateY(0);
-    opacity: 0;
-  }
-  8% {
-    opacity: 0.9;
-  }
-  86% {
-    opacity: 0.9;
-  }
-  100% {
-    transform: translateY(calc(100vh + 60px));
-    opacity: 0;
-  }
-}
-@keyframes atm-sway {
-  0% {
-    transform: translateX(0) rotate(-10deg);
-  }
-  25% {
-    transform: translateX(28px) rotate(12deg);
-  }
-  50% {
-    transform: translateX(-14px) rotate(30deg);
-  }
-  75% {
-    transform: translateX(22px) rotate(46deg);
-  }
-  100% {
-    transform: translateX(4px) rotate(60deg);
-  }
-}
 .atm-leaf {
   position: absolute;
   top: -10%;

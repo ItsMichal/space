@@ -10,7 +10,7 @@ import { createPetal, petalScaleX, stepPetal, type PetalState } from '@/lib/moti
  * air follows the pointer; a tap flicks it. Off-screen or in a hidden tab the loop stops. Reduced motion draws the
  * petal at rest and nothing else.
  */
-export function DriftingPetal({ width = 34, className = '' }: { width?: number; className?: string }) {
+export function DriftingPetal({ width = 34, className = '', global = false }: { width?: number; className?: string; global?: boolean }) {
   const stage = useRef<HTMLDivElement>(null)
   const cv = useRef<HTMLCanvasElement>(null)
 
@@ -130,17 +130,19 @@ export function DriftingPetal({ width = 34, className = '' }: { width?: number; 
       const k = Math.exp(-d / 130)
       p = { ...p, vx: p.vx + (dx / d) * 220 * k, vy: p.vy + (dy / d) * 140 * k - 40 * k, omega: p.omega + 4 * k }
     }
-    el.addEventListener('pointermove', move)
-    el.addEventListener('pointerdown', flick)
+    // `global`: the stage is a pointer-transparent overlay, so the air is stirred by the window's pointer instead.
+    const tgt: HTMLElement | Window = global ? window : el
+    tgt.addEventListener('pointermove', move as EventListener, { passive: true })
+    tgt.addEventListener('pointerdown', flick as EventListener, { passive: true })
     return () => {
       stop()
       io.disconnect()
       ro.disconnect()
       document.removeEventListener('visibilitychange', vis)
-      el.removeEventListener('pointermove', move)
-      el.removeEventListener('pointerdown', flick)
+      tgt.removeEventListener('pointermove', move as EventListener)
+      tgt.removeEventListener('pointerdown', flick as EventListener)
     }
-  }, [width])
+  }, [width, global])
 
   return (
     <div ref={stage} className={`relative overflow-hidden ${className}`} style={{ touchAction: 'pan-y' }}>
