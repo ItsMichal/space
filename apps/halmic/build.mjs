@@ -22,7 +22,7 @@ function wordmark(dir = 'c') {
   const g = w.groups.map((l) => `<g class="ch ch-${l.ch}">${l.ds.map((d, i) => `<path${l.ch === 'i' && i === 1 ? ' class="idot"' : ''} d="${d}"/>`).join('')}</g>`).join('');
   return `<svg class="wordmark" viewBox="0 0 ${w.w} ${w.h}" role="img" aria-label="halmic" focusable="false"><title>halmic</title>${g}</svg>`;
 }
-const hbare = read('./brand/svg/hmark-2-bare.svg');
+const hbare = read('./brand/svg/hmark-3-bare.svg');
 const hv = hbare.match(/viewBox="([^"]+)"/)[1];
 const hpaths = [...hbare.matchAll(/<path d="([^"]+)"/g)].map((m) => `<path d="${m[1]}"/>`).join('');
 const mark = `<svg class="mark" viewBox="${hv}" aria-hidden="true" focusable="false">${hpaths}</svg>`;
@@ -96,8 +96,8 @@ const subs = {
 for (const d of ['videos', 'games']) { const dir = path.join(here, 'public', d); if (fs.existsSync(dir)) for (const e of fs.readdirSync(dir, { withFileTypes: true })) if (e.isDirectory()) fs.rmSync(path.join(dir, e.name), { recursive: true, force: true }); }
 fs.rmSync(path.join(here, 'public/design'), { recursive: true, force: true });
 fs.mkdirSync(path.join(here, 'public/brand'), { recursive: true });
-fs.copyFileSync(path.join(here, './brand/svg/hmark-2-blue.svg'), path.join(here, 'public/favicon.svg'));
-for (const f of ['construction-c.svg', 'hmark-2-blue.svg']) fs.copyFileSync(path.join(here, './brand/svg', f), path.join(here, 'public/brand', f));
+fs.copyFileSync(path.join(here, './brand/svg/hmark-3-blue.svg'), path.join(here, 'public/favicon.svg'));
+for (const f of ['construction-c.svg', 'hmark-3-blue.svg']) fs.copyFileSync(path.join(here, './brand/svg', f), path.join(here, 'public/brand', f));
 for (const f of fs.readdirSync(path.join(here, 'src')).filter((n) => n.endsWith('.html'))) {
   write(f, read(`src/${f}`).replace(/\{\{(\w+)\}\}/g, (_, k) => subs[k] ?? `MISSING:${k}`));
 }
