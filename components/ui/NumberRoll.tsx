@@ -11,8 +11,8 @@ import './number.css'
  * value is in the HTML as real text; the columns are decoration. With scripting off or reduced motion it is just the
  * number. The animation is pure CSS (paused until the figure is visible), so there is no flash of a wrong value.
  */
-export function NumberRoll({ value, className = '', format }: { value: number; className?: string; format?: (n: number) => string }) {
-  const text = format ? format(value) : String(value)
+export function NumberRoll({ value, className = '', text: shown }: { value: number; className?: string; text?: string }) {
+  const text = shown ?? String(value)
   const ref = useRef<HTMLSpanElement>(null)
   const [seen, setSeen] = useState(false)
 

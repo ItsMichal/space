@@ -30,7 +30,7 @@ export function StatusPill({ ns, routeKey }: { ns: GlassNamespace; routeKey: str
     if (entry) return { key: `s:${entry.source}:${entry.title}`, title: entry.title, sub: entry.sub, progress: entry.progress ?? 0 }
     if (reading && reading.started && reading.scrolling && reading.headings.length && reading.section >= 0) {
       const h = reading.headings[reading.section]
-      return { key: `r:${h.id}`, title: h.text, sub: `${reading.section + 1} of ${reading.headings.length}`, progress: reading.progress }
+      return { key: `r:${h.id}`, title: h.text, sub: reading.headings.length > 1 ? `${reading.section + 1} of ${reading.headings.length}` : undefined, progress: reading.progress }
     }
     if (reading && reading.started && reading.scrolling) return { key: 'r:top', title: 'Reading', progress: reading.progress }
     return null
@@ -58,8 +58,11 @@ export function StatusPill({ ns, routeKey }: { ns: GlassNamespace; routeKey: str
   useIso(() => {
     const el = inner.current
     if (!el || !shown) return
-    const w = Math.ceil(el.getBoundingClientRect().width) + 36
-    setWidth(w)
+    const measure = () => setWidth(Math.ceil(el.getBoundingClientRect().width) + 40)
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
   }, [shown?.key, shown?.sub, mounted])
 
   // Outgoing text

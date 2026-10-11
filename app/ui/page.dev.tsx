@@ -129,7 +129,7 @@ export default function Page() {
       <section className={sec} aria-labelledby="n1">
         <h2 id="n1" className={h2}>Number roll</h2>
         <p className="font-serif text-[40px] leading-none">
-          <NumberRoll value={1270} format={(n) => n.toLocaleString('en-US')} /> <span className="text-[18px] text-ink-muted">scroll down and up to see it only once</span>
+          <NumberRoll value={1270} text="1,270" /> <span className="text-[18px] text-ink-muted">scroll down and up to see it only once</span>
         </p>
       </section>
     </div>

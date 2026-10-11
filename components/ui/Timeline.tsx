@@ -32,6 +32,7 @@ type Props = {
 
 const itemDate = (it: TimelineItem, withDay: boolean) => it.dateLabel ?? (it.date ? formatDate(it.date, withDay) : '')
 const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+const r2 = (v: number) => Math.round(v * 100) / 100
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
 
 /**
@@ -67,11 +68,11 @@ export function Timeline({ items, label, pitch = 120, initial, statusLabel, with
       for (let k = 1; k <= 3; k++) {
         const seed = i * 7 + k
         const x = PAD + (i + k / 4) * pitch
-        blades.push({ x, y: stroke.at(uOf(x)).y, d: bladePath(seed).d, seed })
+        blades.push({ x, y: r2(stroke.at(uOf(x)).y), d: bladePath(seed).d, seed })
       }
     const buds = items.map((_, i) => {
       const x = PAD + i * pitch
-      return { x, y: stroke.at(uOf(x)).y }
+      return { x, y: r2(stroke.at(uOf(x)).y) }
     })
     return { W, stroke, uOf, rail: stroke.d(0, 1, -1.8), blades, buds }
   }, [L, n, pitch, items])
