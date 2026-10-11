@@ -1,0 +1,4 @@
+{
+  "_note": "Permanent exclude list: sync-youtube.mjs never adds these ids, and the site build ignores them. Owner decision 2026-10-11.",
+  "ids": ["AUML80zL8Bs"]
+}

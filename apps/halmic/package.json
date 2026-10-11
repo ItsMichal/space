@@ -1,0 +1,14 @@
+{
+  "name": "@space/halmic",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node build.mjs && node serve.mjs",
+    "build": "node build.mjs",
+    "deploy": "node build.mjs && wrangler deploy",
+    "sync:youtube": "node ./scripts/sync-youtube.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.149.0"
+  }
+}

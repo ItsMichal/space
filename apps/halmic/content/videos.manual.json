@@ -1,0 +1,30 @@
+{
+  "_note": "Hand-kept catalogue of the public Videos page (21 videos, newest first, read 2026-10-11) merged with the RSS feed by scripts/sync-youtube.mjs. The feed only returns the latest ~15. Playlists: https://www.youtube.com/playlist?list=PLUtLZU4pik-PsRl0gqi_UaKvB_25Xh0gt (FIFA series), PLUtLZU4pik-OClTpNNyMUl1s4aB2DWvuY (Special Force series), PLUtLZU4pik-NHfJJ3InmHxeKGH9nTqyZ3 (CyberSmash #0).",
+  "playlists": {
+    "fifa": "PLUtLZU4pik-PsRl0gqi_UaKvB_25Xh0gt",
+    "specialForce": "PLUtLZU4pik-OClTpNNyMUl1s4aB2DWvuY",
+    "cybersmash": "PLUtLZU4pik-NHfJJ3InmHxeKGH9nTqyZ3"
+  },
+  "videos": [
+    { "id": "N7HKj1dYZjU", "title": "FIFA With The Boys - Episode 4(EVER) - Funny Moments, Bloopers, and Shots", "length": "10:19", "ago": "1 year ago" },
+    { "id": "2jM2QSTSte4", "title": "FIFA With the Boys - Episode 3 - Funny Moments, Bloopers & Shots with the Boys", "length": "10:42", "ago": "3 years ago" },
+    { "id": "mRIj1BeCJ_o", "title": "FIFA With the Boys - Episode 2 - Funny Moments, Bloopers & Shots with the Boys", "length": "9:18", "ago": "4 years ago" },
+    { "id": "Nhs4iQcN7-w", "title": "FIFA With the Boys - Episode 1 - Funny Moments, Bloopers & Shots with the Boys", "length": "3:19", "ago": "4 years ago" },
+    { "id": "pl6lJAYPLgc", "title": "CU Boulder Racing Team - IMI Motorsports 01:09:59 (PB)", "length": "1:35", "ago": "5 years ago" },
+    { "id": "IIJVKHEtawU", "title": "SPECIAL FORCE 2 - THE ARRAY - EPISODE 1", "length": "6:02", "ago": "6 years ago" },
+    { "id": "qVEDjNc5Gmg", "title": "SPECIAL FORCE 1 - ORIGINS", "length": "2:51", "ago": "7 years ago" },
+    { "id": "Et47QCJ3-3g", "title": "Robomaster 2019 Robotics Competition - Highlight Reel", "length": "11:12", "ago": "7 years ago" },
+    { "id": "o7ISds1lmAs", "title": "Marcin [P. Plant] vs Chris [Ganondorf]  - CyberSmash #0 -  Round 1", "group": "cybersmash" },
+    { "id": "B7QDYMVi-Tk", "title": "Deven [Pikachu] vs Mr. Ryan [Rosalina] - CyberSmash #0 - Round 1", "group": "cybersmash" },
+    { "id": "ruKCixsCyhE", "title": "Halmic [Snake] vs Logan [Kirby]  - CyberSmash #0 - Round 1", "group": "cybersmash" },
+    { "id": "N-Ud4IeHpwQ", "title": "Ali [Toon Link] vs Daniel [Pit] - CyberSmash #0 - Round 1", "group": "cybersmash" },
+    { "id": "IE8JH9MCkMs", "title": "Jack [Yoshi] vs Dr. Campbell [Pikachu] - CyberSmash #0 - Round 1", "group": "cybersmash" },
+    { "id": "dF2kTFSpha8", "title": "Trevor [Ripley] vs Chris [Ganondorf] - CyberSmash #0 - Winners Quarters", "group": "cybersmash" },
+    { "id": "M0XS49W4jGM", "title": "Marcin [P. Plant] vs Alana [Z. S. Samus] - CyberSmash #0 - Losers Round 3", "group": "cybersmash" },
+    { "id": "-IzW3YKTa0w", "title": "Chris [Ganondorf] vs Daniel [Pit] - CyberSmash #0 - Winners Semifinals", "group": "cybersmash" },
+    { "id": "iK4Z0wrwsFM", "title": "Talha [Simon] vs Halmic [Ike] - CyberSmash #0 - Losers Round 4", "group": "cybersmash" },
+    { "id": "ywJJZXUdvJk", "title": "Halmic [Ike] vs Marcin [P.  Plant] - CyberSmash #0 - Losers Semifinals", "group": "cybersmash" },
+    { "id": "Ea9YsbmB14E", "title": "Daniel [Pit] vs Marcin [P.  Plant] - CyberSmash #0 - Losers Finals", "group": "cybersmash" },
+    { "id": "yLKXLvfjUoQ", "title": "CyberSmash #0 GRAND FINALS - Marcin [P. Plant] vs Chris [Ganondorf]", "group": "cybersmash" }
+  ]
+}

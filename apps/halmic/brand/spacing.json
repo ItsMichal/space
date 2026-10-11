@@ -1,0 +1,174 @@
+{
+  "capUnits": 70,
+  "floor": 12,
+  "note": "mean white per scanline across the x-height band, in design units (bar = 53)",
+  "rows": {
+    "a-fixed": [
+      {
+        "pair": "ha",
+        "mean": 45.1,
+        "min": 26
+      },
+      {
+        "pair": "al",
+        "mean": 27,
+        "min": 24
+      },
+      {
+        "pair": "lm",
+        "mean": 33,
+        "min": 30
+      },
+      {
+        "pair": "mi",
+        "mean": 37.9,
+        "min": 30
+      },
+      {
+        "pair": "ic",
+        "mean": 40.5,
+        "min": 26
+      }
+    ],
+    "a-optical": [
+      {
+        "pair": "ha",
+        "mean": 33.5,
+        "min": 12
+      },
+      {
+        "pair": "al",
+        "mean": 30,
+        "min": 27
+      },
+      {
+        "pair": "lm",
+        "mean": 30,
+        "min": 27
+      },
+      {
+        "pair": "mi",
+        "mean": 30,
+        "min": 21.8
+      },
+      {
+        "pair": "ic",
+        "mean": 27.4,
+        "min": 12
+      }
+    ],
+    "b-fixed": [
+      {
+        "pair": "ha",
+        "mean": 52.3,
+        "min": 36
+      },
+      {
+        "pair": "al",
+        "mean": 37,
+        "min": 34
+      },
+      {
+        "pair": "lm",
+        "mean": 42.9,
+        "min": 40
+      },
+      {
+        "pair": "mi",
+        "mean": 47,
+        "min": 40
+      },
+      {
+        "pair": "ic",
+        "mean": 49.2,
+        "min": 36
+      }
+    ],
+    "b-optical": [
+      {
+        "pair": "ha",
+        "mean": 35.2,
+        "min": 14.6
+      },
+      {
+        "pair": "al",
+        "mean": 40,
+        "min": 37.1
+      },
+      {
+        "pair": "lm",
+        "mean": 40,
+        "min": 37.1
+      },
+      {
+        "pair": "mi",
+        "mean": 40,
+        "min": 32.5
+      },
+      {
+        "pair": "ic",
+        "mean": 35.2,
+        "min": 20.3
+      }
+    ],
+    "c-fixed": [
+      {
+        "pair": "ha",
+        "mean": 36.6,
+        "min": 16
+      },
+      {
+        "pair": "al",
+        "mean": 17,
+        "min": 14
+      },
+      {
+        "pair": "lm",
+        "mean": 23,
+        "min": 20
+      },
+      {
+        "pair": "mi",
+        "mean": 23.4,
+        "min": 20
+      },
+      {
+        "pair": "ic",
+        "mean": 31.2,
+        "min": 16
+      }
+    ],
+    "c-optical": [
+      {
+        "pair": "ha",
+        "mean": 33.2,
+        "min": 12
+      },
+      {
+        "pair": "al",
+        "mean": 20,
+        "min": 17
+      },
+      {
+        "pair": "lm",
+        "mean": 20,
+        "min": 17
+      },
+      {
+        "pair": "mi",
+        "mean": 20,
+        "min": 16.6
+      },
+      {
+        "pair": "ic",
+        "mean": 27.4,
+        "min": 12
+      }
+    ]
+  },
+  "lockupGap": {
+    "a": 413.70562433288416,
+    "b": 413.70562433288416,
+    "c": 413.70562433288416
+  }
+}

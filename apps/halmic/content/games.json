@@ -1,0 +1,111 @@
+{
+  "profile": "https://halmic.itch.io/",
+  "fetched": "2026-10-11T10:08:44.296Z",
+  "games": [
+    {
+      "slug": "glass-gunslinger-dod",
+      "url": "https://halmic.itch.io/glass-gunslinger-dod",
+      "title": "Glass Gunslinger - Drop of Doom",
+      "blurb": "Is this really a shmup...?",
+      "cover": "https://img.itch.zone/aW1nLzgzNzQ2ODIucG5n/315x250%23c/0d0eou.png",
+      "playInBrowser": true,
+      "status": "Prototype",
+      "madeWith": "PICO-8",
+      "genre": "Shooter , Survival",
+      "tags": [
+        "fall",
+        "Shoot 'Em Up"
+      ],
+      "rating": null,
+      "jam": null,
+      "published": null,
+      "description": "Uh yeah its a thing I guess. Really wish I coulda themed it a bit better though. Added a story or something funny and original. Oh well! Music by Roby Dugay, everything else by me. Except some code.",
+      "coverLocal": "/games/glass-gunslinger-dod.jpg"
+    },
+    {
+      "slug": "flippy",
+      "url": "https://halmic.itch.io/flippy",
+      "title": "Flippy",
+      "blurb": "Yet another Flappy Bird remake",
+      "cover": "https://img.itch.zone/aW1nLzgyMzE4MjcucG5n/315x250%23c/Euy0VC.png",
+      "playInBrowser": true,
+      "status": "Prototype",
+      "madeWith": "PICO-8",
+      "genre": null,
+      "tags": [],
+      "rating": null,
+      "jam": null,
+      "published": null,
+      "description": "Flippy, built in Pico-8",
+      "coverLocal": "/games/flippy.jpg"
+    },
+    {
+      "slug": "lvasion-du-criminel-de-sa-prison",
+      "url": "https://halmic.itch.io/lvasion-du-criminel-de-sa-prison",
+      "title": "L'évasion du Criminel de sa Prison (The escape of the criminal from his prison)",
+      "blurb": "A top-down stealthgame made in PuzzleScript. Because why not? Also it's in terrible French...sorry.",
+      "cover": "https://img.itch.zone/aW1nLzgxNzk3MTguZ2lm/315x250%23c/cCHAxS.gif",
+      "playInBrowser": true,
+      "status": "Released",
+      "madeWith": "PuzzleScript",
+      "genre": "Action",
+      "tags": [
+        "french",
+        "PuzzleScript",
+        "Stealth",
+        "Story Rich",
+        "Top-Down"
+      ],
+      "rating": "Rated 4.0 out of 5 stars (1 total ratings )",
+      "jam": null,
+      "published": null,
+      "description": "Written in French, but I don't think you need to know too much of it. Eventually you get \"calling cards\", which can kill guards but will only be thrown in the direction of your last move, and if the guard is right next to you... well that's just embarrassing. All buttons need to be pressed to open exits and doors, in the level which has multiple buttons, be careful about how you go about pressing them...",
+      "coverLocal": "/games/lvasion-du-criminel-de-sa-prison.jpg"
+    },
+    {
+      "slug": "soupman",
+      "url": "https://halmic.itch.io/soupman",
+      "title": "Soupman",
+      "blurb": "Defeat the Saladking. Claim your legacy.",
+      "cover": "https://img.itch.zone/aW1nLzgwNTk2NjEuZ2lm/315x250%23c/8YkXSs.gif",
+      "playInBrowser": true,
+      "status": "In development",
+      "madeWith": "bitsy",
+      "genre": "Role Playing",
+      "tags": [
+        "absurd",
+        "Bitsy",
+        "soup"
+      ],
+      "rating": "Rated 5.0 out of 5 stars (1 total ratings )",
+      "jam": null,
+      "published": "04 February 2022 @ 00:26 UTC",
+      "description": "Soupman is a small project using Bitsy for Mysterious Soup Bitsyjam. More details to come.",
+      "coverLocal": "/games/soupman.jpg"
+    },
+    {
+      "slug": "taco-neko",
+      "url": "https://halmic.itch.io/taco-neko",
+      "title": "Taco Neko",
+      "blurb": "Join Suavez on his taco adventure to Islas de Gatacos and their Robo-Cats!",
+      "cover": "https://img.itch.zone/aW1nLzM1MjExODAucG5n/315x250%23c/FnDmuI.png",
+      "playInBrowser": true,
+      "status": "Prototype",
+      "madeWith": null,
+      "genre": "Action , Survival",
+      "tags": [
+        "2D",
+        "Cats",
+        "gbstudio",
+        "Stealth",
+        "taco",
+        "Top-Down"
+      ],
+      "rating": "Rated 5.0 out of 5 stars (1 total ratings )",
+      "jam": null,
+      "published": null,
+      "description": "You. Are. Suavez. Owner of the world's most renown Taqueria. People call you the Gordon Ramsey of Tacos. They said Taco-less Tacos couldn't be done, but you were the first to do it. You made headlines. Developed renowned techniques and styles. Your craft is rewarded with fortune, fame, and countless customers at Suavez #1 Taco. You have it all. Or so you thought. GATACO CO. INVITES YOU TO THE ISLAS DE GATACOS One day, a mysterious letter arrives at Suavez #1. Addressed from the unknown Gataco Co., they claim to have the world's best taco ingredients on the Islas de Gatacos. They offer you a fr",
+      "coverLocal": "/games/taco-neko.jpg"
+    }
+  ]
+}
