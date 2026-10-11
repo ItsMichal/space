@@ -1,4 +1,18 @@
 {
-  "_note": "Permanent exclude list: sync-youtube.mjs never adds these ids, and the site build ignores them. Owner decision 2026-10-11.",
-  "ids": ["AUML80zL8Bs"]
+  "_note": "Permanent exclude list: sync-youtube.mjs never adds these ids, and the site build ignores them. Owner decisions 2026-10-11: the Ted Lasso edit (AUML80zL8Bs) and the whole CyberSmash #0 set (12 videos, playlist PLUtLZU4pik-NHfJJ3InmHxeKGH9nTqyZ3).",
+  "ids": [
+    "AUML80zL8Bs",
+    "o7ISds1lmAs",
+    "B7QDYMVi-Tk",
+    "ruKCixsCyhE",
+    "N-Ud4IeHpwQ",
+    "IE8JH9MCkMs",
+    "dF2kTFSpha8",
+    "M0XS49W4jGM",
+    "-IzW3YKTa0w",
+    "iK4Z0wrwsFM",
+    "ywJJZXUdvJk",
+    "Ea9YsbmB14E",
+    "yLKXLvfjUoQ"
+  ]
 }
