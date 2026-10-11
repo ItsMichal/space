@@ -96,3 +96,7 @@ jobs:
         run: npm run build:halmic
       - if: steps.present.outputs.present == 'true'
         run: npm run check:identity
+      - name: Worker config sanity (no upload)
+        if: steps.present.outputs.present == 'true'
+        working-directory: apps/halmic
+        run: npx wrangler deploy --dry-run
