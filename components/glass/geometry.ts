@@ -1,3 +1,4 @@
+import { project, springCoeffs } from '@/lib/motion/spring'
 /*
  * Pure maths for the glass engine. Nothing here touches the DOM, so it is unit-tested; the GLSL in
  * shaders.ts mirrors these functions line for line.
@@ -127,13 +128,15 @@ export const BOUNCE: SpringConfig = PRESS
  * only when the user threw something).
  */
 export function springFor(response: number, damping = 1): SpringConfig {
-  const w = (2 * Math.PI) / Math.max(response, 0.05)
-  return { stiffness: w * w, damping: 2 * damping * w }
+  // One spring maths for the whole site: the coefficients come from lib/motion/spring.ts. This file only keeps the
+  // mutable {x, v} stepper because the glass engine runs it in a hot loop over many shapes.
+  const { k, c } = springCoeffs({ response: Math.max(response, 0.05), damping })
+  return { stiffness: k, damping: c }
 }
 
 /** Where a throw lands: velocity (px/s) projected with iOS-style deceleration (rate 0.998 per ms). */
 export function projectMomentum(velocity: number, rate = 0.998): number {
-  return (velocity / 1000) * (rate / (1 - rate))
+  return project(0, velocity, rate)
 }
 
 /** Resistance beyond a limit: moves with the finger at first, then progressively less. */

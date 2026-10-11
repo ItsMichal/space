@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalS
 import { Glass, glass, type GlassNamespace } from '@/components/glass'
 import { getServerStatus, getStatus, subscribeStatus } from './status'
 import { useReading } from './useReading'
-import { stemPath } from './craft/stroke'
+import { makeStroke } from '@/lib/motion/handStroke'
 import './ui.css'
 
 type View = { key: string; title: string; sub?: string; progress: number }
@@ -75,7 +75,10 @@ export function StatusPill({ ns, routeKey }: { ns: GlassNamespace; routeKey: str
     prev.current = shown
   }, [shown])
 
-  const stem = useMemo(() => stemPath(240, { seed: 9, base: 2.6, tip: 0.8, sway: 0.8 }), [])
+  const stroke = useMemo(
+    () => makeStroke([0, 1, 2, 3, 4, 5].map((i) => ({ x: i * 48, y: Math.sin(i * 1.7 + 0.4) * 0.9 })), { size: 3.4, seed: 9, wobble: 0.5, tip: 0.1, startWidth: 0.5, density: 48 }),
+    []
+  )
   const visible = !!view
   const p = (view ?? lastView.current)?.progress ?? 0
 
@@ -114,13 +117,8 @@ export function StatusPill({ ns, routeKey }: { ns: GlassNamespace; routeKey: str
         </span>
       </span>
       <svg className="st-stem" viewBox="0 0 240 6" preserveAspectRatio="none" aria-hidden>
-        <defs>
-          <clipPath id="st-clip">
-            <rect x="0" y="0" height="6" style={{ width: `${Math.max(0.02, p) * 240}px`, transition: 'width 520ms var(--ui-settle)' }} />
-          </clipPath>
-        </defs>
         <g transform="translate(0 3)">
-          <path d={stem} clipPath="url(#st-clip)" />
+          <path d={stroke.d(0, Math.min(1, Math.max(0.05, p)), p > 0.02 && p < 0.99 ? 0.6 : 0)} />
         </g>
       </svg>
     </Glass>

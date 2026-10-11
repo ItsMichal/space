@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { createSpring, type Spring } from '@/lib/motion/spring'
-import { bladePath, leafPath, railPath, railY, stemPath } from './craft/stroke'
+import { makeStroke, type Pt } from '@/lib/motion/handStroke'
+import { bladePath, leafPath } from './craft/stroke'
 import { useStrip } from './useStrip'
 import { publishStatus } from './status'
 import { formatDate, yearMarks, type TimelineItem } from './timelineData'
@@ -54,14 +55,26 @@ export function Timeline({ items, label, pitch = 120, initial, statusLabel, with
   const marks = useMemo(() => yearMarks(items), [items])
   const geometry = useMemo(() => {
     const W = L + PAD * 2
-    const blades = [] as { x: number; d: string; seed: number }[]
+    // One hand stroke runs the whole rail. The quiet pencil line and the growing moss stem are the same stroke, so the
+    // stem always sits exactly on the line it grows along; buds and blades are placed on it by arclength.
+    const ctrl: Pt[] = []
+    const steps = Math.max(4, Math.round(W / 70))
+    for (let i = 0; i <= steps; i++) ctrl.push({ x: (i / steps) * W, y: Math.sin(i * 1.3 + 0.6) * 2.4 })
+    const stroke = makeStroke(ctrl, { size: 4.4, seed: 5, wobble: 1.1, tip: 0.05, startWidth: 0.5, density: Math.max(60, Math.round(W / 6)) })
+    const uOf = (x: number) => clamp(x / W, 0, 1)
+    const blades = [] as { x: number; y: number; d: string; seed: number }[]
     for (let i = 0; i < n - 1; i++)
       for (let k = 1; k <= 3; k++) {
         const seed = i * 7 + k
-        blades.push({ x: PAD + (i + k / 4) * pitch, d: bladePath(seed).d, seed })
+        const x = PAD + (i + k / 4) * pitch
+        blades.push({ x, y: stroke.at(uOf(x)).y, d: bladePath(seed).d, seed })
       }
-    return { W, rail: railPath(W, { seed: 3 }), stem: stemPath(W, { seed: 3, base: 3, tip: 1 }), blades }
-  }, [L, n, pitch])
+    const buds = items.map((_, i) => {
+      const x = PAD + i * pitch
+      return { x, y: stroke.at(uOf(x)).y }
+    })
+    return { W, stroke, uOf, rail: stroke.d(0, 1, -1.8), blades, buds }
+  }, [L, n, pitch, items])
 
   // ---- animation state (all imperative; React only owns which item is active)
   const fx = useRef<{
@@ -72,7 +85,7 @@ export function Timeline({ items, label, pitch = 120, initial, statusLabel, with
     prevP: number
     raf: number
     last: number
-    els: { buds: SVGPathElement[]; blades: SVGPathElement[]; clip: SVGRectElement | null; tip: SVGGElement | null } | null
+    els: { buds: SVGPathElement[]; blades: SVGPathElement[]; stem: SVGPathElement | null; tip: SVGGElement | null } | null
     dragging: boolean
   }>({ open: [], lean: createSpring(0, { response: 0.42, damping: 0.55 }), hist: [], p: start, prevP: start, raf: 0, last: 0, els: null, dragging: false })
 
@@ -81,7 +94,8 @@ export function Timeline({ items, label, pitch = 120, initial, statusLabel, with
       const f = fx.current
       if (track.current) track.current.style.transform = `translate3d(${-p * pitch}px,0,0)`
       const x = PAD + clamp(p, 0, n - 1) * pitch
-      f.els?.clip?.setAttribute('width', String(x))
+      const head = geometry.uOf(x)
+      f.els?.stem?.setAttribute('d', geometry.stroke.d(0, head, Math.max(0, Math.min(1, Math.abs(f.p - f.prevP) * 6)) * 1.4))
       for (let i = 0; i < n; i++) {
         const t = tabs.current[i]
         if (t) {
@@ -91,7 +105,7 @@ export function Timeline({ items, label, pitch = 120, initial, statusLabel, with
         }
       }
     },
-    [n, pitch]
+    [n, pitch, geometry]
   )
 
   const fxStep = useCallback(
@@ -125,7 +139,7 @@ export function Timeline({ items, label, pitch = 120, initial, statusLabel, with
           const sway = (f.hist[delay] ?? 0) * 0.6
           const sc = 0.62 + 0.5 * o
           const rot = -18 * (1 - Math.min(o, 1.2)) + sway
-          bud.style.transform = `translate(${PAD + i * pitch}px,${railY(PAD + i * pitch, L + PAD * 2, { seed: 3 })}px) rotate(${rot}deg) scale(${sc})`
+          bud.style.transform = `translate(${geometry.buds[i].x}px,${geometry.buds[i].y}px) rotate(${rot}deg) scale(${sc})`
           const m = clamp(o, 0, 1) * 100
           bud.style.color = `color-mix(in srgb, var(--accent) ${m}%, var(--ink-faint))`
           bud.style.opacity = String(0.55 + 0.45 * clamp(o, 0, 1))
@@ -137,19 +151,20 @@ export function Timeline({ items, label, pitch = 120, initial, statusLabel, with
         const d2 = Math.min(HISTORY - 1, Math.max(0, Math.round(Math.abs((bx - PAD) / pitch - f.p) * 2.5)))
         const a = (f.hist[d2] ?? 0) * (0.5 + Number(b.dataset.k))
         const near = clamp(1 - Math.abs((bx - PAD) / pitch - f.p) / 2.2, 0, 1)
-        b.style.transform = `translate(${bx}px,${railY(bx, L + PAD * 2, { seed: 3 })}px) rotate(${a}deg) scaleY(${0.8 + near * 0.35})`
+        b.style.transform = `translate(${bx}px,${Number(b.dataset.y)}px) rotate(${a}deg) scaleY(${0.8 + near * 0.35})`
         b.style.opacity = String(0.35 + near * 0.4)
       }
       // growing tip of the stem
       if (els.tip) {
         const tx = PAD + clamp(f.p, 0, n - 1) * pitch
         const grow = clamp(f.p / 0.35, 0, 1)
-        els.tip.style.transform = `translate(${tx}px,${railY(tx, L + PAD * 2, { seed: 3 })}px) rotate(${-60 + lean * 1.4}deg) scale(${grow})`
+        const tp = geometry.stroke.at(geometry.uOf(tx))
+        els.tip.style.transform = `translate(${tp.x}px,${tp.y}px) rotate(${-60 + lean * 1.4}deg) scale(${grow})`
       }
       if (busy) f.raf = requestAnimationFrame(fxStep)
       else f.raf = 0
     },
-    [L, n, pitch]
+    [n, pitch, geometry]
   )
 
   const fxKick = useCallback(() => {
@@ -203,7 +218,7 @@ export function Timeline({ items, label, pitch = 120, initial, statusLabel, with
     f.els = {
       buds: Array.from(svg.querySelectorAll<SVGPathElement>('[data-bud]')),
       blades: Array.from(svg.querySelectorAll<SVGPathElement>('[data-blade]')),
-      clip: svg.querySelector('clipPath rect'),
+      stem: svg.querySelector('[data-stem]'),
       tip: svg.querySelector('[data-tip]'),
     }
     strip.jump(start)
@@ -238,18 +253,13 @@ export function Timeline({ items, label, pitch = 120, initial, statusLabel, with
       <div ref={vp} className="tl-vp" {...strip.bind}>
         <div ref={track} className="tl-track" style={{ transform: `translate3d(${-start * pitch}px,0,0)`, height: 132 }}>
           <svg className="tl-svg" width={geometry.W} height={RAIL_Y + 14} style={{ left: -PAD }} aria-hidden focusable="false">
-            <defs>
-              <clipPath id={`${uid}-c`}>
-                <rect x="0" y="-20" width={PAD + start * pitch} height="80" />
-              </clipPath>
-            </defs>
             <g transform={`translate(0 ${RAIL_Y})`}>
-              <path className="tl-rail" d={geometry.rail} transform="translate(0 0)" />
+              <path className="tl-rail" d={geometry.rail} />
               {geometry.blades.map((b, j) => (
-                <path key={j} data-blade data-x={b.x} data-k={(b.seed % 3) / 3} className="tl-blade" d={b.d} style={{ transform: `translate(${b.x}px,0)` }} />
+                <path key={j} data-blade data-x={b.x} data-y={b.y} data-k={(b.seed % 3) / 3} className="tl-blade" d={b.d} style={{ transform: `translate(${b.x}px,${b.y}px)` }} />
               ))}
-              <path className="tl-stem" d={geometry.stem} clipPath={`url(#${uid}-c)`} />
-              <g data-tip className="tl-tip" style={{ transform: `translate(${PAD + start * pitch}px,0) rotate(-60deg)` }}>
+              <path data-stem className="tl-stem" d={geometry.stroke.d(0, geometry.uOf(PAD + start * pitch))} />
+              <g data-tip className="tl-tip" style={{ transform: `translate(${PAD + start * pitch}px,${geometry.buds[start].y}px) rotate(-60deg)` }}>
                 <path d={leafPath(15, 0.4, 0.34)} />
               </g>
               {items.map((it, i) => (
@@ -259,7 +269,7 @@ export function Timeline({ items, label, pitch = 120, initial, statusLabel, with
                   className="tl-bud"
                   d={leafPath(15, i % 2 ? 0.25 : -0.25, 0.4 + (i % 3) * 0.04)}
                   style={{
-                    transform: `translate(${PAD + i * pitch}px,0) ${i === start ? 'rotate(0deg) scale(1.12)' : 'rotate(-18deg) scale(0.62)'}`,
+                    transform: `translate(${geometry.buds[i].x}px,${geometry.buds[i].y}px) ${i === start ? 'rotate(0deg) scale(1.12)' : 'rotate(-18deg) scale(0.62)'}`,
                     color: i === start ? 'var(--accent)' : 'var(--ink-faint)',
                   }}
                 />

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { bounded, dragAxis, focusOf, settleDamping, settleIndex, VelocityTracker } from '../kinetics'
-import { createChain, springEasing } from '../craft/chain'
-import { bladePath, leafPath, railPath, rand, stemPath } from '../craft/stroke'
+import { createFollowers } from '../craft/followers'
+import { bladePath, leafPath, rand, seedPath } from '../craft/stroke'
+import { springFor, projectMomentum } from '@/components/glass/geometry'
+import { springCoeffs, project } from '@/lib/motion/spring'
 
 describe('kinetics', () => {
   it('estimates velocity from recent samples only', () => {
@@ -42,31 +44,31 @@ describe('kinetics', () => {
 })
 
 describe('craft', () => {
-  it('chain followers lag and converge', () => {
-    const c = createChain(4, { response: 0.3, damping: 1 })
+  it('followers lag and converge', () => {
+    const c = createFollowers(4, { response: 0.3, damping: 1 })
     for (let i = 0; i < 6; i++) c.step(1 / 60, 1)
     expect(c.values[0]).toBeGreaterThan(c.values[3])
     for (let i = 0; i < 600; i++) c.step(1 / 60, 1)
     expect(c.values[3]).toBeCloseTo(1, 2)
     expect(c.settled(0.01)).toBe(true)
   })
-  it('spring easing is monotone when critically damped, overshoots when not', () => {
-    const a = springEasing(0.5, 1)
-    expect(a.easing.startsWith('linear(0')).toBe(true)
-    const nums = (s: string) => s.slice(7, -1).split(',').map(Number)
-    expect(Math.max(...nums(a.easing))).toBeLessThanOrEqual(1)
-    expect(Math.max(...nums(springEasing(0.5, 0.7).easing))).toBeGreaterThan(1)
-    expect(a.duration).toBeGreaterThan(300)
-  })
-  it('hand-drawn geometry is deterministic and closed', () => {
+  it('organic silhouettes are deterministic, closed and not identical', () => {
     expect(rand(3)).toBe(rand(3))
-    expect(stemPath(200, { seed: 2 })).toBe(stemPath(200, { seed: 2 }))
-    expect(stemPath(200, { seed: 2 })).not.toBe(stemPath(200, { seed: 3 }))
-    expect(stemPath(100).endsWith('Z')).toBe(true)
-    expect(railPath(100).startsWith('M')).toBe(true)
     expect(leafPath(20)).toMatch(/Z$/)
+    expect(seedPath(1)).toBe(seedPath(1))
+    expect(seedPath(1)).not.toBe(seedPath(2))
     const b = bladePath(5)
     expect(b.h).toBeGreaterThan(0)
     expect(b.h).toBeLessThanOrEqual(9)
+  })
+})
+
+describe('one spring maths', () => {
+  it('glass springFor and momentum projection derive from lib/motion/spring', () => {
+    const cfg = springFor(0.5, 1)
+    const { k, c } = springCoeffs({ response: 0.5, damping: 1 })
+    expect(cfg.stiffness).toBeCloseTo(k)
+    expect(cfg.damping).toBeCloseTo(c)
+    expect(projectMomentum(800)).toBeCloseTo(project(0, 800))
   })
 })

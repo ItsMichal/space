@@ -74,71 +74,43 @@
   align-items: center;
   gap: 6px;
   height: 34px;
-  padding: 0 14px;
+  padding: 0 8px;
   color: var(--ink);
 }
-.pc-dots {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.pc-dot {
+.pc-art {
   position: relative;
-  display: block;
+}
+.pc-svg {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.pc-seed {
+  fill: var(--ink);
+  opacity: 0.32;
+}
+.pc-body {
+  fill: var(--ink);
+  opacity: 0.2;
+}
+.pc-fillp {
+  fill: var(--ink);
+}
+.pc-hit {
+  position: absolute;
+  top: -5px;
+  height: 44px;
   padding: 0;
   border: 0;
   background: none;
   cursor: pointer;
-  height: 8px;
-  width: 8px;
-  border-radius: 999px;
-  transition: width 460ms var(--ui-settle) 40ms;
+  -webkit-tap-highlight-color: transparent;
 }
-.pc-dot::before {
-  content: '';
-  position: absolute;
-  inset: -18px -6px;
-}
-.pc-dot:focus-visible {
+.pc-hit:focus-visible {
   outline: 2px solid var(--focus);
-  outline-offset: 3px;
-}
-.pc-dot[data-on] {
-  width: 30px;
-  transition: width 780ms var(--ui-stretch);
-}
-.pc-fill-wrap {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
+  outline-offset: -6px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--ink) 28%, transparent);
-  transition: background 400ms;
-}
-.pc-dot[data-on] .pc-fill-wrap {
-  background: color-mix(in srgb, var(--ink) 22%, transparent);
-}
-.pc-fill {
-  position: absolute;
-  inset: 0;
-  border-radius: 999px;
-  background: var(--ink);
-  transform-origin: 0 50%;
-  transform: scaleX(1);
-}
-.pc-fill[data-run] {
-  animation: pc-fill linear both;
-}
-@keyframes pc-fill {
-  from {
-    transform: scaleX(0.28);
-  }
-  to {
-    transform: scaleX(1);
-  }
 }
 .pc-play {
   display: grid;
@@ -182,13 +154,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pc-dot,
-  .pc-dot[data-on],
   .pc-ico,
   .pc-ico[data-on] {
     transition: none !important;
-  }
-  .pc-fill[data-run] {
-    animation: none;
   }
 }

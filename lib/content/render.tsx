@@ -63,7 +63,7 @@ function rehypeUnwrapImages() {
 type Props = Record<string, unknown>
 
 const components = {
-  a: (p: Props & { children?: ReactNode }) => <PostPreviewLink {...(p as never)} />,
+  a: (p: Props & { children?: ReactNode }) => <PostPreviewLink {...(p as { href?: string; children?: ReactNode })} />,
   'mdx-youtube': (p: Props) => <YouTube id={String(p.id)} title={p.title as string | undefined} />,
   'mdx-embed': (p: Props) => <Embed url={String(p.url)} title={p.title as string | undefined} ratio={p.ratio as string | undefined} />,
   'mdx-callout': (p: Props & { children?: ReactNode }) => <Callout type={(p.type as string) ?? 'note'}>{p.children}</Callout>,

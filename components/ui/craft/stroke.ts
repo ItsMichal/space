@@ -1,56 +1,16 @@
-// Hand-drawn geometry for the micro-UI kit. Pure functions, no DOM. Shapes here are meant to be swapped for the
-// shared motion toolkit (HandStroke / PathMorph) when it lands; keep signatures small.
-
-/** Deterministic pseudo-random in [0,1) from an integer seed (mulberry32 step). */
-export function rand(seed: number): number {
-  let t = (seed + 0x6d2b79f5) | 0
-  t = Math.imul(t ^ (t >>> 15), t | 1)
-  t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-  return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-}
+// Small organic shapes for the micro-UI kit, built on the shared motion toolkit: seeded randomness from lib/motion/rng,
+// pen strokes from lib/motion/handStroke (makeStroke), blobs from lib/motion/pathMorph. This file only adds the leaf,
+// blade and seed silhouettes those do not provide.
+import { blob, closedPath } from '@/lib/motion/pathMorph'
+import { hash01 } from '@/lib/motion/rng'
 
 const f = (n: number) => (Math.round(n * 100) / 100).toString()
 
-const wander = (x: number, i: number, seed: number, sway: number) =>
-  Math.sin(x * 0.018 + seed) * sway * 0.6 + (rand(seed * 131 + i) - 0.5) * sway * 0.5
+/** Deterministic float in [0,1) from an integer. */
+export const rand = (seed: number) => hash01(seed, 7)
 
 /**
- * A stem: a left-to-right stroke of slightly varying width along a gently wandering centreline, returned as a closed
- * path outline. Width tapers from `base` at the root to `tip` at the end with a little seeded wobble, so it reads as
- * drawn with a brush rather than ruled. `sway` is the vertical wander in px.
- */
-export function stemPath(length: number, { base = 2.6, tip = 0.9, sway = 1.4, seed = 1, step = 12 } = {}): string {
-  const n = Math.max(2, Math.ceil(length / step))
-  const top: string[] = []
-  const bot: string[] = []
-  for (let i = 0; i <= n; i++) {
-    const t = i / n
-    const x = t * length
-    const y = wander(x, i, seed, sway)
-    const w = (base + (tip - base) * t) * (0.86 + rand(seed * 17 + i * 3) * 0.28)
-    top.push(`${f(x)} ${f(y - w / 2)}`)
-    bot.push(`${f(x)} ${f(y + w / 2)}`)
-  }
-  return `M${top.join('L')}L${bot.reverse().join('L')}Z`
-}
-
-/** The wandering hairline the stem grows along (a thin, quiet version of the same centreline). */
-export function railPath(length: number, { sway = 1.4, seed = 1, step = 12 } = {}): string {
-  const n = Math.max(2, Math.ceil(length / step))
-  const pts: string[] = []
-  for (let i = 0; i <= n; i++) pts.push(`${f((i / n) * length)} ${f(wander((i / n) * length, i, seed, sway))}`)
-  return `M${pts.join('L')}`
-}
-
-/** y of the centreline at x, so ticks and the growing tip can sit exactly on the drawn stem. */
-export function railY(x: number, length: number, { sway = 1.4, seed = 1, step = 12 } = {}): number {
-  const n = Math.max(2, Math.ceil(length / step))
-  const i = Math.min(n, Math.max(0, Math.round((x / length) * n)))
-  return wander((i / n) * length, i, seed, sway)
-}
-
-/**
- * A leaf bud rising from (0,0) upward: a pointed-oval with an asymmetric belly and a slight curl at the tip. `size`
+ * A leaf bud rising from (0,0) upward: a pointed oval with an asymmetric belly and a slight curl at the tip. `size`
  * is the height in px, `bend` (-1..1) leans the tip, `fat` widens it. Origin is the base, so scale/rotate from there.
  */
 export function leafPath(size: number, bend = 0, fat = 0.38): string {
@@ -70,4 +30,14 @@ export function bladePath(seed: number, max = 9): { d: string; h: number } {
   const w = 0.7 + rand(seed + 7) * 0.5
   const d = `M${f(-w)} 0Q${f(-w * 0.4 + lean * 0.3)} ${f(-h * 0.6)} ${f(lean)} ${f(-h)}Q${f(w * 0.4 + lean * 0.3)} ${f(-h * 0.55)} ${f(w)} 0Z`
   return { d, h }
+}
+
+/** A resting page-control marker: a small seed, a little different every time (seeded), centred on the origin. */
+export function seedPath(seed: number, radius = 3.3): string {
+  const pts = blob(seed * 31 + 5, radius, 0.26, 14)
+  // slightly flattened and tilted like a seed rather than a dot
+  const tilt = (rand(seed) - 0.5) * 1.2
+  const c = Math.cos(tilt)
+  const s = Math.sin(tilt)
+  return closedPath(pts.map((p) => ({ x: (p.x * c - p.y * s) * 1.12, y: (p.x * s + p.y * c) * 0.86 })))
 }

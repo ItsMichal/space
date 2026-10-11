@@ -50,11 +50,8 @@
   pointer-events: none;
 }
 .tl-rail {
-  fill: none;
-  stroke: var(--ink-faint);
-  stroke-width: 1;
-  stroke-linecap: round;
-  opacity: 0.55;
+  fill: var(--ink-faint);
+  opacity: 0.32;
 }
 .tl-stem {
   fill: var(--accent);
