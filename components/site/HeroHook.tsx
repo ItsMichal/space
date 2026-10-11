@@ -93,7 +93,7 @@ export function HeroHook({ stem, items, label = 'Recent work' }: Props) {
       dispatch({ type: 'pause', reason: 'drag' })
       rollRef.current?.setPointerCapture?.(e.pointerId)
     }
-    setDragPx(Math.max(-28, Math.min(28, -delta * 0.6)))
+    setDragPx(Math.max(-14, Math.min(14, -delta * 0.5)))
   }
   const endDrag = (e: React.PointerEvent, cancelled = false) => {
     const d = drag.current

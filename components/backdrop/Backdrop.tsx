@@ -127,10 +127,10 @@ export function Backdrop({ paths = ['/'] }: Props) {
       const brkDoc = brk != null ? brk + window.scrollY : docH * 0.6
       anchors = [
         // hero: cherry blossom enters from the top-right corner, bleeding off both edges
-        small ? [vw * 0.97, vh * 0.1, 0, vw * 0.8] : [vw * 0.8, vh * 0.34, 0, Math.min(vw * 0.56, 820)],
+        small ? [vw * 0.98, 30, 0, vw * 1.05] : [vw * 0.8, vh * 0.34, 0, Math.min(vw * 0.56, 820)],
         // mid page: hydrangea haze at the far right, level with the about section
         small
-          ? [vw * 0.96, vh * 0.4, Math.max(0, brkDoc - vh * 0.4), vw * 1.25]
+          ? [vw * 0.9, 500, 0, vw * 0.8] // phones: a soft bloom in the free space right of the "Selected work" heading, under the work line
           : [vw * 0.9, vh * 0.52, Math.max(0, brkDoc - vh * 0.5), Math.min(vw * 0.5, 720)],
         // page end: a small, washed daylily as the only warm accent
         small ? [vw * 0.9, vh * 0.8, Math.max(0, docH - vh), vw * 0.9] : [vw * 0.86, vh * 0.78, Math.max(0, docH - vh), Math.min(vw * 0.34, 480)],
@@ -233,9 +233,9 @@ export function Backdrop({ paths = ['/'] }: Props) {
       const ly = leanY.step(dt)
       gl.uniform2f(u.lean, lx.value, ly.value)
       const leaning = !isSettled(lx) || !isSettled(ly)
-      gl.uniform1f(u.quiet, vw < 700 ? 0.985 : 0.9)
+      gl.uniform1f(u.quiet, vw < 700 ? 0.97 : 0.9)
       gl.uniform1f(u.debug, q === 'raw' ? 2 : S.debugZones ? 1 : 0)
-      gl.uniform1f(u.feather, vw < 700 ? 84 : 200)
+      gl.uniform1f(u.feather, vw < 700 ? 58 : 200)
       gl.uniform1i(u.qn, n)
       gl.uniform4fv(u.q, quiet)
       for (let i = 0; i < 3; i++) {

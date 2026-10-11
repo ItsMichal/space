@@ -81,9 +81,9 @@ CSS tokens (defined in `app/globals.css`):
 | Token | Value |
 | --- | --- |
 | `--motion-press` | 100ms: the instant response to a press (ink starts exactly where the finger is) |
-| `--motion-fast` | 240ms: hover colour, focus, small state changes (UI and hover run 320 to 520ms; `--motion-ui` 520ms) |
-| `--motion-slow` | 900ms: reveals, image hover settle (reveals run 1100 to 1400ms) |
-| `--motion-slower` | 1400ms: featured imagery; large settles 2400ms |
+| `--motion-fast` | 320ms: hover colour, focus, small state changes (`--motion-ui` 520ms for UI and hover) |
+| `--motion-slow` | 1200ms: reveals, image hover settle |
+| `--motion-slower` | 2400ms: large settles, featured imagery |
 | `--motion-ambient` | 8–20s loops (slow illustration drift, if any) |
 | `--ease-out-soft` | `cubic-bezier(0.22, 1, 0.36, 1)` |
 | `--ease-in-out-soft` | `cubic-bezier(0.45, 0, 0.15, 1)` |

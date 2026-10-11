@@ -23,7 +23,9 @@ uniform vec4 uCover;    // uv scale (xy), uv offset (zw): object-fit cover + foc
 uniform float uP;       // resolve 0..1 (1 = the true photograph)
 uniform float uScan;    // <0 off; 0..1 progress of the hover scan band
 uniform float uSeed;
-uniform int uVariant;   // 0 stipple, 1 scan, 2 bleed
+uniform int uVariant;
+uniform float uArrive;  // slow arrival, 0..1
+uniform float uBreath;  // hover/focus/press breathing, 0..1   // 0 stipple, 1 scan, 2 bleed
 uniform vec3 uPaper;
 uniform vec3 uInk;
 uniform vec3 uMoss;
@@ -70,12 +72,14 @@ float luma(vec3 c) { return dot(c, vec3(0.299, 0.587, 0.114)); }
 // along a torn, watercolor-like line that is different for every image.
 float edgeMask(vec2 px, vec2 off) {
   float m = min(uSize.x, uSize.y);
-  float F = clamp(m * 0.2, 22.0, 84.0);
+  // Only the outer 3 to 5 percent dissolves: a confident photograph with a softly irregular edge. The wander is at most
+  // 0.4 of the feather width, so the picture is never bitten into: the inner 88 percent of each dimension is always whole.
+  float F = clamp(m * (uSize.x < 520.0 ? 0.05 : 0.04), 10.0, 26.0) * (1.0 + 0.35 * uBreath);
   float d = min(min(px.x, uSize.x - px.x), min(px.y, uSize.y - px.y));
-  float n = fbm(px / min(F * 3.4, m * 0.6) + off);
-  float w = (n - 0.5) * F * 1.5 + (vnoise(px / (F * 1.1) + off * 1.7) - 0.5) * F * 0.12;
+  float n = fbm(px / max(F * 5.0, 40.0) + off);
+  float w = (n - 0.5) * F * 0.8 + (vnoise(px / (F * 1.3) + off * 1.7) - 0.5) * F * 0.2;
   float t = (d + w) / F;
-  float a = smoothstep(-0.05, 1.0, t);
+  float a = smoothstep(-0.25, 1.0, t);
   return a * a * (3.0 - 2.0 * a);
 }
 
@@ -195,6 +199,6 @@ void main() {
   float ign = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
   res += (ign - 0.5) / 255.0 * res.a;
 
-  o = res * mask;
+  o = res * mask * uArrive;
 }
 `

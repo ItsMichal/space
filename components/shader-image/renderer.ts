@@ -58,6 +58,8 @@ export class ShaderRenderer {
   defaultVariant: ShaderVariant = DEFAULT_VARIANT
   onLost: (() => void) | null = null
   /** Rolling frame cost (ms of JS+GL submit) for the dev page. */
+  private arrival = new WeakMap<object, number>()
+  private breath = new WeakMap<object, number>()
   frameMs = 0
 
   constructor(canvas: HTMLCanvasElement) {
@@ -73,7 +75,7 @@ export class ShaderRenderer {
     gl.linkProgram(p)
     if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p) ?? 'link failed')
     this.prog = p
-    for (const n of ['uRect', 'uView', 'uTex', 'uSize', 'uCover', 'uP', 'uScan', 'uSeed', 'uVariant', 'uPaper', 'uInk', 'uMoss']) this.u[n] = gl.getUniformLocation(p, n)
+    for (const n of ['uRect', 'uView', 'uTex', 'uSize', 'uCover', 'uP', 'uScan', 'uSeed', 'uVariant', 'uArrive', 'uBreath', 'uPaper', 'uInk', 'uMoss']) this.u[n] = gl.getUniformLocation(p, n)
     gl.useProgram(p)
     gl.enable(gl.BLEND)
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
@@ -283,7 +285,7 @@ export class ShaderRenderer {
       // Scroll-linked target: begins as the top edge enters the bottom 5% of the viewport, complete at 45%.
       let target: number
       if (o.progress != null) target = clamp01(o.progress)
-      else target = smooth(clamp01((vh * 0.96 - r.top) / (vh * 0.5)))
+      else target = smooth(clamp01((vh * 0.96 - r.top) / (vh * 0.2))) // resolves within the first fifth of a screen of travel: no half-soaked smudge while scrolling
       const strength = o.intensity ?? 1
       target = 1 - (1 - target) * strength
       if (target !== item.lastTarget) {
@@ -325,9 +327,34 @@ export class ShaderRenderer {
         moving = true
       }
 
+      // Slow arrival, once: opacity over 1.4s, a settle from 1.02 over 2.4s (long-tailed ease-out).
+      let st = this.arrival.get(item)
+      if (st == null) {
+        st = now
+        this.arrival.set(item, st)
+      }
+      const ak = clamp01((now - st) / 1400)
+      const sk = clamp01((now - st) / 2400)
+      const arrive = ak * ak * (3 - 2 * ak)
+      if (sk < 1) moving = true
+      // Breathing edge: the feather opens a little under hover, focus or press, and settles back slowly.
+      const link = item.img.closest('a')
+      const want = link && (link.matches(':hover') || link.matches(':focus-visible') || link.matches(':active')) ? 1 : 0
+      const b0 = this.breath.get(item) ?? 0
+      const b1 = b0 + (want - b0) * Math.min(1, dt * (want ? 2.2 : 1.2))
+      this.breath.set(item, b1)
+      if (Math.abs(b1 - want) > 0.004) moving = true
+      const grow = 1 + 0.02 * Math.pow(1 - sk, 3) + 0.006 * b1
+      const gw = r.width * grow
+      const gh = r.height * grow
+      const gl0 = r.left - (gw - r.width) / 2
+      const gt0 = r.top - (gh - r.height) / 2
+
       gl.bindTexture(gl.TEXTURE_2D, item.tex)
-      gl.uniform4f(this.u.uRect, r.left, r.top, r.width, r.height)
-      gl.uniform2f(this.u.uSize, r.width, r.height)
+      gl.uniform4f(this.u.uRect, gl0, gt0, gw, gh)
+      gl.uniform2f(this.u.uSize, gw, gh)
+      gl.uniform1f(this.u.uArrive, arrive)
+      gl.uniform1f(this.u.uBreath, b1)
       gl.uniform4f(this.u.uCover, us, vs, uo, vo)
       gl.uniform1f(this.u.uP, clamp01(s.value))
       gl.uniform1f(this.u.uScan, scan)

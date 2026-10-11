@@ -15,9 +15,11 @@
 /* Motion law: incredibly subtle, tasteful and slow. Opacity is the primary channel; travel <= 12px; scale delta <= 2%.
    Stateful UI uses CSS transitions (they retarget from the current value, so every change is interruptible). */
 :root {
-  --motion-fast: 240ms;
-  --motion-slow: 900ms;
-  --motion-slower: 1400ms;
+  --motion-press: 100ms;
+  --motion-fast: 320ms;
+  --motion-ui: 520ms;
+  --motion-slow: 1200ms;
+  --motion-slower: 2400ms;
   --motion-ambient: 12s;
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out-soft: cubic-bezier(0.45, 0, 0.15, 1);
@@ -370,7 +372,7 @@ body {
     height: auto;
     aspect-ratio: 1 / 1;
     object-fit: cover;
-    transition: transform var(--motion-slower) var(--ease-out-soft);
+    transition: transform var(--spring-settle-ms, 1400ms) var(--spring-settle, var(--ease-out-soft));
   }
   .work-feat__cap {
     display: grid;
