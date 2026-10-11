@@ -199,7 +199,7 @@ export function Timeline({ items, label, pitch = 120, initial, statusLabel, with
       activeRef.current = i
       setActive(i)
       publish(i)
-      if (by !== 'drag') tabs.current[i] && document.activeElement?.getAttribute('role') === 'tab' && tabs.current[i]?.focus({ preventScroll: true })
+      if (by !== 'drag' && document.activeElement?.getAttribute('role') === 'tab') tabs.current[i]?.focus({ preventScroll: true })
       if (by === 'drag' && typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate?.(3)
     },
     onActive: (a) => {

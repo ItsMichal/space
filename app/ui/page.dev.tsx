@@ -1,7 +1,5 @@
 import { Timeline, type TimelineItem } from '@/components/ui/Timeline'
 import { Gallery } from '@/components/ui/Gallery'
-import { PageControl } from '@/components/ui/PageControl'
-import { SegmentedControl } from '@/components/ui/SegmentedControl'
 import { FactRows } from '@/components/ui/FactRows'
 import { Disclosure } from '@/components/ui/Disclosure'
 import { NumberRoll } from '@/components/ui/NumberRoll'

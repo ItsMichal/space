@@ -145,7 +145,6 @@ export function SegmentedControl({ options, value, onChange, label, className = 
       }
     })
     return () => ro.disconnect()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Selection changed (click, key, URL): glide there from wherever the thumb is, carrying its velocity.
