@@ -243,43 +243,67 @@
   }
 }
 
-/* ============================== Status pill ============================== */
-.st {
+/* ============================== Status slot (inside the nav pill) ============================== */
+/* Desktop: a slot at the right of the pill opens on a sampled spring, so the pill itself grows (the gap it would leave
+   is cancelled by the negative margin while shut). Phones: the pill is already full width, so the slot is the free
+   space between mark and menu button and only fades. */
+.st-slot {
   position: relative;
-  box-sizing: border-box;
-  height: 38px;
-  max-width: min(88vw, 440px);
-  min-width: 96px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  flex: none;
+  align-self: center;
+  box-sizing: content-box;
+  width: 0;
+  margin-left: -24px;
+  height: 20px;
   overflow: hidden;
+  opacity: 0;
   color: var(--ink);
   white-space: nowrap;
-  opacity: 0;
-  transform: translateY(-16px) scale(0.7, 0.55);
-  transform-origin: 50% 0;
-  transition: width 820ms var(--ui-stretch), opacity 360ms ease-in, transform 520ms cubic-bezier(0.5, 0, 0.75, 0.3);
+  transition: width 420ms var(--craft-in, ease-in), margin-left 420ms var(--craft-in, ease-in), opacity 260ms ease-in;
 }
-.st--on {
+.st-slot[data-on] {
+  width: var(--sw);
+  margin-left: 0;
   opacity: 1;
-  transform: none;
-  transition: width 820ms var(--ui-stretch), opacity 700ms var(--ui-settle) 80ms, transform 1100ms var(--ui-follow);
+  transition: width 900ms var(--craft-spring, ease-out), margin-left 900ms var(--craft-spring, ease-out), opacity 640ms var(--ui-settle) 120ms;
+}
+@media (max-width: 639px) {
+  .st-slot {
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+    margin: 0;
+    transition: opacity 260ms ease-in;
+  }
+  .st-slot[data-on] {
+    width: auto;
+    transition: opacity 640ms var(--ui-settle) 120ms;
+  }
 }
 .st-clip {
   position: relative;
   display: block;
-  max-width: 100%;
+  width: 100%;
   overflow: hidden;
-  padding: 0 18px;
+  text-overflow: ellipsis;
 }
 .st-inner {
   position: relative;
-  display: inline-block;
+  display: block;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.st-ruler {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  white-space: nowrap;
+  left: 0;
+  top: 0;
 }
 .st-text {
-  display: inline-block;
+  display: inline;
   font: 500 14px/20px var(--font-sans);
 }
 .st-title {
@@ -291,6 +315,11 @@
 }
 .st-text--in {
   animation: st-in 640ms var(--ui-settle) 120ms both;
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: top;
 }
 .st-text--out {
   position: absolute;
@@ -312,14 +341,22 @@
     filter: blur(2px);
   }
 }
+/* Progress: a hand-drawn moss stem along the pill's lower edge, inside the glass. */
 .st-stem {
   position: absolute;
-  left: 18px;
-  right: 18px;
-  bottom: 4px;
-  width: calc(100% - 36px);
+  left: 22px;
+  right: 22px;
+  bottom: 5px;
+  width: calc(100% - 44px);
   height: 5px;
   overflow: visible;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 360ms ease-in;
+}
+.st-stem[data-on] {
+  opacity: 1;
+  transition: opacity 700ms var(--ui-settle) 200ms;
 }
 .st-stem path {
   fill: var(--accent);

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { GlassEffectContainer, GlassFold, GlassFoldItem, glass, useGlassNamespace } from '@/components/glass'
-import { StatusPill } from '@/components/ui/StatusPill'
+import { StatusSlot } from '@/components/ui/StatusPill'
 import { HalmicMark } from './HalmicMark'
 
 const links = [
@@ -82,7 +82,7 @@ export function NavBar() {
           open={open}
           panelId="nav-sheet"
           className="pointer-events-auto min-w-0 flex-1 sm:flex-none"
-          headerClassName="flex min-h-[52px] items-center justify-between gap-space-3 pl-space-4 pr-[4px] sm:gap-space-6 sm:pr-space-4"
+          headerClassName="relative flex min-h-[52px] items-center justify-between gap-space-3 pl-space-4 pr-[4px] sm:gap-space-6 sm:pr-space-4"
           panelClassName="flex flex-col px-space-4 pb-space-3 pt-space-1 sm:hidden"
           header={
             <>
@@ -98,6 +98,7 @@ export function NavBar() {
                   </li>
                 ))}
               </ul>
+              <StatusSlot routeKey={pathname} />
               <button
                 type="button"
                 aria-label={open ? 'Close menu' : 'Open menu'}
@@ -125,7 +126,6 @@ export function NavBar() {
           ))}
         </GlassFold>
       </div>
-      <StatusPill ns={ns} routeKey={pathname} />
     </GlassEffectContainer>
   )
 }
