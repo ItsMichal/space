@@ -7,6 +7,7 @@
    (hashed family names); the token stacks wrap them with the system fallbacks. */
 :root {
   --font-sans: var(--font-schibsted), "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-display-face), "Iowan Old Style", Georgia, serif;
   --font-serif: var(--font-newsreader), "Iowan Old Style", Georgia, serif;
   --font-mono: var(--font-plex-mono), ui-monospace, Menlo, monospace;
 }
@@ -382,8 +383,8 @@ body {
     color: var(--ink-muted);
   }
   .work-feat__title {
-    font: 600 clamp(38px, 11vw, 64px) / 1 var(--font-sans);
-    letter-spacing: -0.04em;
+    font: 400 clamp(46px, 13vw, 84px) / 0.98 var(--font-display);
+    letter-spacing: -0.02em;
     transition: color var(--motion-fast) var(--ease-out-soft);
   }
   .work-feat__desc {
@@ -449,8 +450,8 @@ body {
     grid-area: body;
   }
   .wrow__title {
-    font: 600 19px/1.25 var(--font-sans);
-    letter-spacing: -0.01em;
+    font: 400 27px/1.12 var(--font-display);
+    letter-spacing: -0.005em;
     transition: color var(--motion-fast) var(--ease-out-soft);
   }
   .wrow__desc {
@@ -506,7 +507,7 @@ body {
     .work-feat__title {
       grid-column: 1;
       grid-row: 1 / span 3;
-      font-size: clamp(56px, 6vw, 80px);
+      font-size: clamp(72px, 7.4vw, 108px);
     }
     .work-feat__meta {
       grid-column: 2;
@@ -541,7 +542,7 @@ body {
       display: none;
     }
     .wrow__title {
-      font-size: 21px;
+      font-size: 32px;
     }
     .wrow__desc {
       font-size: 16px;
@@ -954,26 +955,28 @@ body {
   .prose h2,
   .prose h3,
   .prose h4 {
-    font-family: var(--font-sans);
+    font-family: var(--font-display);
+    font-weight: 400;
     color: var(--ink);
     position: relative;
     scroll-margin-top: 96px;
   }
   .prose h2 {
-    font-size: 32px;
-    line-height: 1.1;
-    font-weight: 600;
-    letter-spacing: -0.02em;
+    font-size: 44px;
+    line-height: 1.05;
+    font-weight: 400;
+    letter-spacing: -0.015em;
     margin: var(--space-12) 0 var(--space-4);
   }
   .prose h3 {
-    font-size: 21px;
-    line-height: 1.25;
-    font-weight: 600;
-    letter-spacing: -0.01em;
+    font-size: 30px;
+    line-height: 1.15;
+    font-weight: 400;
+    letter-spacing: -0.005em;
     margin: var(--space-8) 0 var(--space-2);
   }
   .prose h4 {
+    font-family: var(--font-sans);
     font-size: 16px;
     line-height: 24px;
     font-weight: 600;
@@ -1269,4 +1272,120 @@ html[data-backdrop-gl] .backdrop-css {
   width: 100%;
   height: auto;
   object-fit: cover;
+}
+
+/* ---------- Hero hook: "I've built <phrase>" ----------
+   A stem plus a slowly rolling phrase. All phrases sit in one grid cell, so the cell is as tall as the tallest one
+   (no layout shift, two lines reserved on phones automatically). The roll moves 0.6em and fades; the mask feathers the
+   top and bottom so there is no hard clip line. Positions are driven by data-slot, so every change is a CSS transition
+   that retargets from wherever it is (fully interruptible). */
+.hook {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.3em;
+}
+.hook__stem {
+  flex: none;
+}
+.hook__roll {
+  --pad: 0.42em;
+  flex: 1 1 18em;
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
+  padding-block: var(--pad);
+  margin-block: calc(var(--pad) * -1);
+  touch-action: pan-y;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 calc(var(--pad) * 0.95), #000 calc(100% - var(--pad) * 0.95), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 calc(var(--pad) * 0.95), #000 calc(100% - var(--pad) * 0.95), transparent 100%);
+}
+.hook__list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hook__item {
+  grid-area: 1 / 1;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 700ms var(--ease-out-soft), opacity 520ms var(--ease-out-soft);
+}
+.hook__item[data-slot='-1'] {
+  transform: translateY(-0.6em);
+}
+.hook__item[data-slot='1'] {
+  transform: translateY(0.6em);
+}
+.hook__item[data-current] {
+  opacity: 1;
+  pointer-events: auto;
+}
+.hook__roll[data-dragging] .hook__item[data-current] {
+  transform: translateY(var(--drag, 0px));
+  opacity: calc(1 - 0.5 * min(1, max(var(--drag, 0px), calc(var(--drag, 0px) * -1)) / 28px));
+  transition: none;
+}
+.hook__link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--ink) 28%, transparent);
+  text-underline-offset: 0.16em;
+  text-decoration-thickness: 1px;
+  transition: color var(--motion-fast) var(--ease-out-soft), text-decoration-color var(--motion-fast) var(--ease-out-soft);
+  -webkit-tap-highlight-color: transparent;
+}
+.hook__link:hover,
+.hook__link:focus-visible {
+  color: var(--accent);
+  text-decoration-color: currentColor;
+}
+.hook__arrow {
+  display: inline-block;
+  margin-left: 0.18em;
+  vertical-align: 0.12em;
+  opacity: 0;
+  transform: translate(-2px, 2px);
+  transition: opacity var(--motion-fast) var(--ease-out-soft), transform var(--motion-fast) var(--ease-out-soft);
+}
+.hook__link:hover .hook__arrow,
+.hook__link:focus-visible .hook__arrow {
+  opacity: 1;
+  transform: none;
+}
+@media (hover: none) {
+  .hook__link {
+    text-decoration-color: currentColor;
+  }
+  .hook__arrow {
+    opacity: 0.7;
+    transform: none;
+  }
+}
+.hook__next {
+  flex: none;
+  margin-left: 0.6em;
+  min-height: 44px;
+  font: italic 400 0.6em/1 var(--font-display);
+  color: var(--ink-muted);
+  text-decoration: underline;
+  text-decoration-color: var(--hairline);
+  text-underline-offset: 0.2em;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.hook__next:hover {
+  color: var(--accent);
+}
+.hook[data-reduced] .hook__item {
+  transform: none !important;
+  transition: opacity 600ms var(--ease-out-soft);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hook__item {
+    transform: none !important;
+    transition: opacity 600ms var(--ease-out-soft);
+  }
 }

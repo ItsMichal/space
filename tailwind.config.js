@@ -59,6 +59,7 @@ module.exports = {
       },
       fontFamily: {
         sans: [v('font-sans')],
+        display: [v('font-display')],
         serif: [v('font-serif')],
         mono: [v('font-mono')],
       },

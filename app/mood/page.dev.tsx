@@ -48,7 +48,7 @@ export default function MoodPage() {
               </div>
             </div>
             <div className="relative z-10">
-              <TypeHero first={profile.firstName} last={profile.lastName} role={profile.role} intro={profile.intro} />
+              <TypeHero first={profile.firstName} last={profile.lastName} role={profile.role} intro={profile.role} />
             </div>
           </section>
 

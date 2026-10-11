@@ -7,6 +7,7 @@ import { ScrollReveal } from '@/components/site/ScrollReveal'
 import { Footer } from '@/components/site/Footer'
 import { ShaderCanvasProvider } from '@/components/shader-image'
 import { Backdrop } from '@/components/backdrop/Backdrop'
+import { display } from './fonts/display'
 import { siteMetadata } from '@/lib/seo'
 import { profile } from '@/content/profile'
 
@@ -66,7 +67,7 @@ export default function RootLayout({
     <StrictMode>
       <html
         lang="en"
-        className={`${sans.variable} ${serif.variable} ${mono.variable}`}
+        className={`${display.variable} ${sans.variable} ${serif.variable} ${mono.variable}`}
       >
         <body className="flex min-h-screen flex-col font-sans text-ink">
           <a href="#main" className="skip-link">

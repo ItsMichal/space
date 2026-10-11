@@ -11,6 +11,7 @@ coverFocus: "50% 30%"
 priority: 7
 featured: true
 role: "Game developer, UI/UX and music"
+hook: "a rhythm game you play with hiking poles"
 links:
   - label: "Watch the gameplay video"
     href: "https://www.youtube.com/watch?v=Gv-xMeMM8m4"

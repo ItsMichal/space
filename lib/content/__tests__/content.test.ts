@@ -16,6 +16,16 @@ describe('content integrity', () => {
     }
   })
 
+  it('hero hooks are short noun phrases and survive a round trip', () => {
+    const hooked = posts.filter((p) => p.hook)
+    expect(hooked.length).toBeGreaterThanOrEqual(7)
+    for (const p of hooked) {
+      expect(p.hook!.length, p.slug).toBeLessThanOrEqual(48)
+    }
+    const fm = parsePost(serializePost({ ...hooked[0], hook: 'a thing, with: punctuation' }, 'x'), hooked[0].slug).frontmatter
+    expect(fm.hook).toBe('a thing, with: punctuation')
+  })
+
   it('parents are existing top-level projects', () => {
     for (const p of posts.filter((p) => p.parent)) {
       const parent = posts.find((x) => x.slug === p.parent)

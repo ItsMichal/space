@@ -7,15 +7,18 @@ type Props = {
   intro?: ReactNode
 }
 
+/** Hero: name, role and the intro slot (the rotating "lately I've built" line). All in the display face. */
 export function NameHeader({ first, last, role, intro }: Props) {
   return (
-    <header className="pt-[120px] md:pt-[160px]">
-      <h1 className="text-[clamp(44px,14.4vw,56px)] font-semibold leading-[0.9] tracking-[-0.045em] md:text-[88px] lg:text-display-name">
+    <header className="pt-[112px] md:pt-[150px]">
+      <h1
+        className="font-display font-normal leading-[0.88] tracking-[-0.025em] text-[clamp(52px,calc((100vw-32px)/5.55),76px)] md:text-[clamp(110px,calc((100vw-64px)/5.55),176px)]"
+      >
         <span className="block">{first}</span>
         <span className="block">{last}</span>
       </h1>
-      <p className="mt-space-6 max-w-[56ch] text-body text-ink-muted">{role}</p>
-      {intro ? <p className="name-intro mt-space-4 max-w-[34ch] font-serif text-[22px] leading-[1.4] text-ink md:text-[26px]">{intro}</p> : null}
+      <p className="mt-space-6 max-w-[34ch] font-display text-[24px] italic leading-[1.2] text-ink-muted md:mt-space-8 md:text-[32px]">{role}</p>
+      {intro ? <div className="name-intro mt-space-6 max-w-[40ch] font-display text-[27px] leading-[1.2] text-ink md:mt-space-8 md:text-[38px]">{intro}</div> : null}
     </header>
   )
 }

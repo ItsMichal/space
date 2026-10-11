@@ -19,11 +19,11 @@ export const profile = {
   jobTitle: 'Creative developer',
   /** Hero role line. Keep it short so it sits on one or two lines at 375px. */
   role: 'Creative developer. AI, web and systems.',
-  /** Hero intro paragraph. */
-  intro: 'I take projects from 0 to 1.',
+  /** Fixed stem of the hero's rotating line; the phrases come from each post's `hook` frontmatter (see components/site/HeroHook). */
+  hookStem: "I've built",
   /** Site-wide meta description, 155 characters or fewer. */
   description:
-    'Michał Bodzianowski is a creative developer with experience in AI, web and systems, taking projects from 0 to 1.',
+    'Michał Bodzianowski is a creative developer with experience in AI, web and systems.',
   /** Page-title tagline: "<name> — <tagline>". */
   titleTagline: 'Creative developer',
   /** About section paragraphs, first person. */

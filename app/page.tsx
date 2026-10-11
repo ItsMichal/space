@@ -1,5 +1,7 @@
 import { ArrowUpRight, FileText } from 'lucide-react'
-import { getBlogPosts, getTopLevel } from '@/lib/content'
+import { getAllPosts, getBlogPosts, getTopLevel } from '@/lib/content'
+import { HeroHook } from '@/components/site/HeroHook'
+import { postPath } from '@/lib/seo'
 import { siteConfig } from '@/site.config'
 import { GlassButton } from '@/components/glass/GlassButton'
 import { NameHeader } from '@/components/site/NameHeader'
@@ -11,11 +13,13 @@ import { homeMetadata, personJsonLd, websiteJsonLd } from '@/lib/seo'
 
 export const metadata = homeMetadata()
 
-const h2 = 'reveal mb-space-8 text-[32px] font-semibold leading-[1.1] tracking-[-0.02em]'
+const h2 = 'reveal mb-space-8 font-display text-[clamp(38px,10vw,44px)] font-normal leading-[1.05] tracking-[-0.015em] md:text-[56px]'
 
 export default function Home() {
   const projects = getTopLevel('project')
   const articles = getBlogPosts()
+  // Rotating hero line: every post that sets `hook`, in the site's own order (priority, then newest).
+  const hooks = getAllPosts().filter((p) => p.hook).map((p) => ({ text: p.hook!, href: postPath(p) }))
 
   return (
     <div className="mx-auto max-w-content px-space-4 md:px-space-8">
@@ -24,7 +28,7 @@ export default function Home() {
         first={profile.firstName}
         last={profile.lastName}
         role={profile.role}
-        intro={profile.intro}
+        intro={hooks.length ? <HeroHook stem={profile.hookStem} items={hooks} /> : undefined}
       />
 
       <section id="work" aria-labelledby="work-h" className="mt-space-16 md:mt-space-24">

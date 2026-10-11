@@ -54,7 +54,7 @@ export function CompShell({ v }: { v: Variant }) {
               <span className="block">{profile.lastName}</span>
             </h1>
             <p className="m2-role mt-space-6 max-w-[30ch] md:mt-space-8">{profile.role}</p>
-            <p className="m2-intro mt-space-3 max-w-[18ch]">{profile.intro}</p>
+            <p className="m2-intro mt-space-3 max-w-[18ch]">{profile.role}</p>
           </header>
           <section id="work" aria-labelledby="m2-work-h" className="relative">
             {v === 'c' ? (

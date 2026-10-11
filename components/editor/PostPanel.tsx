@@ -121,7 +121,7 @@ export function PostPanel({ slug, fm, onChange, allTags, otherSlugs, projects, o
   const [slugDraft, setSlugDraft] = useState(fm.slug)
   const [busy, setBusy] = useState(false)
   const coverInput = useRef<HTMLInputElement>(null)
-  const ids = { desc: useId(), slug: useId(), date: useId(), updated: useId(), prio: useId(), canon: useId(), alt: useId(), kind: useId(), parent: useId(), series: useId(), order: useId(), role: useId(), years: useId(), focus: useId() }
+  const ids = { desc: useId(), slug: useId(), date: useId(), updated: useId(), prio: useId(), canon: useId(), alt: useId(), kind: useId(), parent: useId(), series: useId(), order: useId(), role: useId(), years: useId(), hook: useId(), focus: useId() }
 
   const slugError = !slugDraft
     ? 'Slug is required.'
@@ -308,6 +308,9 @@ export function PostPanel({ slug, fm, onChange, allTags, otherSlugs, projects, o
           </Field>
           <Field label="Years (spec line)" htmlFor={ids.years}>
             <input id={ids.years} className="ed-input" placeholder="2024 – present" value={fm.years ?? ''} onChange={(e) => onChange({ years: e.target.value || undefined })} />
+          </Field>
+          <Field label="Hero hook" htmlFor={ids.hook} hint={`${(fm.hook ?? '').length} / 48 · finishes \"Lately I've built ...\" on the home page`}>
+            <input id={ids.hook} className="ed-input" maxLength={48} placeholder="an AI that commentates Formula 1" value={fm.hook ?? ''} onChange={(e) => onChange({ hook: e.target.value || undefined })} />
           </Field>
           <Field label="Featured">
             <label className="ed-switch">

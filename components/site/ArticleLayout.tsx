@@ -52,6 +52,8 @@ export function ArticleLayout({
   after,
   children,
 }: Props) {
+  // "Web" is a category, not a stack item: it never leads a spec line.
+  const stack = tags.filter((t) => t !== 'Web')
   return (
     <article data-post className="mx-auto max-w-content px-space-4 pb-space-16 pt-[120px] md:px-space-8 md:pt-[160px]">
       <header className="max-w-[900px]">
@@ -67,7 +69,7 @@ export function ArticleLayout({
             {kind === 'project' ? 'Project' : 'Article'} · {readingMinutes} min read
           </p>
         )}
-        <h1 className="text-[clamp(36px,11vw,56px)] font-semibold leading-none tracking-[-0.03em] md:text-display">
+        <h1 className="font-display text-[clamp(46px,13vw,60px)] font-normal leading-none tracking-[-0.02em] md:text-display">
           {title}
         </h1>
         <p className="lede mt-space-6 max-w-[40ch]">{description}</p>
@@ -79,7 +81,7 @@ export function ArticleLayout({
               <time dateTime={updated}>{fmt(updated)}</time>
             </>
           ) : null}
-          {tags.length ? ` · ${tags.join(' · ')}` : null}
+          {stack.length ? ` · ${stack.join(' · ')}` : null}
         </p>
       </header>
       {cover ? (
@@ -96,7 +98,7 @@ export function ArticleLayout({
       ) : (
         <div className="h-space-12" />
       )}
-      {kind === 'project' && (role || tags.length || links?.length) ? (
+      {kind === 'project' && (role || stack.length || links?.length) ? (
         <dl className="facts" aria-label="Project facts">
           <div>
             <dt>Year</dt>
@@ -108,10 +110,10 @@ export function ArticleLayout({
               <dd>{role}</dd>
             </div>
           ) : null}
-          {tags.length ? (
+          {stack.length ? (
             <div className="facts__wide">
               <dt>Stack</dt>
-              <dd>{tags.join(' · ')}</dd>
+              <dd>{stack.join(' · ')}</dd>
             </div>
           ) : null}
           {links?.length ? (
