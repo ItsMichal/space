@@ -308,3 +308,8 @@
     background: rgba(61, 106, 53, 0.1);
   }
 }
+
+/* only the phrase on screen shows its arrow (the others share the same grid cell) */
+.hook__item:not([data-current]) .hook__arrow {
+  display: none !important;
+}
