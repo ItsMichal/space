@@ -60,16 +60,31 @@ async function thumbs(list) {
   }
 }
 
+const readJson = (f, d) => { try { return JSON.parse(fs.readFileSync(path.join(contentDir, f), 'utf8')); } catch { return d; } };
 try {
   const xml = (await curl(FEED)).toString('utf8');
-  const all = parse(xml);
-  if (!all.length) throw new Error('empty feed');
-  const held = all.filter((v) => deny.some((r) => r.test(v.title + ' ' + v.description)));
-  const ok = all.filter((v) => !held.includes(v));
+  const feed = parse(xml);
+  if (!feed.length) throw new Error('empty feed');
+  const exclude = new Set(readJson('videos.exclude.json', { ids: [] }).ids);
+  const manual = readJson('videos.manual.json', { videos: [] }).videos;
+  // merge: the feed wins (it has dates and descriptions); the hand-kept list adds what the feed (latest ~15) no longer returns
+  const byId = new Map(feed.map((v) => [v.id, v]));
+  for (const m of manual) if (!byId.has(m.id)) byId.set(m.id, { id: m.id, title: m.title, published: null, ago: m.ago ?? null, length: m.length ?? null, description: '', excerpt: '', views: 0, url: `https://www.youtube.com/watch?v=${m.id}`, thumb: `/videos/${m.id}.jpg`, group: m.group ?? null });
+  for (const m of manual) { const v = byId.get(m.id); if (v) { v.length ??= m.length ?? null; v.ago ??= m.ago ?? null; v.group ??= m.group ?? null; } }
+  const all = [...byId.values()].filter((v) => !exclude.has(v.id));
+  // identity rule: an entry whose own description would print the owner's real name is published with its description blanked
+  // (title only); the id and reason go to videos.held.json for the owner to review. A title that matches is dropped entirely.
+  const held = [];
+  const ok = all.filter((v) => {
+    if (deny.some((r) => r.test(v.title))) { held.push({ id: v.id, title: v.title, reason: 'title' }); return false; }
+    if (deny.some((r) => r.test(v.description))) { held.push({ id: v.id, title: v.title, reason: 'description blanked' }); v.description = ''; v.excerpt = ''; v.descriptionHeld = true; }
+    return true;
+  });
   await thumbs(ok);
+  for (const f of fs.readdirSync(thumbDir)) if (f.endsWith('.jpg') && exclude.has(f.slice(0, -4))) fs.rmSync(path.join(thumbDir, f));   // drop cached thumbnails of excluded videos
   fs.writeFileSync(outFile, JSON.stringify({ channel: CHANNEL, channelUrl: 'https://www.youtube.com/@halmic', fetched: new Date().toISOString(), videos: ok }, null, 2) + '\n');
-  fs.writeFileSync(heldFile, JSON.stringify(held.map(({ id, title }) => ({ id, title })), null, 2) + '\n');
-  console.log(`youtube: ${ok.length} videos written, ${held.length} held for review`);
+  fs.writeFileSync(heldFile, JSON.stringify(held, null, 2) + '\n');
+  console.log(`youtube: ${ok.length} videos written (${manual.length} hand-kept, ${exclude.size} excluded), ${held.length} flagged for review`);
 } catch (e) {
   console.warn('youtube sync failed, keeping last good file:', e.message);
   if (!fs.existsSync(outFile)) { fs.writeFileSync(outFile, JSON.stringify({ channel: CHANNEL, channelUrl: 'https://www.youtube.com/@halmic', fetched: null, videos: [] }, null, 2) + '\n'); }

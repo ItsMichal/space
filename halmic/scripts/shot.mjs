@@ -30,6 +30,8 @@ try {
   await send('Emulation.setDeviceMetricsOverride', { width: +W, height: +H, deviceScaleFactor: dpr, mobile });
   await send('Page.navigate', { url });
   await sleep(waitMs);
+  const sel = flags.find((f) => f.startsWith('sel='))?.slice(4);
+  if (sel) { await send('Runtime.evaluate', { expression: `document.querySelector(${JSON.stringify(sel)}).scrollIntoView()` }); await sleep(1200); }
   if (scrollY) { await send('Runtime.evaluate', { expression: `window.scrollTo(0, ${scrollY})` }); await sleep(900); }
   let clip;
   if (full || clipArg) {

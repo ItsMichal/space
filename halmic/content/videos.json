@@ -1,7 +1,7 @@
 {
   "channel": "UC8_ZatxbG4ZZyG0S4Uz1G3g",
   "channelUrl": "https://www.youtube.com/@halmic",
-  "fetched": "2026-10-11T09:44:12.829Z",
+  "fetched": "2026-10-11T10:17:26.866Z",
   "videos": [
     {
       "id": "N7HKj1dYZjU",
@@ -11,7 +11,10 @@
       "excerpt": "A new entry in the Special Force Cinematic Universe (SFCU), join Bill Wuxton as he takes you through FC Diamond Dogs final two seasons together. Tracklist: Męskie Granie Orkiestra ",
       "views": 17,
       "url": "https://www.youtube.com/watch?v=N7HKj1dYZjU",
-      "thumb": "/videos/N7HKj1dYZjU.jpg"
+      "thumb": "/videos/N7HKj1dYZjU.jpg",
+      "length": "10:19",
+      "ago": "1 year ago",
+      "group": null
     },
     {
       "id": "GzB8XCABlQY",
@@ -31,7 +34,10 @@
       "excerpt": "join alpha tau omega on a journey to FIFA 23 we shoot goals, we miss shots, it was the best of times, it was the worst of times don't expect these kinda edit too much lol one more ",
       "views": 32,
       "url": "https://www.youtube.com/watch?v=2jM2QSTSte4",
-      "thumb": "/videos/2jM2QSTSte4.jpg"
+      "thumb": "/videos/2jM2QSTSte4.jpg",
+      "length": "10:42",
+      "ago": "3 years ago",
+      "group": null
     },
     {
       "id": "mRIj1BeCJ_o",
@@ -41,7 +47,10 @@
       "excerpt": "dedicado a @205coolnick futbol is love futbol is life",
       "views": 184,
       "url": "https://www.youtube.com/watch?v=mRIj1BeCJ_o",
-      "thumb": "/videos/mRIj1BeCJ_o.jpg"
+      "thumb": "/videos/mRIj1BeCJ_o.jpg",
+      "length": "9:18",
+      "ago": "4 years ago",
+      "group": null
     },
     {
       "id": "Nhs4iQcN7-w",
@@ -51,7 +60,10 @@
       "excerpt": "just another fifa sesh boys dedicated to @FluffyBunny2525Gaming",
       "views": 204,
       "url": "https://www.youtube.com/watch?v=Nhs4iQcN7-w",
-      "thumb": "/videos/Nhs4iQcN7-w.jpg"
+      "thumb": "/videos/Nhs4iQcN7-w.jpg",
+      "length": "3:19",
+      "ago": "4 years ago",
+      "group": null
     },
     {
       "id": "OxALXgr2yvM",
@@ -64,16 +76,6 @@
       "thumb": "/videos/OxALXgr2yvM.jpg"
     },
     {
-      "id": "AUML80zL8Bs",
-      "title": "Ted Lasso - S1E5 - 4,438 Miles Worth Of Space",
-      "published": "2021-10-24T07:20:59+00:00",
-      "description": "Ted explains why he moved 4,438 miles away.",
-      "excerpt": "Ted explains why he moved 4,438 miles away.",
-      "views": 161438,
-      "url": "https://www.youtube.com/watch?v=AUML80zL8Bs",
-      "thumb": "/videos/AUML80zL8Bs.jpg"
-    },
-    {
       "id": "pl6lJAYPLgc",
       "title": "CU Boulder Racing Team - IMI Motorsports 01:09:59 (PB)",
       "published": "2021-05-17T08:20:25+00:00",
@@ -81,7 +83,38 @@
       "excerpt": "1:09:59 in the #720 Miata from CUBRT",
       "views": 194,
       "url": "https://www.youtube.com/watch?v=pl6lJAYPLgc",
-      "thumb": "/videos/pl6lJAYPLgc.jpg"
+      "thumb": "/videos/pl6lJAYPLgc.jpg",
+      "length": "1:35",
+      "ago": "5 years ago",
+      "group": null
+    },
+    {
+      "id": "IIJVKHEtawU",
+      "title": "SPECIAL FORCE 2 - THE ARRAY - EPISODE 1",
+      "published": "2019-12-25T17:00:11+00:00",
+      "description": "",
+      "excerpt": "",
+      "views": 67,
+      "url": "https://www.youtube.com/watch?v=IIJVKHEtawU",
+      "thumb": "/videos/IIJVKHEtawU.jpg",
+      "length": "6:02",
+      "ago": "6 years ago",
+      "group": null,
+      "descriptionHeld": true
+    },
+    {
+      "id": "qVEDjNc5Gmg",
+      "title": "SPECIAL FORCE 1 - ORIGINS",
+      "published": "2019-10-06T07:44:47+00:00",
+      "description": "",
+      "excerpt": "",
+      "views": 89,
+      "url": "https://www.youtube.com/watch?v=qVEDjNc5Gmg",
+      "thumb": "/videos/qVEDjNc5Gmg.jpg",
+      "length": "2:51",
+      "ago": "7 years ago",
+      "group": null,
+      "descriptionHeld": true
     },
     {
       "id": "Et47QCJ3-3g",
@@ -91,7 +124,10 @@
       "excerpt": "A collection of highlights from this year's Robomaster competition. It's a little long so I'll be creating a sizzle reel to help promote the competition with a video that isn't 11 ",
       "views": 1516,
       "url": "https://www.youtube.com/watch?v=Et47QCJ3-3g",
-      "thumb": "/videos/Et47QCJ3-3g.jpg"
+      "thumb": "/videos/Et47QCJ3-3g.jpg",
+      "length": "11:12",
+      "ago": "7 years ago",
+      "group": null
     },
     {
       "id": "o7ISds1lmAs",
@@ -101,7 +137,10 @@
       "excerpt": "Match starts at 0:12 No audio due to streaming error. CyberSmash #0 is a test Smash Ultimate tourney which took place at STEM School Highlands Ranch for their CyberPatriot club. Ea",
       "views": 33,
       "url": "https://www.youtube.com/watch?v=o7ISds1lmAs",
-      "thumb": "/videos/o7ISds1lmAs.jpg"
+      "thumb": "/videos/o7ISds1lmAs.jpg",
+      "length": null,
+      "ago": null,
+      "group": "cybersmash"
     },
     {
       "id": "B7QDYMVi-Tk",
@@ -111,7 +150,24 @@
       "excerpt": "Match starts at 1:34 No audio due to streaming issue. CyberSmash #0 is a test Smash Ultimate tourney which took place at STEM School Highlands Ranch for their CyberPatriot club. Ea",
       "views": 15,
       "url": "https://www.youtube.com/watch?v=B7QDYMVi-Tk",
-      "thumb": "/videos/B7QDYMVi-Tk.jpg"
+      "thumb": "/videos/B7QDYMVi-Tk.jpg",
+      "length": null,
+      "ago": null,
+      "group": "cybersmash"
+    },
+    {
+      "id": "ruKCixsCyhE",
+      "title": "Halmic [Snake] vs Logan [Kirby]  - CyberSmash #0 - Round 1",
+      "published": "2019-03-07T02:53:04+00:00",
+      "description": "",
+      "excerpt": "",
+      "views": 22,
+      "url": "https://www.youtube.com/watch?v=ruKCixsCyhE",
+      "thumb": "/videos/ruKCixsCyhE.jpg",
+      "length": null,
+      "ago": null,
+      "group": "cybersmash",
+      "descriptionHeld": true
     },
     {
       "id": "N-Ud4IeHpwQ",
@@ -121,7 +177,114 @@
       "excerpt": "Match starts at 0:22 CyberSmash #0 is a test Smash Ultimate tourney which took place at STEM School Highlands Ranch for their CyberPatriot club. Each of these videos aren't of the ",
       "views": 9,
       "url": "https://www.youtube.com/watch?v=N-Ud4IeHpwQ",
-      "thumb": "/videos/N-Ud4IeHpwQ.jpg"
+      "thumb": "/videos/N-Ud4IeHpwQ.jpg",
+      "length": null,
+      "ago": null,
+      "group": "cybersmash"
+    },
+    {
+      "id": "IE8JH9MCkMs",
+      "title": "Jack [Yoshi] vs Dr. Campbell [Pikachu] - CyberSmash #0 - Round 1",
+      "published": null,
+      "ago": null,
+      "length": null,
+      "description": "",
+      "excerpt": "",
+      "views": 0,
+      "url": "https://www.youtube.com/watch?v=IE8JH9MCkMs",
+      "thumb": "/videos/IE8JH9MCkMs.jpg",
+      "group": "cybersmash"
+    },
+    {
+      "id": "dF2kTFSpha8",
+      "title": "Trevor [Ripley] vs Chris [Ganondorf] - CyberSmash #0 - Winners Quarters",
+      "published": null,
+      "ago": null,
+      "length": null,
+      "description": "",
+      "excerpt": "",
+      "views": 0,
+      "url": "https://www.youtube.com/watch?v=dF2kTFSpha8",
+      "thumb": "/videos/dF2kTFSpha8.jpg",
+      "group": "cybersmash"
+    },
+    {
+      "id": "M0XS49W4jGM",
+      "title": "Marcin [P. Plant] vs Alana [Z. S. Samus] - CyberSmash #0 - Losers Round 3",
+      "published": null,
+      "ago": null,
+      "length": null,
+      "description": "",
+      "excerpt": "",
+      "views": 0,
+      "url": "https://www.youtube.com/watch?v=M0XS49W4jGM",
+      "thumb": "/videos/M0XS49W4jGM.jpg",
+      "group": "cybersmash"
+    },
+    {
+      "id": "-IzW3YKTa0w",
+      "title": "Chris [Ganondorf] vs Daniel [Pit] - CyberSmash #0 - Winners Semifinals",
+      "published": null,
+      "ago": null,
+      "length": null,
+      "description": "",
+      "excerpt": "",
+      "views": 0,
+      "url": "https://www.youtube.com/watch?v=-IzW3YKTa0w",
+      "thumb": "/videos/-IzW3YKTa0w.jpg",
+      "group": "cybersmash"
+    },
+    {
+      "id": "iK4Z0wrwsFM",
+      "title": "Talha [Simon] vs Halmic [Ike] - CyberSmash #0 - Losers Round 4",
+      "published": null,
+      "ago": null,
+      "length": null,
+      "description": "",
+      "excerpt": "",
+      "views": 0,
+      "url": "https://www.youtube.com/watch?v=iK4Z0wrwsFM",
+      "thumb": "/videos/iK4Z0wrwsFM.jpg",
+      "group": "cybersmash"
+    },
+    {
+      "id": "ywJJZXUdvJk",
+      "title": "Halmic [Ike] vs Marcin [P.  Plant] - CyberSmash #0 - Losers Semifinals",
+      "published": null,
+      "ago": null,
+      "length": null,
+      "description": "",
+      "excerpt": "",
+      "views": 0,
+      "url": "https://www.youtube.com/watch?v=ywJJZXUdvJk",
+      "thumb": "/videos/ywJJZXUdvJk.jpg",
+      "group": "cybersmash"
+    },
+    {
+      "id": "Ea9YsbmB14E",
+      "title": "Daniel [Pit] vs Marcin [P.  Plant] - CyberSmash #0 - Losers Finals",
+      "published": null,
+      "ago": null,
+      "length": null,
+      "description": "",
+      "excerpt": "",
+      "views": 0,
+      "url": "https://www.youtube.com/watch?v=Ea9YsbmB14E",
+      "thumb": "/videos/Ea9YsbmB14E.jpg",
+      "group": "cybersmash"
+    },
+    {
+      "id": "yLKXLvfjUoQ",
+      "title": "CyberSmash #0 GRAND FINALS - Marcin [P. Plant] vs Chris [Ganondorf]",
+      "published": null,
+      "ago": null,
+      "length": null,
+      "description": "",
+      "excerpt": "",
+      "views": 0,
+      "url": "https://www.youtube.com/watch?v=yLKXLvfjUoQ",
+      "thumb": "/videos/yLKXLvfjUoQ.jpg",
+      "group": "cybersmash"
     }
   ]
 }

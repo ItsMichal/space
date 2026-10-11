@@ -42,6 +42,9 @@ const games = JSON.parse(fs.readFileSync(path.join(root, 'content/games.json'), 
 const videos = JSON.parse(fs.readFileSync(path.join(root, 'content/videos.json'), 'utf8')).videos;
 await card('home', { title: 'streams, videos, games, design' });
 for (const g of games) if (g.coverLocal) await card(`game-${g.slug}`, { title: g.title.replace(/ \(.*\)$/, ''), image: path.join(root, 'site/public', g.coverLocal), pixel: true });
-for (const v of videos) { const f = path.join(root, 'site/public', v.thumb); if (fs.existsSync(f)) await card(`video-${v.id}`, { title: v.title, image: f }); }
+const cur = JSON.parse(fs.readFileSync(path.join(root, 'content/curation.json'), 'utf8')).videos;
+const pageIds = new Set([...cur.series.episodes, ...cur.other.map((o) => o.id)]);
+for (const f of fs.readdirSync(out)) if (f.startsWith('video-')) fs.rmSync(path.join(out, f));
+for (const v of videos) { const f = path.join(root, 'site/public', v.thumb); if (pageIds.has(v.id) && fs.existsSync(f)) await card(`video-${v.id}`, { title: v.title, image: f }); }
 await card('design-sedd', { title: 'Logo for Southeast Denver Dental', image: path.join(root, 'site/public/work/southeast-denver-dental-header.png'), imageFit: 'contain' });
 console.log('og images:', fs.readdirSync(out).length);
