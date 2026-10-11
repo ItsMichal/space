@@ -4,6 +4,7 @@ import { ArrowUpRight } from 'lucide-react'
 import type { GalleryItem, PostLink } from '@/lib/content/types'
 import { Zoomable } from '@/components/media/Zoomable'
 import { Lightbox } from '@/components/media/Lightbox'
+import { Gallery } from '@/components/ui/Gallery'
 
 type Props = {
   title: string
@@ -131,16 +132,15 @@ export function ArticleLayout({
       ) : null}
       {gallery?.length ? (
         <section className="gallery" aria-label="Gallery">
-          <ul className="gallery__list">
-            {gallery.map((g) => (
-              <li key={g.src}>
-                <figure className="gallery__item">
-                  <Zoomable src={g.src} alt={g.alt} caption={g.caption} sizes="(min-width: 1184px) 340px, (min-width: 768px) 30vw, 82vw" />
-                  {g.caption ? <figcaption>{g.caption}</figcaption> : null}
-                </figure>
-              </li>
-            ))}
-          </ul>
+          <Gallery
+            label="Project images"
+            autoplayMs={gallery.length > 2 ? 6500 : 0}
+            slides={gallery.map((g) => ({
+              key: g.src,
+              caption: g.caption,
+              node: <Zoomable src={g.src} alt={g.alt} caption={g.caption} sizes="(min-width: 900px) 760px, 90vw" />,
+            }))}
+          />
         </section>
       ) : null}
       <div className="prose">{children}</div>
