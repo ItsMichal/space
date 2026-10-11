@@ -1,0 +1,146 @@
+name: Deploy
+
+# Merges to main deploy the Workers whose files changed. Manual runs: Actions -> Deploy -> Run workflow.
+# Needs repository secret CLOUDFLARE_API_TOKEN and repository variable CLOUDFLARE_ACCOUNT_ID (see "Deploying" in the
+# root README). Without the token the deploy jobs are skipped with a notice instead of failing.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      app:
+        description: App to deploy (ignores change detection; halmic ignores the DEPLOY_HALMIC gate)
+        type: choice
+        options: [michal, halmic, both]
+        default: michal
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    # Secrets cannot be read in job-level `if:`, so look once here and expose a boolean.
+    runs-on: ubuntu-latest
+    outputs:
+      has_token: ${{ steps.t.outputs.has_token }}
+    steps:
+      - id: t
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -n "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "has_token=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_token=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Deploy skipped::Repository secret CLOUDFLARE_API_TOKEN is not set (an environment-scoped secret is not visible here). Add it under Settings -> Secrets and variables -> Actions."
+            echo "Deploy skipped: CLOUDFLARE_API_TOKEN is not set." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      michal: ${{ steps.final.outputs.michal }}
+      halmic: ${{ steps.final.outputs.halmic }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: f
+        if: github.event_name == 'push'
+        with:
+          filters: |
+            michal:
+              - 'apps/michal-ai/**'
+              - 'packages/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'scripts/**'
+              - '.github/workflows/deploy.yml'
+              - '.github/actions/**'
+            halmic:
+              - 'apps/halmic/**'
+              - 'packages/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'scripts/**'
+              - '.github/workflows/deploy.yml'
+              - '.github/actions/**'
+      - id: final
+        env:
+          EVENT: ${{ github.event_name }}
+          APP: ${{ inputs.app }}
+          F_MICHAL: ${{ steps.f.outputs.michal }}
+          F_HALMIC: ${{ steps.f.outputs.halmic }}
+        run: |
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            [ "$APP" = "michal" ] || [ "$APP" = "both" ] && m=true || m=false
+            [ "$APP" = "halmic" ] || [ "$APP" = "both" ] && h=true || h=false
+          else
+            m="$F_MICHAL"; h="$F_HALMIC"
+          fi
+          echo "michal=$m" >> "$GITHUB_OUTPUT"
+          echo "halmic=$h" >> "$GITHUB_OUTPUT"
+
+  deploy-michal:
+    needs: [preflight, changes]
+    if: needs.preflight.outputs.has_token == 'true' && needs.changes.outputs.michal == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment:
+      name: production
+      url: https://michal.ai
+    concurrency:
+      group: deploy-michal
+      cancel-in-progress: false
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - uses: ./.github/actions/checks
+      - uses: ./.github/actions/media-cache
+      - name: Build and deploy (opennextjs-cloudflare build + deploy)
+        run: npm run deploy:michal 2>&1 | tee deploy.log
+      - name: Deployed version
+        run: |
+          v=$(grep -oE 'Current Version ID: [0-9a-f-]+' deploy.log | tail -n1 | awk '{print $4}' || true)
+          echo "Deployed Worker version: ${v:-unknown}"
+          echo "michal.ai deployed, Worker version \`${v:-unknown}\` from ${GITHUB_SHA::7}" >> "$GITHUB_STEP_SUMMARY"
+      - name: Smoke test
+        run: scripts/smoke.sh https://michal.ai / /sitemap.xml /robots.txt /projects/isat-dashboard
+
+  deploy-halmic:
+    # Dormant until launch: set repository variable DEPLOY_HALMIC=true (or run manually and choose halmic).
+    needs: [preflight, changes]
+    if: >-
+      needs.preflight.outputs.has_token == 'true' && needs.changes.outputs.halmic == 'true' &&
+      (github.event_name == 'workflow_dispatch' || vars.DEPLOY_HALMIC == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: ${{ vars.HALMIC_URL }}
+    concurrency:
+      group: deploy-halmic
+      cancel-in-progress: false
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      HALMIC_URL: ${{ vars.HALMIC_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - uses: ./.github/actions/checks
+      - name: Build and deploy (identity check runs against the build output first)
+        run: |
+          npm run build:halmic
+          npm run check:identity
+          npm run deploy:halmic 2>&1 | tee deploy.log
+      - name: Deployed version
+        run: |
+          v=$(grep -oE 'Current Version ID: [0-9a-f-]+' deploy.log | tail -n1 | awk '{print $4}' || true)
+          echo "Deployed Worker version: ${v:-unknown}"
+          echo "halmic deployed, Worker version \`${v:-unknown}\` from ${GITHUB_SHA::7}" >> "$GITHUB_STEP_SUMMARY"
+      - name: Smoke test
+        if: env.HALMIC_URL != ''
+        run: scripts/smoke.sh "$HALMIC_URL" /

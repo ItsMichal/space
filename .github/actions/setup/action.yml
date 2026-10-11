@@ -1,0 +1,11 @@
+name: Setup
+description: Node (version pinned here, one place) with the npm cache, then npm ci at the repo root.
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: npm
+    - run: npm ci
+      shell: bash

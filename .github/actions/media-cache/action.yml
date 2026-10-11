@@ -1,0 +1,18 @@
+name: Media cache
+description: >
+  Restore/save the generated image variants (AVIF/WebP, share cards, manifest) so apps/michal-ai/scripts/build-images.mjs
+  only encodes new or changed sources. An exact key hit means nothing to do; restore-keys fall back to the newest older cache
+  and the script (incremental, hash-based, prunes stale outputs) fills the gap.
+runs:
+  using: composite
+  steps:
+    - uses: actions/cache@v4
+      with:
+        path: |
+          apps/michal-ai/public/media/_v
+          apps/michal-ai/public/media/_og
+          apps/michal-ai/lib/media/manifest.json
+          apps/michal-ai/.cache/build-images
+        key: media-${{ runner.os }}-${{ hashFiles('apps/michal-ai/public/media/**', 'apps/michal-ai/public/michal.png', 'apps/michal-ai/scripts/build-images.mjs') }}
+        restore-keys: |
+          media-${{ runner.os }}-
