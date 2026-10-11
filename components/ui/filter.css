@@ -1,0 +1,17 @@
+/* Project filter: JS sets data-filter; without JS the anchors target the markers and :has() does the same. */
+.fw-bar {
+  margin: 0 0 var(--space-8);
+}
+.fw-mark {
+  display: block;
+  height: 0;
+  scroll-margin-top: 120px;
+}
+.fw[data-filter='web'] [data-buckets]:not([data-buckets~='web']),
+.fw[data-filter='ai'] [data-buckets]:not([data-buckets~='ai']),
+.fw[data-filter='games'] [data-buckets]:not([data-buckets~='games']),
+.fw:has(#f-web:target) [data-buckets]:not([data-buckets~='web']),
+.fw:has(#f-ai:target) [data-buckets]:not([data-buckets~='ai']),
+.fw:has(#f-games:target) [data-buckets]:not([data-buckets~='games']) {
+  display: none;
+}

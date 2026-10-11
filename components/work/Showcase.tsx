@@ -2,6 +2,10 @@ import Link from 'next/link'
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import type { Post } from '@/lib/content/types'
 import { Picture } from '@/components/media/Picture'
+import { PROJECT_FILTERS, matchesFilter } from '@/components/ui/segments'
+
+/** Filter buckets a post belongs to, for the /projects segmented control (all items stay in the HTML). */
+const buckets = (p: Post) => PROJECT_FILTERS.filter((f) => f.value !== 'all' && matchesFilter(p.tags, f.value)).map((f) => f.value).join(' ')
 
 const FEAT_SIZES = '100vw'
 const THUMB_SIZES = '(min-width: 768px) 176px, 104px'
@@ -83,13 +87,13 @@ export function Showcase({ posts, base, limit, priority = false }: { posts: Post
     <div className="work">
       {blocks.map((b, i) =>
         'feature' in b ? (
-          <div key={b.feature.slug} className="work-feat-wrap reveal">
+          <div key={b.feature.slug} className="work-feat-wrap reveal" data-buckets={buckets(b.feature)}>
             <Feature post={b.feature} href={`${base}/${b.feature.slug}`} priority={priority && i === 0} />
           </div>
         ) : (
           <ul key={b.rows[0].slug} className="work-index">
             {b.rows.map((p, j) => (
-              <li key={p.slug} className="reveal" style={{ ["--i" as string]: j }}>
+              <li key={p.slug} className="reveal" data-buckets={buckets(p)} style={{ ["--i" as string]: j }}>
                 <Row post={p} href={`${base}/${p.slug}`} />
               </li>
             ))}
