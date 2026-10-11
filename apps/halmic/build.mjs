@@ -35,7 +35,7 @@ const vc = cur.videos;
 const episodes = vc.series.episodes.map((id, i) => ({ ...byId[id], ep: i + 1 }));
 const latestEp = episodes.at(-1), earlierEps = episodes.slice(0, -1);
 const others = vc.other.map((o) => ({ ...byId[o.id], ...o }));
-const tourn = { ...vc.tournament, v: byId[vc.tournament.thumb] };
+const smash = vc.smash;
 const pageVideos = [...episodes.slice().reverse(), ...others];   // everything that gets its own page, feed, sitemap entry and VideoObject
 const when = (v) => (v.published ? fmtDate(v.published) : v.ago ?? '');
 const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
@@ -85,7 +85,7 @@ const subs = {
     <div class="series-grid"><div class="vfeat">${vcard(latestEp, 'vid-featured', `Episode ${latestEp.ep}, the latest`)}</div><ol class="eps">${earlierEps.slice().reverse().map((v) => `<li>${vcard(v, 'vid-ep')}</li>`).join('')}</ol></div>
     <p class="more"><a href="https://www.youtube.com/playlist?list=${vc.series.playlist}" rel="noopener">The whole series on YouTube</a></p></div>`,
   vother: `<h3 class="sub-h">Other edits</h3><div class="reel" role="list">${others.map((v) => vcard(v)).join('')}</div>`,
-  vtourn: `<a class="tourn" href="https://www.youtube.com/playlist?list=${tourn.playlist}" rel="noopener"><span class="tthumb"><img src="${tourn.v.thumb}" width="640" height="360" loading="lazy" decoding="async" alt="Thumbnail of the CyberSmash #0 grand finals video"></span><span class="tbody"><b>${esc(tourn.title)}</b><span>${esc(tourn.line)}</span><span class="tgo">Watch the playlist on YouTube</span></span></a>`,
+  vsmash: `<p class="intro">${esc(smash.line)} <span class="draft">[draft]</span></p><div class="reel" role="list">${smash.sets.map((s) => `<a class="vid" role="listitem" href="https://www.youtube.com/watch?v=${s.id}" rel="noopener"><span class="thumb"><img src="/videos/${s.id}.jpg" width="640" height="360" loading="lazy" decoding="async" alt="Thumbnail of the stream overlay for the set ${esc(s.event)}, ${esc(s.round)}, halmic vs ${esc(s.opp)}"></span><span class="vt">${esc(s.event)}: ${esc(s.round)}</span><span class="vm">${esc(`vs ${s.opp} · ${s.date}`)}</span></a>`).join('')}</div><p class="gmeta">${esc(smash.credit)}</p>`,
   clips: clipRows,
   gfeature: gFeature.map((g, i) => gcard(g, i ? 'g-sm' : 'g-lg')).join(''), gmore: gMore.map((g) => gcard(g, 'g-xs')).join(''),
   head_bold: head({ title: 'halmic productions: streams, videos, games and design', desc: 'halmic productions: an assortment of various somewhat creative work I’ve done. Twitch (halmictv), YouTube, tiny itch.io games and logo design, all in one place.', path: '/', og: '/og/home.png', ld: [PERSON, { '@type': 'WebSite', '@id': `${SITE}/#site`, url: `${SITE}/`, name: 'halmic productions', alternateName: 'halmic', description: 'An assortment of various somewhat creative work I’ve done.', publisher: { '@id': `${SITE}/#halmic` } }, ...pageVideos.map(videoLd), ...gl.map(gameLd), designLd], css: ['/bold.css'] }),
@@ -121,7 +121,7 @@ for (const v of pageVideos) {
     body: `<p class="crumb"><a href="/#videos">videos</a></p><h1>${esc(v.title)}</h1><div class="vfeat">${vplayer(v)}</div><p class="gmeta">${esc([v.ep && `${vc.series.title}, episode ${v.ep}`, v.kind, v.length, when(v)].filter(Boolean).join(' · '))} · <a href="${v.url}" rel="noopener">Watch on YouTube</a> · <a href="https://www.youtube.com/@halmic?sub_confirmation=1" rel="noopener">Subscribe</a></p>${v.desc ? `<p>${esc(v.desc)}</p>` : v.excerpt ? `<p>${esc(v.excerpt)}</p>` : ''}<p class="more"><a href="/#videos">More videos</a> · <a href="/#games">Little games</a></p>`,
   }));
 }
-const vindex = `<h1>Videos</h1><h2 class="h2s">${esc(vc.series.title)}</h2><div class="vgrid">${episodes.slice().reverse().map((v) => vcard(v)).join('')}</div><h2 class="h2s">Other edits</h2><div class="vgrid">${others.map((v) => vcard(v)).join('')}</div><h2 class="h2s">Tournament</h2>${subs.vtourn}`;
+const vindex = `<h1>Videos</h1><h2 class="h2s">${esc(vc.series.title)}</h2><div class="vgrid">${episodes.slice().reverse().map((v) => vcard(v)).join('')}</div><h2 class="h2s">Other edits</h2><div class="vgrid">${others.map((v) => vcard(v)).join('')}</div><h2 class="h2s">Smash</h2>${subs.vsmash.replace('class="reel"', 'class="vgrid"')}`;
 write('videos/index.html', inner({ title: 'Videos by halmic: edits, highlights and friends', desc: 'Videos from halmic on YouTube: edits, highlight reels and friends playing games.', path: '/videos/', og: '/og/home.png', ld: [PERSON, ...pageVideos.map(videoLd)], body: vindex }));
 write('design/index.html', inner({ title: 'Design by halmic: logos and things I made', desc: 'Things halmic has designed: a logo for Southeast Denver Dental and the halmic logotype itself.', path: '/design/', og: '/og/home.png', ld: [PERSON, designLd], body: `<h1>Things I’ve designed</h1><p class="lede2"><a href="/design/southeast-denver-dental/">The logo for Southeast Denver Dental</a>, and <a href="/#design">the halmic logotype</a>.</p>` }));
 write('design/southeast-denver-dental/index.html', inner({

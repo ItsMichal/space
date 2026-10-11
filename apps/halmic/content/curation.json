@@ -1,31 +1,113 @@
 {
   "_note": "Draft copy in halmic's voice, written by the assistant for the owner to rewrite. tier: feature | more | off. alt = what the cover actually shows.",
   "games": {
-    "taco-neko": { "tier": "feature", "line": "A stealth taco-making game. You are a very serious taco chef on an island full of robo-cats.", "alt": "Title card for Taco Neko: rough hand-drawn lettering, a taco with a paw print, and the line 'a stealth taco making game'." },
-    "soupman": { "tier": "feature", "line": "Defeat the Saladking. Claim your legacy. A tiny, absurd Bitsy game for the Mystery Soup jam, still in development.", "alt": "Soupman: a pale room with small sprites in Bitsy's two-colour style, a red crab-like enemy and furniture along the walls." },
-    "glass-gunslinger-dod": { "tier": "more", "line": "A shmup that is maybe not a shmup. Music by Roby Dugay, the rest by me.", "alt": "Glass Gunslinger: a tiny character with a gun falling through a dark blue sky inside a grey frame." },
-    "lvasion-du-criminel-de-sa-prison": { "tier": "more", "line": "A top-down stealth game in PuzzleScript. The French is terrible, sorry.", "alt": "Top-down grid view of a prison: a grey robot guard, a line of pink laser dots, and a small black thief." },
-    "flippy": { "tier": "off", "line": "Yet another Flappy Bird remake.", "alt": "Flippy: a yellow bird between green pipes on a blue sky." }
+    "taco-neko": {
+      "tier": "feature",
+      "line": "A stealth taco-making game. You are a very serious taco chef on an island full of robo-cats.",
+      "alt": "Title card for Taco Neko: rough hand-drawn lettering, a taco with a paw print, and the line 'a stealth taco making game'."
+    },
+    "soupman": {
+      "tier": "feature",
+      "line": "Defeat the Saladking. Claim your legacy. A tiny, absurd Bitsy game for the Mystery Soup jam, still in development.",
+      "alt": "Soupman: a pale room with small sprites in Bitsy's two-colour style, a red crab-like enemy and furniture along the walls."
+    },
+    "glass-gunslinger-dod": {
+      "tier": "more",
+      "line": "A shmup that is maybe not a shmup. Music by Roby Dugay, the rest by me.",
+      "alt": "Glass Gunslinger: a tiny character with a gun falling through a dark blue sky inside a grey frame."
+    },
+    "lvasion-du-criminel-de-sa-prison": {
+      "tier": "more",
+      "line": "A top-down stealth game in PuzzleScript. The French is terrible, sorry.",
+      "alt": "Top-down grid view of a prison: a grey robot guard, a line of pink laser dots, and a small black thief."
+    },
+    "flippy": {
+      "tier": "off",
+      "line": "Yet another Flappy Bird remake.",
+      "alt": "Flippy: a yellow bird between green pipes on a blue sky."
+    }
   },
   "videos": {
     "series": {
       "title": "FIFA With the Boys",
       "line": "My friends, a FIFA lobby and a lot of bad shots, cut down to the funny parts.",
       "playlist": "PLUtLZU4pik-PsRl0gqi_UaKvB_25Xh0gt",
-      "episodes": ["Nhs4iQcN7-w", "mRIj1BeCJ_o", "2jM2QSTSte4", "N7HKj1dYZjU"]
+      "episodes": [
+        "Nhs4iQcN7-w",
+        "mRIj1BeCJ_o",
+        "2jM2QSTSte4",
+        "N7HKj1dYZjU"
+      ]
     },
     "other": [
-      { "id": "qVEDjNc5Gmg", "kind": "short film", "desc": "A short action-comedy film made with friends, the first of two. Written, shot and edited by me." },
-      { "id": "IIJVKHEtawU", "kind": "short film", "desc": "The sequel, episode 1." },
-      { "id": "Et47QCJ3-3g", "kind": "highlight reel", "desc": "Highlights from the 2019 Robomaster robotics competition, where robots fight in an arena." },
-      { "id": "pl6lJAYPLgc", "kind": "onboard lap", "desc": "1:09:59 in the #720 Miata with the CU Boulder racing team." }
+      {
+        "id": "qVEDjNc5Gmg",
+        "kind": "short film",
+        "desc": "A short action-comedy film made with friends, the first of two. Written, shot and edited by me."
+      },
+      {
+        "id": "IIJVKHEtawU",
+        "kind": "short film",
+        "desc": "The sequel, episode 1."
+      },
+      {
+        "id": "Et47QCJ3-3g",
+        "kind": "highlight reel",
+        "desc": "Highlights from the 2019 Robomaster robotics competition, where robots fight in an arena."
+      },
+      {
+        "id": "pl6lJAYPLgc",
+        "kind": "onboard lap",
+        "desc": "1:09:59 in the #720 Miata with the CU Boulder racing team."
+      }
     ],
-    "tournament": {
-      "title": "CyberSmash #0",
-      "line": "A local Smash tournament, 12 sets from round one to the grand finals.",
-      "playlist": "PLUtLZU4pik-NHfJJ3InmHxeKGH9nTqyZ3",
-      "thumb": "yLKXLvfjUoQ",
-      "sets": 12
+    "smash": {
+      "line": "I used to play Smash Ultimate at SmashDEN, a monthly tournament in the Denver area. Some of my sets ended up on YouTube.",
+      "credit": "Sets recorded and posted by SmashDEN. Linked as they are on YouTube.",
+      "sets": [
+        {
+          "id": "3-fIoRP40_A",
+          "event": "2019 SmashDEN Invitational",
+          "round": "Winners Round 1",
+          "opp": "RYOO",
+          "date": "Dec 2019"
+        },
+        {
+          "id": "GdsFqsdzX9M",
+          "event": "SmashDEN March",
+          "round": "Winners Round 3",
+          "opp": "Steam",
+          "date": "Mar 2019"
+        },
+        {
+          "id": "uiDxlLdA4MQ",
+          "event": "SmashDEN Jan '20",
+          "round": "Losers Round 3",
+          "opp": "FrozeRamen",
+          "date": "Jan 2020"
+        },
+        {
+          "id": "hMO-ZjR9GkE",
+          "event": "SmashDEN Jan '20",
+          "round": "Losers Round 4",
+          "opp": "Kirbyboi",
+          "date": "Jan 2020"
+        },
+        {
+          "id": "dcOZ7mDQ5d0",
+          "event": "SmashDEN Mar '20",
+          "round": "Winners Round 2",
+          "opp": "S7ACERONIN",
+          "date": "Mar 2020"
+        },
+        {
+          "id": "TwW1XOMIb-k",
+          "event": "SmashDEN Mar '20",
+          "round": "Losers Round 7",
+          "opp": "Fairy",
+          "date": "Mar 2020"
+        }
+      ]
     }
   }
 }
