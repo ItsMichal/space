@@ -8,7 +8,7 @@ updated: 2020-11-10
 tags: ["Game Dev", "Design", "GB Studio"]
 priority: 3
 featured: true
-cover: /media/taco-neko-development/46-f34f45.png
+cover: /media/taco-neko-development/cover.webp
 coverAlt: "TacoNeko title screen with hand-drawn art, the TacoNeko logo with a paw-print taco icon and Japanese characters, and a Start Game and Credits menu"
 originalUrl: "https://halmic.medium.com/taco-neko-development-5c1fb9e6372c"
 ---

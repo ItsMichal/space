@@ -5,7 +5,7 @@ kind: article
 description: "This is a continuation of a previous article. For more context about the MedPuck device, read that article here."
 date: 2021-11-02
 tags: ["Electronics", "Design", "DIY"]
-cover: /media/medpuck-pcb-prototype/07-04ec4f.webp
+cover: /media/medpuck-pcb-prototype/cover.webp
 coverAlt: "Fingertip pressing the blue pushbutton in the assembled MedPuck while the LED ring glows green"
 series: "Object"
 order: 5

@@ -5,7 +5,7 @@ kind: article
 description: "But before we get to that… let’s talk processing. I’ve been using the Arduino as the brains for my projects for a while now."
 date: 2021-10-15
 tags: ["Arduino", "ATtiny85", "Electronics", "Design"]
-cover: /media/creating-my-first-pcb-object/03-377c87.webp
+cover: /media/creating-my-first-pcb-object/cover.webp
 coverAlt: "Sketch of the MedPuck: a pill bottle on a round base, labelled pressure switch, LED ring, coin cell and timer circuit"
 series: "Object"
 order: 4

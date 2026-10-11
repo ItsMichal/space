@@ -7,7 +7,7 @@ date: 2021-11-20
 tags: ["Game Dev", "Arduino", "Electronics"]
 priority: 2
 featured: true
-cover: /media/making-a-punching-bag-game-in-p5-js/03-440051.png
+cover: /media/making-a-punching-bag-game-in-p5-js/cover.webp
 coverAlt: "Screenshot of the Lane Defense game: three vertical lanes with magenta enemy circles, a red pellet and green health bars"
 coverFocus: "50% 40%"
 series: "Object"

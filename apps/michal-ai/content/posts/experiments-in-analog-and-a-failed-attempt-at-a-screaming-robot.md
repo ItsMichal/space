@@ -7,7 +7,7 @@ date: 2021-11-06
 tags: ["Arduino", "Electronics", "Robotics", "DIY"]
 priority: 1
 featured: true
-cover: /media/experiments-in-analog-and-a-failed-attempt-at-a-screaming-robot/11-e3ebe9.jpg
+cover: /media/experiments-in-analog-and-a-failed-attempt-at-a-screaming-robot/cover.webp
 coverAlt: "The finished RobotScreamer robot on a white background, with an ultrasonic sensor on the front and a 9V battery and loose wires on top"
 series: "Object"
 order: 6

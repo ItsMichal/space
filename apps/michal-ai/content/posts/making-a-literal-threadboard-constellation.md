@@ -5,7 +5,7 @@ kind: article
 description: "First off- obligatory explanation of what the heck a threadboard is."
 date: 2021-09-08
 tags: ["Electronics", "DIY"]
-cover: /media/making-a-literal-threadboard-constellation/16-2262dc.webp
+cover: /media/making-a-literal-threadboard-constellation/cover.webp
 coverAlt: "Constellation of steel balls and magnetic bars shaped like the Big Dipper on blue foam with hand-drawn stars and handwriting, with a yellow glow underneath"
 series: "Object"
 order: 2

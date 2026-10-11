@@ -5,7 +5,7 @@ kind: article
 description: "This version comes pre-soldered so prototyping with breadboards was a breeze. And well, that’s exactly what we did."
 date: 2021-09-25
 tags: ["Arduino", "Electronics", "Design"]
-cover: /media/led-pong-and-more-adventures-with-the-arduino-nano-33-iot/01-a62780.webp
+cover: /media/led-pong-and-more-adventures-with-the-arduino-nano-33-iot/cover.webp
 coverAlt: "Two NeoPixel strips glowing blue and green, wired to an Arduino on a breadboard with a red pushbutton on long leads"
 series: "Object"
 order: 3
