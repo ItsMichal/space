@@ -28,7 +28,7 @@ function Sec({ n, title, note, children }: { n: number; title: string; note: str
 
 export default function MicroPage() {
   return (
-    <main style={{ maxWidth: 760, margin: '0 auto', padding: 'var(--space-12) var(--space-4) var(--space-24)' }}>
+    <main style={{ maxWidth: 760, margin: '0 auto', padding: 'var(--space-24) var(--space-4) var(--space-24)' }}>
       <Replay label="replay the title">
         <h1 className="m-settle" style={{ font: '600 clamp(44px, 9vw, 84px)/0.98 var(--font-sans)', letterSpacing: '-0.035em', margin: 0 }}>
           <span style={{ '--i': 0 } as CSSProperties}>Micro-</span>
