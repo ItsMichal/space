@@ -62,7 +62,7 @@ export default function MicroPage() {
       </Sec>
 
       <Sec n={3} title="Slow arrival" note="opacity 1.4s, settle from 1.02 over 2.4s, once">
-        <SlowImage src="/micro/hydrangea.jpg" alt="Hydrangea with soft bokeh" />
+        <SlowImage src="/botanical/own/hydrangea-1400.webp" alt="Hydrangea with soft bokeh" />
       </Sec>
 
       <Sec n={4} title="Breathing edge" note="the feathered edge inhales on hover, focus or press">
@@ -73,12 +73,12 @@ export default function MicroPage() {
           aria-label="Daylily photograph, press to let its edge breathe"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/micro/daylily.jpg" alt="Red and yellow daylily" />
+          <img src="/botanical/own/daylily-wash-1400.webp" alt="Red and yellow daylily" />
         </button>
       </Sec>
 
       <Sec n={5} title="Blossom lean" note="move the pointer or drag a finger across; it leans a degree and settles">
-        <BlossomLean src="/micro/cherry-blossom.jpg" alt="Cherry blossoms, softly out of focus" />
+        <BlossomLean src="/botanical/own/cherry-bloom-1400.webp" alt="Cherry blossoms, softly out of focus" />
       </Sec>
 
       <Sec n={6} title="Ink-soak press" note="a stain from the exact press point, fading after release">
