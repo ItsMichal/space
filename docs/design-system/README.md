@@ -80,12 +80,15 @@ CSS tokens (defined in `app/globals.css`):
 
 | Token | Value |
 | --- | --- |
-| `--motion-fast` | 240ms — hover color, focus, small state changes |
-| `--motion-slow` | 900ms — reveals, image hover settle |
-| `--motion-slower` | 1400ms — featured imagery |
+| `--motion-press` | 100ms: the instant response to a press (ink starts exactly where the finger is) |
+| `--motion-fast` | 240ms: hover colour, focus, small state changes (UI and hover run 320 to 520ms; `--motion-ui` 520ms) |
+| `--motion-slow` | 900ms: reveals, image hover settle (reveals run 1100 to 1400ms) |
+| `--motion-slower` | 1400ms: featured imagery; large settles 2400ms |
 | `--motion-ambient` | 8–20s loops (slow illustration drift, if any) |
 | `--ease-out-soft` | `cubic-bezier(0.22, 1, 0.36, 1)` |
 | `--ease-in-out-soft` | `cubic-bezier(0.45, 0, 0.15, 1)` |
+
+Timing ladder (the law): instant response, very slow settle, long-tailed ease-out. 0.1s press, 0.3 to 0.6s UI and hover, 1.1 to 1.4s reveals, 2.4s large settles. Crafted easings live in `app/styles/craft.css` (`--craft-out`, `--craft-in`, `--craft-spring`, a `linear()` spring with 1.5% follow-through); the craft checklist is `docs/motion/craft.md`.
 
 Limits: max travel 12px, max scale delta 2%, opacity is the primary channel.
 
