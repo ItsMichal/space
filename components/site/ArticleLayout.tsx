@@ -127,7 +127,7 @@ export function ArticleLayout({
         <section className="gallery" aria-label="Gallery">
           <Gallery
             label="Project images"
-            autoplayMs={gallery.length > 2 ? 6500 : 0}
+            autoplayMs={0}
             slides={gallery.map((g) => ({
               key: g.src,
               caption: g.caption,

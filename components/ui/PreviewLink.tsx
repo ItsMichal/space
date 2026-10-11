@@ -25,6 +25,9 @@ export function PreviewLink({ href, preview, children }: { href: string; preview
   const card = useRef<HTMLDivElement>(null)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [open, setOpen] = useState(false)
+  // Mounted outlives `open` so the card can fold back before it unmounts; `vis` drives the CSS transitions (which retarget).
+  const [mounted, setMounted] = useState(false)
+  const [vis, setVis] = useState(false)
   const [pos, setPos] = useState<{ x: number; y: number; above: boolean; ox: number } | null>(null)
   const pressed = useRef(false)
   const suppress = useRef(false)
@@ -67,6 +70,23 @@ export function PreviewLink({ href, preview, children }: { href: string; preview
   }, [open])
 
   useEffect(() => clear, [])
+
+  useEffect(() => {
+    if (open) {
+      setMounted(true)
+      let r2 = 0
+      const r1 = requestAnimationFrame(() => {
+        r2 = requestAnimationFrame(() => setVis(true))
+      })
+      return () => {
+        cancelAnimationFrame(r1)
+        cancelAnimationFrame(r2)
+      }
+    }
+    setVis(false)
+    const t = setTimeout(() => setMounted(false), 520)
+    return () => clearTimeout(t)
+  }, [open])
 
   return (
     <>
@@ -116,7 +136,7 @@ export function PreviewLink({ href, preview, children }: { href: string; preview
       >
         {children}
       </Link>
-      {open && pos && typeof document !== 'undefined'
+      {mounted && pos && typeof document !== 'undefined'
         ? createPortal(
             <div
               ref={card}
@@ -124,6 +144,7 @@ export function PreviewLink({ href, preview, children }: { href: string; preview
               role="tooltip"
               className="pv"
               data-above={pos.above ? '' : undefined}
+              data-vis={vis ? '' : undefined}
               style={{ left: pos.x, top: pos.y, ['--ox' as string]: `${pos.ox}px` }}
               onPointerEnter={() => clear()}
               onPointerLeave={() => hide()}

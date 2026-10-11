@@ -10,20 +10,35 @@
   align-items: baseline;
   padding: var(--space-3) 0;
 }
-.fr-row::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 1px;
-  background: var(--hairline);
-  transform-origin: 0 50%;
+/* The same fine hand-drawn hair the links rest on (makeStroke, seeded), not a CSS border. */
+.fr {
+  --t-rest: var(--t-rest-1);
 }
+:root[data-reading] .fr {
+  --t-rest: var(--t-rest-dark-1);
+}
+.fr-row::before,
 .fr-row:last-child::after {
   content: '';
   position: absolute;
-  inset: auto 0 0 0;
-  height: 1px;
-  background: var(--hairline);
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: var(--t-rest) no-repeat 0 50% / 100% 100%;
+  pointer-events: none;
+}
+.fr-row::before {
+  top: -3px;
+  transform-origin: 0 50%;
+}
+.fr-row:last-child::after {
+  bottom: -3px;
+}
+.fr-row:nth-child(2n)::before {
+  --t-rest: var(--t-rest-2);
+}
+:root[data-reading] .fr-row:nth-child(2n)::before {
+  --t-rest: var(--t-rest-dark-1);
 }
 .fr dt {
   font: 400 15px/24px var(--font-serif);

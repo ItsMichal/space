@@ -51,20 +51,24 @@ export function PageControl({ count, index, label = 'Pages', onSelect, playing, 
   const seeds = useMemo(() => Array.from({ length: count }, (_, i) => seedPath(i + 1)), [count])
 
   const shape = (l: number, r: number, k: number, lift: number) => {
-    // leaf-like pill from x=l-H/2 to r+H/2, pinched waist, one end a touch fuller than the other
+    // A leaf, never a circle: round at the shoulder, drawn to a soft tip. Stretched, the waist pinches and the tip
+    // lifts; at rest it is a small asymmetric bud (a touch wider than tall, tip tilted up) so even stillness is organic.
     const span = r - l
     const stretch = Math.min(1, Math.max(0, span / (GAP * 1.6)))
-    const h = H * (1 - 0.3 * stretch)
-    const waist = h * 0.34 * stretch
-    const x0 = l - H / 2
-    const x1 = r + H / 2 + 0
-    const x1k = x0 + (x1 - x0) * k
-    const mx = (x0 + x1k) / 2
-    const rad = h / 2
+    const h = H * (1 - 0.28 * stretch)
+    const waist = h * 0.3 * stretch
+    const x0 = l - H * 0.62
+    const x1 = x0 + (r + H * 0.7 - x0) * k
+    const w = x1 - x0
     const skew = (hash01(index * 3 + 1) - 0.5) * 1.1
+    const tipY = Y - 1.6 - lift - stretch * 0.8
     const yTop = Y - h / 2 - lift
     const yBot = Y + h / 2 + lift * 0.4
-    return `M${f(x0 + rad)} ${f(yTop)}Q${f(mx)} ${f(yTop + waist * 2 + skew)} ${f(x1k - rad)} ${f(yTop)}A${f(rad)} ${f(rad)} 0 0 1 ${f(x1k - rad)} ${f(yBot)}Q${f(mx)} ${f(yBot - waist * 2 - skew)} ${f(x0 + rad)} ${f(yBot)}A${f(rad)} ${f(rad)} 0 0 1 ${f(x0 + rad)} ${f(yTop)}Z`
+    return (
+      `M${f(x0)} ${f(Y + 0.4)}` +
+      `C${f(x0 - 0.2)} ${f(yTop - h * 0.1)} ${f(x0 + w * 0.34)} ${f(yTop + waist + skew)} ${f(x1)} ${f(tipY)}` +
+      `C${f(x1 - w * 0.28)} ${f(yBot - waist - skew)} ${f(x0 + w * 0.12)} ${f(yBot + h * 0.12)} ${f(x0)} ${f(Y + 0.4)}Z`
+    )
   }
 
   const draw = () => {

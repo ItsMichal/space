@@ -13,10 +13,25 @@
   width: 300px;
   max-width: calc(100vw - 24px);
   transform-origin: var(--ox, 50%) 0;
-  animation: pv-in 900ms var(--ui-follow) both;
+  /* Folded: it leaves quicker and without overshoot (a critically damped fold back into the link). */
+  opacity: 0;
+  transform: translate3d(calc(var(--ox, 0px) * -0.04), -8px, 0) scale(0.84, 0.7);
+  transition: opacity 280ms var(--craft-in, ease-in), transform 460ms var(--craft-in, ease-in);
+  pointer-events: none;
+}
+.pv[data-vis] {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  /* Open: grows out of the link with a hair of overshoot; opacity leads. */
+  transition: opacity 500ms var(--ui-settle), transform 900ms var(--ui-follow);
 }
 .pv[data-above] {
   transform-origin: var(--ox, 50%) 100%;
+  transform: translate3d(0, 8px, 0) scale(0.84, 0.7);
+}
+.pv[data-above][data-vis] {
+  transform: none;
 }
 .pv-glass {
   display: block;
@@ -60,44 +75,11 @@
   color: var(--ink-muted);
   font-variant-numeric: tabular-nums;
 }
-/* grows out of the link: scale and a slight arc (x settles faster than y) */
-@keyframes pv-in {
-  0% {
-    opacity: 0;
-    transform: translate3d(calc(var(--ox, 0px) * -0.04), -8px, 0) scale(0.84, 0.7);
-  }
-  35% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 1;
-    transform: none;
-  }
-}
-.pv[data-above] {
-  animation-name: pv-in-up;
-}
-@keyframes pv-in-up {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 8px, 0) scale(0.84, 0.7);
-  }
-  35% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 1;
-    transform: none;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .pv,
-  .pv[data-above] {
-    animation: pv-fade 160ms linear both;
-  }
-}
-@keyframes pv-fade {
-  from {
-    opacity: 0;
+  .pv[data-above],
+  .pv[data-vis] {
+    transform: none;
+    transition: opacity 160ms linear;
   }
 }
