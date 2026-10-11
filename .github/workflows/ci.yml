@@ -1,0 +1,98 @@
+name: CI
+
+# Verification only. Nothing here deploys; Cloudflare Workers Builds deploys each app
+# (see "Deploying" in the root README).
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      michal: ${{ steps.f.outputs.michal }}
+      halmic: ${{ steps.f.outputs.halmic }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: f
+        with:
+          filters: |
+            michal:
+              - 'apps/michal-ai/**'
+              - 'packages/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'scripts/**'
+              - '.github/workflows/ci.yml'
+            halmic:
+              - 'apps/halmic/**'
+              - 'packages/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'scripts/**'
+              - '.github/workflows/ci.yml'
+
+  checks:
+    # typecheck + lint + unit tests + identity check for the whole workspace; cheap, always runs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run check:identity
+
+  build-michal:
+    needs: changes
+    if: needs.changes.outputs.michal == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build:michal
+      - name: OpenNext bundle (same output the Worker deploys)
+        working-directory: apps/michal-ai
+        run: npx opennextjs-cloudflare build
+      - name: Worker config sanity (no upload)
+        working-directory: apps/michal-ai
+        run: npx wrangler deploy --dry-run
+
+  build-halmic:
+    needs: changes
+    if: needs.changes.outputs.halmic == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Is halmic present yet?
+        id: present
+        run: |
+          if [ -f apps/halmic/package.json ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/setup-node@v4
+        if: steps.present.outputs.present == 'true'
+        with:
+          node-version: 22
+          cache: npm
+      - if: steps.present.outputs.present == 'true'
+        run: npm ci
+      - if: steps.present.outputs.present == 'true'
+        run: npm run build:halmic
+      - if: steps.present.outputs.present == 'true'
+        run: npm run check:identity
