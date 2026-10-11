@@ -3,9 +3,9 @@
  * Re-runnable importer: the owner's Medium articles -> content/posts/<slug>.md + public/media/<slug>/*
  *
  * Usage:
- *   node scripts/import-medium.mjs                  # import everything
+ *   node scripts/import-medium.mjs                  # import articles that have no content/posts/<slug>.md yet; existing posts are skipped
  *   node scripts/import-medium.mjs --only <slug|id> # one article (slug, 12-char Medium id, or Medium URL fragment)
- *   node scripts/import-medium.mjs --force          # re-download images even when already present
+ *   node scripts/import-medium.mjs --force          # regenerate existing posts too (DISCARDS hand edits) and re-download images
  *   node scripts/import-medium.mjs --no-images      # convert text only (image links still point at /media/..)
  *   node scripts/import-medium.mjs --refresh-feed   # re-download scripts/medium-src/feed.xml from the RSS feed
  *
@@ -19,7 +19,7 @@
  *                                    so the gist URLs were looked up once and are recorded here.
  *
  * Output: every post is `kind: article`, `draft: true`, `canonical:` the original Medium URL. Re-running overwrites
- * content/posts/<slug>.md, so hand edits after the import are lost; run with --only for a single article.
+ * content/posts/<slug>.md only with --force (hand edits after the import are then lost); without it existing posts are left alone.
  * Also writes docs/content-review/medium-import.json (machine-readable per-article log).
  *
  * Text is never rewritten: only the HTML -> Markdown translation, link cleaning, and metadata derivation happen here.
@@ -519,9 +519,15 @@ async function main() {
   SLUG_BY_ID = new Map(articles.map((a) => [a.id, a.slug]))
   fs.mkdirSync(POSTS_DIR, { recursive: true })
   const log = []
+  let skipped = 0
 
   for (const a of articles) {
     if (ONLY && ![a.slug, a.id].includes(ONLY) && !a.url.includes(ONLY)) continue
+    if (!FORCE && fs.existsSync(path.join(POSTS_DIR, `${a.slug}.md`))) {
+      console.log(`\n${a.slug}  skipped: content/posts/${a.slug}.md already exists (hand-edited since import; use --force to regenerate)`)
+      skipped++
+      continue
+    }
     console.log(`\n${a.slug}  (${a.id}, ${a.source})`)
     const ctx = { notes: [], embeds: [], unresolved: [], warnings: [], missingAlt: [], images: new Map(), captions: 0 }
     const { blocks, checks, cover } = await convertBody(a, ctx)
@@ -595,7 +601,8 @@ async function main() {
     for (const m of [...ctx.notes, ...ctx.unresolved, ...ctx.warnings]) console.log(`  ! ${m}`)
   }
 
-  if (!ONLY) {
+  // The log describes a full import run; a partial (skipping) run must not overwrite it.
+  if (!ONLY && skipped === 0) {
     fs.mkdirSync(path.dirname(LOG_FILE), { recursive: true })
     fs.writeFileSync(LOG_FILE, JSON.stringify(log, null, 2) + '\n')
     console.log(`\nlog: ${path.relative(ROOT, LOG_FILE)}`)

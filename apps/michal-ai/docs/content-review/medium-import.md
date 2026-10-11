@@ -43,17 +43,15 @@ Descriptions are the post's first sentence or paragraph; Medium had no real subt
 
 ## What did not convert cleanly or needs the owner
 
-1. **Alt text: all 161 images have empty alt** (Medium stored none). Captions were kept as image titles (figcaptions) where present.
-2. **No covers set.** The site's content test requires real alt text on any cover. Two posts have a Medium lead image
-   (LED Pong, Logic Probe); it stays as the first body image. Add alt text, then set `cover`/`coverAlt` if wanted.
+1. **Alt text (done in the cleanup pass below).** Medium stored none, so all 164 image references (161 distinct files plus 3 reuses
+   in Taco Neko) were empty. Each image was viewed and given a one-sentence description; captions stay as image titles.
+2. **Covers (done in the cleanup pass below)** for the 9 posts that have images. The 4 posts without images have no cover.
 3. **Gists are links, not embeds** (gist.github.com cannot be framed). Five gists, all `ItsMichal`: Lane Defense, Prototype Boxing
    Bag Code, MEDPuck, Police LEDs, LED Pong. Their Medium embed pages are behind Cloudflare, so the URLs are hard-coded in the
    script (`MEDIA_EMBEDS`). Optional: paste the code into fenced blocks.
 4. **Medium link cards** (Instructables, ThreadBoard, p5.js editor) were reduced to their title as a plain link.
-5. **Bold lines used as headings** (Taco Neko and the PCB posts use bold paragraphs for section titles) stay bold paragraphs,
-   not headings. Medium h3 became `##`. Taco Neko's last two h3s ("Play TacoNeko on Itch.io" and a bare URL) became `##` headings.
-6. **Time-bound or Medium-specific wording was kept verbatim**: "Stay tuned … in 2 weeks", "my RSS feed", "Click on the images",
-   "I’ll try and keep this updated", signature lines.
+5. **Bold lines used as headings** were converted in the cleanup pass (Taco Neko, Quantum "Transcript").
+6. **Time-bound or Medium-specific wording** and signature lines were removed in the cleanup pass (see below).
 7. YouTube embeds are `::youtube{id=…}` (titles added where Medium had them). 19 videos across the set.
 8. **Drafts' images are still public static files.** `public/media/<slug>/` and the generated `public/media/_v` variants ship
    with any deploy even though the pages are drafts. They are unlinked images from his public Medium articles.
@@ -81,10 +79,43 @@ Better as archive or creator/streamer-persona material (motion design, hobby, pe
 - Making a (literal) ThreadBoard constellation! and Logic Probe Build Log (course exercises; lower value for a professional audience;
   Logic Probe is a build log with 40 uncaptioned photos)
 
-The seven "Object" course posts (ThreadBoard, Logic Probe, LED Pong, First PCB, MedPuck, Analog, Punching bag) read as one series
-and could use `series`/`parent` later.
+The seven "Object" course posts (ThreadBoard, Logic Probe, LED Pong, First PCB, MedPuck, Analog, Punching bag) now carry
+`series: "Object"` and `order` 1 to 7 by date. The site only uses `series` as the list heading under a `parent` project, and no
+"Object" parent project exists, so for now the fields are inert metadata (posts stay in /writing); create a parent project and set
+`parent:` on the seven to get the grouped list with prev/next navigation.
+
+## Cleanup pass (owner-requested edits, after the import)
+
+Only the changes listed here touch the converted text. Everything is still `draft: true` with `canonical:` set.
+
+Applied to all posts with images: one-sentence alt text for every image (no empty alts), `cover` + `coverAlt` (reusing an
+existing body image; no new files). Signature lines ("-Michal", "— Michal", "Signing out,", "Thanks," plus the michal.us link,
+"-Michal Bodzianowski") removed. Link cards and gists were already labelled links; the gist links kept their titles.
+
+| Post | Cover (image no.) | Other changes |
+|---|---|---|
+| Taco Neko Development | 46, title screen | 13 bold-only section titles became `##`/`###` headings; closing "Play TacoNeko on Itch.io" heading + bare-URL heading became a heading plus a "TacoNeko on itch.io" link; removed "I’ll try and keep this updated!" and "Medium makes sprites look weird!" (caption of image 21); signature removed; typo "Suarez" to "Suavez" in two captions |
+| Logic Probe Build Log | 34, finished probe | signature removed; `series: "Object"`, `order: 1` |
+| Creating my own animated logo | 3, traced vs. original logo | none besides alt and cover |
+| Making a (literal) ThreadBoard constellation! | 16, finished constellation | removed "Next up, I will be finishing the Logic Probe that I started last week." (and its link to the Logic Probe post); typo "acryllic" to "acrylic" (twice); `order: 2` |
+| Making a Kinetic Typography | none (no images) | none |
+| LED Pong and more adventures… | 1, first image | removed "Stay tuned for the next project in 2 weeks time." and the "Signing out," sign-off; `order: 3` |
+| Small Projects in Motion | none | removed the opening RSS-feed paragraph and the closing "More to come!"; the frontmatter description is now the post's own first sentence ("Please enjoy my walking animation!"), no new prose |
+| Creating my first PCB — Object | 3, MedPuck sketch | removed the caption "Click on the images to see the detail!", the sentences "If you want to build the MedPuck yourself, I’ll be making another post…" and "Next, we’ll be using more analog inputs…", and the clause "as well as a confirmation of our order, which by this time is almost here! Exciting!"; typo "smorgasboard" to "smorgasbord"; `order: 4` |
+| Quantum Computing explained in 1 minute. | none | bold "Transcript —" became `## Transcript` |
+| MedPuck PCB Prototype | 7, glowing LED ring | "read that article here" now links "here" to the first PCB post; `order: 5` |
+| Experiments in Analog… | 11, finished robot | "— Michal" removed; `order: 6` |
+| Poznan — Low Roar MV | none | none |
+| Making a punching bag game in P5.js | 3, game screenshot (`coverFocus: "50% 40%"`) | the two "p5.js Web Editor" link cards now carry the sketch title ("LaneDefense by ItsMichal, play in / edit and remix in the p5.js Web Editor"); removed "Look forward to whatever could happen with our speed bag contraption as we work on it!" and the "Thanks," sign-off; typos "inheritence" to "inheritance", "Sneak peak" to "Sneak peek"; `order: 7` |
+
+Left as written for the owner to decide: classmate, TA and tester mentions (file and line numbers in the review report), "Part 1 is
+complete! Next steps include…" in the Logic Probe post, "Sorry for (somewhat) spoiling the next post" in the punching bag post, the
+dated "Hearing my instructors playtest…" update note at the end of Taco Neko, and bare credit URLs inside two captions in the
+Analog post.
 
 ## Re-running
 
-`node scripts/import-medium.mjs [--only <slug|id>] [--force] [--no-images]`. It overwrites `content/posts/<slug>.md`, so hand edits
-are lost on re-run. It also prunes unreferenced images in each post's media folder.
+`node scripts/import-medium.mjs [--only <slug|id>] [--force] [--no-images]`. Existing posts are **skipped** unless `--force`, so
+the hand edits above are not overwritten (a plain run with the 13 posts present changes nothing). `--force` regenerates the posts from
+the committed snapshots and discards hand edits; it also prunes unreferenced images in each post's media folder. The JSON log
+(`medium-import.json`) is the record of the original import and is only rewritten by a run that skips nothing.
