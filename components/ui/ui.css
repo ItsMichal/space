@@ -1,0 +1,247 @@
+/* Micro-UI kit. Light first; every colour is a token, so Basalt reading pages follow for free. Springs are sampled
+   from real damped springs (components/ui/craft/chain.ts springEasing) and written out as CSS linear() so transitions
+   have the same physics as the JS ones. cubic-bezier fallbacks come first for engines without linear(). */
+:root {
+  --ui-settle: cubic-bezier(0.22, 1, 0.36, 1);
+  --ui-follow: cubic-bezier(0.22, 1.25, 0.36, 1);
+  --ui-stretch: cubic-bezier(0.2, 1.4, 0.4, 1);
+  --ui-display: var(--font-display, var(--font-serif));
+}
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    --ui-settle: linear(0, 0.026, 0.088, 0.17, 0.259, 0.349, 0.435, 0.514, 0.586, 0.65, 0.705, 0.753, 0.794, 0.829, 0.859, 0.883, 0.904, 0.921, 0.936, 0.947, 0.957, 0.965, 0.972, 0.977, 0.981, 0.985, 0.988, 0.99, 1);
+    --ui-follow: linear(0, 0.042, 0.143, 0.271, 0.407, 0.536, 0.651, 0.749, 0.828, 0.89, 0.936, 0.97, 0.992, 1.007, 1.015, 1.019, 1.02, 1.019, 1.017, 1.014, 1.012, 1.009, 1.007, 1.005, 1.003, 1.002, 1.001, 1.001, 1);
+    --ui-stretch: linear(0, 0.067, 0.222, 0.413, 0.602, 0.766, 0.895, 0.987, 1.045, 1.075, 1.083, 1.079, 1.066, 1.05, 1.034, 1.02, 1.009, 1.002, 0.997, 0.994, 0.993, 0.993, 0.994, 0.996, 0.997, 0.998, 0.999, 1, 1);
+  }
+}
+
+/* ============================== Timeline ============================== */
+.tl {
+  position: relative;
+  max-width: 100%;
+}
+.tl-vp {
+  position: relative;
+  height: 132px;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: pan-y;
+  overscroll-behavior-x: contain;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 14%, #000 86%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 14%, #000 86%, transparent 100%);
+}
+.tl-vp:active {
+  cursor: grabbing;
+}
+.tl-track {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 0;
+  will-change: transform;
+}
+.tl-svg {
+  position: absolute;
+  top: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.tl-rail {
+  fill: none;
+  stroke: var(--ink-faint);
+  stroke-width: 1;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+.tl-stem {
+  fill: var(--accent);
+}
+.tl-tip,
+.tl-bud,
+.tl-blade {
+  transform-box: view-box;
+  transform-origin: 0 0;
+}
+.tl-tip {
+  fill: var(--accent);
+}
+.tl-bud {
+  fill: currentColor;
+}
+.tl-blade {
+  fill: var(--ink-faint);
+}
+.tl-year {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font: 400 15px/18px var(--ui-display);
+  font-variant-numeric: lining-nums;
+  color: var(--ink-muted);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.tl-tabs {
+  position: absolute;
+  inset: 0;
+}
+.tl-tab {
+  position: absolute;
+  top: 0;
+  height: 132px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  padding: 0 6px 6px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  text-align: center;
+  cursor: inherit;
+  font: inherit;
+  border-radius: var(--radius-md);
+  transition: opacity 320ms var(--ui-settle);
+}
+.tl-tab:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+.tl-date {
+  font: 400 14px/18px var(--font-serif);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.tl-name {
+  font: 500 13px/16px var(--font-sans);
+  letter-spacing: -0.005em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 100%;
+  min-height: 32px;
+}
+
+/* Detail panels: all in the HTML, stacked in one grid cell so the tallest sets the height (no layout shift). Leaving is
+   quick and eased in; arriving is later, curves in (x and y on different springs, so the path is an arc), and its
+   parts follow one after another. */
+.tl-panels {
+  display: grid;
+  margin: var(--space-6) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.tl-panel {
+  grid-area: 1 / 1;
+  min-width: 0;
+  max-width: 56ch;
+  visibility: hidden;
+  opacity: 0;
+  translate: 0 0;
+  transition: opacity 220ms cubic-bezier(0.4, 0, 1, 1), visibility 0s linear 260ms, translate 420ms cubic-bezier(0.4, 0, 0.6, 1);
+}
+.tl-panel[data-pos='before'] {
+  translate: -18px 0;
+}
+.tl-panel[data-pos='after'] {
+  translate: 18px 0;
+}
+.tl-panel[data-pos='active'] {
+  visibility: visible;
+  opacity: 1;
+  translate: 0 0;
+  transition: opacity 640ms var(--ui-settle) 140ms, visibility 0s, translate 1100ms var(--ui-follow) 100ms;
+}
+.tl-panel > * {
+  transform: translateY(0);
+  opacity: 1;
+  transition: transform 300ms ease-in, opacity 200ms ease-in;
+}
+.tl-panel:not([data-pos='active']) > * {
+  transform: translateY(5px);
+  opacity: 0;
+}
+.tl-panel[data-pos='active'] > * {
+  transition: transform 900ms var(--ui-settle), opacity 700ms var(--ui-settle);
+}
+.tl-panel[data-pos='active'] > :nth-child(1) {
+  transition-delay: 160ms;
+}
+.tl-panel[data-pos='active'] > :nth-child(2) {
+  transition-delay: 230ms;
+}
+.tl-panel[data-pos='active'] > :nth-child(3) {
+  transition-delay: 320ms;
+}
+.tl-panel[data-pos='active'] > :nth-child(n + 4) {
+  transition-delay: 420ms;
+}
+.tl-p-date {
+  margin: 0 0 var(--space-1);
+  font: 400 15px/22px var(--font-serif);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.tl-p-title {
+  margin: 0;
+  font: 500 clamp(24px, 6.4vw, 32px) / 1.12 var(--ui-display);
+  letter-spacing: -0.015em;
+}
+.tl-p-sum {
+  margin: var(--space-2) 0 0;
+  font: 400 18px/1.5 var(--font-serif);
+  color: var(--ink-muted);
+}
+.tl-p-img {
+  display: block;
+  margin-top: var(--space-4);
+  width: min(100%, 360px);
+  height: auto;
+  border-radius: var(--radius-md);
+}
+.tl-p-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-4);
+  margin: var(--space-2) 0 0;
+}
+.tl-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ink);
+  font: 500 15px/1 var(--font-sans);
+  text-decoration: underline;
+  text-decoration-color: var(--hairline);
+  text-underline-offset: 0.25em;
+  transition: color 240ms, text-decoration-color 240ms;
+}
+.tl-link:hover {
+  color: var(--accent);
+  text-decoration-color: currentColor;
+}
+.tl-link--quiet {
+  color: var(--ink-muted);
+  font-weight: 400;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tl-panel,
+  .tl-panel[data-pos='active'],
+  .tl-panel > *,
+  .tl-panel[data-pos='active'] > * {
+    transition: opacity 160ms linear, visibility 0s !important;
+    translate: none !important;
+    transform: none !important;
+    transition-delay: 0s !important;
+  }
+  .tl-tab {
+    transition: none;
+  }
+}
