@@ -1,5 +1,5 @@
 // Share images (1200x630) with the halmic logotype: home, one per game, one per video, one for the design entry.
-// Needs `sharp` (resolved from the working tree or WS_PATH-like env SHARP_PATH). Output: halmic/site/public/og/*.png
+// Needs `sharp` (resolved from the working tree or WS_PATH-like env SHARP_PATH). Output: halmic/public/og/*.png
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
@@ -11,7 +11,7 @@ let sharp;
 for (const p of [process.env.SHARP_PATH, 'sharp'].filter(Boolean)) { try { sharp = require(p); break; } catch { /* next */ } }
 if (!sharp) { console.warn('sharp not found; set SHARP_PATH. Skipping OG images (existing files kept).'); process.exit(0); }
 
-const out = path.join(root, 'site/public/og');
+const out = path.join(root, 'public/og');
 fs.mkdirSync(out, { recursive: true });
 const W = 1200, H = 630;
 const wordmark = fs.readFileSync(path.join(root, 'brand/svg/wordmark-c-paper.svg'));
@@ -40,11 +40,11 @@ async function card(name, { title, image, imageFit = 'cover', pixel = false }) {
 
 const games = JSON.parse(fs.readFileSync(path.join(root, 'content/games.json'), 'utf8')).games;
 const videos = JSON.parse(fs.readFileSync(path.join(root, 'content/videos.json'), 'utf8')).videos;
-await card('home', { title: 'streams, videos, games, design' });
-for (const g of games) if (g.coverLocal) await card(`game-${g.slug}`, { title: g.title.replace(/ \(.*\)$/, ''), image: path.join(root, 'site/public', g.coverLocal), pixel: true });
+await card('home', { title: 'productions' });
+for (const g of games) if (g.coverLocal) await card(`game-${g.slug}`, { title: g.title.replace(/ \(.*\)$/, ''), image: path.join(root, 'public', g.coverLocal), pixel: true });
 const cur = JSON.parse(fs.readFileSync(path.join(root, 'content/curation.json'), 'utf8')).videos;
 const pageIds = new Set([...cur.series.episodes, ...cur.other.map((o) => o.id)]);
 for (const f of fs.readdirSync(out)) if (f.startsWith('video-')) fs.rmSync(path.join(out, f));
-for (const v of videos) { const f = path.join(root, 'site/public', v.thumb); if (pageIds.has(v.id) && fs.existsSync(f)) await card(`video-${v.id}`, { title: v.title, image: f }); }
-await card('design-sedd', { title: 'Logo for Southeast Denver Dental', image: path.join(root, 'site/public/work/southeast-denver-dental-header.png'), imageFit: 'contain' });
+for (const v of videos) { const f = path.join(root, 'public', v.thumb); if (pageIds.has(v.id) && fs.existsSync(f)) await card(`video-${v.id}`, { title: v.title, image: f }); }
+await card('design-sedd', { title: 'Logo for Southeast Denver Dental', image: path.join(root, 'public/work/southeast-denver-dental-header.png'), imageFit: 'contain' });
 console.log('og images:', fs.readdirSync(out).length);

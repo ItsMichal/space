@@ -1,6 +1,6 @@
-# halmic
+# halmic productions
 
-> halmic (also halmicTV) streams games and codes stupid things on Twitch, makes edited videos on YouTube and tiny games on itch.io, and designs logos and other things. This is its home page.
+> halmic productions (also halmic, halmicTV): an assortment of various somewhat creative work I’ve done. It streams games and codes stupid things on Twitch, makes edited videos on YouTube and tiny games on itch.io, and designs logos and other things. This is its home page.
 
 ## Where to find halmic
 - Twitch: https://www.twitch.tv/halmictv
