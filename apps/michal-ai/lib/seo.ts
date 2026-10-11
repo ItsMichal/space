@@ -70,11 +70,25 @@ export const websiteJsonLd = {
   publisher: { '@id': `${SITE_URL}/#person` },
 }
 
+const HOME_TITLE = `${profile.name} — ${profile.titleTagline}`
+
 /** Metadata fragment for the home page: canonical + profile OG. Spread into the page's `metadata`. */
 export function homeMetadata(): Metadata {
   return {
     alternates: { canonical: SITE_URL },
-    openGraph: { type: 'profile', url: SITE_URL, siteName: SITE_NAME, firstName: profile.firstName, lastName: profile.lastName },
+    // Next replaces (not merges) `openGraph` per page, so the layout's og:image/title/description must be repeated here.
+    openGraph: {
+      type: 'profile',
+      url: SITE_URL,
+      siteName: SITE_NAME,
+      locale: 'en_US',
+      title: HOME_TITLE,
+      description: profile.description,
+      images: [{ url: absoluteUrl(DEFAULT_OG_IMAGE) }],
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+    },
+    twitter: { ...siteMetadata.twitter, title: HOME_TITLE, description: profile.description, images: [absoluteUrl(DEFAULT_OG_IMAGE)] },
   }
 }
 
