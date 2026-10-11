@@ -1,0 +1,60 @@
+{
+  "note": "All five works are public domain by age (hand-coloured engravings from 1761 to 1827). Cut-outs, colour-harmonizing and compression are ours (scripts/botanical-cutout.mjs); the artwork is unchanged otherwise. Originals are kept in assets-src/botanical/.",
+  "plates": [
+    {
+      "id": "dryas",
+      "species": "Dryas octopetala (mountain avens, holtasóley, Iceland's national flower)",
+      "work": "Flora Danica, fasc. 1, tab. 31 (Tab. XXXI)",
+      "creators": "Flora Danica (1761-1883): botanists G. C. Oeder, O. F. Müller, J. W. Hornemann and others; engraved and hand-coloured by the Flora Danica artists",
+      "date": "1761",
+      "institution": "Det Kgl. Bibliotek (Royal Danish Library), via Danmarks Natur- og Lægevidenskabelige Bibliotek scan",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Flora_Danica_Hft_01_Tab_0031.tif",
+      "institutionUrl": "https://digitalesamlinger.kb.dk/images/billed/2010/okt/billeder/object315488/da/",
+      "license": "Public domain (PD-old; Wikimedia Commons PD Old, CC-PD-Mark)"
+    },
+    {
+      "id": "silene",
+      "species": "Silene acaulis (moss campion, lambagras)",
+      "work": "Flora Danica, fasc. 1, tab. 21 (Tab. XXI)",
+      "creators": "Flora Danica (1761-1883)",
+      "date": "1761",
+      "institution": "Det Kgl. Bibliotek (Royal Danish Library), via Danmarks Natur- og Lægevidenskabelige Bibliotek scan",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Flora_Danica_Hft_01_Tab_0021.tif",
+      "institutionUrl": "https://digitalesamlinger.kb.dk/images/billed/2010/okt/billeder/object315478/da/",
+      "license": "Public domain (PD-old; Wikimedia Commons PD Old, CC-PD-Mark)"
+    },
+    {
+      "id": "papaver",
+      "species": "Papaver radicatum (arctic poppy, melasól)",
+      "work": "Flora Danica, fasc. 1, tab. 41 (Tab. XLI), titled Papaver nudicaule",
+      "creators": "Flora Danica (1761-1883)",
+      "date": "1761",
+      "institution": "Det Kgl. Bibliotek (Royal Danish Library), via Danmarks Natur- og Lægevidenskabelige Bibliotek scan",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Flora_Danica_Hft_01_Tab_0041.tif",
+      "institutionUrl": "https://digitalesamlinger.kb.dk/images/billed/2010/okt/billeder/object315497/da/",
+      "license": "Public domain (PD-old; Wikimedia Commons PD Old, CC-PD-Mark)"
+    },
+    {
+      "id": "eriophorum",
+      "species": "Eriophorum angustifolium (common cotton grass, fífa)",
+      "work": "Flora Danica, fasc. 25, tab. 1442 (Tab. MDCCCXLII)",
+      "creators": "Flora Danica (1761-1883)",
+      "date": "1813",
+      "institution": "Det Kgl. Bibliotek (Royal Danish Library), via Danmarks Natur- og Lægevidenskabelige Bibliotek scan",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Flora_Danica_Hft_25_Tab_1442.tif",
+      "institutionUrl": "https://digitalesamlinger.kb.dk/images/billed/2010/okt/billeder/object316658/da/",
+      "license": "Public domain (PD-old; Wikimedia Commons PD Old, CC-PD-Mark)"
+    },
+    {
+      "id": "lupinus",
+      "species": "Lupinus polyphyllus (garden lupine; a close stand-in for the Nootka lupine, Lupinus nootkatensis, that now carpets Iceland)",
+      "work": "Edwards's Botanical Register, vol. 13, plate 1096, text by John Lindley",
+      "creators": "John Lindley (text); plate lettered 'A. Hart del.' and 'J. Watts sc.' (as read from the scan); published by J. Ridgway, Piccadilly, 1 Oct 1827",
+      "date": "1827",
+      "institution": "Biodiversity Heritage Library scan, hosted on Wikimedia Commons",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lupinus_polyphyllus_Lindley_1827.jpg",
+      "institutionUrl": "https://www.biodiversitylibrary.org/",
+      "license": "Public domain (published 1827; Wikimedia Commons marks it public domain)"
+    }
+  ]
+}

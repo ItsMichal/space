@@ -1,0 +1,204 @@
+/* Prototype tokens and textures for /mood. Proposed additions only; nothing here is read by the live site. */
+
+/* The landing page is light only. While /mood is mounted, pin the site tokens to Birch, lift the paper a touch,
+   and switch the lidar field off (the plan: no dot field behind the page). */
+:root:has(.mood-root) {
+  color-scheme: light;
+  --lidar-opacity: 0;
+  --paper: #f8f6ef;
+  --paper-raised: #fdfcf8;
+  --paper-sunk: #ece8da;
+  --ink: #18211b;
+  --ink-muted: #525c4f;
+  --ink-faint: #7f8777;
+  --hairline: #ddd8c8;
+  --dot: #c2c2ab;
+  --accent: #3d6a35;
+  --focus: #1d6b74;
+  --glass-tint: rgba(253, 252, 248, 0.46);
+  --glass-rim: rgba(255, 255, 255, 0.95);
+  --glass-edge: rgba(24, 33, 27, 0.1);
+  --presence-1: #4f7d3c;
+  --presence-2: #2b7a8c;
+  --presence-3: #6b52b0;
+  --presence-4: #c9592a;
+  --presence-5: #9a7a00;
+  --presence-6: #b04462;
+  --shadow-glass: 0 1px 1px rgba(24, 33, 27, 0.04), 0 8px 24px -6px rgba(24, 33, 27, 0.14), 0 24px 48px -24px rgba(24, 33, 27, 0.18);
+}
+
+.mood-root {
+  --sky: #dcebf1;
+  --sun: #fff3d6;
+  --aqua: #3f9db3;
+  --aqua-deep: #23788c;
+  --leaf: #5f9a4f;
+}
+
+.mood-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Texture 1, the sky wash: sky at the top dissolving into paper by about 60% of the first screen, plus a faint
+   sun-warm corner. Fixed, so it never moves with scroll and never repaints. */
+.mood-wash {
+  background:
+    radial-gradient(60% 45% at 92% 4%, rgba(255, 243, 214, 0.75), rgba(255, 243, 214, 0) 70%),
+    linear-gradient(180deg, rgba(220, 235, 241, 0.85) 0%, rgba(220, 235, 241, 0.35) 34%, rgba(220, 235, 241, 0) 62%);
+}
+
+/* Texture 2, paper grain: procedural fractal noise, 180px tile, multiplied so it can only darken the paper by a hair. */
+.mood-grain {
+  opacity: 0.055;
+  mix-blend-mode: multiply;
+  background-size: 180px 180px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.45  0 0 0 0 0.42  0 0 0 0 0.36  0 0 0 1.2 -0.1'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* Texture 3, the plant shadow: one very large, very pale, softened plate behind everything, the way a pressed
+   specimen shows through the next page. It replaces the lidar field as the "something is out there" layer. */
+.mood-shadow img {
+  position: absolute;
+  left: -6vw;
+  bottom: -4vh;
+  width: min(70vw, 760px);
+  height: auto;
+  opacity: 0.07;
+  filter: grayscale(0.7) blur(1.4px);
+  mix-blend-mode: multiply;
+}
+@media (max-width: 639px) {
+  .mood-shadow img {
+    left: -22vw;
+    width: 120vw;
+    opacity: 0.06;
+  }
+}
+
+.mood-no-wash .mood-wash,
+.mood-no-grain .mood-grain,
+.mood-no-shadow .mood-shadow {
+  display: none;
+}
+
+.mood-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* Motion. Everything below is slow, tiny, non-interactive and removed under reduced motion.
+   Nothing pins, snaps, hijacks or delays scroll; browsers without scroll-driven animations just show the page. */
+.mood-arrive {
+  animation: mood-arrive 2.8s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@keyframes mood-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(10px) rotate(0.8deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.mood-sway {
+  transform-origin: 50% 100%;
+  animation: mood-sway 18s ease-in-out infinite alternate;
+}
+@keyframes mood-sway {
+  from {
+    transform: rotate(-0.55deg);
+  }
+  to {
+    transform: rotate(0.55deg);
+  }
+}
+@supports (animation-timeline: view()) {
+  .mood-drift {
+    animation: mood-drift linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 100vh;
+  }
+  .mood-rise {
+    animation: mood-rise linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 60%;
+  }
+}
+/* parallax: the specimen rises about 36px more slowly than the page over the first screen of scroll */
+@keyframes mood-drift {
+  to {
+    transform: translateY(36px);
+  }
+}
+@keyframes mood-rise {
+  from {
+    opacity: 0.15;
+    transform: translateY(16px) rotate(1.2deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mood-arrive,
+  .mood-sway,
+  .mood-drift,
+  .mood-rise {
+    animation: none;
+  }
+}
+.mood-still .mood-arrive,
+.mood-still .mood-sway,
+.mood-still .mood-drift,
+.mood-still .mood-rise {
+  animation: none;
+}
+
+/* Hero specimen placement: big, bleeding off the right edge, behind the type. */
+.mood-hero-art {
+  position: absolute;
+  right: -8vw;
+  top: 56px;
+  z-index: 0;
+}
+@media (max-width: 639px) {
+  .mood-hero-art {
+    right: -34px;
+    top: auto;
+    bottom: -36px;
+  }
+}
+
+/* If Michelangelus is installed on the visitor's device it is used; it is never shipped (its licence does not grant web embedding). */
+@font-face {
+  font-family: 'Michelangelus Local';
+  font-style: normal;
+  font-weight: 400 700;
+  src: local('Michelangelus'), local('Michelangelus Regular');
+}
+@font-face {
+  font-family: 'Michelangelus Local';
+  font-style: italic;
+  font-weight: 400 700;
+  src: local('Michelangelus Italic');
+}
+
+.mood-swatch {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+/* Swatches are petal-shaped, not circles. */
+.mood-petal {
+  display: block;
+  width: 30px;
+  height: 30px;
+  border-radius: 0 70% 0 70%;
+  transform: rotate(-8deg);
+}
