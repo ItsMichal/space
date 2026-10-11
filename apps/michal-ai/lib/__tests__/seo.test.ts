@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_SHARE_IMAGE, homeMetadata, listMetadata, shareImagePath, SITE_URL } from '../seo'
+import { DEFAULT_SHARE_IMAGE, homeMetadata, listMetadata, profilePageJsonLd, websiteJsonLd, shareImagePath, SITE_URL } from '../seo'
 
 const images = (v: unknown) => (Array.isArray(v) ? v : v ? [v] : [])
 
@@ -22,6 +22,16 @@ describe('share images', () => {
     expect(shareImagePath('/media/foo/cover.png')).toBe('/media/foo/cover.png')
     expect(DEFAULT_SHARE_IMAGE).toMatch(/\.jpg$/)
     expect(JSON.stringify(homeMetadata().openGraph?.images)).toContain('.jpg')
+  })
+})
+
+describe('home JSON-LD', () => {
+  it('wraps the Person in a ProfilePage and gives WebSite an alternateName', () => {
+    expect(profilePageJsonLd['@type']).toBe('ProfilePage')
+    expect(profilePageJsonLd.mainEntity['@id']).toBe(`${SITE_URL}/#person`)
+    expect(profilePageJsonLd.mainEntity['@type']).toBe('Person')
+    expect(profilePageJsonLd.mainEntity.alternateName).toBe('Michal Bodzianowski')
+    expect(websiteJsonLd.alternateName).toBe('Michal Bodzianowski')
   })
 })
 

@@ -52,6 +52,8 @@ export const metadata: Metadata = {
   title: { default: TITLE, template: `%s — ${profile.name}` },
   description: DESCRIPTION,
   robots: { index: true, follow: true },
+  // Google wants a crawlable square icon in a multiple of 48px; the file-based favicon.ico/icon.svg stay as they are.
+  icons: { icon: [{ url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }] },
   openGraph: {
     ...siteMetadata.openGraph,
     title: TITLE,

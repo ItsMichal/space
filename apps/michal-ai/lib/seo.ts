@@ -65,12 +65,25 @@ export const personJsonLd = {
   ],
 }
 
+/** ProfilePage wrapper for the home page; its mainEntity is the Person node (same @id the posts reference). */
+export const profilePageJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ProfilePage',
+  '@id': `${SITE_URL}/#profilepage`,
+  url: SITE_URL,
+  name: `${AUTHOR_NAME} — ${profile.titleTagline}`,
+  inLanguage: 'en-US',
+  isPartOf: { '@id': `${SITE_URL}/#website` },
+  mainEntity: { ...personJsonLd, '@context': undefined },
+}
+
 export const websiteJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   '@id': `${SITE_URL}/#website`,
   url: SITE_URL,
   name: SITE_NAME,
+  alternateName: profile.asciiName,
   inLanguage: 'en-US',
   publisher: { '@id': `${SITE_URL}/#person` },
 }
