@@ -44,7 +44,7 @@ export default function Home() {
         intro={hooks.length ? <HeroHook stem={profile.hookStem} items={hooks} /> : undefined}
       />
 
-      <section id="work" aria-labelledby="work-h" className="mt-space-16 md:mt-space-24">
+      <section id="work" aria-labelledby="work-h" className="mt-[104px] md:mt-space-24">
         <h2 id="work-h" className={h2}>
           Selected work
         </h2>

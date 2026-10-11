@@ -30,7 +30,7 @@ type Props = {
 /** Hero: name, role and the intro slot (the rotating "lately I've built" line). All in the display face. */
 export function NameHeader({ first, last, role, intro }: Props) {
   return (
-    <header className="pt-[112px] max-md:min-h-[calc(100svh-120px)] md:pt-[150px]">
+    <header className="pt-[112px] md:pt-[150px]">
       <h1
         style={rootVars}
         className="settle font-display font-normal leading-[0.88] tracking-[-0.025em] text-[clamp(52px,calc((100vw-32px)/5.55),76px)] md:text-[clamp(110px,calc((100vw-64px)/5.55),176px)]"
