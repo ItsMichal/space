@@ -11,6 +11,8 @@ for (const p of ['ws', process.env.WS_PATH ?? 'ws']) { try { WebSocket = require
 const [url, out, W = '1280', H = '800', ...flags] = process.argv.slice(2);
 const full = flags.includes('full'), mobile = flags.includes('mobile');
 const waitMs = +(flags.find((f) => /^\d+$/.test(f)) ?? 1500);
+const dpr = flags.includes('dpr2') ? 2 : (mobile ? 2 : 1);
+const clipArg = flags.find((f) => f.startsWith('clip='))?.slice(5).split(',').map(Number);
 const scrollY = +(flags.find((f) => /^y\d+$/.test(f))?.slice(1) ?? 0);
 const port = 9300 + Math.floor(Math.random() * 400);
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'shot-'));
@@ -25,7 +27,7 @@ try {
   ws.on('message', (m) => { const d = JSON.parse(m); if (d.id && pending.has(d.id)) { pending.get(d.id)(d); pending.delete(d.id); } });
   const send = (method, params = {}) => new Promise((r) => { const i = ++id; pending.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
   await send('Page.enable');
-  await send('Emulation.setDeviceMetricsOverride', { width: +W, height: +H, deviceScaleFactor: mobile ? 2 : 1, mobile });
+  await send('Emulation.setDeviceMetricsOverride', { width: +W, height: +H, deviceScaleFactor: dpr, mobile });
   await send('Page.navigate', { url });
   await sleep(waitMs);
   if (scrollY) { await send('Runtime.evaluate', { expression: `window.scrollTo(0, ${scrollY})` }); await sleep(900); }
@@ -39,7 +41,8 @@ try {
     const h = Math.ceil(m.result.cssContentSize.height);
     clip = { x: 0, y: 0, width: +W, height: Math.min(h, 12000), scale: 1 };
   }
-  const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: !!full, ...(clip ? { clip } : {}) });
+  if (clipArg) clip = { x: clipArg[0], y: clipArg[1], width: clipArg[2], height: clipArg[3], scale: 1 };
+  const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: !!(full || clipArg), ...(clip ? { clip } : {}) });
   fs.writeFileSync(out, Buffer.from(shot.result.data, 'base64'));
   ws.close();
   console.log('saved', out);

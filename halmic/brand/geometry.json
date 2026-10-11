@@ -16,7 +16,7 @@
       "cAperture": 42,
       "cWidth": 1,
       "gap": 30,
-      "width": 931.94,
+      "width": 895.74,
       "height": 235.02
     },
     "b": {
@@ -29,7 +29,7 @@
       "cAperture": 44,
       "cWidth": 1,
       "gap": 40,
-      "width": 1035.09,
+      "width": 990.56,
       "height": 235.02
     },
     "c": {
@@ -45,7 +45,7 @@
       "cAperture": 48,
       "cWidth": 1,
       "gap": 20,
-      "width": 871.23,
+      "width": 859.81,
       "height": 235.02
     }
   },
@@ -83,6 +83,15 @@
     "mark-paper.svg",
     "mark-tile-accent.svg",
     "mark-accent.svg",
-    "construction-c.svg"
+    "construction-c.svg",
+    "spacing-proof-a-fixed.svg",
+    "wordmark-a-before.svg",
+    "spacing-proof-a-optical.svg",
+    "spacing-proof-b-fixed.svg",
+    "wordmark-b-before.svg",
+    "spacing-proof-b-optical.svg",
+    "spacing-proof-c-fixed.svg",
+    "wordmark-c-before.svg",
+    "spacing-proof-c-optical.svg"
   ]
 }
