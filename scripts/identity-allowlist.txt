@@ -1,0 +1,5 @@
+# Paths (relative to the repo root, glob syntax: * within a segment, ** across segments) that the SOFT reverse
+# check (portfolio copy mentioning the halmic handle) accepts. Historical post bodies and logo assets only.
+apps/michal-ai/content/posts/mountaintop-first-steps-week-1-2-recap.md
+apps/michal-ai/content/posts/mountaintop-stay-on-beat-week-2-3-recap.md
+apps/michal-ai/public/**/halmic*

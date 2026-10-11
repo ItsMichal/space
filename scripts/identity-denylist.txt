@@ -1,0 +1,8 @@
+# Case-insensitive regexes, one per line. Lines starting with # are comments.
+# apps/halmic must not contain any of these in shipped source, content, public files or build output.
+# (This file lives at the repo root, outside apps/halmic, precisely so it is never scanned itself.)
+micha(?!el)
+bodzian
+mbodzian
+itsmichal
+michaljbodzianowski
