@@ -39,6 +39,7 @@ h2.wide { max-width: none; margin-bottom: var(--s4); }
 
 .vfeat { max-width: 1000px; margin-bottom: var(--s6); }
 .vfeat .vt { font: 700 clamp(22px, 2.6vw, 34px)/1.1 var(--display); letter-spacing: var(--dtrack); margin-top: 16px; }
+.reel + .gmeta { margin-top: var(--s3); }
 .reel { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s4) var(--s3); }
 @media (max-width: 900px) { .reel { display: flex; overflow-x: auto; scroll-snap-type: x proximity; scroll-padding-inline: var(--gut); gap: 16px; margin-inline: calc(var(--gut) * -1); padding-inline: var(--gut); touch-action: pan-x pan-y; scrollbar-width: none; } .reel .vid { flex: 0 0 74%; scroll-snap-align: start; } }
 
