@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { GlassEffectContainer, GlassFold, GlassFoldItem, glass, useGlassNamespace } from '@/components/glass'
 import { StatusSlot } from '@/components/ui/StatusPill'
-import { HalmicMark } from './HalmicMark'
+import { SiteMark } from './SiteMark'
 
 const links = [
   { label: 'Work', href: '/projects', match: '/projects' },
@@ -87,7 +87,7 @@ export function NavBar() {
           header={
             <>
               <Link href="/" aria-label="Home" className="flex min-h-[44px] items-center rounded-sm text-ink" onClick={close}>
-                <HalmicMark height={18} />
+                <SiteMark height={18} />
               </Link>
               <ul className="m-0 hidden list-none items-center gap-space-6 p-0 sm:flex">
                 {links.map((l) => (

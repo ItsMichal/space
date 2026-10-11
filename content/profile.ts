@@ -19,7 +19,6 @@ export const profile = {
   lastName: 'Bodzianowski',
   /** ASCII spelling, only for search (JSON-LD alternateName). */
   asciiName: 'Michal Bodzianowski',
-  nickname: 'halmic',
   jobTitle: 'Software Engineer',
   /** Hero role line. Keep it short so it sits on one or two lines at 375px. */
   role: 'Creative developer. AI, web and systems.',

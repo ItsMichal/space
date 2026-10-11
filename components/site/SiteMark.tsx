@@ -1,5 +1,5 @@
-/** The halmic mark (public/logo.svg), filled with currentColor. */
-export function HalmicMark({ height = 24, className }: { height?: number; className?: string }) {
+/** The site mark (public/logo.svg), filled with currentColor. */
+export function SiteMark({ height = 24, className }: { height?: number; className?: string }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

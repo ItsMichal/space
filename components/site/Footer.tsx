@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { siteConfig } from '@/site.config'
 import { profile } from '@/content/profile'
-import { HalmicMark } from './HalmicMark'
+import { SiteMark } from './SiteMark'
 
 const linkCls = 'text-ink-muted transition-colors duration-150 hover:text-accent'
 
@@ -10,17 +10,12 @@ export function Footer() {
     <footer className="relative mt-space-24 px-space-4 pb-space-12 md:px-space-8">
       <div className="mx-auto flex max-w-content flex-col gap-space-4 border-t border-hairline pt-space-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-space-3 text-ink">
-          <Link href="/" aria-label="halmic, home" className="rounded-sm">
-            <HalmicMark height={24} />
+          <Link href="/" aria-label="Home" className="rounded-sm">
+            <SiteMark height={24} />
           </Link>
           <span className="font-serif text-meta text-ink-muted">
             © {new Date().getFullYear()} {profile.name}
           </span>
-          {siteConfig.halmic.live ? (
-            <a className={`font-serif text-meta ${linkCls}`} href={siteConfig.halmic.url} rel="me">
-              halmic
-            </a>
-          ) : null}
         </div>
         <nav aria-label="Elsewhere" className="flex gap-space-6 text-body-strong">
           <a className={linkCls} href={siteConfig.github} target="_blank" rel="noreferrer">

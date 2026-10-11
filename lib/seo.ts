@@ -57,7 +57,6 @@ export const personJsonLd = {
     siteConfig.github,
     siteConfig.linkedin,
     `https://twitter.com/${siteConfig.twitter.replace(/^@/, '')}`,
-    ...(siteConfig.halmic.live ? [siteConfig.halmic.url] : []),
   ],
 }
 

@@ -14,7 +14,7 @@ Printed matter in a northern landscape: a birch-paper page, basalt ink, moss for
 
 ## Content
 
-First person, plain, a little playful, short declarative lines. Sentence case everywhere: **no uppercase text, no letter-spaced small caps.** The name is **Michał Bodzianowski** (with ł); URLs, handles and file names stay ASCII; the nickname **halmic** is lowercase. No emoji in titles or UI. Spec lines (year, stack, role) and dates are small serif in `ink-muted`, joined with ` · `. Copy lives in `content/profile.ts` (about, experience, hero stem) and each post's frontmatter (`hook` feeds the work line).
+First person, plain, a little playful, short declarative lines. Sentence case everywhere: **no uppercase text, no letter-spaced small caps.** The name is **Michał Bodzianowski** (with ł); URLs, handles and file names stay ASCII. No emoji in titles or UI. Spec lines (year, stack, role) and dates are small serif in `ink-muted`, joined with ` · `. Copy lives in `content/profile.ts` (about, experience, hero stem) and each post's frontmatter (`hook` feeds the work line).
 
 ## Color
 
@@ -53,7 +53,7 @@ Thin convex lens: refraction at the rim, frost, vibrancy, tint, specular rim, `s
 
 ## Shape language
 
-Decorative elements never use primitive shapes: strokes have pressure, blobs have seeded harmonics, leaves are asymmetric, page-control seeds each differ. Controls keep clean geometry: pills, 44px targets, 1px hairlines (or the hand-drawn hair that links and fact rows rest on). Lucide icons at 1.5px stroke, 20px. The halmic mark is the favicon and a 24px footer mark.
+Decorative elements never use primitive shapes: strokes have pressure, blobs have seeded harmonics, leaves are asymmetric, page-control seeds each differ. Controls keep clean geometry: pills, 44px targets, 1px hairlines (or the hand-drawn hair that links and fact rows rest on). Lucide icons at 1.5px stroke, 20px. The site mark is the favicon and a 24px footer mark.
 
 ## Motion
 
