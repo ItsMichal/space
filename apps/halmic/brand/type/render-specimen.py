@@ -138,6 +138,78 @@ def bodies():
     return f'<section class="card"><div class="main" style="width:100%"><h2>Body faces at 16px</h2><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px">{rows}</div></div></section>'
 
 
+def text_css():
+    c = [css()]
+    c.append("@font-face{font-family:HalmicText;src:url('%s');font-weight:400 800}" % ("file://" + os.path.join(OUT, "halmic-text-latin.woff2")))
+    return "\n".join(c)
+
+
+FACES = [("Halmic Text 400", "HalmicText", 400), ("Nunito Sans 400", "NunitoSansA", 400), ("Geist 400 (previous)", "Geist", 400)]
+CONF = "Il1| O0 rn m cl d a o g q 9 &#8216;&#8217; &#8220;&#8221; &hellip; &ndash; &mdash; ( ) [ ] / &amp; @ #"
+LATEXT = "&#321;&oacute;d&#378;, &Aring;ngstr&ouml;m, &#268;e&scaron;tina, fa&ccedil;ade, &ntilde;and&uacute;, &#350;&#304;&#286;, &#258;&#7871;&#7881;"
+NAV = "stream &nbsp;&nbsp; videos &nbsp;&nbsp; games &nbsp;&nbsp; design &nbsp;&nbsp; say hi"
+
+
+def para_col(label, fam, w, dark):
+    fg, mute = ("#f1ece1", "#a29eae") if dark else ("#0f0e13", "#5d5848")
+    paras = "".join(f'<p style="font-size:{s}px;line-height:1.55;margin:0 0 10px">{PARA}</p>' for s in (14, 16, 18))
+    return f"""<div class="tcol" style="font-family:{fam};font-weight:{w};color:{fg}">
+  <h3 style="font-family:NunitoSansA;color:{'#7fa6ff' if dark else '#1d4fe0'}">{label}</h3>{paras}
+  <p style="font-size:16px;margin:0 0 8px;letter-spacing:.02em">{CONF}</p>
+  <p style="font-size:15px;margin:0 0 8px;color:{mute}">{NAV}</p>
+  <p style="font-size:13px;margin:0 0 8px;color:{mute}">Caption: last stream Sep 2025 &middot; 4 episodes &middot; 6 games &middot; <em>emphasised</em> and <b>bold</b></p>
+  <p style="font-size:16px;margin:0 0 8px;font-variant-numeric:tabular-nums">1111 8888 0123456789<br>1,284 plays &middot; 10:19 &middot; 3.14 &middot; 2022&ndash;2026</p>
+  <p style="font-size:15px;margin:0">{LATEXT}</p></div>"""
+
+
+def text_section():
+    dark = "".join(para_col(l, f, w, True) for l, f, w in FACES)
+    light = "".join(para_col(l, f, w, False) for l, f, w in FACES)
+    return f"""<section class="card" style="display:block"><h2>Halmic Text against Nunito Sans and Geist, 14 / 16 / 18px</h2>
+<p class="note">Halmic Text is Nunito (upright, weight 400 to 800, spacing and kerning untouched). em and b show the 700 weight; no synthetic italic.</p>
+<div class="tgrid" style="background:#0f0e13">{dark}</div><div class="tgrid" style="background:#f1ece1;margin-top:0">{light}</div></section>"""
+
+
+def slant_section():
+    rows = "".join(
+        f'<div style="margin:10px 0;font:400 16px/1.55 HalmicText;max-width:640px"><span style="font:700 12px NunitoSans A;color:#7fa6ff">{d}&deg; </span>'
+        f'<span style="display:inline-block;transform:skewX(-{d}deg);transform-origin:0 100%">{PARA}</span></div>'
+        for d in (0, 3, 5, 13)).replace("NunitoSans A", "NunitoSansA")
+    return f'<section class="card" style="display:block"><h2>Slant test on the text face (CSS skew): 0, 3, 5, 13 degrees</h2><div style="width:700px">{rows}</div></section>'
+
+
+def together_section():
+    wm = wordmark(70)
+    hero = f"""<div class="mock"><div class="wm" style="margin-bottom:16px">{wm}</div>
+  <div style="font:750 32px/1.05 HalmicDisplay">halmic productions</div>
+  <div style="font:500 20px/1.35 HalmicText;margin-top:8px;max-width:30ch">An assortment of various somewhat creative work I&rsquo;ve done.</div>
+  <div style="margin-top:16px;font:700 16px HalmicText"><span class="btn" style="font:700 16px HalmicText;margin:0">Watch on Twitch</span> <span class="btn" style="font:600 16px HalmicText;background:none;color:#f1ece1;border:1px solid #2c2938">See what I&rsquo;ve made</span></div></div>"""
+    card_ = """<div class="mock"><div style="aspect-ratio:16/9;background:#23202e;border-radius:18px;position:relative"><span style="position:absolute;left:14px;top:12px;background:#0f0e13c7;border-radius:99px;padding:2px 12px;font:700 18px HalmicDisplay">4</span></div>
+  <div style="font:750 24px/1.1 HalmicDisplay;margin-top:14px">Episode 4, the latest</div>
+  <div style="font:400 14px HalmicText;color:#a29eae;margin-top:6px">10:19 &middot; Sep 2025</div>
+  <div style="font:400 16px/1.5 HalmicText;margin-top:10px">My friends, a FIFA lobby and a lot of bad shots, cut down to the funny parts.</div></div>"""
+    rows = [("Episode 4, the latest", "10:19 &middot; Sep 2025"), ("Episode 3", "10:42 &middot; Oct 2022"), ("Episode 2", "9:18 &middot; Aug 2022"), ("Special Force 1: Origins", "6:02 &middot; 2021")]
+    lst = '<div class="mock"><div style="font:750 28px/1.1 HalmicDisplay;margin-bottom:10px">Videos</div>' + "".join(
+        f'<div style="display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px solid #2c2938"><span style="font:750 18px HalmicDisplay">{a}</span><span style="font:400 14px HalmicText;color:#a29eae;white-space:nowrap">{b}</span></div>' for a, b in rows) + "</div>"
+    return f'<section class="card" style="display:block"><h2>Display + Text together: hero, video card, list</h2><div style="display:flex;gap:28px;align-items:flex-start;margin-top:10px">{hero}{card_}{lst}</div></section>'
+
+
+def html_text():
+    return f"""<!doctype html><meta charset="utf-8"><title>halmic text specimen</title>
+<style>{text_css()}
+body{{margin:0;background:#0f0e13;color:#f1ece1;font:15px/1.4 NunitoSansA,sans-serif;padding:28px 32px;width:1496px}}
+h1{{font:700 20px NunitoSansA;margin:0 0 4px}} h2{{font:700 17px NunitoSansA;margin:0;color:#7fa6ff}} h3{{font:700 13px NunitoSansA;margin:0 0 8px}}
+em{{font-style:normal;font-weight:700}} .note{{margin:2px 0 14px;color:#a29eae;font-size:13px}}
+.card{{border-top:1px solid #2c2938;padding:20px 0}}
+.tgrid{{display:grid;grid-template-columns:repeat(3,1fr);gap:0}} .tcol{{padding:20px 24px}}
+.mock{{width:440px;border:1px solid #2c2938;border-radius:18px;padding:20px;background:#0f0e13}} .mock .wm svg{{max-width:100%}}
+.btn{{display:inline-block;background:#3d7bff;color:#0f0e13;padding:9px 18px;border-radius:999px}}
+</style>
+<h1>halmic text specimen: Halmic Text with Halmic Display</h1>
+{text_section()}{slant_section()}{together_section()}
+"""
+
+
 def html():
     return f"""<!doctype html><meta charset="utf-8"><title>halmic type specimen</title>
 <style>{css()}
@@ -162,12 +234,15 @@ def main():
     ap.add_argument("--chrome", default="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
     ap.add_argument("--width", type=int, default=1560)
     ap.add_argument("--height", type=int, default=4420)
-    ap.add_argument("--out", default=os.path.join(HERE, "specimen.png"))
+    ap.add_argument("--part", choices=["faces", "text"], default="faces",
+                    help="faces: current vs candidates vs Halmic Display (specimen.png); text: Halmic Text block (specimen-text.png)")
+    ap.add_argument("--out")
     a = ap.parse_args()
+    a.out = a.out or os.path.join(HERE, "specimen.png" if a.part == "faces" else "specimen-text.png")
     fetch()
     # the page holds absolute file:// font paths, so it lives in a temp dir, never inside the repo
     page = os.path.join(tempfile.mkdtemp(prefix="halmic-specimen-"), "specimen.html")
-    open(page, "w").write(html())
+    open(page, "w").write(html() if a.part == "faces" else html_text())
     subprocess.run([a.chrome, "--headless=new", "--disable-gpu", "--hide-scrollbars", "--force-device-scale-factor=1",
                     f"--window-size={a.width},{a.height}", f"--screenshot={a.out}", "file://" + page], check=True)
     print("wrote", a.out)

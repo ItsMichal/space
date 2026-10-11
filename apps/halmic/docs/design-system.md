@@ -34,7 +34,7 @@ Why darker and more vivid than the portfolio: it is a stage (streams are watched
 ## Type
 
 - **Halmic Display** (headings; derived from Nunito, SIL OFL 1.1, built by `brand/type/build-display.py`): Nunito at the weight whose stem matches the logotype bar, slanted 13 degrees, with the logotype's own h a l m i c, kerned so "halmic" typed in it reproduces the wordmark spacing. One weight, 10 KB woff2, preloaded, with a size-adjusted fallback. Tracking is 0 (the face carries its spacing); line-height about 1.
-- **Nunito Sans** (body and UI, variable 400 to 800, SIL OFL 1.1), self-hosted as latin and latin-ext woff2; body 400 at 17px. Same family lineage as the display face, calmer and upright. (Replaced Geist; `brand/type/specimen.png` has the comparison.) Display scale is carried by the wordmark itself. No serif here.
+- **Halmic Text** (body, UI, captions; Nunito, SIL OFL 1.1, built by `brand/type/build-text.py`): one variable file on weight 400 to 800, upright, the skeleton's own spacing and kerning, renamed and subset (latin and latin-ext woff2, about 32 KB each). Body 400 at 17px, emphasis is the 700 weight (no italic is shipped; `em` maps to 700 and font synthesis is off). It is Nunito on purpose: the logotype's single-storey a, M-shaped m and plain-stem l were tested at 14 to 18px and do not survive in paragraphs, so the text face keeps only the round terminals and dots it shares with Halmic Display. Display scale is carried by the wordmark itself. No serif here.
 - Body 17px/1.5, sentence case, one weight step up (500 to 600) for ledes.
 
 ## Marks
