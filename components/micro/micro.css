@@ -1,0 +1,427 @@
+/* Micro-interaction prototypes. Dev only (see app/micro/page.dev.tsx). Every effect has a reduced-motion collapse and a
+   touch equivalent. Law: slow soft ease-out, <=12px travel, <=2% scale, opacity first. */
+
+@property --feather {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 62%;
+}
+@property --r {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
+/* 1. Tendril underline: grows from the left, withdraws to the right. */
+.m-tendril {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--hairline);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  background-image: linear-gradient(var(--accent), var(--accent));
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  background-position: 100% calc(100% - 0.02em);
+  padding-bottom: 0.2em;
+  transition:
+    background-size 320ms var(--ease-in-out-soft),
+    color var(--motion-fast) var(--ease-out-soft);
+}
+.m-tendril:hover,
+.m-tendril:focus-visible,
+.m-tendril:active {
+  color: var(--accent);
+  background-size: 100% 1px;
+  background-position: 0% calc(100% - 0.02em);
+  transition:
+    background-size 420ms var(--ease-out-soft),
+    color var(--motion-fast) var(--ease-out-soft);
+}
+@media (prefers-reduced-motion: reduce) {
+  .m-tendril,
+  .m-tendril:hover,
+  .m-tendril:focus-visible,
+  .m-tendril:active {
+    transition: none;
+  }
+}
+
+/* 2. Settling title: a sheet laid down; each line lands a hair after the one above. */
+.m-settle > span {
+  display: block;
+  animation: m-settle 1400ms var(--ease-out-soft) both;
+  animation-delay: calc(120ms + var(--i, 0) * 90ms);
+}
+@keyframes m-settle {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .m-settle > span {
+    animation: m-fade 150ms linear both;
+  }
+}
+@keyframes m-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* 3. Slow arrival: opacity quickly, settle for seconds. Clipped to the frame. */
+.m-arrive {
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--paper-sunk);
+}
+.m-arrive > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: translateY(8px) scale(1.02);
+  transition:
+    opacity 1400ms var(--ease-out-soft),
+    transform 2400ms var(--ease-out-soft);
+}
+.m-arrive[data-in='true'] > img {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .m-arrive > img {
+    transform: none;
+    transition: opacity 400ms linear;
+  }
+}
+
+/* 4. Breathing edge: the feathered edge inhales on hover, press or focus. */
+.m-edge {
+  position: relative;
+  overflow: hidden;
+  --feather: 62%;
+  -webkit-mask-image: radial-gradient(ellipse 78% 78% at 50% 50%, #000 var(--feather), transparent 100%);
+  mask-image: radial-gradient(ellipse 78% 78% at 50% 50%, #000 var(--feather), transparent 100%);
+  transition: --feather 1400ms var(--ease-out-soft);
+  -webkit-tap-highlight-color: transparent;
+}
+.m-edge > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1);
+  transition: transform 1400ms var(--ease-out-soft);
+}
+.m-edge:hover,
+.m-edge:focus-visible,
+.m-edge:active {
+  --feather: 78%;
+  transition-duration: 900ms;
+}
+.m-edge:hover > img,
+.m-edge:focus-visible > img,
+.m-edge:active > img {
+  transform: scale(1.012);
+  transition-duration: 900ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .m-edge,
+  .m-edge > img {
+    transition: none;
+  }
+  .m-edge:hover > img,
+  .m-edge:focus-visible > img,
+  .m-edge:active > img {
+    transform: none;
+  }
+}
+
+/* 5. Blossom lean: transform written by a spring; here only the anchor. */
+.m-lean {
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-y;
+  border-radius: 12px;
+  background: var(--paper-sunk);
+}
+.m-lean__layer {
+  position: absolute;
+  inset: -4%;
+  width: 108%;
+  height: 108%;
+  object-fit: cover;
+  will-change: transform;
+  transform-origin: 100% 100%;
+}
+
+/* 6. Ink-soak press. */
+.m-ink {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  appearance: none;
+  border: 1px solid var(--hairline);
+  background: var(--paper-raised);
+  color: var(--ink);
+  font: 500 16px/1 var(--font-sans);
+  letter-spacing: -0.005em;
+  min-height: 44px;
+  padding: 0 var(--space-6);
+  border-radius: 999px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 160ms var(--ease-out-soft),
+    border-color var(--motion-fast) var(--ease-out-soft);
+}
+.m-ink::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  --r: 0%;
+  background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), color-mix(in srgb, var(--ink) 11%, transparent) var(--r), transparent calc(var(--r) + 28%));
+  opacity: 0;
+  transition:
+    opacity 900ms var(--ease-out-soft),
+    --r 900ms var(--ease-out-soft);
+}
+.m-ink[data-soak='true']::before {
+  opacity: 1;
+  --r: 150%;
+  transition:
+    --r 640ms var(--ease-out-soft),
+    opacity 100ms linear;
+}
+.m-ink:active {
+  transform: scale(0.995);
+}
+.m-ink:hover {
+  border-color: var(--ink-faint);
+}
+@media (prefers-reduced-motion: reduce) {
+  .m-ink,
+  .m-ink::before,
+  .m-ink[data-soak='true']::before {
+    transition: none;
+  }
+  .m-ink:active {
+    transform: none;
+    background: var(--paper-sunk);
+  }
+}
+
+/* 7. Row hairline growth. */
+.m-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-2) var(--space-6);
+  padding: var(--space-6) 0;
+  border-top: 1px solid var(--hairline);
+  color: inherit;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.m-row::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 0;
+  height: 1px;
+  width: 100%;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 320ms var(--ease-in-out-soft);
+}
+.m-row__t {
+  font: 600 21px/1.25 var(--font-sans);
+  letter-spacing: -0.01em;
+  transition:
+    transform 500ms var(--ease-out-soft),
+    color var(--motion-fast) var(--ease-out-soft);
+}
+.m-row__m {
+  font: 400 15px/22px var(--font-serif);
+  color: var(--ink-muted);
+  transition: color 400ms var(--ease-out-soft);
+}
+.m-row:hover::before,
+.m-row:focus-visible::before,
+.m-row:active::before {
+  transform: scaleX(1);
+  transition: transform 600ms var(--ease-out-soft);
+}
+.m-row:hover .m-row__t,
+.m-row:focus-visible .m-row__t,
+.m-row:active .m-row__t {
+  transform: translateX(4px);
+  color: var(--accent);
+}
+.m-row:hover .m-row__m,
+.m-row:focus-visible .m-row__m,
+.m-row:active .m-row__m {
+  color: var(--ink);
+}
+@media (prefers-reduced-motion: reduce) {
+  .m-row::before,
+  .m-row__t,
+  .m-row:hover::before,
+  .m-row:focus-visible::before,
+  .m-row:active::before {
+    transition: none;
+  }
+  .m-row:hover .m-row__t,
+  .m-row:focus-visible .m-row__t,
+  .m-row:active .m-row__t {
+    transform: none;
+  }
+}
+
+/* 8. Leaf shadow: a cloud-slow pass across the paper. Scoped to its panel here; fixed under content in production. */
+.m-shadow {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+}
+.m-shadow__leaf {
+  position: absolute;
+  top: -10%;
+  left: -40%;
+  width: 60%;
+  height: 120%;
+  opacity: 0;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  animation: m-shadow 40s var(--ease-in-out-soft) infinite;
+}
+@keyframes m-shadow {
+  0% {
+    transform: translateX(0) rotate(-6deg);
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.09;
+  }
+  70% {
+    opacity: 0.09;
+  }
+  100% {
+    transform: translateX(260%) rotate(4deg);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .m-shadow__leaf {
+    animation: none;
+    display: none;
+  }
+}
+
+/* 9. Petal fall: one petal, once. */
+.m-petal-stage {
+  position: relative;
+  overflow: hidden;
+}
+.m-petal {
+  position: absolute;
+  top: -24px;
+  left: 62%;
+  width: 22px;
+  height: 28px;
+  opacity: 0;
+  pointer-events: none;
+  animation: m-fall 9000ms linear both;
+}
+.m-petal svg {
+  display: block;
+  animation: m-sway 9000ms ease-in-out both;
+}
+@keyframes m-fall {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  9% {
+    opacity: 0.85;
+  }
+  84% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(var(--fall, 260px));
+    opacity: 0;
+  }
+}
+@keyframes m-sway {
+  0% {
+    transform: translateX(0) rotate(-10deg);
+  }
+  25% {
+    transform: translateX(14px) rotate(8deg);
+  }
+  50% {
+    transform: translateX(-6px) rotate(24deg);
+  }
+  75% {
+    transform: translateX(12px) rotate(40deg);
+  }
+  100% {
+    transform: translateX(2px) rotate(52deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .m-petal {
+    display: none;
+  }
+}
+
+/* 10. Footnote dew: the landing spot dries slowly. */
+.m-fn:target {
+  animation: m-dew 2800ms var(--ease-in-out-soft) both;
+}
+@keyframes m-dew {
+  0%,
+  15% {
+    background-color: color-mix(in srgb, var(--accent) 14%, transparent);
+    box-shadow: -2px 0 0 color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: -2px 0 0 transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .m-fn:target {
+    animation: none;
+    background-color: color-mix(in srgb, var(--accent) 14%, transparent);
+  }
+}
+
+/* Page furniture for the showcase only. */
+.m-sec {
+  padding: var(--space-12) 0;
+  border-top: 1px solid var(--hairline);
+}
+.m-label {
+  font: italic 400 15px/22px var(--font-serif);
+  color: var(--ink-muted);
+  margin: 0 0 var(--space-4);
+}
+.m-replay {
+  font: 400 15px/22px var(--font-serif);
+  color: var(--ink-muted);
+  background: none;
+  border: 0;
+  padding: var(--space-2) 0;
+  min-height: 44px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--hairline);
+  text-underline-offset: 0.2em;
+}
