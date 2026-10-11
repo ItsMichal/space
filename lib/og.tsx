@@ -69,7 +69,7 @@ export function renderPostOg(post: Post) {
           }}
         >
           <div style={{ display: 'flex' }}>Michał Bodzianowski</div>
-          <div style={{ display: 'flex', color: MUTED }}>michal.us</div>
+          <div style={{ display: 'flex', color: MUTED }}>michal.ai</div>
         </div>
       </div>
     ),

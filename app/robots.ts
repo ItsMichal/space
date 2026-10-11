@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: '/private/',
     },
-    sitemap: 'https://michal.us/sitemap.xml',
+    sitemap: 'https://michal.ai/sitemap.xml',
   }
 }

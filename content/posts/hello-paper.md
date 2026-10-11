@@ -11,7 +11,7 @@ draft: true
 
 ## Headings get anchors
 
-Body text with **bold**, _italic_, `inline code`, and a [link](https://michal.us).
+Body text with **bold**, _italic_, `inline code`, and a [link](https://michal.ai).
 
 - GFM list
 - [x] task item

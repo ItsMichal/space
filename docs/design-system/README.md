@@ -1,4 +1,4 @@
-# Paper: the design system for michal.us
+# Paper: the design system for michal.ai
 
 Printed matter in a northern landscape: a birch-paper page, basalt ink, moss for the one living accent, out-of-focus flowers behind the text, and liquid glass for the few things that float. This file is the law; `benchmark.md` is the professional bar every screen is held to and `docs/motion/craft.md` is the standard every motion must meet. Tokens: `tokens.json` (generates `app/styles/tokens.css` via `npm run tokens`).
 
