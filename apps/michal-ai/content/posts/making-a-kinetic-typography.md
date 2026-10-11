@@ -4,9 +4,8 @@ slug: making-a-kinetic-typography
 kind: article
 description: "For my Motion course, I was tasked with making a Kinetic typography animation."
 date: 2021-09-20
-tags: ["Motion Graphics", "Typography", "Animation"]
-draft: true
-canonical: "https://halmic.medium.com/making-a-kinetic-typography-58e52217cab0"
+tags: ["Motion Design", "Typography", "Animation"]
+originalUrl: "https://halmic.medium.com/making-a-kinetic-typography-58e52217cab0"
 ---
 
 ::youtube{id="MflsgTYU8O8"}

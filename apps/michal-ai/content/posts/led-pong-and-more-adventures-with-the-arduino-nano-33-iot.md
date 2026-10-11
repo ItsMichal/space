@@ -2,15 +2,14 @@
 title: "LED Pong and more adventures with the Arduino Nano 33 IoT"
 slug: led-pong-and-more-adventures-with-the-arduino-nano-33-iot
 kind: article
-description: "After finishing up constellations and logic probes, our next stop on the Object journey was to work with our microcontroller of choice for this class- the Arduino Nano 33 IoT."
+description: "This version comes pre-soldered so prototyping with breadboards was a breeze. And well, that’s exactly what we did."
 date: 2021-09-25
 tags: ["Arduino", "Electronics", "Design"]
 cover: /media/led-pong-and-more-adventures-with-the-arduino-nano-33-iot/01-a62780.webp
 coverAlt: "Two NeoPixel strips glowing blue and green, wired to an Arduino on a breadboard with a red pushbutton on long leads"
 series: "Object"
 order: 3
-draft: true
-canonical: "https://halmic.medium.com/led-pong-and-more-adventures-with-the-arduino-nano-33-iot-b674611fd0d0"
+originalUrl: "https://halmic.medium.com/led-pong-and-more-adventures-with-the-arduino-nano-33-iot-b674611fd0d0"
 ---
 
 ![Two NeoPixel strips glowing blue and green, wired to an Arduino on a breadboard with a red pushbutton on long leads](/media/led-pong-and-more-adventures-with-the-arduino-nano-33-iot/01-a62780.webp "LED pong with built-in cheat codes!")

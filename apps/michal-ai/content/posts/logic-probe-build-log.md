@@ -5,13 +5,12 @@ kind: article
 description: "This year I’m taking some cool courses as part of my Creative Technology & Design major at CU Boulder."
 date: 2021-08-28
 updated: 2021-09-10
-tags: ["DIY", "Electronics", "Education"]
+tags: ["Electronics", "DIY"]
 cover: /media/logic-probe-build-log/34-da30bd.webp
 coverAlt: "Finished black logic probe with white L and red H LEDs fitted, blue and red cords on the right and a mint cord at the bottom"
 series: "Object"
 order: 1
-draft: true
-canonical: "https://halmic.medium.com/logic-probe-build-log-part-1-2277172dad0e"
+originalUrl: "https://halmic.medium.com/logic-probe-build-log-part-1-2277172dad0e"
 ---
 
 ![Finished black logic probe box engraved Michal’s Logic Probe, with white L and red H LEDs and blue, red and mint cords, while a needle probe touches a Circuit Playground board](/media/logic-probe-build-log/01-66835b.webp)

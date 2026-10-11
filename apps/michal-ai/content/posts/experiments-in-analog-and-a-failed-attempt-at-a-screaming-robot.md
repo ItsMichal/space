@@ -4,13 +4,14 @@ slug: experiments-in-analog-and-a-failed-attempt-at-a-screaming-robot
 kind: article
 description: "Analog! We technically already delved into using analog with the MedPuck — but it turns out we’re actually going to dive deeper into it."
 date: 2021-11-06
-tags: ["Fail", "Arduino", "Electronics", "DIY", "Robotics"]
+tags: ["Arduino", "Electronics", "Robotics", "DIY"]
+priority: 1
+featured: true
 cover: /media/experiments-in-analog-and-a-failed-attempt-at-a-screaming-robot/11-e3ebe9.jpg
 coverAlt: "The finished RobotScreamer robot on a white background, with an ultrasonic sensor on the front and a 9V battery and loose wires on top"
 series: "Object"
 order: 6
-draft: true
-canonical: "https://halmic.medium.com/experiments-in-analog-and-a-failed-attempt-at-a-screaming-robot-e5d67d9e8d29"
+originalUrl: "https://halmic.medium.com/experiments-in-analog-and-a-failed-attempt-at-a-screaming-robot-e5d67d9e8d29"
 ---
 
 Analog! We technically already delved into using analog with the MedPuck — but it turns out we’re actually going to dive deeper into it. Also the first “failure” of the semester!

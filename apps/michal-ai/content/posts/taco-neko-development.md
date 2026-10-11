@@ -5,11 +5,12 @@ kind: article
 description: "Hello! Welcome to my post about a short game I made for a Design class. This game was ideated and created in the span of 2–3 days. Here was my process."
 date: 2020-05-27
 updated: 2020-11-10
-tags: ["Game Dev", "Design", "Process", "itch.io", "GB Studio"]
+tags: ["Game Dev", "Design", "GB Studio"]
+priority: 3
+featured: true
 cover: /media/taco-neko-development/46-f34f45.png
 coverAlt: "TacoNeko title screen with hand-drawn art, the TacoNeko logo with a paw-print taco icon and Japanese characters, and a Start Game and Credits menu"
-draft: true
-canonical: "https://halmic.medium.com/taco-neko-development-5c1fb9e6372c"
+originalUrl: "https://halmic.medium.com/taco-neko-development-5c1fb9e6372c"
 ---
 
 Hello! Welcome to my post about a short game I made for a Design class. This game was ideated and created in the span of 2–3 days. Here was my process.

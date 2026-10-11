@@ -91,6 +91,17 @@ export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
   }
 }
 
+/** Display name of the site a post first appeared on, from its URL: "https://x.medium.com/y" gives "Medium". */
+export function originalSite(url: string): string | undefined {
+  try {
+    const parts = new URL(url).hostname.replace(/^www\./, '').split('.')
+    const name = parts.length > 1 ? parts[parts.length - 2] : parts[0]
+    return name ? name[0].toUpperCase() + name.slice(1) : undefined
+  } catch {
+    return undefined
+  }
+}
+
 export function postImage(post: Post) {
   return absoluteUrl(post.cover ?? DEFAULT_OG_IMAGE)
 }
@@ -147,6 +158,7 @@ export function postJsonLd(post: Post, parent?: Pick<Post, 'title' | 'slug' | 'p
     inLanguage: 'en-US',
     isPartOf: parent ? { '@type': 'CreativeWork', '@id': `${parentUrl}#work`, name: parent.title, url: parentUrl } : { '@id': `${SITE_URL}/#website` },
     mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    ...(post.originalUrl ? { sameAs: post.originalUrl } : {}),
     author,
   }
   const entity =

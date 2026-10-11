@@ -9,8 +9,7 @@ cover: /media/making-a-literal-threadboard-constellation/16-2262dc.webp
 coverAlt: "Constellation of steel balls and magnetic bars shaped like the Big Dipper on blue foam with hand-drawn stars and handwriting, with a yellow glow underneath"
 series: "Object"
 order: 2
-draft: true
-canonical: "https://halmic.medium.com/making-a-literal-threadboard-constellation-cda34539ecac"
+originalUrl: "https://halmic.medium.com/making-a-literal-threadboard-constellation-cda34539ecac"
 ---
 
 First off- obligatory explanation of what the heck a threadboard is. If you haven’t seen my other post, our TA [Chris Hill for this course co-created this concept!](https://dl.acm.org/doi/pdf/10.1145/3430524.3440642)

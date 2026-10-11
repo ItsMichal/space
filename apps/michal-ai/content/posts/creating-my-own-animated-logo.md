@@ -2,13 +2,12 @@
 title: "Creating my own animated logo"
 slug: creating-my-own-animated-logo
 kind: article
-description: "So, I’m in a few design classes this semester."
+description: "So, I’m in a few design classes this semester. In addition to my Object exploits, I’m also in a Motion (read animation) class."
 date: 2021-09-01
-tags: ["Motion Design", "After Effects", "Design", "Motion"]
+tags: ["Motion Design", "After Effects", "Design"]
 cover: /media/creating-my-own-animated-logo/03-bc381d.png
 coverAlt: "Two stacked versions of the blue and green Michal B wordmark, the traced version on top and the original below"
-draft: true
-canonical: "https://halmic.medium.com/creating-my-own-animated-stinger-b4035abc7622"
+originalUrl: "https://halmic.medium.com/creating-my-own-animated-stinger-b4035abc7622"
 ---
 
 So, I’m in a few design classes this semester. In addition to my Object exploits, I’m also in a Motion (read animation) class. Our first assignment was to create a simple animation for our logo/brand in After Effects, but I may have gone a bit overboard here.

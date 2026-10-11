@@ -4,13 +4,12 @@ slug: medpuck-pcb-prototype
 kind: article
 description: "This is a continuation of a previous article. For more context about the MedPuck device, read that article here."
 date: 2021-11-02
-tags: ["Electronics", "Design", "Entrepreneurship", "Product Development", "DIY"]
+tags: ["Electronics", "Design", "DIY"]
 cover: /media/medpuck-pcb-prototype/07-04ec4f.webp
 coverAlt: "Fingertip pressing the blue pushbutton in the assembled MedPuck while the LED ring glows green"
 series: "Object"
 order: 5
-draft: true
-canonical: "https://halmic.medium.com/medpuck-pcb-prototype-e7bbe87de941"
+originalUrl: "https://halmic.medium.com/medpuck-pcb-prototype-e7bbe87de941"
 ---
 
 This is a continuation of a previous article. For more context about the MedPuck device, read that article [here](/writing/creating-my-first-pcb-object).

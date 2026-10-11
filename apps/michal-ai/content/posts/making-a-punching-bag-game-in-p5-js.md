@@ -2,16 +2,17 @@
 title: "Making a punching bag game in P5.js"
 slug: making-a-punching-bag-game-in-p5-js
 kind: article
-description: "I’m a pretty decent programmer…kinda."
+description: "I’m a pretty decent programmer…kinda. What I am not good at is hardware, which I’ve been focusing on improving the past couple months."
 date: 2021-11-20
-tags: ["Game Dev", "Hardware", "Arduino", "Fun", "Projects"]
+tags: ["Game Dev", "Arduino", "Electronics"]
+priority: 2
+featured: true
 cover: /media/making-a-punching-bag-game-in-p5-js/03-440051.png
 coverAlt: "Screenshot of the Lane Defense game: three vertical lanes with magenta enemy circles, a red pellet and green health bars"
 coverFocus: "50% 40%"
 series: "Object"
 order: 7
-draft: true
-canonical: "https://halmic.medium.com/making-a-punching-bag-game-in-p5-js-1f8fe83cb6af"
+originalUrl: "https://halmic.medium.com/making-a-punching-bag-game-in-p5-js-1f8fe83cb6af"
 ---
 
 I’m a pretty decent programmer…kinda. What I am not good at is hardware, which I’ve been focusing on improving the past couple months while making these projects and writeups. However, for our final lab project, we delved much more into the software side, which means… it’s my time to shine!
