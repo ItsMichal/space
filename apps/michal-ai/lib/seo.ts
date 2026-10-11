@@ -9,6 +9,11 @@ export const SITE_URL = siteConfig.url.replace(/\/$/, '')
 export const SITE_NAME = siteConfig.title
 export const AUTHOR_NAME = profile.name
 export const DEFAULT_OG_IMAGE = '/michal.png'
+/** 1200x630 JPEG share card (built by scripts/build-images.mjs); the portrait stays DEFAULT_OG_IMAGE for JSON-LD. */
+export const DEFAULT_SHARE_IMAGE = '/media/_og/default.jpg'
+
+/** WebP covers have a JPEG twin under /media/_og/ for share cards; other formats are used as they are. */
+export const shareImagePath = (cover: string) => cover.replace(/^\/media\/(.+)\/cover\.webp$/i, '/media/_og/$1.jpg')
 
 /** Pass to `metadata.metadataBase` in the root layout so relative URLs resolve to https://michal.ai. */
 export const metadataBase = new URL(SITE_URL)
@@ -84,11 +89,11 @@ export function homeMetadata(): Metadata {
       locale: 'en_US',
       title: HOME_TITLE,
       description: profile.description,
-      images: [{ url: absoluteUrl(DEFAULT_OG_IMAGE) }],
+      images: [{ url: absoluteUrl(DEFAULT_SHARE_IMAGE) }],
       firstName: profile.firstName,
       lastName: profile.lastName,
     },
-    twitter: { ...siteMetadata.twitter, title: HOME_TITLE, description: profile.description, images: [absoluteUrl(DEFAULT_OG_IMAGE)] },
+    twitter: { ...siteMetadata.twitter, title: HOME_TITLE, description: profile.description, images: [absoluteUrl(DEFAULT_SHARE_IMAGE)] },
   }
 }
 
@@ -106,7 +111,7 @@ export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
 }
 
 export function postImage(post: Post) {
-  return absoluteUrl(post.cover ?? DEFAULT_OG_IMAGE)
+  return absoluteUrl(post.cover ? shareImagePath(post.cover) : DEFAULT_SHARE_IMAGE)
 }
 
 export function postMetadata(post: Post): Metadata {
@@ -202,9 +207,9 @@ export function listMetadata(kind: PostKind, title: string, description: string)
       title,
       description,
       siteName: SITE_NAME,
-      images: [{ url: absoluteUrl(DEFAULT_OG_IMAGE) }],
+      images: [{ url: absoluteUrl(DEFAULT_SHARE_IMAGE) }],
     },
-    twitter: { card: 'summary_large_image', title, description, images: [absoluteUrl(DEFAULT_OG_IMAGE)] },
+    twitter: { card: 'summary_large_image', title, description, images: [absoluteUrl(DEFAULT_SHARE_IMAGE)] },
   }
 }
 

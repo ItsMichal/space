@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { homeMetadata, listMetadata, SITE_URL } from '../seo'
+import { DEFAULT_SHARE_IMAGE, homeMetadata, listMetadata, shareImagePath, SITE_URL } from '../seo'
 
 const images = (v: unknown) => (Array.isArray(v) ? v : v ? [v] : [])
 
@@ -13,6 +13,15 @@ describe('homeMetadata', () => {
     expect(m.alternates?.canonical).toBe(SITE_URL)
     expect(m.openGraph?.title).toBeTruthy()
     expect(m.openGraph?.description).toBeTruthy()
+  })
+})
+
+describe('share images', () => {
+  it('points WebP covers and the default card at JPEG twins', () => {
+    expect(shareImagePath('/media/foo/cover.webp')).toBe('/media/_og/foo.jpg')
+    expect(shareImagePath('/media/foo/cover.png')).toBe('/media/foo/cover.png')
+    expect(DEFAULT_SHARE_IMAGE).toMatch(/\.jpg$/)
+    expect(JSON.stringify(homeMetadata().openGraph?.images)).toContain('.jpg')
   })
 })
 

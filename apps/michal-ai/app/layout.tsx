@@ -11,7 +11,7 @@ import { Atmosphere } from '@/components/site/Atmosphere'
 import { ShaderCanvasProvider } from '@/components/shader-image'
 import { Backdrop } from '@/components/backdrop/Backdrop'
 import { display } from './fonts/display'
-import { siteMetadata } from '@/lib/seo'
+import { DEFAULT_SHARE_IMAGE, siteMetadata } from '@/lib/seo'
 import { profile } from '@/content/profile'
 
 const sans = Schibsted_Grotesk({
@@ -56,9 +56,9 @@ export const metadata: Metadata = {
     ...siteMetadata.openGraph,
     title: TITLE,
     description: DESCRIPTION,
-    images: [{ url: '/michal.png' }],
+    images: [{ url: DEFAULT_SHARE_IMAGE }],
   },
-  twitter: { ...siteMetadata.twitter, images: ['/michal.png'] },
+  twitter: { ...siteMetadata.twitter, images: [DEFAULT_SHARE_IMAGE] },
 }
 
 export default function RootLayout({
