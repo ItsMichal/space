@@ -1172,3 +1172,101 @@ body {
     }
   }
 }
+
+/* Shader images. Reason: photographs should melt into the paper, not sit in rectangles. The shared canvas draws the
+   treated frame; the real <img> stays for SEO, LCP and no-JS, wearing an organic mask until (and unless) GL takes
+   over. The canvas sits above page content but below the nav (z-50). */
+.shader-frame {
+  display: contents;
+}
+.shader-frame img {
+  -webkit-mask-image: var(--shader-mask);
+  mask-image: var(--shader-mask);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+.shader-frame[data-gl] img {
+  opacity: 0;
+  transition: opacity 180ms linear;
+}
+/* The frame's own rounded, tinted box would show through the feathered edge; the organic mask replaces it. */
+.work-feat__media:has(.shader-frame),
+.wrow__thumb:has(.shader-frame) {
+  background: transparent;
+  border-radius: 0;
+}
+.shader-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100lvh;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Botanical backdrop. Reason: a quiet floral presence behind the page, out of focus and multiplied into the paper, so
+   the hero's far edge and the section breaks feel alive while text sits on calm paper (quiet zones are done in the
+   shader). The CSS twin below is the no-WebGL fallback (static, blurred, masked). */
+.backdrop-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100lvh;
+  z-index: -1;
+  pointer-events: none;
+  transition: opacity 1200ms var(--ease-in-out-soft);
+}
+.backdrop-css {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: clip;
+}
+html[data-backdrop-gl] .backdrop-css {
+  display: none;
+}
+.backdrop-css i {
+  position: absolute;
+  background-size: cover;
+  background-position: center;
+  filter: blur(26px) saturate(0.9);
+  opacity: 0.2;
+  mix-blend-mode: multiply;
+  -webkit-mask-image: radial-gradient(closest-side, #000 15%, transparent 100%);
+  mask-image: radial-gradient(closest-side, #000 15%, transparent 100%);
+}
+.backdrop-css__a {
+  top: -4%;
+  right: -22%;
+  width: min(100vw, 1000px);
+  aspect-ratio: 1280 / 931;
+}
+.backdrop-css__b {
+  top: 52%;
+  left: -26%;
+  width: min(80vw, 620px);
+  aspect-ratio: 1280 / 1922;
+}
+.backdrop-css__c {
+  bottom: -2%;
+  right: -26%;
+  width: min(100vw, 900px);
+  aspect-ratio: 1280 / 1097;
+}
+@media (prefers-reduced-motion: reduce) {
+  .backdrop-canvas {
+    transition: none;
+  }
+}
+
+/* Dev lab (app/shaders): images fill their grid cell. */
+.shader-lab__img,
+.shader-lab__thumb {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
