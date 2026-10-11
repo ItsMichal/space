@@ -15,7 +15,7 @@ export function TendrilLink({
   href,
   seed = 3,
   className = '',
-  size = 2.4,
+  size = 3.2,
 }: {
   children: ReactNode
   href: string
@@ -39,10 +39,10 @@ export function TendrilLink({
   const stroke = useMemo(() => {
     const n = Math.max(4, Math.round(w / 34))
     const ctrl: Pt[] = []
-    for (let i = 0; i <= n; i++) ctrl.push({ x: (i / n) * w, y: 6 + Math.sin(i * 1.7 + seed) * 1.1 })
+    for (let i = 0; i <= n; i++) ctrl.push({ x: (i / n) * w, y: 6.5 + Math.sin(i * 1.7 + seed) * 1.6 })
     // the curl: leaves the baseline, rises and winds back on itself
-    ctrl.push({ x: w + 5, y: 4.6 }, { x: w + 9, y: 0.2 }, { x: w + 5.5, y: -3.4 }, { x: w + 1.2, y: -2.4 }, { x: w + 1.4, y: 0.4 })
-    return makeStroke(ctrl, { size, seed, wobble: 1.4, tip: 0.1, startWidth: 0.4, density: 90 })
+    ctrl.push({ x: w + 6, y: 5.2 }, { x: w + 12, y: 0.4 }, { x: w + 8, y: -5.6 }, { x: w + 1.5, y: -4.8 }, { x: w - 0.2, y: -0.6 }, { x: w + 3.5, y: 1.2 })
+    return makeStroke(ctrl, { size, seed, wobble: 1.9, tip: 0.1, startWidth: 0.4, density: 90 })
   }, [w, seed, size])
 
   const strokeRef = useRef(stroke)

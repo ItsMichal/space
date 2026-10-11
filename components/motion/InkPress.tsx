@@ -152,12 +152,12 @@ export function InkPress({ children, className = '', onPress }: { children: Reac
       y: e.clientY - r.top,
       seed: (seedN.current += 17),
       radius: createSpring(reduce ? reach * 0.5 : 2, { response: 1.05, damping: 1 }),
-      alpha: createSpring(reduce ? 0.2 : 0, { response: 0.28, damping: 1 }),
+      alpha: createSpring(reduce ? 0.3 : 0, { response: 0.28, damping: 1 }),
       released: false,
       age: 0,
     }
     b.radius.to(reach * 0.55)
-    b.alpha.to(0.2)
+    b.alpha.to(0.3)
     blots.current.push(b)
     if (blots.current.length > 4) blots.current.shift()
     active.current = b

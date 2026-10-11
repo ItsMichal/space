@@ -9,8 +9,8 @@ const PAD = 14
 const H = 12
 const DOT = 3.2
 
-const LEAD: SpringConfig = { response: 0.3, damping: 0.8 } // the edge in the direction of travel jumps ahead
-const TRAIL: SpringConfig = { response: 0.52, damping: 0.92 } // the other edge is dragged along, a beat late
+const LEAD: SpringConfig = { response: 0.36, damping: 0.78 } // the edge in the direction of travel jumps ahead
+const TRAIL: SpringConfig = { response: 0.66, damping: 0.94 } // the other edge is dragged along, a beat late
 
 /**
  * A page control whose indicator is a stretching pill. The leading edge goes first on a quick spring that overshoots a
@@ -31,7 +31,7 @@ export function StretchPill({ count = 5, onChange }: { count?: number; onChange?
     const span = r - l
     const stretch = Math.min(1, Math.max(0, (span - H) / (GAP * 1.6)))
     const h = H * (1 - 0.3 * stretch) // volume conservation: longer means thinner
-    const waist = h * 0.18 * stretch // the middle pinches in
+    const waist = h * 0.34 * stretch // the middle pinches in
     const y = 22
     const rad = h / 2
     const x0 = l - H / 2 + rad * 0.0

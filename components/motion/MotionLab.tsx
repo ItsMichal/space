@@ -39,7 +39,7 @@ export function MotionLab() {
   const settle = useRef<SettleHandle>(null)
 
   return (
-    <main className="mx-auto max-w-[1120px] px-4 py-16 md:px-8">
+    <main className="mx-auto max-w-[1120px] px-4 pb-24 pt-28 md:px-8">
       <style>{`
         .lab-simple-link{position:relative;display:inline-block;font-family:var(--font-serif,serif);font-size:24px}
         .lab-simple-link::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:1px;background:currentColor;transform:scaleX(0);transform-origin:left;transition:transform .3s ease}
@@ -122,7 +122,7 @@ export function MotionLab() {
         title="A single drifting petal"
         note="A real petal from the owner's photograph. It tumbles on an arc with air drag. Move the pointer near it, or tap to flick it."
         simple={<div className="relative h-[210px] w-full overflow-hidden"><span className="lab-fall absolute left-1/3 top-0 h-5 w-5 rounded-full bg-[#e9b9c6]" /></div>}
-        crafted={<DriftingPetal className="h-[210px] w-full" />}
+        crafted={<DriftingPetal width={54} className="h-[210px] w-full" />}
       />
 
       <Pair

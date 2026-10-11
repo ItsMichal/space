@@ -31,7 +31,7 @@ export function BuddingTimeline({ onChange }: { onChange?: (p: number) => void }
   const stem = useMemo(() => {
     const ctrl: Pt[] = []
     for (let i = 0; i <= 8; i++) ctrl.push({ x: 18 + (i / 8) * (W - 44), y: MID + Math.sin(i * 1.3 + 0.6) * 2.6 })
-    return makeStroke(ctrl, { size: 3.2, seed: 5, wobble: 1.1, tip: 0.07, startWidth: 0.5, density: 110 })
+    return makeStroke(ctrl, { size: 4.6, seed: 5, wobble: 1.1, tip: 0.07, startWidth: 0.5, density: 110 })
   }, [])
 
   const leaves = useMemo(
@@ -39,7 +39,7 @@ export function BuddingTimeline({ onChange }: { onChange?: (p: number) => void }
       TICKS.map((u, i) => {
         const p = stem.at(u)
         const up = i % 2 === 0
-        return { u, p, up, d: leafPath(15 + (i % 3) * 3, 5.4 + (i % 2), 0.1 * ((i * 7) % 3)), base: (up ? -1 : 1) * (0.78 + 0.1 * ((i * 5) % 3)) }
+        return { u, p, up, d: leafPath(24 + (i % 3) * 4, 8.5 + (i % 2) * 1.5, 0.1 * ((i * 7) % 3)), base: (up ? -1 : 1) * (0.78 + 0.1 * ((i * 5) % 3)) }
       }),
     [stem]
   )
