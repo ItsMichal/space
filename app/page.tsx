@@ -69,7 +69,7 @@ export default function Home() {
           <p className="text-ink-muted">{profile.about[1]}</p>
         </div>
         <div className="mt-space-8 max-w-[640px]">
-          <Timeline items={experience} label="Experience" statusLabel="Experience" />
+          <Timeline items={experience} label="Experience" statusLabel="Experience" pitch={104} />
         </div>
         <div className="mt-space-8 flex flex-wrap gap-space-3">
           <GlassButton href="/BodzianowskiResume.pdf" icon={<FileText aria-hidden />}>

@@ -88,8 +88,8 @@ Esports.
 
 ## Discrepancies to confirm with the owner
 
-- Award year: LinkedIn says Best Interactive Event at the AI in Education Conference **2023**; the
-  résumé and the iSAT post on the site say **2022**.
+- Award year: RESOLVED by the owner: **2022** (Best Interactive Event at the AI in Education Conference 2022).
+  The site, résumé and iSAT post all say 2022.
 - Title at SpaceX: LinkedIn says "Software Engineer"; the site currently says "Full-stack engineer,
   Consumer Platform".
 - The 2018 internship employer is "Panther Industries, Inc." on LinkedIn; check the site's wording.

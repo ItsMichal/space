@@ -343,7 +343,7 @@ export function Timeline({ items, label, pitch = 120, initial, statusLabel, with
         ))}
       </ol>
       <noscript>
-        <style>{`.tl-vp{display:none!important}.tl-panels{display:block!important}.tl-panel{position:static!important;visibility:visible!important;opacity:1!important;translate:none!important;transform:none!important;margin:0 0 32px!important;padding-left:16px;border-left:1.5px solid var(--hairline)}`}</style>
+        <style>{`.tl-vp{display:none!important}.tl-panels{display:block!important}.tl-panel,.tl-panel>*{position:static!important;visibility:visible!important;opacity:1!important;translate:none!important;transform:none!important;filter:none!important;animation:none!important}.tl-panel{margin:0 0 32px!important;padding-left:16px;border-left:1.5px solid var(--hairline)}`}</style>
       </noscript>
     </section>
   )

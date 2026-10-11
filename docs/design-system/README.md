@@ -23,7 +23,7 @@ First person, plain, a little playful, short declarative lines. Sentence case ev
 
 ## Type
 
-- **Display: Michelangelus** (`font-display`): name, section heads, role line, work line, project titles. Regular + Italic, Latin and Latin Extended (Polish ł), self-hosted (`app/fonts/*.woff2`), tracking -2%, line-height 0.88 to 1.1, with a size-adjusted fallback so the swap shifts nothing. Details and licence notes: `type-michelangelus.md`. **To swap it, edit only `app/fonts/display.ts`** (the file shows the Instrument Serif replacement); `--font-display-face` maps to `font-display` everywhere.
+- **Display: Michelangelus** (`font-display`): name, section heads, role line, work line, project titles. Regular + Italic, Latin and Latin Extended (Polish ł), self-hosted (`app/fonts/*.woff2`), tracking -2%, line-height 0.88 to 1.1, with a size-adjusted fallback so the swap shifts nothing. Details: `type-michelangelus.md`. **To swap it, edit only `app/fonts/display.ts`** (the file shows the Instrument Serif replacement); `--font-display-face` maps to `font-display` everywhere.
 - **Schibsted Grotesk** (`sans`): UI, nav, buttons, reading-page headings. **Newsreader** (`serif`): prose, meta (italic), spec lines, captions; use its optical-size axis; body 19 to 20px. **IBM Plex Mono** (`mono`): code only, nowhere else.
 - The hero is the name on two lines, flush left, the role in italic, then the rotating work line. At most 3 sizes and 2 families on the first screen. Never set prose in the sans.
 
