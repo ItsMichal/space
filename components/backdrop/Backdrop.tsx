@@ -75,7 +75,7 @@ export function Backdrop({ paths = ['/'] }: Props) {
     const u = {
       view: U('uView'), res: U('uRes'), time: U('uTime'), scroll: U('uScroll'), par: U('uPar'), set: U('uSet'),
       t: [U('uT0'), U('uT1'), U('uT2')], a: [U('uA0'), U('uA1'), U('uA2')], asp: U('uAsp'), op: U('uOp'), fade: U('uFade'),
-      q: U('uQ[0]'), qn: U('uQN'), debug: U('uDebug'), feather: U('uFeather'), quiet: U('uQuiet'),
+      q: U('uQ[0]'), qn: U('uQN'), debug: U('uDebug'), feather: U('uFeather'), quiet: U('uQuiet'), lean: U('uLean'),
     }
 
     // Textures load after first paint and decode off the main thread (createImageBitmap); each layer fades in only once
@@ -137,6 +137,24 @@ export function Backdrop({ paths = ['/'] }: Props) {
       ]
     }
 
+    // Pointer lean: a very soft critically damped spring. Listeners are passive and never touch scrolling.
+    const leanX = createSpring(0, { response: 0.9, damping: 1 })
+    const leanY = createSpring(0, { response: 0.9, damping: 1 })
+    const aim = (e: PointerEvent) => {
+      leanX.to(Math.max(-1, Math.min(1, (e.clientX / window.innerWidth) * 2 - 1)))
+      leanY.to(Math.max(-1, Math.min(1, (e.clientY / window.innerHeight) * 2 - 1)))
+      kick()
+    }
+    const rest = () => {
+      leanX.to(0)
+      leanY.to(0)
+      kick()
+    }
+    if (!reduced) {
+      window.addEventListener('pointermove', aim, { passive: true })
+      window.addEventListener('pointerup', rest, { passive: true })
+      document.documentElement.addEventListener('pointerleave', rest, { passive: true })
+    }
     const scrollSpring = createSpring(window.scrollY, { response: reduced ? 0.01 : 0.4, damping: 1 })
     let raf = 0
     let last = 0
@@ -206,11 +224,15 @@ export function Backdrop({ paths = ['/'] }: Props) {
       let fading = false
       const fade = LAYERS.map((_, i) => {
         if (!tex[i]) return 0
-        const f = reduced ? 1 : Math.min(1, (now - readyAt[i]) / 1600)
+        const f = reduced ? 1 : Math.max(0, Math.min(1, (now - readyAt[i]) / 1600))
         if (f < 1) fading = true
         return f * f * (3 - 2 * f)
       })
       gl.uniform3f(u.fade, fade[0], fade[1], fade[2])
+      const lx = leanX.step(dt)
+      const ly = leanY.step(dt)
+      gl.uniform2f(u.lean, lx.value, ly.value)
+      const leaning = !isSettled(lx) || !isSettled(ly)
       gl.uniform1f(u.quiet, vw < 700 ? 0.985 : 0.9)
       gl.uniform1f(u.debug, q === 'raw' ? 2 : S.debugZones ? 1 : 0)
       gl.uniform1f(u.feather, vw < 700 ? 84 : 200)
@@ -229,7 +251,7 @@ export function Backdrop({ paths = ['/'] }: Props) {
       // Ambient sway runs at ~30fps; scroll and settling springs run every frame.
       lastDraw = now
       const moving = !isSettled(st)
-      if (moving || fading) request()
+      if (moving || fading || leaning) request()
       else if (!reduced && S.enabled && S.sway > 0 && ready > 0) requestSlow()
     }
 
@@ -285,6 +307,9 @@ export function Backdrop({ paths = ['/'] }: Props) {
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onResize)
       document.removeEventListener('visibilitychange', onVis)
+      window.removeEventListener('pointermove', aim)
+      window.removeEventListener('pointerup', rest)
+      document.documentElement.removeEventListener('pointerleave', rest)
       off()
       ro.disconnect()
       document.documentElement.removeAttribute('data-backdrop-gl')

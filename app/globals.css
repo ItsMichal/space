@@ -1319,24 +1319,13 @@ html[data-backdrop-gl] .backdrop-css {
 }
 .hook__item {
   grid-area: 1 / 1;
-  opacity: 0;
   pointer-events: none;
-  transition: transform 700ms var(--ease-out-soft), opacity 520ms var(--ease-out-soft);
-}
-.hook__item[data-slot='-1'] {
-  transform: translateY(-0.6em);
-}
-.hook__item[data-slot='1'] {
-  transform: translateY(0.6em);
 }
 .hook__item[data-current] {
-  opacity: 1;
   pointer-events: auto;
 }
 .hook__roll[data-dragging] .hook__item[data-current] {
   transform: translateY(var(--drag, 0px));
-  opacity: calc(1 - 0.5 * min(1, max(var(--drag, 0px), calc(var(--drag, 0px) * -1)) / 28px));
-  transition: none;
 }
 .hook__link {
   color: inherit;
@@ -1389,14 +1378,4 @@ html[data-backdrop-gl] .backdrop-css {
 }
 .hook__next:hover {
   color: var(--accent);
-}
-.hook[data-reduced] .hook__item {
-  transform: none !important;
-  transition: opacity 600ms var(--ease-out-soft);
-}
-@media (prefers-reduced-motion: reduce) {
-  .hook__item {
-    transform: none !important;
-    transition: opacity 600ms var(--ease-out-soft);
-  }
 }

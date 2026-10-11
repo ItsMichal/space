@@ -32,7 +32,8 @@ uniform vec4 uQ[32];       // quiet rects: x0 y0 x1 y1 (viewport CSS px)
 uniform int uQN;
 uniform float uDebug;
 uniform float uFeather;
-uniform float uQuiet;      // how completely a quiet zone clears the backdrop (0..1)
+uniform float uQuiet;
+uniform vec2 uLean;       // pointer lean, -1..1 (springed on the CPU)      // how completely a quiet zone clears the backdrop (0..1)
 out vec4 o;
 
 uint pcg(uint v) {
@@ -57,8 +58,12 @@ vec4 bloom(sampler2D t, vec4 A, float asp, float op, float fade, float idx, vec2
   if (fade <= 0.001) return vec4(0.0);
   float w = A.w * mix(0.85, 1.2, clamp(uSet.z * 0.5, 0.0, 1.0));
   float h = w * asp;
-  vec2 c = vec2(A.x, A.y + (A.z - uScroll) * uPar);
+  // The blossoms lean toward the pointer or a dragging finger: at most 6px and 1.5 degrees, the far layers a little less.
+  float depth = 1.0 - 0.2 * idx;
+  vec2 c = vec2(A.x, A.y + (A.z - uScroll) * uPar) + uLean * 6.0 * depth;
   vec2 uv = (frag - c) / vec2(w, h) + 0.5;
+  float ang = uLean.x * 0.0262 * depth;
+  uv = vec2(cos(ang) * (uv.x - 0.5) - sin(ang) * (uv.y - 0.5), sin(ang) * (uv.x - 0.5) + cos(ang) * (uv.y - 0.5)) + 0.5;
   if (uv.x < -0.1 || uv.x > 1.1 || uv.y < -0.1 || uv.y > 1.1) return vec4(0.0);
 
   // Wind: bend grows away from the base (bottom of the frame): a slow gust and a drifting noise, a fraction of a degree.

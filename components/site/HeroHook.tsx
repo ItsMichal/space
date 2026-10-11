@@ -112,6 +112,13 @@ export function HeroHook({ stem, items, label = 'Recent work' }: Props) {
 
   const current = clickTarget(s)
 
+  // Keyboard stepping moves the focus ring with the phrase: only the phrase on screen is ever focused.
+  useEffect(() => {
+    const roll = rollRef.current
+    if (!roll || !roll.contains(document.activeElement)) return
+    roll.querySelector<HTMLAnchorElement>('a[tabindex="0"]')?.focus({ preventScroll: true })
+  }, [current])
+
   return (
     <div ref={rootRef} className="hook" data-hook data-reduced={s.reduced ? '' : undefined}>
       <span className="hook__stem">{stem}</span>
@@ -136,7 +143,12 @@ export function HeroHook({ stem, items, label = 'Recent work' }: Props) {
           {items.map((it, i) => (
             <li key={it.href} className="hook__item" data-slot={slotOf(s, i)} data-current={i === current ? '' : undefined}>
               <Link href={it.href} className="hook__link" tabIndex={i === current ? 0 : -1} data-hook-link>
-                {it.text}
+                {it.text.split(' ').map((w, k) => (
+                  <span key={k} className="hook__w" style={{ ['--w' as string]: k } as React.CSSProperties}>
+                    {k ? ' ' : ''}
+                    {w}
+                  </span>
+                ))}
                 <ArrowUpRight aria-hidden className="hook__arrow" size={'0.62em'} strokeWidth={1.4} />
               </Link>
             </li>
