@@ -454,7 +454,7 @@ body {
   .wrow__title {
     font: 400 27px/1.12 var(--font-display);
     letter-spacing: -0.005em;
-    transition: color var(--motion-fast) var(--ease-out-soft);
+    transition: color var(--motion-fast) var(--ease-out-soft), translate 754ms var(--spring-row);
   }
   .wrow__desc {
     margin-top: 2px;
@@ -479,11 +479,12 @@ body {
     height: auto;
     aspect-ratio: 4 / 3;
     object-fit: cover;
-    transition: transform var(--motion-slow) var(--ease-out-soft);
+    transition: transform 754ms var(--spring-row);
   }
   .wrow:hover .wrow__title,
   .wrow:focus-visible .wrow__title {
     color: var(--accent);
+    translate: 4px 0;
   }
   .wrow:hover .wrow__img {
     transform: scale(1.02);
