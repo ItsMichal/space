@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { linearSpring } from '@/lib/motion/linearSpring'
-import { settleLine } from '@/lib/motion/settle'
+import { linearSpring } from '@space/motion/linearSpring'
+import { settleLine } from '@space/motion/settle'
 
 // SettleText's maths, computed once on the server and handed to CSS: three springs with different timings (opacity quick
 // and critical, blur slow and critical, rise plus a hair of rotation underdamped), and seeded per-line stagger and tilt.

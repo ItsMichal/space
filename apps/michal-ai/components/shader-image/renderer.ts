@@ -1,4 +1,4 @@
-import { createSpring, isSettled, type Spring } from '@/lib/motion/spring'
+import { createSpring, isSettled, type Spring } from '@space/motion/spring'
 import { DEFAULT_VARIANT, VARIANT_INDEX, type ShaderTuning, type ShaderVariant } from './config'
 import { FRAG, VERT } from './shaders'
 

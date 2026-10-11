@@ -10,7 +10,7 @@
   --craft-in: cubic-bezier(0.5, 0, 0.75, 0.2);
   /* a soft spring with 1.5% follow-through, as a linear() easing */
   --craft-spring: linear(0, 0.12 6%, 0.42 16%, 0.72 28%, 0.9 40%, 0.99 52%, 1.016 62%, 1.012 74%, 1.003 86%, 1);
-  /* row hover settle: lib/motion/linearSpring({ response: 0.5, damping: 0.82 }), 754ms, 0.8% follow-through */
+  /* row hover settle: @space/motion/linearSpring({ response: 0.5, damping: 0.82 }), 754ms, 0.8% follow-through */
   --spring-row: linear(0, 0.097, 0.2594, 0.4551, 0.6101, 0.7495, 0.8508, 0.913, 0.9586, 0.9854, 0.9985, 1.0056, 1.0078, 1.0077, 1.0065, 1.0051, 1.0036, 1.0024, 1.0016, 1.0009, 1.0005, 1);
   --tendril-ink: #3d6a35;
 }

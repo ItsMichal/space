@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { createSpring, isSettled } from '@/lib/motion/spring'
+import { createSpring, isSettled } from '@space/motion/spring'
 import './ui.css'
 import './disclosure.css'
 

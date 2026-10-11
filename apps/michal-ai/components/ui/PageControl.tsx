@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useRef } from 'react'
 import { Glass, glass } from '@/components/glass'
-import { useSpringSet } from '@/lib/motion/useSpringSet'
-import type { SpringConfig } from '@/lib/motion/spring'
-import { hash01 } from '@/lib/motion/rng'
+import { useSpringSet } from '@space/motion/useSpringSet'
+import type { SpringConfig } from '@space/motion/spring'
+import { hash01 } from '@space/motion/rng'
 import { seedPath } from './craft/stroke'
 import './ui.css'
 import './gallery.css'

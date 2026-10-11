@@ -1,4 +1,4 @@
-import { project, springCoeffs } from '@/lib/motion/spring'
+import { project, springCoeffs } from '@space/motion/spring'
 /*
  * Pure maths for the glass engine. Nothing here touches the DOM, so it is unit-tested; the GLSL in
  * shaders.ts mirrors these functions line for line.
@@ -128,7 +128,7 @@ export const BOUNCE: SpringConfig = PRESS
  * only when the user threw something).
  */
 export function springFor(response: number, damping = 1): SpringConfig {
-  // One spring maths for the whole site: the coefficients come from lib/motion/spring.ts. This file only keeps the
+  // One spring maths for the whole site: the coefficients come from @space/motion/spring.ts. This file only keeps the
   // mutable {x, v} stepper because the glass engine runs it in a hot loop over many shapes.
   const { k, c } = springCoeffs({ response: Math.max(response, 0.05), damping })
   return { stiffness: k, damping: c }

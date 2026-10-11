@@ -1,0 +1,16 @@
+{
+  "name": "@space/tokens",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Design-token structure and the tokens.json to CSS-variables generator. Each app keeps its own token values.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "bin": {
+    "space-tokens": "./src/cli.mjs"
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}

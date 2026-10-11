@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { getServerStatus, getStatus, subscribeStatus } from './status'
 import { useReading } from './useReading'
-import { makeStroke } from '@/lib/motion/handStroke'
+import { makeStroke } from '@space/motion/handStroke'
 import './ui.css'
 
 type View = { key: string; title: string; sub?: string; progress: number }

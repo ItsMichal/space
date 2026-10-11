@@ -4,6 +4,8 @@
 // Run: node scripts/build-petal.mjs      Preview: node scripts/preview-petal.mjs out.png
 import sharp from 'sharp'
 import fs from 'node:fs'
+// Paths below are relative to the app root; make that true whatever directory the script is launched from.
+process.chdir(new URL('..', import.meta.url).pathname)
 
 const SRC = 'assets-src/botanical/own/cherry-blossom.jpg'
 const W = 240

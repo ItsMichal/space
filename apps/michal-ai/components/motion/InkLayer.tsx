@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { fbm1, mulberry32 } from '@/lib/motion/rng'
-import { createSpring, isSettled, type Spring } from '@/lib/motion/spring'
-import type { Pt } from '@/lib/motion/handStroke'
+import { fbm1, mulberry32 } from '@space/motion/rng'
+import { createSpring, isSettled, type Spring } from '@space/motion/spring'
+import type { Pt } from '@space/motion/handStroke'
 
 /** Streaky paper-fibre alpha tile, made once. Used to eat into the ink so its body is mottled and fibrous. */
 let fibre: HTMLCanvasElement | null = null

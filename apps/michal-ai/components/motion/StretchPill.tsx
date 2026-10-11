@@ -1,8 +1,8 @@
 'use client'
 
 import { useRef } from 'react'
-import { useSpringSet } from '@/lib/motion/useSpringSet'
-import type { SpringConfig } from '@/lib/motion/spring'
+import { useSpringSet } from '@space/motion/useSpringSet'
+import type { SpringConfig } from '@space/motion/spring'
 
 const GAP = 22
 const PAD = 14

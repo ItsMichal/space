@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef } from 'react'
-import { createSpring, isSettled } from '@/lib/motion/spring'
+import { createSpring, isSettled } from '@space/motion/spring'
 import { bounded, dragAxis, settleDamping, settleIndex, VelocityTracker } from './kinetics'
 
 type StripOptions = {

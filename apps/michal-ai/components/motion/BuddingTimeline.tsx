@@ -1,8 +1,8 @@
 'use client'
 
 import { useMemo, useRef } from 'react'
-import { makeStroke, type Pt } from '@/lib/motion/handStroke'
-import { useSpringSet } from '@/lib/motion/useSpringSet'
+import { makeStroke, type Pt } from '@space/motion/handStroke'
+import { useSpringSet } from '@space/motion/useSpringSet'
 
 const W = 520
 const H = 92

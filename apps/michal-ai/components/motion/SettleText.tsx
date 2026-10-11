@@ -1,8 +1,8 @@
 'use client'
 
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react'
-import { createSpring, isSettled, type Spring } from '@/lib/motion/spring'
-import { settleLine, type SettleOpts } from '@/lib/motion/settle'
+import { createSpring, isSettled, type Spring } from '@space/motion/spring'
+import { settleLine, type SettleOpts } from '@space/motion/settle'
 
 export type SettleHandle = { settle(on: boolean): void }
 

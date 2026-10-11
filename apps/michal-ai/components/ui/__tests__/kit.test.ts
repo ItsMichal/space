@@ -3,7 +3,7 @@ import { bounded, dragAxis, focusOf, settleDamping, settleIndex, VelocityTracker
 import { createFollowers } from '../craft/followers'
 import { bladePath, leafPath, rand, seedPath } from '../craft/stroke'
 import { springFor, projectMomentum } from '@/components/glass/geometry'
-import { springCoeffs, project } from '@/lib/motion/spring'
+import { springCoeffs, project } from '@space/motion/spring'
 
 describe('kinetics', () => {
   it('estimates velocity from recent samples only', () => {
@@ -64,7 +64,7 @@ describe('craft', () => {
 })
 
 describe('one spring maths', () => {
-  it('glass springFor and momentum projection derive from lib/motion/spring', () => {
+  it('glass springFor and momentum projection derive from @space/motion/spring', () => {
     const cfg = springFor(0.5, 1)
     const { k, c } = springCoeffs({ response: 0.5, damping: 1 })
     expect(cfg.stiffness).toBeCloseTo(k)

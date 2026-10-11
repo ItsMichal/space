@@ -7,7 +7,7 @@ import { InkPress } from './InkPress'
 import { SettleText, type SettleHandle } from './SettleText'
 import { StretchPill } from './StretchPill'
 import { TendrilLink } from './TendrilLink'
-import { linearSpring } from '@/lib/motion/linearSpring'
+import { linearSpring } from '@space/motion/linearSpring'
 
 const SPRING = linearSpring({ response: 0.5, damping: 0.72 })
 

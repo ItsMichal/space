@@ -1,4 +1,4 @@
-import { project, rubberBand } from '@/lib/motion/spring'
+import { project, rubberBand } from '@space/motion/spring'
 
 /** Rolling velocity estimate from pointer samples, in units/second. Uses only the last ~100ms like UIKit does. */
 export class VelocityTracker {

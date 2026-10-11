@@ -10,6 +10,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import sharp from 'sharp'
+// Paths below are relative to the app root; make that true whatever directory the script is launched from.
+process.chdir(new URL('..', import.meta.url).pathname)
 
 // `node scripts/botanical-soft.mjs own [id]` processes the owner's own photographs (scripts/botanical-own.mjs).
 if (process.argv[2] === 'own') {

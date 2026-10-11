@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent as RPointerEvent } from 'react'
 import { Glass, glass } from '@/components/glass'
-import { createSpring } from '@/lib/motion/spring'
-import { project } from '@/lib/motion/spring'
+import { createSpring } from '@space/motion/spring'
+import { project } from '@space/motion/spring'
 import { bounded, VelocityTracker } from './kinetics'
 import { nearestSegment, type Segment } from './segments'
 import './segmented.css'

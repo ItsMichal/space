@@ -1,8 +1,8 @@
-// Small organic shapes for the micro-UI kit, built on the shared motion toolkit: seeded randomness from lib/motion/rng,
-// pen strokes from lib/motion/handStroke (makeStroke), blobs from lib/motion/pathMorph. This file only adds the leaf,
+// Small organic shapes for the micro-UI kit, built on the shared motion toolkit: seeded randomness from @space/motion/rng,
+// pen strokes from @space/motion/handStroke (makeStroke), blobs from @space/motion/pathMorph. This file only adds the leaf,
 // blade and seed silhouettes those do not provide.
-import { blob, closedPath } from '@/lib/motion/pathMorph'
-import { hash01 } from '@/lib/motion/rng'
+import { blob, closedPath } from '@space/motion/pathMorph'
+import { hash01 } from '@space/motion/rng'
 
 const f = (n: number) => (Math.round(n * 100) / 100).toString()
 

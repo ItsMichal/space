@@ -10,6 +10,8 @@ import sharp from 'sharp'
 import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
+// Paths below are relative to the app root; make that true whatever directory the script is launched from.
+process.chdir(new URL('..', import.meta.url).pathname)
 
 const ROOT = process.cwd()
 const SRC = path.join(ROOT, 'public', 'media')

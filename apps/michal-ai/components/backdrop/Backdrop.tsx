@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import { createSpring, isSettled } from '@/lib/motion/spring'
+import { createSpring, isSettled } from '@space/motion/spring'
 import { BACKDROP_FRAG, BACKDROP_VERT } from './shaders'
 import { getBackdrop, onBackdropChange } from './store'
 

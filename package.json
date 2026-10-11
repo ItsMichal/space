@@ -1,0 +1,26 @@
+{
+  "name": "space-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:michal": "npm run dev -w @space/michal-ai",
+    "dev:halmic": "npm run dev -w @space/halmic",
+    "build:michal": "npm run build -w @space/michal-ai",
+    "build:halmic": "npm run build -w @space/halmic",
+    "build": "npm run build:michal",
+    "deploy:michal": "npm run deploy -w @space/michal-ai",
+    "deploy:halmic": "npm run deploy -w @space/halmic",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "check:identity": "node scripts/check-identity.mjs",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run check:identity"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.9"
+  },
+  "prettier": "@space/config/prettier"
+}

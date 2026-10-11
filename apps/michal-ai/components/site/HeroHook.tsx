@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 import { Fragment, useEffect, useReducer, useRef, useState } from 'react'
-import { clickTarget, initialRotation, INTERVAL, ROLL_MS, rotationReducer, slotOf } from '@/lib/motion/rotation'
+import { clickTarget, initialRotation, INTERVAL, ROLL_MS, rotationReducer, slotOf } from '@space/motion/rotation'
 
 export type HookItem = { text: string; href: string }
 
@@ -18,7 +18,7 @@ type Props = { stem: string; items: HookItem[]; label?: string }
  * and a click can never land on a phrase that is leaving. Chosen over a single link whose name changes because that
  * would hide six links from search and assistive tech, and would make the accessible name change under the user.
  *
- * Without JS the first phrase is simply a link. All timing/step logic lives in lib/motion/rotation.ts (unit tested).
+ * Without JS the first phrase is simply a link. All timing/step logic lives in @space/motion/rotation.ts (unit tested).
  */
 export function HeroHook({ stem, items, label = 'Recent work' }: Props) {
   const [s, dispatch] = useReducer(rotationReducer, items.length, (n) => initialRotation(n))

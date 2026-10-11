@@ -1,7 +1,7 @@
-import { createSpring, type Spring, type SpringConfig } from '@/lib/motion/spring'
+import { createSpring, type Spring, type SpringConfig } from '@space/motion/spring'
 
 /**
- * Follow-through (a chain of springs; the Verlet stem lives in lib/motion/springChain.ts): a leader value drives a chain of followers, each a little softer and later than the one before, so a
+ * Follow-through (a chain of springs; the Verlet stem lives in @space/motion/springChain.ts): a leader value drives a chain of followers, each a little softer and later than the one before, so a
  * disturbance travels through the set instead of everything moving as one block. The chain owns no timing: call
  * `step(dt, leader)` from the host's frame loop. Pure and unit-testable.
  */

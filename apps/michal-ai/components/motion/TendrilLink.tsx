@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { makeStroke, type Pt } from '@/lib/motion/handStroke'
-import { useSpringSet } from '@/lib/motion/useSpringSet'
+import { makeStroke, type Pt } from '@space/motion/handStroke'
+import { useSpringSet } from '@space/motion/useSpringSet'
 
 /**
  * A link underline drawn as ONE hand-made stroke: it wavers, swells in the belly, ends in a small curl like a

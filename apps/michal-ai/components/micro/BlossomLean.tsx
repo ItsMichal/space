@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
-import { useSpring } from '@/lib/motion/useSpring'
+import { useSpring } from '@space/motion/useSpring'
 
 /**
  * Two layers of the same blossom photograph lean toward the pointer (or a dragging finger) and settle. Travel <= 6px,

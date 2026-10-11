@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { useReading } from './useReading'
-import { makeStroke } from '@/lib/motion/handStroke'
+import { makeStroke } from '@space/motion/handStroke'
 import './ui.css'
 import './toc.css'
 

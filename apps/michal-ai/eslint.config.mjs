@@ -1,16 +1,3 @@
-import { FlatCompat } from '@eslint/eslintrc'
+import { nextConfig } from '@space/config/eslint'
 
-const compat = new FlatCompat({ baseDirectory: import.meta.dirname })
-
-const config = [
-  { ignores: ['.next/**', '.open-next/**', '.wrangler/**', 'node_modules/**', 'cloudflare-env.d.ts'] },
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
-  {
-    rules: {
-      '@typescript-eslint/no-unused-vars': 'error',
-      '@typescript-eslint/no-explicit-any': 'error',
-    },
-  },
-]
-
-export default config
+export default nextConfig(import.meta.dirname)

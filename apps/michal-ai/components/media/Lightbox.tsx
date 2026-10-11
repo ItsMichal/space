@@ -1,8 +1,8 @@
 'use client'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { project, rubberBand, SPRING_MOMENTUM, SPRING_SOFT } from '@/lib/motion/spring'
-import { useSpring } from '@/lib/motion/useSpring'
+import { project, rubberBand, SPRING_MOMENTUM, SPRING_SOFT } from '@space/motion/spring'
+import { useSpring } from '@space/motion/useSpring'
 
 type Item = { src: string; srcSet?: string; w?: number; h?: number; alt: string; caption?: string; color?: string }
 

@@ -1,8 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
-import { createSpring, type Spring } from '@/lib/motion/spring'
-import { makeStroke, type Pt } from '@/lib/motion/handStroke'
+import { createSpring, type Spring } from '@space/motion/spring'
+import { makeStroke, type Pt } from '@space/motion/handStroke'
 import { bladePath, leafPath } from './craft/stroke'
 import { useStrip } from './useStrip'
 import { publishStatus } from './status'

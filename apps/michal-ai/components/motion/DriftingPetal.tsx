@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { createPetal, petalScaleX, stepPetal, type PetalState } from '@/lib/motion/petalPhysics'
+import { createPetal, petalScaleX, stepPetal, type PetalState } from '@space/motion/petalPhysics'
 
 /**
  * One petal, cut from the owner's own cherry-blossom photograph, falling like a petal: a thin plate that tumbles, so it

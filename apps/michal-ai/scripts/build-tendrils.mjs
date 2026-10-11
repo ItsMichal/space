@@ -1,4 +1,4 @@
-// Generates the hand-drawn link strokes used by craft.css, with the motion-craft pen maths (lib/motion/handStroke.ts:
+// Generates the hand-drawn link strokes used by craft.css, with the motion-craft pen maths (packages/motion/src/handStroke.ts:
 // `makeStroke`, variable width, seeded wobble). Output: app/styles/tendrils.css (custom properties holding SVG data URIs).
 //   node scripts/build-tendrils.mjs
 // Two families, three hands each: the resting line (hairline weight, ink-muted, quiet) and the moss tendril that draws on
@@ -6,8 +6,10 @@
 // to keep the stretch small. Wrapped links get one stroke per line box (box-decoration-break: clone).
 import fs from 'node:fs'
 import { build } from 'esbuild'
+// Paths below are relative to the app root; make that true whatever directory the script is launched from.
+process.chdir(new URL('..', import.meta.url).pathname)
 
-const out = await build({ entryPoints: ['lib/motion/handStroke.ts'], bundle: true, format: 'esm', write: false, platform: 'node' })
+const out = await build({ entryPoints: [new URL('../../../packages/motion/src/handStroke.ts', import.meta.url).pathname], bundle: true, format: 'esm', write: false, platform: 'node' })
 const mod = await import('data:text/javascript;base64,' + Buffer.from(out.outputFiles[0].text).toString('base64'))
 const { makeStroke } = mod
 
@@ -31,8 +33,8 @@ seeds.forEach((s, i) => {
   lines.push(`  --t-rest-${i + 1}: ${stroke(s + 40, 1.0, "#525c4f", 0.45)};`)
   lines.push(`  --t-rest-dark-${i + 1}: ${stroke(s + 40, 1.0, "#a4ab99", 0.45)};`)
 })
-// a soft spring (1% follow-through) from lib/motion/linearSpring.ts, for row and image hover settles
-const ls = await build({ entryPoints: ['lib/motion/linearSpring.ts'], bundle: true, format: 'esm', write: false, platform: 'node' })
+// a soft spring (1% follow-through) from packages/motion/src/linearSpring.ts, for row and image hover settles
+const ls = await build({ entryPoints: [new URL('../../../packages/motion/src/linearSpring.ts', import.meta.url).pathname], bundle: true, format: 'esm', write: false, platform: 'node' })
 const { linearSpring } = await import('data:text/javascript;base64,' + Buffer.from(ls.outputFiles[0].text).toString('base64'))
 const sp = linearSpring({ response: 0.8, damping: 0.86 })
 lines.push(`  --spring-settle: ${sp.easing};`, `  --spring-settle-ms: ${Math.round(sp.duration)}ms;`)
