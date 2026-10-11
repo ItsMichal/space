@@ -1,7 +1,12 @@
-/* halmic: shared tokens + components. Font: Geist (variable, SIL OFL 1.1), self-hosted. */
-@font-face { font-family: "Geist"; src: url("/fonts/geist-latin.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-@font-face { font-family: "Geist"; src: url("/fonts/geist-latin-ext.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
-@font-face { font-family: "Geist Fallback"; src: local("Arial"); size-adjust: 104%; ascent-override: 92%; descent-override: 24%; line-gap-override: 0%; }
+/* halmic: shared tokens + components.
+   Fonts, self-hosted, both SIL OFL 1.1 (licence texts in /fonts):
+   - Halmic Display: headings. Derived from Nunito, with the logotype's own h a l m i c, slanted 13 degrees (brand/type/build-display.py).
+   - Halmic Text: body, UI, captions (Nunito, upright, variable 400-800; brand/type/build-text.py). */
+@font-face { font-family: "Halmic Display"; src: url("/fonts/halmic-display.woff2") format("woff2"); font-weight: 900; font-style: normal; font-display: swap; unicode-range: U+0020-007E, U+00A0, U+00B7, U+00D7, U+2013, U+2014, U+2018, U+2019, U+201C, U+201D, U+2022, U+2026, U+2192; }
+@font-face { font-family: "Halmic Text"; src: url("/fonts/halmic-text-latin.woff2") format("woff2"); font-weight: 400 800; font-style: normal; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Halmic Text"; src: url("/fonts/halmic-text-latin-ext.woff2") format("woff2"); font-weight: 400 800; font-style: normal; font-display: swap; unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Halmic Text Fallback"; src: local("Arial"); size-adjust: 100.9%; ascent-override: 100.2%; descent-override: 35%; line-gap-override: 0%; }
+@font-face { font-family: "Halmic Display Fallback"; src: local("Arial Bold"), local("Arial"); font-weight: 900; size-adjust: 101.5%; ascent-override: 99.6%; descent-override: 34.8%; line-gap-override: 0%; }
 :root {
   --ink: #0f0e13; --ink-2: #181621; --ink-3: #23202e; --line: #2c2938;
   --paper: #f1ece1; --paper-2: #e6dfd0; --paper-ink: #0f0e13; --paper-mute: #5d5848;
@@ -10,8 +15,9 @@
   --blue-live: #7fa6ff;     /* live tint: 8.1:1 */
   --blue-paper: #1d4fe0;    /* signal on paper: 5.5:1 */
   --ph-ink: #f0b44c; --ph-paper: #8a5200;
-  --sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
-  --display: var(--sans);
+  --sans: "Halmic Text", "Halmic Text Fallback", ui-sans-serif, system-ui, sans-serif;
+  --display: "Halmic Display", "Halmic Display Fallback", "Halmic Text", "Halmic Text Fallback", ui-sans-serif, system-ui, sans-serif;
+  --dtrack: 0;              /* heading tracking: the display face carries its own spacing (wordmark pairs kerned in the font) */
   --s1: 8px; --s2: 16px; --s3: 24px; --s4: 32px; --s6: 48px; --s8: 64px; --s12: 96px; --s20: 160px;
   --ease: cubic-bezier(.2, .8, .2, 1);
   --gut: 16px;
@@ -21,6 +27,9 @@
 html { color-scheme: dark; background: var(--ink); scroll-behavior: auto; }
 body { margin: 0; background: var(--ink); color: var(--text); font: 400 17px/1.5 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; overflow-x: hidden; }
 a { color: inherit; text-decoration: none; }
+/* no real italic is shipped: never let the browser slant the text face; emphasis is the 700 weight */
+html { font-synthesis: none; }
+em { font-style: normal; font-weight: 700; } i { font-style: normal; }
 img { max-width: 100%; height: auto; display: block; }
 :focus-visible { outline: 2px solid var(--blue-live); outline-offset: 3px; border-radius: 6px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -79,7 +88,7 @@ img { max-width: 100%; height: auto; display: block; }
 .gthumb { display: block; border-radius: 18px; overflow: hidden; background: var(--ink-3); aspect-ratio: 640 / 508; }
 .gthumb img { width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; transition: transform 1.2s var(--ease); }
 .gthumb:hover img { transform: scale(1.04); }
-.game h3 { margin: 14px 0 4px; font: 700 clamp(20px, 2vw, 26px)/1.1 var(--display); letter-spacing: -.02em; }
+.game h3 { margin: 14px 0 4px; font: 700 clamp(20px, 2vw, 26px)/1.1 var(--display); letter-spacing: var(--dtrack); }
 .game .gline { margin: 0 0 8px; color: var(--mute); max-width: 44ch; }
 .game .gmeta, .gmeta { margin: 0 0 10px; color: var(--mute); font-size: 14px; }
 .gplay { display: inline-flex; align-items: center; min-height: 44px; color: var(--blue-live); font-weight: 600; } .gplay:hover { text-decoration: underline; text-underline-offset: 4px; }
