@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import type { Post } from '@/lib/content/types'
 import { postPath } from '@/lib/seo'
+import { Timeline, type TimelineItem } from '@/components/ui/Timeline'
 
 type Props = {
   parent?: Post
@@ -24,7 +25,22 @@ export function PostNav({ parent, items, prev, next, position }: Props) {
         <h2 id="children-h" className="postnav__h">
           {heading}
         </h2>
-        <ol className="postnav__list">
+        {items.length >= 3 ? (
+          <Timeline
+            label={heading}
+            statusLabel={heading}
+            initial={0}
+            items={items.map<TimelineItem>((c) => ({
+              id: c.slug,
+              date: c.date,
+              title: c.title,
+              summary: c.description,
+              image: c.cover ? { src: c.cover, alt: c.coverAlt ?? '' } : undefined,
+              link: { href: postPath(c), label: 'Read this entry' },
+            }))}
+          />
+        ) : (
+          <ol className="postnav__list">
           {items.map((c, i) => (
             <li key={c.slug}>
               <Link href={postPath(c)} className="postnav__row">
@@ -34,7 +50,8 @@ export function PostNav({ parent, items, prev, next, position }: Props) {
               </Link>
             </li>
           ))}
-        </ol>
+          </ol>
+        )}
       </section>
     )
   }
