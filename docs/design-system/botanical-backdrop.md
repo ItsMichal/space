@@ -1,5 +1,7 @@
 # Botanical backdrop: art direction and asset spec
 
+> Status: what ships uses three photographs, all in `public/botanical/own/` (hydrangea, daylily, cherry blossom); see `public/botanical/CREDITS.md`. The placement, coverage, blur and sway rules below still apply. The nine-asset table is the earlier exploration and is not deployed.
+
 For the WebGL "botanical backdrop" (real photographs, variable blur and depth of field, slow wind sway, dissolve to paper, a light wash). The comps (`/mood/a`, `/mood/b`, `/mood/c`) are CSS approximations of what this layer should look like; the numbers below are what they use.
 
 Direction in one line: **florals live in the background as soft, luminous, pastel haze that dissolves into the paper. Text always sits on calm paper.** The look to match is the references' shallow-focus, high-key, luminous flowers on white (the floral skirt, the daisy-ringed portrait, the soft sakura), not botanical specimens.
