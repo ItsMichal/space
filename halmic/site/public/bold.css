@@ -1,0 +1,67 @@
+/* Direction 1, bold: dark stage, a field of leaning bars behind a huge wordmark, studio as a paper panel with a 13deg edge */
+.hero { position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; padding: 112px 0 var(--s6); isolation: isolate; }
+.hero .field { position: absolute; z-index: -1; left: 0; right: 0; bottom: 0; height: 78%; overflow: hidden; mask-image: linear-gradient(to top, #000 55%, transparent); }
+.hero .field .bar { background: #221f2d; }
+[data-live="1"] .hero .field .bar { background: #ff4d2e2e; }
+.hero-in { display: flex; flex-direction: column; gap: var(--s4); }
+.hero-in .status { align-self: flex-start; }
+.wm { margin: 0; line-height: 0; }
+.wordmark { display: block; width: 100%; height: auto; fill: var(--text); overflow: visible; }
+.wordmark .idot { transition: fill .8s var(--ease); transform-box: fill-box; transform-origin: center; }
+[data-live="1"] .wordmark .idot { fill: var(--signal); animation: onair 2.8s var(--ease) infinite; }
+.hero-foot { display: grid; gap: var(--s3); grid-template-columns: 1fr; align-items: end; padding-top: var(--s2); }
+.lede { margin: 0; font: 700 clamp(24px, 3.2vw, 44px)/1.08 var(--display); letter-spacing: -.02em; max-width: 22ch; text-wrap: balance; }
+.cta { margin: 0; display: flex; flex-wrap: wrap; gap: 12px; }
+@media (min-width: 900px) { .hero-foot { grid-template-columns: 1.3fr 1fr; } .cta { justify-content: flex-end; } }
+
+.sec { padding-block: var(--s12) 0; }
+.two { display: grid; gap: var(--s3); padding-block: 0 var(--s12); }
+@media (min-width: 900px) { .two { grid-template-columns: 4fr 8fr; gap: var(--s8); } }
+h2 { margin: 0; font: 700 clamp(30px, 4.2vw, 56px)/1.02 var(--display); letter-spacing: -.025em; text-wrap: balance; max-width: 14ch; }
+h2.wide { max-width: none; margin-bottom: var(--s6); }
+.plays { list-style: none; margin: 0; padding: 0; counter-reset: p; }
+.plays li { display: grid; gap: 4px; padding: 22px 0; border-top: 1px solid var(--line); transition: padding .5s var(--ease); }
+.plays li:last-child { border-bottom: 1px solid var(--line); }
+.plays li:hover { padding-left: 16px; }
+.plays b { font: 700 clamp(28px, 4vw, 52px)/1 var(--display); letter-spacing: -.025em; }
+.plays span { color: var(--mute); }
+.muted { color: var(--mute); margin: var(--s3) 0 0; max-width: 52ch; }
+.more { margin: var(--s3) 0 0; color: var(--mute); } .more a { text-decoration: underline; text-decoration-color: #ffffff44; text-underline-offset: 4px; padding: 10px 0; display: inline-block; } .more a:hover { color: var(--signal); } .more .sep { padding: 0 10px; opacity: .4; }
+
+/* week: seven empty stumps, waiting for a schedule */
+.week { display: flex; align-items: flex-end; gap: 14px; height: 120px; }
+.week i { flex: 0 0 34px; height: var(--h); border-radius: 34px; transform: skewX(-13deg); border: 2px dashed #ffffff40; }
+@media (min-width: 900px) { .week i { flex-basis: 46px; } }
+
+/* videos */
+.vfeat { max-width: 1000px; margin-bottom: var(--s6); }
+.vfeat .vt { font: 700 clamp(22px, 2.6vw, 34px)/1.1 var(--display); letter-spacing: -.02em; margin-top: 16px; }
+.reel { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s4) var(--s3); }
+@media (max-width: 900px) { .reel { display: flex; overflow-x: auto; scroll-snap-type: x proximity; gap: 16px; margin-inline: calc(var(--gut) * -1); padding-inline: var(--gut); touch-action: pan-x pan-y; scrollbar-width: none; } .reel .vid { flex: 0 0 74%; scroll-snap-align: start; } }
+
+/* studio: paper panel; on desktop its left edge leans exactly 13deg (the mark's lean), on phones a leaning notch on top */
+.studio { margin-top: var(--s12); color: var(--paper-ink); position: relative; padding: var(--s12) 0 var(--s12); overflow: hidden; isolation: isolate; background: var(--paper); }
+.studio::before { content: ""; position: absolute; left: 0; right: 0; top: -1px; height: 40px; background: var(--ink); clip-path: polygon(0 0, 100% 0, 100% 0, 0 100%); }
+@media (min-width: 900px) {
+  .studio { background: var(--ink); padding: 160px 0 var(--s12); }
+  .studio::before { height: auto; top: 0; bottom: 0; left: 0; right: -60%; clip-path: none; background: var(--paper); z-index: -1; transform: skewX(-13deg); transform-origin: 0 100%; }
+  .studio-in { padding-left: calc(var(--gut) + 220px); }
+}
+.studio h2 { max-width: 16ch; color: var(--paper-ink); font-size: clamp(36px, 6vw, 88px); line-height: .98; }
+.studio .ph { color: #c02a0f; }
+.cols { display: grid; gap: var(--s6); padding-top: var(--s8); }
+@media (min-width: 900px) { .cols { grid-template-columns: 1fr 1fr; gap: var(--s8); } }
+.big { font: 600 clamp(21px, 2.2vw, 30px)/1.2 var(--display); letter-spacing: -.015em; margin: 0 0 var(--s3); max-width: 30ch; }
+.svc { list-style: none; padding: 0; margin: 0; } .svc li { padding: 14px 0; border-top: 1px solid #0f0e1325; font-size: 19px; } .svc li:last-child { border-bottom: 1px solid #0f0e1325; }
+.work { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-content: start; }
+.slot p { margin: 12px 0 0; font-size: 14px; line-height: 1.35; color: var(--paper-mute); }
+.hollow { display: block; aspect-ratio: 3 / 4; border-radius: 28px; border: 2px dashed #0f0e1340; transform: skewX(-13deg); }
+@media (max-width: 560px) { .work { grid-template-columns: 1fr 1fr 1fr; gap: 10px; } .slot p { font-size: 12px; } }
+.contact { margin-top: var(--s12); display: flex; flex-wrap: wrap; gap: var(--s3); align-items: center; justify-content: space-between; border-top: 1px solid #0f0e1330; padding-top: var(--s6); }
+.contact .big { margin: 0; max-width: 20ch; }
+.foot { background: var(--paper); color: var(--paper-mute); padding: 0 0 var(--s12); font-size: 15px; }
+.foot .wrap { display: flex; flex-wrap: wrap; gap: var(--s2); justify-content: space-between; border-top: 1px solid #0f0e1325; padding-top: var(--s3); }
+.foot p { margin: 0; } .links { display: flex; gap: 6px; } .links a { padding: 10px 12px; margin: -10px -2px; color: var(--paper-ink); } .links a:hover { text-decoration: underline; }
+.foot .links a:focus-visible { outline-color: #c02a0f; }
+
+@media (max-width: 899px) { .hero { justify-content: flex-start; padding-top: 104px; } .hero .field { height: 52%; } .hero-in { gap: var(--s3); } .hero .cta { margin-top: 4px; } }

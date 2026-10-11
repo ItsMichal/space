@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>halmic</title>
+<meta name="description" content="halmic streams games and codes stupid things, and designs and builds for other people.">
+<meta name="theme-color" content="#0f0e13">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/base.css"><link rel="stylesheet" href="/calm.css">
+{{jsonld}}
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a href="/calm.html" aria-label="halmic, home">{{mark}}</a>
+  <nav aria-label="Primary"><a href="#stream">stream</a><a href="#videos">videos</a><a href="#studio">studio</a><a href="#contact">contact</a></nav>
+</div></header>
+<main class="wrap col">
+<section class="hero">
+  <h1 class="wm">{{wordmark}}</h1>
+  <p class="status" role="status">
+    <span class="meter" data-meter data-count="6" data-t="4" data-pitch="8" data-h="22" aria-hidden="true"></span>
+    <span class="on"><b>on air</b> <span class="sub">now playing <i class="ph">[category, from Twitch]</i></span></span>
+    <span class="off"><b>offline</b> <span class="sub">last stream <i class="ph">[date, from Twitch]</i></span></span>
+  </p>
+  <p class="lede">I stream games and code stupid things. I also design and build for other people.</p>
+  <p class="cta"><a class="btn btn-signal" href="https://www.twitch.tv/halmictv" rel="me noopener">Watch on Twitch</a><a class="btn btn-ghost" href="#studio">The studio</a></p>
+</section>
+
+<section id="stream" class="blk">
+  <h2>On the stream</h2>
+  <ul class="rows">
+    <li><b>Minecraft</b><span>Hardcore challenge with the boys</span></li>
+    <li><b>VALORANT</b><span>College league matches</span></li>
+    <li><b>F1 23</b><span>League seasons</span></li>
+    <li><b>Among Us</b><span>Discord friends</span></li>
+    <li><b>Code</b><span>Stupid things <i class="ph">[owner]</i></span></li>
+  </ul>
+  <h3>Clips</h3>
+  <ul class="clips">{{clips}}</ul>
+  <p class="note">Schedule: <i class="ph">[owner: days and times; none is set on Twitch yet]</i></p>
+</section>
+
+<section id="videos" class="blk">
+  <h2>Videos</h2>
+  <div class="vfeat">{{featured}}</div>
+  <div class="reel">{{reel}}</div>
+  <p class="note"><a href="https://www.youtube.com/@halmic">All videos on YouTube</a> · <a href="https://www.youtube.com/@halmic?sub_confirmation=1">Subscribe</a></p>
+</section>
+
+<section id="studio" class="blk">
+  <h2>Studio</h2>
+  <p class="big">Halmic is the practice: design and creative development. <i class="ph">[owner: rewrite in your voice]</i></p>
+  <ul class="rows"><li><b>Design</b><span><i class="ph">[owner: description]</i></span></li><li><b>Creative development</b><span><i class="ph">[owner: description]</i></span></li></ul>
+  <h3>Selected work</h3>
+  <p class="note"><i class="ph">[owner decides what can be shown, and under what name]</i></p>
+  <h3 id="contact">Contact</h3>
+  <p class="note"><i class="ph">[owner: contact email or form]</i></p>
+</section>
+</main>
+<footer class="foot"><div class="wrap col">
+  <p>© {{year}} halmic</p>
+  <p class="links"><a href="https://www.twitch.tv/halmictv" rel="me">Twitch</a><a href="https://www.youtube.com/@halmic" rel="me">YouTube</a><a href="https://x.com/halmicc" rel="me">X</a><a href="https://discord.gg/4xvveJ8jS5">Discord</a></p>
+</div></footer>
+<div class="dock" aria-label="Prototype controls">
+  <span class="tag">prototype</span>
+  <div><a data-dock="live" data-val="0" href="/calm.html">offline</a><a data-dock="live" data-val="1" href="/calm.html">live</a></div>
+  <div><a data-dock="dir" data-val="index" href="/index.html">bold</a><a data-dock="dir" data-val="calm" href="/calm.html">calm</a></div>
+</div>
+<script src="/app.js" defer></script>
+</body>
+</html>

@@ -7,7 +7,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 let WebSocket;
-for (const p of ['ws', '/Users/michal/Desktop/dev/space/node_modules/ws']) { try { WebSocket = require(p); break; } catch { /* next */ } }
+for (const p of ['ws', process.env.WS_PATH ?? 'ws']) { try { WebSocket = require(p); break; } catch { /* next */ } }
 const [url, out, W = '1280', H = '800', ...flags] = process.argv.slice(2);
 const full = flags.includes('full'), mobile = flags.includes('mobile');
 const waitMs = +(flags.find((f) => /^\d+$/.test(f)) ?? 1500);
@@ -31,6 +31,10 @@ try {
   if (scrollY) { await send('Runtime.evaluate', { expression: `window.scrollTo(0, ${scrollY})` }); await sleep(900); }
   let clip;
   if (full) {
+    // walk down the page so lazy images load, then return to the top
+    const hh = (await send('Runtime.evaluate', { expression: 'document.documentElement.scrollHeight', returnByValue: true })).result.result.value;
+    for (let y = 0; y < hh; y += +H * 0.8) { await send('Runtime.evaluate', { expression: `window.scrollTo(0, ${y})` }); await sleep(250); }
+    await send('Runtime.evaluate', { expression: 'window.scrollTo(0, 0)' }); await sleep(600);
     const m = await send('Page.getLayoutMetrics');
     const h = Math.ceil(m.result.cssContentSize.height);
     clip = { x: 0, y: 0, width: +W, height: Math.min(h, 12000), scale: 1 };
