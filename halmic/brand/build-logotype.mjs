@@ -161,7 +161,9 @@ function wordmark(dir, o = {}) {
   let x0 = 1e9, x1 = -1e9;
   all.forEach((s, i) => { const b = bbox([s], shift[i]); x0 = Math.min(x0, b.x0); x1 = Math.max(x1, b.x1); });
   const ds = all.map((s, i) => dOf(s, shift[i] - x0));
-  return { w: x1 - x0, h: B, ds, letters: parts.map((p) => p.ch) };
+  let k = 0;
+  const groups = parts.map((p) => ({ ch: p.ch, ds: p.shapes.map(() => ds[k++]) }));
+  return { w: x1 - x0, h: B, ds, groups, letters: parts.map((p) => p.ch) };
 }
 
 // ---------- mark (reused verbatim) ----------
@@ -218,10 +220,11 @@ for (const [cn, c] of Object.entries(COLORS)) {
   const body = `<g fill="#f1ece1" fill-opacity=".92" transform="translate(${pad} ${pad})">${w.ds.map((d) => pathTag(d)).join('')}</g>` +
     g(0, 'ascender 235.02') + g(XT, 'x-height 148.21') + g(B, 'baseline') + lean +
     `<text x="${f(pad + 30 + SK * B)}" y="${f(pad - 12)}" font-family="system-ui,sans-serif" font-size="13" fill="#8fa3ff">lean 13 deg</text>` +
-    `<text x="${f(W - 330)}" y="${f(H - 14)}" font-family="system-ui,sans-serif" font-size="13" fill="#9a968e">bar T = 53.0, cap radius 26.5, dot = T, i-bar 140.54, gap 41.5</text>`;
+    `<text x="${pad}" y="${f(H - 14)}" font-family="system-ui,sans-serif" font-size="13" fill="#9a968e">bar T = 53.0, cap radius 26.5, dot = T, i-bar 140.54, gap 41.5</text>`;
   write('construction-c.svg', doc(W, H, body, '#0f0e13', 'halmic construction'));
 }
 
+fs.writeFileSync(path.join(here, 'wordmark-parts.json'), JSON.stringify(Object.fromEntries(Object.keys(DIRECTIONS).map((k) => { const w = wordmark(k); return [k, { w: +f(w.w), h: w.h, groups: w.groups }]; }))));
 fs.writeFileSync(path.join(here, 'geometry.json'), JSON.stringify({
   thickness: T, capRadius: R, leanDegrees: 13, ascender: B, xHeight: XH, bangBar: BANG, dot: T,
   directions: Object.fromEntries(Object.entries(DIRECTIONS).map(([k, v]) => { const w = wordmark(k); return [k, { ...v, width: +f(w.w), height: +f(w.h) }]; })),
