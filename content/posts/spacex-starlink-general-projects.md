@@ -10,7 +10,7 @@ coverAlt: "Close-up of a black and gold jet wing and engine with SpaceX branding
 coverFocus: "28% 60%"
 priority: 10
 featured: true
-role: "Full-stack engineer, Consumer Platform"
+role: "Software engineer"
 years: "2024 – present"
 links:
   - label: "Starlink.com"
