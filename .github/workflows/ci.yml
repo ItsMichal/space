@@ -26,18 +26,20 @@ jobs:
         id: f
         with:
           filters: |
-            shared: &shared
+            michal:
+              - 'apps/michal-ai/**'
               - 'packages/**'
               - 'package.json'
               - 'package-lock.json'
               - 'scripts/**'
               - '.github/workflows/ci.yml'
-            michal:
-              - *shared
-              - 'apps/michal-ai/**'
             halmic:
-              - *shared
               - 'apps/halmic/**'
+              - 'packages/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'scripts/**'
+              - '.github/workflows/ci.yml'
 
   checks:
     # typecheck + lint + unit tests + identity check for the whole workspace; cheap, always runs
@@ -75,14 +77,22 @@ jobs:
 
   build-halmic:
     needs: changes
-    if: needs.changes.outputs.halmic == 'true' && hashFiles('apps/halmic/package.json') != ''
+    if: needs.changes.outputs.halmic == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Is halmic present yet?
+        id: present
+        run: |
+          if [ -f apps/halmic/package.json ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; fi
       - uses: actions/setup-node@v4
+        if: steps.present.outputs.present == 'true'
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - run: npm run build:halmic
-      - run: npm run check:identity
+      - if: steps.present.outputs.present == 'true'
+        run: npm ci
+      - if: steps.present.outputs.present == 'true'
+        run: npm run build:halmic
+      - if: steps.present.outputs.present == 'true'
+        run: npm run check:identity
