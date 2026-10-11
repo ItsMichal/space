@@ -38,13 +38,13 @@ export function useSpringSet<K extends string>(
     (now: number) => {
       const dt = Math.min((now - last.current) / 1000, 1 / 20)
       last.current = now
-      let busy = false
       for (const s of Object.values(springs.current!)) {
         const st = s.step(dt)
         if (isSettled(st, 0.0005)) s.set(st.target)
-        else busy = true
       }
+      // `emit` may retarget springs (a follower chasing a leader), so decide whether we are still busy AFTER it.
       emit()
+      const busy = Object.values(springs.current!).some((s) => !isSettled(s.state, 0.0005))
       raf.current = busy ? requestAnimationFrame(loop) : 0
     },
     [emit]
