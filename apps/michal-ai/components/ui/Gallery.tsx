@@ -142,6 +142,7 @@ export function Gallery({ slides, label = 'Gallery', autoplayMs = 0, className =
               aria-roledescription="slide"
               aria-label={`${i + 1} of ${n}`}
               aria-hidden={js && Math.abs(i - index) > 1 ? true : undefined}
+              inert={js && Math.abs(i - index) > 1 ? true : undefined}
               id={`${uid}-s${i}`}
             >
               <div className="gal-media">{s.node}</div>

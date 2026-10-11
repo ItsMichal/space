@@ -48,7 +48,7 @@ export default function Home() {
         <h2 id="work-h" className={h2}>
           Selected work
         </h2>
-        <Showcase posts={projects} base="/projects" limit={5} shader />
+        <Showcase posts={projects} base="/projects" limit={5} shader priority />
       </section>
 
       {articles.length > 0 ? (
