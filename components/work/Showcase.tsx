@@ -90,13 +90,13 @@ export function Showcase({ posts, base, limit, priority = false, shader = false 
     <div className="work">
       {blocks.map((b, i) =>
         'feature' in b ? (
-          <div key={b.feature.slug} className="work-feat-wrap reveal">
+          <div key={b.feature.slug} className="work-feat-wrap reveal" data-buckets={buckets(b.feature)}>
             <Feature post={b.feature} href={`${base}/${b.feature.slug}`} priority={priority && i === 0} shader={shader} />
           </div>
         ) : (
           <ul key={b.rows[0].slug} className="work-index">
             {b.rows.map((p, j) => (
-              <li key={p.slug} className="reveal" style={{ ["--i" as string]: j }}>
+              <li key={p.slug} className="reveal" data-buckets={buckets(p)} style={{ ["--i" as string]: j }}>
                 <Row post={p} href={`${base}/${p.slug}`} shader={shader} />
               </li>
             ))}
