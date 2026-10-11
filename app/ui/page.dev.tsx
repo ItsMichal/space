@@ -58,7 +58,7 @@ export default function Page() {
       <section className={sec} aria-labelledby="t3">
         <h2 id="t3" className={h2}>Timeline: Starlink launches since {STARLINK_JOINED_LABEL}</h2>
         <p className="mb-space-4 max-w-[56ch] font-serif text-ink-muted">
-          {starlinkDatedCount} sourced markets, high and medium confidence only. Roughly <NumberRoll value={STARLINK_MARKETS_SINCE.value} /> new markets in all.
+          {starlinkLaunches.length} sourced launches.
         </p>
         <div className="max-w-[760px]">
           <Timeline items={starlinkLaunches} label="Starlink launches since I joined" initial={0} statusLabel="Starlink" withDay />
