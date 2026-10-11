@@ -11,16 +11,13 @@ Do this only after the other agent's second round on `halmic-site` is finished.
 ```bash
 git switch monorepo            # or the branch the monorepo PR was merged into
 git switch -c halmic-into-monorepo
-git merge --no-commit --no-ff -X find-renames=40% halmic-site
-# the only conflict risk is the root: halmic-site still has the OLD root files (package.json, app/, ...).
-# Resolve by keeping the monorepo side for everything outside halmic/:
-git checkout --ours -- . ':!halmic'   # then re-add the deleted-by-us root files as deleted:
-git status                             # expect: new halmic/** only
+git merge --no-ff halmic-site -m 'Merge halmic-site'
+git status   # expect only new halmic/** files
 ```
 
-Because `halmic-site` never modified the old root files, git sees the old root paths as unchanged on its side and the
-`apps/michal-ai/**` renames as ours, so they merge cleanly; if git still reports modify/delete conflicts on old root
-paths, resolve them as "deleted" (`git rm`). Then move the folder in one commit with no edits, so history follows:
+This was dry-run against the monorepo branch: the merge is clean with no conflicts, because `halmic-site` only adds
+`halmic/**` and never touched the old root files that moved to `apps/michal-ai`. Then move the folder in one commit
+with no edits, so history follows:
 
 ```bash
 git mv halmic/site/*  apps/halmic/     # site/ becomes the app root (build.mjs, serve.mjs, src/, public/, package.json)
@@ -28,7 +25,7 @@ git mv halmic/brand   apps/halmic/brand
 git mv halmic/content apps/halmic/content
 git mv halmic/scripts apps/halmic/scripts
 git mv halmic/docs    apps/halmic/docs
-git mv halmic/README.md apps/halmic/README.md   # replaces the placeholder README
+git mv -f halmic/README.md apps/halmic/README.md   # replaces the placeholder README
 git commit -m "Move halmic into apps/halmic"
 ```
 
