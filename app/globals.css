@@ -238,14 +238,14 @@ body {
     cursor: pointer;
     text-decoration: none;
     transition:
-      transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1.2),
+      transform 500ms cubic-bezier(0.25, 0.7, 0.25, 1),
       background-color 160ms ease;
   }
   .lg-btn:hover {
-    transform: scale(1.03);
+    transform: scale(1.012);
   }
   .lg-btn:active {
-    transform: scale(0.97);
+    transform: scale(0.98);
   }
   .lg-btn svg {
     width: 20px;
