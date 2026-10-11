@@ -53,7 +53,12 @@ export const personJsonLd = {
   alumniOf: profile.alumniOf.map((name) => ({ '@type': 'CollegeOrUniversity', name })),
   knowsAbout: [...profile.knowsAbout],
   description: siteConfig.description,
-  sameAs: [siteConfig.github, siteConfig.linkedin, `https://twitter.com/${siteConfig.twitter.replace(/^@/, '')}`],
+  sameAs: [
+    siteConfig.github,
+    siteConfig.linkedin,
+    `https://twitter.com/${siteConfig.twitter.replace(/^@/, '')}`,
+    ...(siteConfig.halmic.live ? [siteConfig.halmic.url] : []),
+  ],
 }
 
 export const websiteJsonLd = {

@@ -16,6 +16,11 @@ export function Footer() {
           <span className="font-serif text-meta text-ink-muted">
             © {new Date().getFullYear()} {profile.name}
           </span>
+          {siteConfig.halmic.live ? (
+            <a className={`font-serif text-meta ${linkCls}`} href={siteConfig.halmic.url} rel="me">
+              halmic
+            </a>
+          ) : null}
         </div>
         <nav aria-label="Elsewhere" className="flex gap-space-6 text-body-strong">
           <a className={linkCls} href={siteConfig.github} target="_blank" rel="noreferrer">

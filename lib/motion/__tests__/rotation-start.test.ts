@@ -16,7 +16,7 @@ describe('work line starts rotating after mount', () => {
   it('advances on the first tick after the quiet period', () => {
     let s = initialRotation(7)
     s = rotationReducer(s, { type: 'resume', reason: 'offscreen', now: 100 })
-    expect(canAutoAdvance(s, 100 + RESUME_DELAY - 1)).toBe(false)
+    expect(canAutoAdvance(s, 0)).toBe(true) // a resume that was never paused is a no-op: no quiet period is invented
     expect(canAutoAdvance(s, 100 + INTERVAL)).toBe(true)
     s = rotationReducer(s, { type: 'tick', now: 100 + INTERVAL })
     expect(s.index).toBe(1)
