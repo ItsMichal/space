@@ -5,7 +5,7 @@ import { createSpring, type Spring } from '@/lib/motion/spring'
 import { bladePath, leafPath, railPath, railY, stemPath } from './craft/stroke'
 import { useStrip } from './useStrip'
 import { publishStatus } from './status'
-import { formatDate, yearMarks, type TimelineItem } from './timeline'
+import { formatDate, yearMarks, type TimelineItem } from './timelineData'
 import './ui.css'
 
 export type { TimelineItem }
