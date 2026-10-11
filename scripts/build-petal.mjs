@@ -68,6 +68,7 @@ for (let i = 0; i < W * H; i++) {
   rgba[i * 4 + 3] = alpha[i]
 }
 await sharp(rgba, { raw: { width: W, height: H, channels: 4 } })
+  .modulate({ brightness: 1.1, saturation: 1.25 })
   .trim({ threshold: 5 })
   .resize({ width: 240 })
   .png({ compressionLevel: 9 })

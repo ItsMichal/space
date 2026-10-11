@@ -122,7 +122,7 @@ export function MotionLab() {
         title="A single drifting petal"
         note="A real petal from the owner's photograph. It tumbles on an arc with air drag. Move the pointer near it, or tap to flick it."
         simple={<div className="relative h-[210px] w-full overflow-hidden"><span className="lab-fall absolute left-1/3 top-0 h-5 w-5 rounded-full bg-[#e9b9c6]" /></div>}
-        crafted={<DriftingPetal width={54} className="h-[210px] w-full" />}
+        crafted={<DriftingPetal width={68} className="h-[210px] w-full" />}
       />
 
       <Pair
