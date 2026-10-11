@@ -1,0 +1,16 @@
+<!-- @dsCard group="Content" height=560 -->
+<article class="page">
+  <div class="eyebrow">Writing · 6 min read</div>
+  <h1>Building arcade controllers for a rhythm game</h1>
+  <div class="prose">
+    <p class="lede">I soldered the controllers before I wrote a single line of the game.</p>
+    <p>Project Mountaintop started as a question about feel: what does a rhythm game play like when the buttons are <a href="#">yours</a>? The answer took a MIDI pipeline, an Arduino and a lot of trial and error.</p>
+    <h2>The MIDI system</h2>
+    <p>Every note in the soundtrack is authored once and drives both audio and gameplay, so <code>NoteSpawner</code> never drifts from the music.</p>
+    <blockquote>The best input lag is the one the player never notices.</blockquote>
+  </div>
+</article>
+<style>
+  .page { padding: 40px; background: var(--paper); }
+  .page h1 { font: 600 44px/1 var(--font-sans); letter-spacing: -0.03em; margin: 12px 0 24px; max-width: 18ch; }
+</style>

@@ -1,0 +1,11 @@
+<!-- @dsCard group="Presence" height=140 -->
+<div class="row">
+  <span class="lg lg--pill presence" id="a"><span class="presence__dots"><i class="presence__dot me" style="background:var(--presence-4)"></i></span>1 here</span>
+  <span class="lg lg--pill presence" id="b"><span class="presence__dots"><i class="presence__dot me" style="background:var(--presence-2)"></i><i class="presence__dot" style="background:var(--presence-1)"></i><i class="presence__dot" style="background:var(--presence-3)"></i><i class="presence__dot" style="background:var(--presence-5)"></i><i class="presence__dot" style="background:var(--presence-6)"></i></span>12 here now</span>
+</div>
+<style>
+  .row { display: flex; gap: 16px; padding: 44px 32px; background: var(--paper); color: var(--ink-muted);
+    background-image: radial-gradient(var(--dot) 1.2px, transparent 1.4px); background-size: 12px 12px; }
+  .presence__dot.me { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ink); margin-right: 4px; }
+</style>
+<script>requestAnimationFrame(function () { ['a','b'].forEach(function (id) { Paper.liquidGlass(document.getElementById(id), { bezel: 12 }); }); });</script>

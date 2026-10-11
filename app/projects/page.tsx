@@ -1,66 +1,22 @@
-import { getProjects } from '../notion-utils'
-import * as React from 'react'
-import { GlassBoxContent, GlassBoxStatic } from '@/components/GlassBox'
-import Link from 'next/link'
-import { Metadata } from 'next'
-import { ClientNotionHeader } from '@/components/ClientNotion'
+import type { Metadata } from 'next'
+import { getTopLevel } from '@/lib/content'
+import { Showcase } from '@/components/work/Showcase'
+import { JsonLd } from '@/components/seo/JsonLd'
+import { listJsonLd, listMetadata } from '@/lib/seo'
 
-export const revalidate = 3600 // revalidate the data at most every hour
+const TITLE = 'Projects — Michał Bodzianowski'
+const DESCRIPTION =
+  'Games, AI tools and web platforms built by Michał Bodzianowski, from Starlink.com to Unity arcade experiments.'
 
-export const metadata: Metadata = {
-  title: 'Projects by Michal Bodzianowski',
-  description: 'A list of projects built by Michal Bodzianowski',
-  robots: 'follow, index',
-  alternates: undefined,
-  twitter: {
-    card: 'summary_large_image',
-    site: '@itsmichal',
-    creator: '@itsmichal',
-    images: [
-      {
-        url: 'https://michal.us/preview.png',
-      },
-    ],
-  },
-  verification: undefined,
-  appleWebApp: undefined,
-  other: undefined,
-  openGraph: {
-    title: 'Projects',
-    description: 'A list of projects built by Michal Bodzianowski',
-    images: [
-      {
-        url: 'https://michal.us/preview.png',
-      },
-    ],
-  },
-}
+export const metadata: Metadata = listMetadata('project', TITLE, DESCRIPTION)
 
-export default async function Page({}) {
-  const projects = await getProjects()
-  console.log(projects)
+export default function Page() {
+  const posts = getTopLevel('project')
   return (
-    <>
-      <GlassBoxContent
-        title="Projects"
-        description="A list of my favorite projects"
-      />
-      {projects.map((project, index) => {
-        return (
-          <ClientNotionHeader
-            key={index}
-            pageMetadata={project}
-            baseUrl={'projects/'}
-          />
-        )
-      })}
-      <GlassBoxStatic className="w-full md:col-span-2 lg:col-span-3">
-        <Link href={'/'} className="w-full flex flex-row">
-          <div className="flex-1"></div>
-          <div className="text-lg font-title p-4 mx-auto">Back to Home</div>
-          <div className="flex-1"></div>
-        </Link>
-      </GlassBoxStatic>
-    </>
+    <div className="mx-auto max-w-content px-space-4 pb-space-16 pt-[120px] md:px-space-8 md:pt-[160px]">
+      <JsonLd data={listJsonLd('project', TITLE, posts)} />
+      <h1 className="mb-space-12 text-[clamp(36px,11vw,56px)] font-semibold leading-none tracking-[-0.03em] md:text-display">Selected work</h1>
+      <Showcase posts={posts} base="/projects" priority />
+    </div>
   )
 }

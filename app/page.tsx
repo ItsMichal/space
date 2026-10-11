@@ -1,104 +1,79 @@
-import { GlassBoxContent, GlassBoxStatic } from '@/components/GlassBox'
-import React from 'react'
-import ResumePic from '../public/ResumePix.png'
-import LIPic from '../public/templi.png'
-import GHPic from '../public/tempgh.png'
-import { getProjects } from './notion-utils'
-import { ClientNotionHeader } from '@/components/ClientNotion'
-import { MoveRight } from 'lucide-react'
-import Link from 'next/link'
+import { ArrowUpRight, FileText } from 'lucide-react'
+import { getBlogPosts, getTopLevel } from '@/lib/content'
+import { siteConfig } from '@/site.config'
+import { GlassButton } from '@/components/glass/GlassButton'
+import { NameHeader } from '@/components/site/NameHeader'
+import { ProjectList } from '@/components/site/ProjectList'
+import { Showcase } from '@/components/work/Showcase'
+import { JsonLd } from '@/components/seo/JsonLd'
+import { profile } from '@/content/profile'
+import { homeMetadata, personJsonLd, websiteJsonLd } from '@/lib/seo'
 
-export default async function Home() {
-  const projects = await getProjects()
+export const metadata = homeMetadata()
+
+const h2 = 'reveal mb-space-8 text-[32px] font-semibold leading-[1.1] tracking-[-0.02em]'
+
+export default function Home() {
+  const projects = getTopLevel('project')
+  const articles = getBlogPosts()
 
   return (
-    <>
-      <GlassBoxContent image="/michal.png" title="About" description="">
-        <div className="font-paragraph">
-          <p className=" text-lg">
-            {`Hello, I'm Michal. I'm a Creative Developer with experience in AI, XR, and Web, specializing in taking projects from 0 to 1.`}
-          </p>
-          <p className="mt-2">
-            {`I run Halmic Ltd, a studio providing creative development services. I'm also an applied researcher at the University of Colorado's SHINE Lab, where I work on human-AI interaction, focusing on education.
-            `}
-          </p>
-        </div>
-      </GlassBoxContent>
-      <GlassBoxStatic className="w-full overflow-hidden md:col-span-2 lg:col-span-3 ">
-        <Link href={'/projects'}>
-          <div className="w-full flex flex-row pt-6 px-6">
-            <h1 className="font-title text-3xl ">Recent Projects</h1>
-            <div className="flex-1"></div>
-            <div className="flex flex-row gap-4 opacity-50 animate-pulse">
-              <div className="mt-0.5">click for more</div>
-              <MoveRight size={'2rem'} />
-            </div>
-          </div>
-        </Link>
-        <div className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-          {projects.slice(0, 6).map((project, index) => {
-            return (
-              <ClientNotionHeader
-                key={index}
-                pageMetadata={project}
-                baseUrl={'projects/'}
-              />
-            )
-          })}
-        </div>
-      </GlassBoxStatic>
+    <div className="mx-auto max-w-content px-space-4 md:px-space-8">
+      <JsonLd data={[personJsonLd, websiteJsonLd]} />
+      <NameHeader
+        first={profile.firstName}
+        last={profile.lastName}
+        role={profile.role}
+        intro={profile.intro}
+      />
 
-      <GlassBoxContent
-        title="Resume"
-        description="Direct link to my full-stack resume"
-        image={ResumePic.src}
-      >
-        <a
-          href="/BodzianowskiResume.pdf"
-          target="_blank"
-          rel="noreferrer"
-          className="glass-btn w-fit p-4 font-paragraph"
-          style={{
-            zIndex: '1',
-          }}
-        >
-          PDF
-        </a>
-      </GlassBoxContent>
-      <GlassBoxContent
-        title="Hit me up on LinkedIn"
-        description="See more of my work here for now"
-        image={LIPic.src}
-      >
-        <a
-          href="https://linkedin.com/in/mbodzianowski"
-          target="_blank"
-          rel="noreferrer"
-          className="glass-btn w-fit p-4 font-paragraph"
-          style={{
-            zIndex: '1',
-          }}
-        >
-          LinkedIn
-        </a>
-      </GlassBoxContent>
-      <GlassBoxContent
-        title="My Github"
-        description="I'm building this site in public on github! Come check it out and don't (or do) judge it too harshly"
-        image={GHPic.src}
-      >
-        <a
-          href="https://github.com/itsMichal"
-          target="_blank"
-          rel="noreferrer"
-          className="glass-btn w-fit p-4 font-paragraph"
-          style={{
-            zIndex: '1',
-          }}
-        >
-          GitHub
-        </a>
-      </GlassBoxContent>
-    </>
+      <section id="work" aria-labelledby="work-h" className="mt-space-16 md:mt-space-24">
+        <h2 id="work-h" className={h2}>
+          Selected work
+        </h2>
+        <Showcase posts={projects} base="/projects" limit={5} />
+      </section>
+
+      {articles.length > 0 ? (
+        <section id="writing" aria-labelledby="writing-h" className="mt-space-16">
+          <h2 id="writing-h" className={h2}>
+            Writing
+          </h2>
+          <ProjectList posts={articles} base="/writing" />
+        </section>
+      ) : null}
+
+      <section id="about" aria-labelledby="about-h" className="mt-space-16">
+        <h2 id="about-h" className={h2}>
+          About
+        </h2>
+        <div className="max-w-[60ch] space-y-space-4 font-serif text-[20px] leading-[1.55] md:text-[22px]">
+          <p>{profile.about[0]}</p>
+          <p className="text-ink-muted">{profile.about[1]}</p>
+        </div>
+        <ul aria-label="Experience" className="mt-space-8 max-w-[56ch] divide-y divide-hairline border-y border-hairline">
+          {profile.experience.map((e) => (
+            <li key={e.company} className="flex flex-col gap-space-1 py-space-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-space-4">
+              <span className="font-serif text-[18px] font-medium">
+                {e.company}
+                <span className="font-normal text-ink-muted"> · {e.role}</span>
+              </span>
+              {'years' in e ? <span className="font-serif text-body text-ink-muted">{e.years}</span> : null}
+            </li>
+          ))}
+        </ul>
+        <div className="mt-space-8 flex flex-wrap gap-space-3">
+          <GlassButton href="/BodzianowskiResume.pdf" icon={<FileText aria-hidden />}>
+            Resume
+          </GlassButton>
+          <GlassButton href={siteConfig.github} icon={<ArrowUpRight aria-hidden />}>
+            GitHub
+          </GlassButton>
+          <GlassButton href={siteConfig.linkedin} icon={<ArrowUpRight aria-hidden />}>
+            LinkedIn
+          </GlassButton>
+        </div>
+      </section>
+    </div>
   )
 }
