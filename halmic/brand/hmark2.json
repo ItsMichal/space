@@ -1,0 +1,82 @@
+[
+  {
+    "n": 6,
+    "name": "hm ridge",
+    "letters": "h, m",
+    "feature": "The arch starts left of the stem, so it crosses it (the original's overlapping-bar joint), then a second arch carries on to a third stem: the h's shoulder turns into an m.",
+    "width": 279.56,
+    "height": 235.02
+  },
+  {
+    "n": 7,
+    "name": "peg",
+    "letters": "h, m in the voids",
+    "feature": "An h with one wide shoulder and a short peg hanging from its middle. The peg is the m's middle stem, so the two white slots either side of it are the m's counters, read against the stems the way the B is read in the original.",
+    "width": 253.4,
+    "height": 235.02
+  },
+  {
+    "n": 8,
+    "name": "M stem",
+    "letters": "h, M",
+    "feature": "The original M (stem, V, stem) at x-height with its left stem pulled up into an ascender: one glyph, read as an M or as an h.",
+    "width": 216.39,
+    "height": 235.02
+  },
+  {
+    "n": 9,
+    "name": "hook left",
+    "letters": "h, J hook, !",
+    "feature": "The ascender curls into the original's J hook (the stem bottom runs into a bar going left, outside the letter), and the \"!\" dot sits bottom right at the original's 41.5 gap. The counter stays open, so it still reads h.",
+    "width": 298.91,
+    "height": 235.02
+  },
+  {
+    "n": 10,
+    "name": "M ridge",
+    "letters": "h, M diagonals",
+    "feature": "The original's two diagonals turned over into a pointed shoulder: stem, ridge, leg. An h whose arch is the M's strokes.",
+    "width": 165.77,
+    "height": 235.02
+  },
+  {
+    "n": 11,
+    "name": "hi",
+    "letters": "h, i",
+    "feature": "A plain h with the \"!\" dot floating top right at the original's distance: the dot gives a hidden i beside the h (h, i, as in hi).",
+    "width": 282.93,
+    "height": 235.02
+  },
+  {
+    "n": 12,
+    "name": "h, m stacked",
+    "letters": "h, m",
+    "feature": "Like 6, but the middle stem stops short and a dot sits under it at the original's gap: the middle leg is a \"!\" hanging inside the m.",
+    "width": 243.4,
+    "height": 235.02
+  },
+  {
+    "n": 13,
+    "name": "ridge peg",
+    "letters": "h, M diagonals, m in the voids",
+    "feature": "The M's diagonals form the shoulder (as in 10), and a short peg hangs from the ridge: the two white triangles-and-slots either side of it are the m's counters against the stem, while the diagonals carry the M.",
+    "width": 227.46,
+    "height": 235.02
+  },
+  {
+    "n": 14,
+    "name": "double ridge",
+    "letters": "h, M, m",
+    "feature": "Two ridges, three stems: the M's diagonals turned over twice, so the h's shoulder is also an m made of the original's strokes.",
+    "width": 231.92,
+    "height": 235.02
+  },
+  {
+    "n": 15,
+    "name": "ridge hook",
+    "letters": "h, M diagonals, J hook, dot",
+    "feature": "10 with 9's hook and dot: the M diagonals as the shoulder, the J hook off the stem, the \"!\" dot at the original's distance. Three layers, one h.",
+    "width": 342.91,
+    "height": 235.02
+  }
+]

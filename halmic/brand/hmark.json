@@ -1,0 +1,37 @@
+[
+  {
+    "n": 1,
+    "name": "Diagonal cross",
+    "feature": "Where the mark's bars overlap: the arch is its own bar and starts to the left of the stem, so it crosses the ascender and its tip pokes out the other side, an X-shaped joint at the shoulder.",
+    "width": 196.26,
+    "height": 235.02
+  },
+  {
+    "n": 2,
+    "name": "h!",
+    "feature": "The mark's \"!\": a bar with a dot below it, same bar height (140.54), same gap (41.5), set after the h so the pair reads like the \"M!\" lockup.",
+    "width": 283.43,
+    "height": 235.02
+  },
+  {
+    "n": 3,
+    "name": "Plus joint",
+    "feature": "The mark's bottom bar meeting the long stem: here the shoulder is a horizontal bar that crosses the ascender and sticks out the other side, making a plus where the two bars overlap.",
+    "width": 202.41,
+    "height": 235.02
+  },
+  {
+    "n": 4,
+    "name": "Reticle",
+    "feature": "A sight: four bar-tips (the mark's bars, shortened) at north, east, south and west with the h held in the middle, like a reticle around the dot.",
+    "width": 604.41,
+    "height": 603
+  },
+  {
+    "n": 5,
+    "name": "Sight dot",
+    "feature": "The mark's dot, placed as a sight inside the h's counter, the arch widened so the dot (53) floats with equal air on both sides.",
+    "width": 211.06,
+    "height": 235.02
+  }
+]
