@@ -29,10 +29,9 @@ export const profile = {
   /** About section paragraphs, first person. */
   about: [
     "I like the first version of things. The rough prototype. The odd idea. The thing that has to exist before anyone can argue about it.",
-    "I run Halmic Ltd, a creative development studio. Before that I spent four years at the University of Colorado's SHINE Lab, working on human-AI interaction in education. I'm on Starlink's Consumer Platform team too.",
+    "I'm on Starlink's Consumer Platform team. Before that I spent four years at the University of Colorado's SHINE Lab, working on human-AI interaction in education.",
   ],
   worksFor: [
-    { name: 'Halmic Ltd', url: 'https://halmic.co' },
     { name: 'Starlink', url: 'https://www.starlink.com' },
   ],
   alumniOf: ['University of Colorado Boulder'],
@@ -49,7 +48,6 @@ export const profile = {
   ],
   /** Compact home page Experience list, newest first. */
   experience: [
-    { company: 'Halmic Ltd', role: 'Runs the studio' },
     { company: 'Starlink', role: 'Full-stack engineer, Consumer Platform', years: '2024 to now' },
     { company: 'SHINE Lab, CU Boulder', role: 'Full-stack developer', years: '2020 to 2024' },
     { company: 'AmedicaRx', role: 'Full-stack developer', years: '2022 to 2023' },

@@ -13,7 +13,7 @@ Paper is the visual system for michal.us: printed matter in a northern landscape
 
 - First person, plain, a little playful — the old site said *"don't (or do) judge it too harshly"*. Keep that warmth; cut filler adjectives. Short declarative lines.
 - Sentence case everywhere. **No uppercase text anywhere** — no eyebrows, no all-caps labels, no letter-spaced small caps.
-- The name is **Michał Bodzianowski** (with ł). URLs, handles and file names stay ASCII (`michal.us`). The nickname **halmic** is always lowercase; the studio is **Halmic Ltd**.
+- The name is **Michał Bodzianowski** (with ł). URLs, handles and file names stay ASCII (`michal.us`). The nickname **halmic** is always lowercase.
 - No emoji in titles or UI.
 - Spec lines (year · stack · role) and dates are small serif text in `ink-muted`, joined with ` · `.
 
