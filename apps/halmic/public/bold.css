@@ -10,7 +10,9 @@
 .wordmark .idot { transition: fill .8s var(--ease); transform-box: fill-box; transform-origin: center; }
 [data-live="1"] .wordmark .idot { fill: var(--blue-live); animation: onair 2.8s var(--ease) infinite; }
 .hero-foot { display: grid; gap: var(--s3); grid-template-columns: 1fr; align-items: end; padding-top: var(--s2); }
-.lede { margin: 0; font: 700 clamp(24px, 3.2vw, 44px)/1.08 var(--display); letter-spacing: -.025em; max-width: 24ch; text-wrap: balance; }
+.topline { display: grid; gap: 10px; }
+.ttl { margin: 0; font: 750 clamp(26px, 3.4vw, 44px)/1.05 var(--display); letter-spacing: -.025em; }
+.lede { margin: 0; font: 500 clamp(18px, 1.9vw, 24px)/1.35 var(--sans); max-width: 34ch; text-wrap: balance; }
 .cta { margin: 0; display: flex; flex-wrap: wrap; gap: 12px; }
 @media (min-width: 900px) { .hero-foot { grid-template-columns: 1.3fr 1fr; } .cta { justify-content: flex-end; } }
 @media (max-width: 899px) { .hero { justify-content: flex-start; padding-top: 104px; } .hero .field { height: 52%; } .hero-in { gap: var(--s3); } .hero .cta { margin-top: 4px; } .hero .btn { min-height: 48px; padding: 0 22px; font-size: 16px; } }
