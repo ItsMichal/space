@@ -20,19 +20,24 @@ const WARM = [1.025, 1.0, 0.955] // gentle warm tint
 
 const plates = {
   // pink blossom cloud, mirrored so the dense side sits toward the page corner; branches dissolved, grey sky and road keyed out
+  // Wikimedia Commons featured picture (CC BY 4.0, W.carter; see public/botanical/CREDITS.md): three pink sakura blossoms in soft
+  // lavender-pink bokeh. Crop to the blossoms and the bokeh to their right, lift the dark leaves and branch toward blush.
+  // (The owner's own cherry photo, cherry-blossom.jpg, did not survive branch removal without going muddy; see docs.)
   'cherry-bloom': {
-    file: 'cherry-blossom.jpg',
-    crop: [0, 0, 1, 0.78],
+    dir: 'assets-src/botanical/wikimedia',
+    file: 'three-pink-cherry-blossoms-tuntorp.jpg',
+    crop: [0.27, 0.02, 0.5, 0.8],
     flop: true,
     dark: { lo: 85, hi: 140, sat: 0.6 },
+    blush: { lo: 50, hi: 150, k: 0.7, color: [241, 206, 215] },
     fill: 30,
-    soft: 3,
-    gamma: 0.7,
-    sat: 0.9,
-    wash: 0.34,
-    key: { kind: 'pink', lo: 0.04, hi: 0.18, grow: 3.2 },
-    alphaBlur: 38,
-    ell: [0.62, 0.62],
+    soft: 1.6,
+    gamma: 0.8,
+    sat: 0.95,
+    wash: 0.2,
+    key: null,
+    alphaBlur: 0,
+    ell: [0.6, 0.58],
   },
   // lavender hydrangea with green and yellow bokeh: a whole soft haze, no key; darkest greens and maroon lifted
   hydrangea: {
@@ -128,7 +133,7 @@ function noiseField(w, h, seed) {
 }
 
 async function make(id, cfg, seed) {
-  const file = path.join(SRC, cfg.file)
+  const file = path.join(cfg.dir ?? SRC, cfg.file)
   const meta = await sharp(file).metadata()
   const [fx, fy, fw, fh] = cfg.crop
   const cw = Math.round(fw * meta.width)
@@ -142,6 +147,16 @@ async function make(id, cfg, seed) {
   for (let i = 0; i < N * 3; i++) rgb[i] = raw[i]
 
   // 2. suppress branches / dark ground
+  if (cfg.blush) {
+    // Cherry: no inpainting (it turns calyxes into blobs). Anything dark, branch or crimson calyx alike, is simply lifted to a
+    // blush, in proportion to how dark it is, so the cluster reads as soft pink and white blossom.
+    for (let i = 0; i < N; i++) {
+      const l = 0.299 * rgb[i * 3] + 0.587 * rgb[i * 3 + 1] + 0.114 * rgb[i * 3 + 2]
+      const d = Math.pow(1 - smooth(cfg.blush.lo, cfg.blush.hi, l), 0.85) * cfg.blush.k
+      for (let c = 0; c < 3; c++) rgb[i * 3 + c] = rgb[i * 3 + c] * (1 - d) + cfg.blush.color[c] * d
+    }
+  }
+  if (!cfg.blush) {
   const lum = new Float32Array(N)
   const bad = new Float32Array(N)
   for (let i = 0; i < N; i++) {
@@ -152,27 +167,33 @@ async function make(id, cfg, seed) {
     const sat = mx > 0 ? (mx - mn) / mx : 0
     bad[i] = (1 - smooth(cfg.dark.lo, cfg.dark.hi, l)) * (1 - smooth(cfg.dark.sat, cfg.dark.sat + 0.15, sat))
   }
-  const badGrown = blur(bad, W, H, 1, 6)
-  for (let i = 0; i < N; i++) badGrown[i] = Math.min(1, badGrown[i] * 2.6)
+  const badGrown = blur(bad, W, H, 1, 8)
+  for (let i = 0; i < N; i++) badGrown[i] = Math.min(1, badGrown[i] * 3)
   const wgt = new Float32Array(N)
   const premul = new Float32Array(N * 3)
   for (let i = 0; i < N; i++) {
-    wgt[i] = 1 - badGrown[i]
+    wgt[i] = 1 - smooth(0, 0.2, badGrown[i]) // any real branch contribution is cut to zero, or its tiny residual weight would dominate far-fill averages
     for (let c = 0; c < 3; c++) premul[i * 3 + c] = rgb[i * 3 + c] * wgt[i]
   }
   const bp = blur(premul, W, H, 3, cfg.fill)
   const bw = blur(wgt, W, H, 1, cfg.fill)
+  // second, much wider pass so the middle of a thick branch still gets a colour from far-away good pixels
+  const bp2 = blur(premul, W, H, 3, cfg.fill * 4)
+  const bw2 = blur(wgt, W, H, 1, cfg.fill * 4)
   for (let i = 0; i < N; i++) {
     const m = badGrown[i]
     for (let c = 0; c < 3; c++) {
-      const fill = bw[i] > 0.02 ? bp[i * 3 + c] / bw[i] : PAPER[c]
+      const den = bw[i] + bw2[i] * 0.02
+      const fill = den > 1e-4 ? (bp[i * 3 + c] + bp2[i * 3 + c] * 0.02) / den : PAPER[c]
       rgb[i * 3 + c] = rgb[i * 3 + c] * (1 - m) + fill * m
     }
   }
 
+  }
   // 3. soften, lift, warm, wash
   const tmp = Buffer.alloc(N * 3)
   for (let i = 0; i < N * 3; i++) tmp[i] = Math.round(Math.min(255, Math.max(0, rgb[i])))
+  if (process.env.DEBUG_FILL) await sharp(tmp, { raw: { width: W, height: H, channels: 3 } }).jpeg().toFile(`/tmp/claude/${id}-fill.jpg`)
   const soft = await sharp(tmp, { raw: { width: W, height: H, channels: 3 } }).blur(cfg.soft).raw().toBuffer()
   const col = new Float32Array(N * 3)
   for (let i = 0; i < N; i++) {

@@ -1,6 +1,7 @@
 // Botanical backdrop. Original GLSL; techniques credited in docs/shaders/research.md.
-// Premultiplied-alpha layers over the paper: blooms are alpha-composited with soft organic edges, so they dissolve into
-// the paper (and its grain) instead of lying on it.
+// Premultiplied-alpha layers over the paper. Each plate (public/botanical/own/*) is already washed, warm and carries its
+// own soft alpha; the shader adds depth of field (blur grows toward the frame edge), a slow sway, a fade to paper, quiet
+// zones around every text block, and a warm sun corner. Text always sits on calm paper.
 
 export const BACKDROP_VERT = /* glsl */ `#version 300 es
 void main() {
@@ -24,17 +25,14 @@ uniform sampler2D uT2;
 uniform vec4 uA0;          // x, y at anchor, anchor scroll, width
 uniform vec4 uA1;
 uniform vec4 uA2;
-uniform vec2 uAsp;         // h/w of the textures 0,1 (2 packed below)
-uniform float uAsp2;
-uniform vec4 uC0;
-uniform vec4 uC1;
-uniform vec4 uC2;
-uniform vec3 uKey;
-uniform vec3 uSky;
+uniform vec3 uAsp;         // h/w of the textures
+uniform vec3 uOp;          // per-layer opacity ceiling
+uniform vec3 uFade;        // per-layer fade-in 0..1 (each texture fades in only once decoded)
 uniform vec4 uQ[32];       // quiet rects: x0 y0 x1 y1 (viewport CSS px)
 uniform int uQN;
 uniform float uDebug;
 uniform float uFeather;
+uniform float uQuiet;      // how completely a quiet zone clears the backdrop (0..1)
 out vec4 o;
 
 uint pcg(uint v) {
@@ -55,48 +53,41 @@ float fbm(vec2 p) {
 }
 
 // One bloom layer. Returns straight rgb in .rgb and coverage in .a.
-vec4 bloom(sampler2D t, vec4 A, vec4 crop, float key, float asp, float idx, vec2 frag, float quiet) {
-  float w = A.w * mix(0.8, 1.25, clamp(uSet.z * 0.5, 0.0, 1.0));
+vec4 bloom(sampler2D t, vec4 A, float asp, float op, float fade, float idx, vec2 frag, float quiet) {
+  if (fade <= 0.001) return vec4(0.0);
+  float w = A.w * mix(0.85, 1.2, clamp(uSet.z * 0.5, 0.0, 1.0));
   float h = w * asp;
   vec2 c = vec2(A.x, A.y + (A.z - uScroll) * uPar);
   vec2 uv = (frag - c) / vec2(w, h) + 0.5;
-  if (uv.x < -0.2 || uv.x > 1.2 || uv.y < -0.2 || uv.y > 1.2) return vec4(0.0);
+  if (uv.x < -0.1 || uv.x > 1.1 || uv.y < -0.1 || uv.y > 1.1) return vec4(0.0);
 
-  // Wind: bend grows away from the base (bottom of the frame), slow gust + small flutter + drifting noise.
+  // Wind: bend grows away from the base (bottom of the frame): a slow gust and a drifting noise, a fraction of a degree.
   float wgt = pow(clamp(1.0 - uv.y, 0.0, 1.0), 1.3);
-  float s = sin(uTime * 0.31 + idx * 2.1 + uv.y * 1.9) * 0.011 + sin(uTime * 0.12 + idx * 4.0) * 0.007;
-  s += (vnoise(vec2(uv.y * 3.0 + idx * 7.0, uTime * 0.06)) - 0.5) * 0.012;
+  float s = sin(uTime * 0.31 + idx * 2.1 + uv.y * 1.9) * 0.009 + sin(uTime * 0.12 + idx * 4.0) * 0.006;
+  s += (vnoise(vec2(uv.y * 3.0 + idx * 7.0, uTime * 0.06)) - 0.5) * 0.01;
   uv.x += s * wgt * uSet.w;
-  uv.y += sin(uTime * 0.23 + idx + uv.x * 2.0) * 0.004 * wgt * uSet.w;
+  uv.y += sin(uTime * 0.23 + idx + uv.x * 2.0) * 0.003 * wgt * uSet.w;
 
-  // Depth of field: golden-angle ring taps on top of a blurred mip level; wider toward the frame edge.
+  // Depth of field: ring taps over a blurred mip level; wider toward the frame edge (the focus plane is the centre).
   vec2 q0 = uv - 0.5;
   float edge = clamp(length(q0 * 2.0), 0.0, 1.0);
-  float rad = (0.007 + 0.02 * edge) * uSet.y;
-  float lod = 0.7 + 1.9 * uSet.y;
-  vec3 acc = vec3(0.0);
+  float rad = (0.006 + 0.018 * edge) * uSet.y;
+  float lod = 0.5 + 1.2 * uSet.y;
+  vec4 acc = vec4(0.0);
   for (int i = 0; i < 7; i++) {
     float a = float(i) * 2.39996;
     float r = sqrt((float(i) + 0.5) / 7.0) * rad;
     vec2 tu = clamp(uv + vec2(cos(a), sin(a) * (1.0 / max(asp, 0.4))) * r, 0.0, 1.0);
-    acc += textureLod(t, crop.xy + tu * crop.zw, lod).rgb;
+    vec4 tx = textureLod(t, tu, lod);
+    acc += vec4(tx.rgb * tx.a, tx.a);
   }
-  vec3 col = acc / 7.0;
+  vec3 col = acc.a > 0.001 ? acc.rgb / acc.a : vec3(1.0);
+  float ta = acc.a / 7.0;
 
-  // Organic fade into paper: ellipse bent by low-frequency noise, different per layer.
-  float cov = clamp(uSet.z, 0.2, 1.5);
-  float e = length(q0 * vec2(2.0, 2.0 / max(0.8, asp * 0.9))) + (fbm(uv * 2.3 + idx * 11.0) - 0.5) * 0.55;
-  float a = 1.0 - smoothstep(0.25 * cov, 0.95 * cov + 0.15, e);
-  a = a * a;
-  float l = dot(col, vec3(0.299, 0.587, 0.114));
-  float sat = max(max(col.r, col.g), col.b) - min(min(col.r, col.g), col.b);
-  // Optional chroma key: let flowers through, drop grey sky and dark ground.
-  a *= mix(1.0, smoothstep(0.1, 0.38, sat), key);
-  col = mix(vec3(l), col, 0.85);
-  // Low contrast wash: pull toward light, so the bloom reads as air and colour, never as an object.
-  col = mix(vec3(dot(col, vec3(0.299, 0.587, 0.114))), col, 1.18);
-  col = mix(col, vec3(1.0), 0.2);
-  return vec4(col, a * 0.55 * uSet.x * quiet);
+  // The rectangle itself never shows: fade the outer fifth into paper, bent by low-frequency noise.
+  float e = max(abs(q0.x), abs(q0.y)) * 2.0 + (fbm(uv * 2.3 + idx * 11.0) - 0.5) * 0.22;
+  float a = 1.0 - smoothstep(0.78 * clamp(uSet.z, 0.6, 1.3), 1.0, e);
+  return vec4(col, ta * a * op * uSet.x * quiet * fade);
 }
 
 void main() {
@@ -114,19 +105,18 @@ void main() {
     float zz = 1.0 - smoothstep(0.0, uFeather, sd);
     zone = max(zone, zz * zz * (3.0 - 2.0 * zz));
   }
-  float quiet = uDebug > 1.5 ? 1.0 : 1.0 - 0.92 * zone;
+  float quiet = uDebug > 1.5 ? 1.0 : 1.0 - uQuiet * zone;
 
-  // Sky and sun: a very faint morning wash at the top of the page, heavier toward the far (right) edge.
+  // Warm morning: a faint cream wash across the top of the page and a sun-warm corner at the top right. Warm only, never cool.
   float docY = frag.y + uScroll;
   float top = 1.0 - smoothstep(0.0, 1100.0, docY);
-  float side = smoothstep(0.1, 1.0, frag.x / uView.x);
-  vec4 acc = vec4(uSky, 0.26 * top * (0.3 + 0.7 * side) * uSet.x);
-  float sun = exp(-pow(length((frag - vec2(uView.x * 0.92, 140.0 - uScroll * 0.5)) / vec2(uView.x * 0.55, 420.0)), 2.0));
-  acc = vec4(mix(acc.rgb, vec3(1.0, 0.93, 0.78), sun * 0.5), acc.a + sun * 0.12 * uSet.x);
+  vec4 acc = vec4(1.0, 0.955, 0.86, 0.2 * top * uSet.x);
+  float sun = exp(-pow(length((frag - vec2(uView.x * 0.96, 90.0 - uScroll * 0.5)) / vec2(uView.x * 0.6, 460.0)), 2.0));
+  acc = vec4(mix(acc.rgb, vec3(1.0, 0.88, 0.66), sun * 0.65), acc.a + sun * 0.2 * uSet.x);
 
-  vec4 b0 = bloom(uT0, uA0, uC0, uKey.x, uAsp.x, 0.0, frag, quiet);
-  vec4 b1 = bloom(uT1, uA1, uC1, uKey.y, uAsp.y, 1.0, frag, quiet);
-  vec4 b2 = bloom(uT2, uA2, uC2, uKey.z, uAsp2, 2.0, frag, quiet);
+  vec4 b0 = bloom(uT0, uA0, uAsp.x, uOp.x, uFade.x, 0.0, frag, quiet);
+  vec4 b1 = bloom(uT1, uA1, uAsp.y, uOp.y, uFade.y, 1.0, frag, quiet);
+  vec4 b2 = bloom(uT2, uA2, uAsp.z, uOp.z, uFade.z, 2.0, frag, quiet);
   acc = vec4(mix(acc.rgb, b0.rgb, b0.a), acc.a + b0.a * (1.0 - acc.a));
   acc = vec4(mix(acc.rgb, b1.rgb, b1.a), acc.a + b1.a * (1.0 - acc.a));
   acc = vec4(mix(acc.rgb, b2.rgb, b2.a), acc.a + b2.a * (1.0 - acc.a));

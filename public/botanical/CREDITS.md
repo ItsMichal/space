@@ -35,3 +35,13 @@ Not used: Unsplash/Pexels downloads (their licences are permissive but are not m
 The engravings above stay available as an optional small accent; in round 2 they are dropped from the hero (antique, not the soft luminous feeling asked for) and kept in one comp as a single tiny detail.
 
 Candidates considered and not used: Nootka lupine photographs on Commons (photographs, mixed licenses, not artwork); any stock-site or "free for personal use" set.
+
+## Homepage backdrop (`public/botanical/own/`)
+
+| Id | Subject | Author | Licence | Source |
+| --- | --- | --- | --- | --- |
+| `hydrangea-*` | Hydrangea with green and yellow bokeh | Michał Bodzianowski | Own photograph | `assets-src/botanical/own/hydrangea.jpg` |
+| `daylily-wash-*` | Red and yellow daylily, washed to a warm accent | Michał Bodzianowski | Own photograph | `assets-src/botanical/own/daylily.jpg` |
+| `cherry-bloom-*` | "Three pink cherry blossoms in Tuntorp" (Featured picture on Wikimedia Commons, 4721x3148) | W.carter | CC BY 4.0, attribution required | [Commons](https://commons.wikimedia.org/wiki/File:Three_pink_cherry_blossoms_in_Tuntorp.jpg) |
+
+The cherry plate is cropped, mirrored, has its dark leaves lifted toward blush, is washed toward the paper and given a soft alpha (`scripts/botanical-own.mjs`). The owner's own cherry photograph (`cherry-blossom.jpg`) is kept in `assets-src` but not used: automatic branch removal left it muddy.

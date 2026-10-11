@@ -55,6 +55,18 @@
       "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lupinus_polyphyllus_Lindley_1827.jpg",
       "institutionUrl": "https://www.biodiversitylibrary.org/",
       "license": "Public domain (published 1827; Wikimedia Commons marks it public domain)"
+    },
+    {
+      "id": "cherry-bloom",
+      "file": "own/cherry-bloom-*",
+      "title": "Three pink cherry blossoms in Tuntorp",
+      "author": "W.carter",
+      "license": "CC BY 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Three_pink_cherry_blossoms_in_Tuntorp.jpg",
+      "originalSize": "4721x3148",
+      "badge": "Featured picture on Wikimedia Commons",
+      "changes": "cropped, mirrored, dark leaves lifted toward blush, washed toward the paper, soft alpha (scripts/botanical-own.mjs)"
     }
   ]
 }

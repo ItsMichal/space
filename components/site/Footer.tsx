@@ -29,6 +29,13 @@ export function Footer() {
           </a>
         </nav>
       </div>
+      <p className="mx-auto mt-space-4 max-w-content font-serif text-[14px] leading-[20px] text-ink-faint">
+        Photo credits: the home page cherry blossom is{' '}
+        <a className="underline decoration-hairline underline-offset-2 hover:text-accent" href="https://commons.wikimedia.org/wiki/File:Three_pink_cherry_blossoms_in_Tuntorp.jpg" target="_blank" rel="noreferrer">
+          Three pink cherry blossoms in Tuntorp
+        </a>{' '}
+        by W.carter, CC BY 4.0, cropped and softened. Hydrangea and daylily are my own photographs.
+      </p>
     </footer>
   )
 }
