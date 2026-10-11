@@ -1,0 +1,32 @@
+{
+  "note": "What ships in public/botanical and public/motion. See CREDITS.md.",
+  "images": [
+    {
+      "id": "hydrangea",
+      "subject": "Hydrangea with green and yellow bokeh",
+      "author": "Michał Bodzianowski",
+      "license": "Own photograph"
+    },
+    {
+      "id": "daylily-wash",
+      "subject": "Red and yellow daylily, washed to a warm accent",
+      "author": "Michał Bodzianowski",
+      "license": "Own photograph"
+    },
+    {
+      "id": "cherry-bloom",
+      "subject": "Three pink cherry blossoms in Tuntorp",
+      "author": "W.carter",
+      "license": "CC BY 4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Three_pink_cherry_blossoms_in_Tuntorp.jpg",
+      "changes": "cropped, mirrored, leaves lifted toward blush, washed toward paper, soft alpha",
+      "attribution": "Footer, home page"
+    },
+    {
+      "id": "petal",
+      "subject": "Petal texture for ?petal=1",
+      "author": "Michał Bodzianowski",
+      "license": "Own photograph (cherry-blossom.jpg)"
+    }
+  ]
+}

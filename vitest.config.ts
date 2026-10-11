@@ -6,7 +6,7 @@ export default defineConfig({
   esbuild: { jsx: 'automatic' },
   test: {
     environment: 'node',
-    include: ['lib/**/*.test.ts', 'lib/**/*.test.tsx'],
+    include: ['lib/**/*.test.ts', 'lib/**/*.test.tsx', 'components/**/*.test.ts', 'worker/**/*.test.ts'],
     testTimeout: 30_000,
   },
 })

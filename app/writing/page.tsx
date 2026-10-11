@@ -22,7 +22,7 @@ export default function Page() {
   return (
     <div className="mx-auto max-w-content px-space-4 pb-space-16 pt-[120px] md:px-space-8 md:pt-[160px]">
       <JsonLd data={listJsonLd('article', TITLE, posts)} />
-      <h1 className="text-[clamp(36px,11vw,56px)] font-semibold leading-none tracking-[-0.03em] md:text-display">Writing</h1>
+      <h1 className="font-display text-[clamp(46px,13vw,60px)] font-normal leading-none tracking-[-0.02em] md:text-display">Writing</h1>
       <p className="lede mt-space-6 mb-space-12 max-w-[36ch]">Notes on building things: what worked, what didn&rsquo;t, and what I&rsquo;d do differently.</p>
       {posts.length ? (
         <ProjectList posts={posts} base="/writing" />

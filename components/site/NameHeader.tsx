@@ -1,4 +1,24 @@
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
+import { linearSpring } from '@/lib/motion/linearSpring'
+import { settleLine } from '@/lib/motion/settle'
+
+// SettleText's maths, computed once on the server and handed to CSS: three springs with different timings (opacity quick
+// and critical, blur slow and critical, rise plus a hair of rotation underdamped), and seeded per-line stagger and tilt.
+// No client JS, no measuring, nothing to flash: the name paints with the first HTML and settles on the compositor.
+const SPRING = {
+  o: linearSpring({ response: 0.34, damping: 1 }),
+  b: linearSpring({ response: 0.62, damping: 1 }),
+  m: linearSpring({ response: 0.7, damping: 0.62 }),
+}
+const lineVars = (i: number): CSSProperties => {
+  const l = settleLine(i, { rise: -8, tilt: 0.8, blur: 6 })
+  return { '--d': `${80 + l.delay}ms`, '--ny': `${l.fromY.toFixed(2)}px`, '--nr': `${l.fromRot.toFixed(3)}deg`, '--nb': `${l.fromBlur}px` } as CSSProperties
+}
+const rootVars = {
+  '--so-e': SPRING.o.easing, '--so-d': `${SPRING.o.duration}ms`,
+  '--sb-e': SPRING.b.easing, '--sb-d': `${SPRING.b.duration}ms`,
+  '--sm-e': SPRING.m.easing, '--sm-d': `${SPRING.m.duration}ms`,
+} as CSSProperties
 
 type Props = {
   first: string
@@ -7,15 +27,19 @@ type Props = {
   intro?: ReactNode
 }
 
+/** Hero: name, role and the intro slot (the rotating "lately I've built" line). All in the display face. */
 export function NameHeader({ first, last, role, intro }: Props) {
   return (
-    <header className="pt-[120px] md:pt-[160px]">
-      <h1 className="text-[clamp(44px,14.4vw,56px)] font-semibold leading-[0.9] tracking-[-0.045em] md:text-[88px] lg:text-display-name">
-        <span className="block">{first}</span>
-        <span className="block">{last}</span>
+    <header className="pt-[112px] md:pt-[150px]">
+      <h1
+        style={rootVars}
+        className="settle font-display font-normal leading-[0.88] tracking-[-0.025em] text-[clamp(52px,calc((100vw-32px)/5.55),76px)] md:text-[clamp(110px,calc((100vw-64px)/5.55),176px)]"
+      >
+        <span className="block" style={lineVars(0)}>{first}</span>
+        <span className="block" style={lineVars(1)}>{last}</span>
       </h1>
-      <p className="mt-space-6 max-w-[56ch] text-body text-ink-muted">{role}</p>
-      {intro ? <p className="name-intro mt-space-4 max-w-[34ch] font-serif text-[22px] leading-[1.4] text-ink md:text-[26px]">{intro}</p> : null}
+      <p className="mt-space-6 max-w-[34ch] font-display text-[24px] italic leading-[1.2] text-ink-muted md:mt-space-8 md:text-[32px]">{role}</p>
+      {intro ? <div className="name-intro mt-space-6 max-w-[40ch] font-display text-[27px] leading-[1.2] text-ink md:mt-space-8 md:text-[38px]">{intro}</div> : null}
     </header>
   )
 }

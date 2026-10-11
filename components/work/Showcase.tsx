@@ -2,6 +2,11 @@ import Link from 'next/link'
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import type { Post } from '@/lib/content/types'
 import { Picture } from '@/components/media/Picture'
+import { ShaderImage } from '@/components/shader-image'
+import { PROJECT_FILTERS, matchesFilter } from '@/components/ui/segments'
+
+/** Filter buckets a post belongs to, for the /projects segmented control (all items stay in the HTML). */
+const buckets = (p: Post) => PROJECT_FILTERS.filter((f) => f.value !== 'all' && matchesFilter(p.tags, f.value)).map((f) => f.value).join(' ')
 
 const FEAT_SIZES = '100vw'
 const THUMB_SIZES = '(min-width: 768px) 176px, 104px'
@@ -9,13 +14,14 @@ const THUMB_SIZES = '(min-width: 768px) 176px, 104px'
 const year = (p: Post) => p.years ?? p.date.slice(0, 4)
 
 /** A featured project: full-bleed cinematic image, large title, serif spec line. */
-function Feature({ post, href, priority }: { post: Post; href: string; priority: boolean }) {
+function Feature({ post, href, priority, shader }: { post: Post; href: string; priority: boolean; shader: boolean }) {
+  const Img = shader ? ShaderImage : Picture
   const meta = [year(post), post.role].filter(Boolean).join(' · ')
   return (
     <Link href={href} className="work-feat">
       <div className="work-feat__media">
         {post.cover ? (
-          <Picture
+          <Img
             src={post.cover}
             alt={post.coverAlt ?? ''}
             sizes={FEAT_SIZES}
@@ -41,7 +47,8 @@ function Feature({ post, href, priority }: { post: Post; href: string; priority:
 }
 
 /** An index row: year, title, description and an always-visible thumbnail (no hover-only reveals). */
-function Row({ post, href }: { post: Post; href: string }) {
+function Row({ post, href, shader }: { post: Post; href: string; shader: boolean }) {
+  const Img = shader ? ShaderImage : Picture
   const tags = post.tags.slice(0, 4)
   return (
     <Link href={href} className={`wrow${post.cover ? '' : ' wrow--bare'}`}>
@@ -56,7 +63,7 @@ function Row({ post, href }: { post: Post; href: string }) {
       <p className="wrow__tags">{tags.join(' · ')}</p>
       {post.cover ? (
         <div className="wrow__thumb">
-          <Picture src={post.cover} alt="" sizes={THUMB_SIZES} className="wrow__img" focus={post.coverFocus} />
+          <Img src={post.cover} alt="" sizes={THUMB_SIZES} className="wrow__img" focus={post.coverFocus} />
         </div>
       ) : null}
     </Link>
@@ -68,7 +75,7 @@ function Row({ post, href }: { post: Post; href: string }) {
  * features in place; runs of other projects between them are index rows with thumbnails. `limit` caps the total number
  * of projects shown and adds an "all projects" link (home page).
  */
-export function Showcase({ posts, base, limit, priority = false }: { posts: Post[]; base: string; limit?: number; priority?: boolean }) {
+export function Showcase({ posts, base, limit, priority = false, shader = false }: { posts: Post[]; base: string; limit?: number; priority?: boolean; shader?: boolean }) {
   const shown = limit ? posts.slice(0, limit) : posts
   const blocks: ({ feature: Post } | { rows: Post[] })[] = []
   for (const p of shown) {
@@ -83,14 +90,14 @@ export function Showcase({ posts, base, limit, priority = false }: { posts: Post
     <div className="work">
       {blocks.map((b, i) =>
         'feature' in b ? (
-          <div key={b.feature.slug} className="work-feat-wrap reveal">
-            <Feature post={b.feature} href={`${base}/${b.feature.slug}`} priority={priority && i === 0} />
+          <div key={b.feature.slug} className="work-feat-wrap reveal" data-buckets={buckets(b.feature)}>
+            <Feature post={b.feature} href={`${base}/${b.feature.slug}`} priority={priority && i === 0} shader={shader} />
           </div>
         ) : (
           <ul key={b.rows[0].slug} className="work-index">
             {b.rows.map((p, j) => (
-              <li key={p.slug} className="reveal" style={{ ["--i" as string]: j }}>
-                <Row post={p} href={`${base}/${p.slug}`} />
+              <li key={p.slug} className="reveal" data-buckets={buckets(p)} style={{ ["--i" as string]: j }}>
+                <Row post={p} href={`${base}/${p.slug}`} shader={shader} />
               </li>
             ))}
           </ul>

@@ -1,0 +1,222 @@
+/* Round 2 comps. Light only; Michelangelus for evaluation (git-ignored local font files, never shipped). */
+
+:root:has(.m2-root) {
+  color-scheme: light;
+  --lidar-opacity: 0;
+  --paper: #f8f6ef;
+  --paper-raised: #fdfcf8;
+  --paper-sunk: #ece8da;
+  --ink: #18211b;
+  --ink-muted: #525c4f;
+  --ink-faint: #7f8777;
+  --hairline: #ddd8c8;
+  --accent: #3d6a35;
+  --focus: #1d6b74;
+  --glass-tint: rgba(253, 252, 248, 0.5);
+  --glass-rim: rgba(255, 255, 255, 0.95);
+  --glass-edge: rgba(24, 33, 27, 0.1);
+}
+
+/* Michelangelus: an installed copy wins (local), otherwise the git-ignored evaluation file, otherwise Instrument Serif
+   (the nearest open face). The real font is NOT licensed for web embedding; see docs/design-system/type-michelangelus.md. */
+@font-face {
+  font-family: 'Michelangelus';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Michelangelus'), local('Michelangelus Regular'), url('/fonts-eval/Michelangelus-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Michelangelus';
+  font-style: italic;
+  font-weight: 400;
+  src: local('Michelangelus Italic'), url('/fonts-eval/Michelangelus-Italic.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Michelangelus';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Michelangelus Bold'), url('/fonts-eval/Michelangelus-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Michelangelus';
+  font-style: italic;
+  font-weight: 700;
+  src: local('Michelangelus Bold Italic'), url('/fonts-eval/Michelangelus-BoldItalic.ttf') format('truetype');
+}
+
+.m2-root {
+  --m2-serif: 'Michelangelus', var(--font-instrument), 'Iowan Old Style', Georgia, serif;
+  position: relative;
+  overflow-x: clip;
+}
+
+/* ---------- layers ---------- */
+.m2-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.m2-wash {
+  background:
+    radial-gradient(60% 45% at 92% 4%, rgba(255, 243, 214, 0.7), rgba(255, 243, 214, 0) 70%),
+    linear-gradient(180deg, rgba(220, 235, 241, 0.8) 0%, rgba(220, 235, 241, 0.32) 34%, rgba(220, 235, 241, 0) 62%);
+}
+.m2-grain {
+  opacity: 0.05;
+  mix-blend-mode: multiply;
+  background-size: 180px 180px;
+  background-image: url('/textures/grain-light.png');
+}
+
+/* ---------- backdrop: CSS stand-in for the WebGL botanical backdrop ---------- */
+.m2-bd {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.m2-ph {
+  position: absolute;
+  height: auto;
+  max-width: none;
+  user-select: none;
+}
+.m2-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- type ---------- */
+.m2-name {
+  font-family: var(--m2-serif);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+  /* "Bodzianowski" is about 5.4em wide in Michelangelus: size the name so it always fits the column */
+  font-size: clamp(52px, calc((100vw - 32px) / 5.55), 76px);
+}
+@media (min-width: 768px) {
+  .m2-name {
+    font-size: clamp(110px, calc((100vw - 64px) / 5.55), 176px);
+    line-height: 0.88;
+  }
+}
+.m2-role {
+  font-family: var(--m2-serif);
+  font-style: italic;
+  font-size: 24px;
+  line-height: 1.25;
+  color: var(--ink-muted);
+}
+.m2-intro {
+  font-family: var(--m2-serif);
+  font-size: 30px;
+  line-height: 1.2;
+  letter-spacing: -0.005em;
+}
+@media (min-width: 768px) {
+  .m2-role {
+    font-size: 30px;
+  }
+  .m2-intro {
+    font-size: 44px;
+  }
+}
+.m2-h2 {
+  font-family: var(--m2-serif);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+  font-size: 40px;
+}
+@media (min-width: 768px) {
+  .m2-h2 {
+    font-size: 64px;
+  }
+}
+
+/* Selected work, retyped in Michelangelus; images feather into the paper instead of sitting in a box. */
+.m2-root .work-feat__title,
+.m2-root .wrow__title {
+  font-family: var(--m2-serif);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+}
+.m2-root .work-feat__title {
+  font-size: clamp(46px, 13vw, 84px);
+  line-height: 0.98;
+}
+.m2-root .work-feat__media {
+  background: transparent;
+  margin-inline: 0;
+  -webkit-mask-image: radial-gradient(ellipse 54% 56% at 50% 50%, #000 34%, transparent 100%);
+  mask-image: radial-gradient(ellipse 54% 56% at 50% 50%, #000 34%, transparent 100%);
+}
+.m2-root .work-feat__img {
+  aspect-ratio: 4 / 3;
+  filter: saturate(0.9) contrast(0.96);
+}
+@media (min-width: 768px) {
+  .m2-root .work-feat__img {
+    aspect-ratio: 16 / 9;
+  }
+}
+.m2-root .work-feat__meta,
+.m2-root .wrow__meta {
+  font-family: var(--m2-serif);
+  font-style: italic;
+  font-size: 18px;
+}
+.m2-root .work-feat__desc {
+  font-family: var(--m2-serif);
+  font-size: 20px;
+  line-height: 1.35;
+}
+
+/* ---------- motion: slow, tiny, optional ---------- */
+.m2-arrive {
+  animation: m2-arrive 3.2s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+.m2-sway {
+  transform-origin: 50% 100%;
+  animation: m2-sway 20s ease-in-out infinite alternate;
+}
+@keyframes m2-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes m2-sway {
+  from {
+    transform: rotate(-0.5deg);
+  }
+  to {
+    transform: rotate(0.5deg);
+  }
+}
+@supports (animation-timeline: scroll()) {
+  .m2-drift {
+    animation: m2-drift linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 120vh;
+  }
+}
+@keyframes m2-drift {
+  to {
+    transform: translateY(var(--m2-drift, 40px));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .m2-arrive,
+  .m2-sway,
+  .m2-drift {
+    animation: none;
+  }
+}

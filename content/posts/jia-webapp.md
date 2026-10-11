@@ -10,6 +10,7 @@ cover: /media/jia-webapp/cover.webp
 coverAlt: "JIA student worksheet beside an AI chat panel, with a confirm dialog and a new-message notice"
 priority: 6
 role: "Lead developer, SHINE Lab"
+hook: "an LLM helper for students' worksheets"
 links:
   - label: "NSF AI Institute for Student-AI Teaming"
     href: "https://www.colorado.edu/research/ai-institute/"

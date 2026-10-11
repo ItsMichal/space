@@ -1,0 +1,85 @@
+.pv-link {
+  text-decoration-line: underline;
+  text-decoration-color: var(--hairline);
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color 240ms, color 240ms;
+}
+.pv-link:hover {
+  text-decoration-color: currentColor;
+}
+.pv {
+  position: fixed;
+  z-index: 70;
+  width: 300px;
+  max-width: calc(100vw - 24px);
+  transform-origin: var(--ox, 50%) 0;
+  /* Folded: it leaves quicker and without overshoot (a critically damped fold back into the link). */
+  opacity: 0;
+  transform: translate3d(calc(var(--ox, 0px) * -0.04), -8px, 0) scale(0.84, 0.7);
+  transition: opacity 280ms var(--craft-in, ease-in), transform 460ms var(--craft-in, ease-in);
+  pointer-events: none;
+}
+.pv[data-vis] {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  /* Open: grows out of the link with a hair of overshoot; opacity leads. */
+  transition: opacity 500ms var(--ui-settle), transform 900ms var(--ui-follow);
+}
+.pv[data-above] {
+  transform-origin: var(--ox, 50%) 100%;
+  transform: translate3d(0, 8px, 0) scale(0.84, 0.7);
+}
+.pv[data-above][data-vis] {
+  transform: none;
+}
+.pv-glass {
+  display: block;
+  overflow: hidden;
+}
+.pv-in {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  color: var(--ink);
+  text-decoration: none;
+}
+.pv-img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 14px 8px 14px 8px;
+  background: var(--paper-sunk);
+}
+.pv-txt {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.pv-t {
+  font: 600 15px/1.25 var(--font-sans);
+  letter-spacing: -0.01em;
+}
+.pv-d {
+  font: 400 14px/1.35 var(--font-serif);
+  color: var(--ink-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.pv-m {
+  font: 400 13px/1.3 var(--font-serif);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pv,
+  .pv[data-above],
+  .pv[data-vis] {
+    transform: none;
+    transition: opacity 160ms linear;
+  }
+}

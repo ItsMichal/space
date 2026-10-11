@@ -1,0 +1,98 @@
+.fr {
+  margin: 0 0 var(--space-12);
+  max-width: 760px;
+}
+.fr-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(76px, 112px) 1fr;
+  column-gap: var(--space-6);
+  align-items: baseline;
+  padding: var(--space-3) 0;
+}
+/* The same fine hand-drawn hair the links rest on (makeStroke, seeded), not a CSS border. */
+.fr {
+  --t-rest: var(--t-rest-1);
+}
+:root[data-reading] .fr {
+  --t-rest: var(--t-rest-dark-1);
+}
+.fr-row::before,
+.fr-row:last-child::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: var(--t-rest) no-repeat 0 50% / 100% 100%;
+  pointer-events: none;
+}
+.fr-row::before {
+  top: -3px;
+  transform-origin: 0 50%;
+}
+.fr-row:last-child::after {
+  bottom: -3px;
+}
+.fr-row:nth-child(2n)::before {
+  --t-rest: var(--t-rest-2);
+}
+:root[data-reading] .fr-row:nth-child(2n)::before {
+  --t-rest: var(--t-rest-dark-1);
+}
+.fr dt {
+  font: 400 15px/24px var(--font-serif);
+  color: var(--ink-muted);
+}
+.fr dd {
+  margin: 0;
+  font: 400 17px/24px var(--font-serif);
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.fr dd a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  margin-right: var(--space-4);
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--hairline);
+  text-underline-offset: 0.2em;
+  transition: color 240ms, text-decoration-color 240ms;
+}
+.fr dd a:hover {
+  color: var(--accent);
+  text-decoration-color: currentColor;
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .fr-row::before {
+      animation: fr-line linear both;
+      animation-timeline: view();
+      animation-range: entry 5% entry 70%;
+    }
+    .fr-row dt,
+    .fr-row dd {
+      animation: fr-text linear both;
+      animation-timeline: view();
+      animation-range: entry 10% entry 85%;
+    }
+    .fr-row dd {
+      animation-range: entry 20% entry 100%;
+    }
+  }
+}
+@keyframes fr-line {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes fr-text {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}

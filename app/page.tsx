@@ -1,5 +1,7 @@
 import { ArrowUpRight, FileText } from 'lucide-react'
-import { getBlogPosts, getTopLevel } from '@/lib/content'
+import { getAllPosts, getBlogPosts, getTopLevel } from '@/lib/content'
+import { HeroHook } from '@/components/site/HeroHook'
+import { postPath } from '@/lib/seo'
 import { siteConfig } from '@/site.config'
 import { GlassButton } from '@/components/glass/GlassButton'
 import { NameHeader } from '@/components/site/NameHeader'
@@ -7,15 +9,30 @@ import { ProjectList } from '@/components/site/ProjectList'
 import { Showcase } from '@/components/work/Showcase'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { profile } from '@/content/profile'
+import { Timeline, type TimelineItem } from '@/components/ui/Timeline'
 import { homeMetadata, personJsonLd, websiteJsonLd } from '@/lib/seo'
 
 export const metadata = homeMetadata()
 
-const h2 = 'reveal mb-space-8 text-[32px] font-semibold leading-[1.1] tracking-[-0.02em]'
+// Oldest first, left to right; the plain list in the HTML keeps the same order.
+const experience: TimelineItem[] = [...profile.experience]
+  .sort((a, b) => Number(a.since) - Number(b.since))
+  .map((e) => ({
+    id: e.company.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    date: e.since,
+    dateLabel: e.years,
+    title: e.company,
+    label: 'short' in e ? e.short : undefined,
+    summary: e.role,
+  }))
+
+const h2 = 'reveal mb-space-8 font-display text-[clamp(38px,10vw,44px)] font-normal leading-[1.05] tracking-[-0.015em] md:text-[56px]'
 
 export default function Home() {
   const projects = getTopLevel('project')
   const articles = getBlogPosts()
+  // Rotating hero line: every post that sets `hook`, in the site's own order (priority, then newest).
+  const hooks = getAllPosts().filter((p) => p.hook).map((p) => ({ text: p.hook!, href: postPath(p) }))
 
   return (
     <div className="mx-auto max-w-content px-space-4 md:px-space-8">
@@ -24,14 +41,14 @@ export default function Home() {
         first={profile.firstName}
         last={profile.lastName}
         role={profile.role}
-        intro={profile.intro}
+        intro={hooks.length ? <HeroHook stem={profile.hookStem} items={hooks} /> : undefined}
       />
 
-      <section id="work" aria-labelledby="work-h" className="mt-space-16 md:mt-space-24">
+      <section id="work" aria-labelledby="work-h" className="mt-[104px] md:mt-space-24">
         <h2 id="work-h" className={h2}>
           Selected work
         </h2>
-        <Showcase posts={projects} base="/projects" limit={5} />
+        <Showcase posts={projects} base="/projects" limit={5} shader />
       </section>
 
       {articles.length > 0 ? (
@@ -51,17 +68,9 @@ export default function Home() {
           <p>{profile.about[0]}</p>
           <p className="text-ink-muted">{profile.about[1]}</p>
         </div>
-        <ul aria-label="Experience" className="mt-space-8 max-w-[56ch] divide-y divide-hairline border-y border-hairline">
-          {profile.experience.map((e) => (
-            <li key={e.company} className="flex flex-col gap-space-1 py-space-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-space-4">
-              <span className="font-serif text-[18px] font-medium">
-                {e.company}
-                <span className="font-normal text-ink-muted"> · {e.role}</span>
-              </span>
-              {'years' in e ? <span className="font-serif text-body text-ink-muted">{e.years}</span> : null}
-            </li>
-          ))}
-        </ul>
+        <div className="mt-space-8">
+          <Timeline items={experience} label="Experience" statusLabel="Experience" pitch={84} fit />
+        </div>
         <div className="mt-space-8 flex flex-wrap gap-space-3">
           <GlassButton href="/BodzianowskiResume.pdf" icon={<FileText aria-hidden />}>
             Resume

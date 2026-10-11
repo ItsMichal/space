@@ -7,6 +7,7 @@ import { PostNav } from '@/components/content/PostNav'
 import type { PostKind } from '@/lib/content/types'
 import { ReadingTheme } from '@/components/site/ReadingTheme'
 import { JsonLd } from '@/components/seo/JsonLd'
+import { PostExtras } from '@/components/content/PostExtras'
 import { postJsonLd, postMetadata as buildPostMetadata } from '@/lib/seo'
 
 /** Reading pages follow the OS light/dark setting (everything else is Birch only). */
@@ -69,13 +70,16 @@ export async function PostPage({ kind, slug, parent }: { kind: PostKind; slug: s
         kind={kind}
         back={parentPost ? { href: `/projects/${parentPost.slug}`, label: parentPost.title, series: post.series } : undefined}
         after={
-          <PostNav
+          <>
+            <PostExtras slug={post.slug} />
+            <PostNav
             parent={parentPost}
             items={children}
             prev={at > 0 ? siblings[at - 1] : undefined}
             next={at >= 0 ? siblings[at + 1] : undefined}
             position={at >= 0 ? { n: at + 1, of: siblings.length } : undefined}
-          />
+            />
+          </>
         }
       >
         {body}

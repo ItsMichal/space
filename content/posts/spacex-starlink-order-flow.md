@@ -12,6 +12,7 @@ parent: spacex-starlink-general-projects
 series: "Selected pieces"
 order: 1
 role: "Engineer, order flow rewrite in React"
+hook: "the Starlink.com order flow"
 links:
   - label: "Order a Starlink"
     href: "https://starlink.com"

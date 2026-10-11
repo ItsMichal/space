@@ -10,7 +10,7 @@ export const SITE_NAME = siteConfig.title
 export const AUTHOR_NAME = profile.name
 export const DEFAULT_OG_IMAGE = '/michal.png'
 
-/** Pass to `metadata.metadataBase` in the root layout so relative URLs resolve to https://michal.us. */
+/** Pass to `metadata.metadataBase` in the root layout so relative URLs resolve to https://michal.ai. */
 export const metadataBase = new URL(SITE_URL)
 
 export const absoluteUrl = (path: string) =>
@@ -53,7 +53,11 @@ export const personJsonLd = {
   alumniOf: profile.alumniOf.map((name) => ({ '@type': 'CollegeOrUniversity', name })),
   knowsAbout: [...profile.knowsAbout],
   description: siteConfig.description,
-  sameAs: [siteConfig.github, siteConfig.linkedin, `https://twitter.com/${siteConfig.twitter.replace(/^@/, '')}`],
+  sameAs: [
+    siteConfig.github,
+    siteConfig.linkedin,
+    `https://twitter.com/${siteConfig.twitter.replace(/^@/, '')}`,
+  ],
 }
 
 export const websiteJsonLd = {

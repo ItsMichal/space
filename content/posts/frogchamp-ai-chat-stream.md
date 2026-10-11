@@ -9,6 +9,7 @@ cover: /media/frogchamp-ai-chat-stream/cover.webp
 coverAlt: "Frogchamp dashboard in dark mode: a live stream beside an AI chat summary, an activity meter and a scrolling chat feed"
 priority: 8
 role: "Design and development"
+hook: "a live dashboard for streamers' chat"
 links:
   - label: "frogchamp.co"
     href: "https://frogchamp.co"

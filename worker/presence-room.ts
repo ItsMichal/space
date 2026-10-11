@@ -31,7 +31,7 @@ interface Attachment {
   ro: boolean
 }
 
-const ALLOWED_HOSTS = new Set(['michal.us', 'www.michal.us', 'localhost', '127.0.0.1', '[::1]'])
+const ALLOWED_HOSTS = new Set(['michal.ai', 'www.michal.ai', 'michal.us', 'www.michal.us', 'localhost', '127.0.0.1', '[::1]'])
 
 export function originAllowed(origin: string | null): boolean {
   if (!origin) return false

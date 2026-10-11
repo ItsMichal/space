@@ -9,6 +9,7 @@ cover: /media/realtime-ai-f1-comentator/cover.png
 coverAlt: "Discord messages from the A.I. Croft bot commentating the Abu Dhabi Grand Prix, with a lap table of drivers and gaps"
 priority: 9
 role: "Solo build"
+hook: "an AI race commentator for F1 23"
 ---
 
 ## AI Croft- F1 Game Commentator that provides commentary in realtime

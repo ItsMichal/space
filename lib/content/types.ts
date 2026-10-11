@@ -26,6 +26,8 @@ export type PostFrontmatter = {
   role?: string
   /* Display span for the spec line instead of the date's year, e.g. "2024 – present". */
   years?: string
+  /* Short noun phrase (<= 48 chars) for the home hero's rotating "Lately I've built ..." line. Posts that set it join the rotation, ordered by priority then date. */
+  hook?: string
   links?: PostLink[]
   gallery?: GalleryItem[]
   draft?: boolean

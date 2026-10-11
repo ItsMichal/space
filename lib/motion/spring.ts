@@ -12,14 +12,14 @@ export const SPRING_MOMENTUM: SpringConfig = { response: 0.45, damping: 0.85 }
 export type SpringState = { value: number; velocity: number; target: number }
 
 /** Natural frequency and damping coefficient for a unit mass. */
-const coeffs = ({ response, damping }: SpringConfig) => {
+export const springCoeffs = ({ response, damping }: SpringConfig) => {
   const w = (2 * Math.PI) / Math.max(response, 0.01)
   return { k: w * w, c: 2 * damping * w }
 }
 
 /** Advance by `dt` seconds. Sub-steps keep stiff springs stable at low frame rates. Returns a new state. */
 export function stepSpring(s: SpringState, cfg: SpringConfig, dt: number): SpringState {
-  const { k, c } = coeffs(cfg)
+  const { k, c } = springCoeffs(cfg)
   let { value, velocity } = s
   const n = Math.max(1, Math.ceil(dt / (1 / 240)))
   const h = dt / n

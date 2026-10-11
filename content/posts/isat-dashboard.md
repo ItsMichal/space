@@ -11,6 +11,7 @@ coverAlt: "iSAT Interactive Display: a grid of per-team gauges and charts for no
 coverFocus: "50% 0%"
 priority: 4
 role: "Developer, SHINE Lab"
+hook: "a teacher's dashboard for group activity"
 links:
   - label: "Publications"
     href: "https://www.colorado.edu/research/ai-institute/our-publications"

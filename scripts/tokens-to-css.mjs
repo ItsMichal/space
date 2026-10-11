@@ -16,6 +16,7 @@ const themed = (theme) => {
 const fixed = () => {
   const out = []
   out.push(`  --font-sans: ${t.type.families.sans};`)
+  out.push(`  --font-display: ${t.type.families.display};`)
   out.push(`  --font-serif: ${t.type.families.serif};`)
   out.push(`  --font-mono: ${t.type.families.mono};`)
   for (const g of t.type.groups) {

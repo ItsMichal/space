@@ -4,6 +4,9 @@ import { ArrowUpRight } from 'lucide-react'
 import type { GalleryItem, PostLink } from '@/lib/content/types'
 import { Zoomable } from '@/components/media/Zoomable'
 import { Lightbox } from '@/components/media/Lightbox'
+import { Gallery } from '@/components/ui/Gallery'
+import { FactRows } from '@/components/ui/FactRows'
+import { ReadingToc } from '@/components/ui/ReadingToc'
 
 type Props = {
   title: string
@@ -52,6 +55,8 @@ export function ArticleLayout({
   after,
   children,
 }: Props) {
+  // "Web" is a category, not a stack item: it never leads a spec line.
+  const stack = tags.filter((t) => t !== 'Web')
   return (
     <article data-post className="mx-auto max-w-content px-space-4 pb-space-16 pt-[120px] md:px-space-8 md:pt-[160px]">
       <header className="max-w-[900px]">
@@ -67,7 +72,7 @@ export function ArticleLayout({
             {kind === 'project' ? 'Project' : 'Article'} · {readingMinutes} min read
           </p>
         )}
-        <h1 className="text-[clamp(36px,11vw,56px)] font-semibold leading-none tracking-[-0.03em] md:text-display">
+        <h1 className="font-display text-[clamp(46px,13vw,60px)] font-normal leading-none tracking-[-0.02em] md:text-display">
           {title}
         </h1>
         <p className="lede mt-space-6 max-w-[40ch]">{description}</p>
@@ -79,7 +84,7 @@ export function ArticleLayout({
               <time dateTime={updated}>{fmt(updated)}</time>
             </>
           ) : null}
-          {tags.length ? ` · ${tags.join(' · ')}` : null}
+          {stack.length ? ` · ${stack.join(' · ')}` : null}
         </p>
       </header>
       {cover ? (
@@ -96,55 +101,44 @@ export function ArticleLayout({
       ) : (
         <div className="h-space-12" />
       )}
-      {kind === 'project' && (role || tags.length || links?.length) ? (
-        <dl className="facts" aria-label="Project facts">
-          <div>
-            <dt>Year</dt>
-            <dd>{years ?? date.slice(0, 4)}</dd>
-          </div>
-          {role ? (
-            <div>
-              <dt>Role</dt>
-              <dd>{role}</dd>
-            </div>
-          ) : null}
-          {tags.length ? (
-            <div className="facts__wide">
-              <dt>Stack</dt>
-              <dd>{tags.join(' · ')}</dd>
-            </div>
-          ) : null}
-          {links?.length ? (
-            <div className="facts__wide">
-              <dt>Links</dt>
-              <dd>
-                {links.map((l) => (
-                  <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer">
-                    {l.label}
-                    <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
-                  </a>
-                ))}
-              </dd>
-            </div>
-          ) : null}
-        </dl>
+      {kind === 'project' && (role || stack.length || links?.length) ? (
+        <FactRows
+          facts={[
+            { label: 'Year', value: years ?? date.slice(0, 4) },
+            ...(role ? [{ label: 'Role', value: role }] : []),
+            ...(stack.length ? [{ label: 'Stack', value: stack.join(' · ') }] : []),
+            ...(links?.length
+              ? [
+                  {
+                    label: 'Links',
+                    value: links.map((l) => (
+                      <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer">
+                        {l.label}
+                        <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
+                      </a>
+                    )),
+                  },
+                ]
+              : []),
+          ]}
+        />
       ) : null}
       {gallery?.length ? (
         <section className="gallery" aria-label="Gallery">
-          <ul className="gallery__list">
-            {gallery.map((g) => (
-              <li key={g.src}>
-                <figure className="gallery__item">
-                  <Zoomable src={g.src} alt={g.alt} caption={g.caption} sizes="(min-width: 1184px) 340px, (min-width: 768px) 30vw, 82vw" />
-                  {g.caption ? <figcaption>{g.caption}</figcaption> : null}
-                </figure>
-              </li>
-            ))}
-          </ul>
+          <Gallery
+            label="Project images"
+            autoplayMs={0}
+            slides={gallery.map((g) => ({
+              key: g.src,
+              caption: g.caption,
+              node: <Zoomable src={g.src} alt={g.alt} caption={g.caption} sizes="(min-width: 900px) 760px, 90vw" />,
+            }))}
+          />
         </section>
       ) : null}
       <div className="prose">{children}</div>
       {after}
+      <ReadingToc />
       <Lightbox />
     </article>
   )

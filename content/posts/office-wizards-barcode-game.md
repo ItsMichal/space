@@ -10,6 +10,7 @@ cover: /media/office-wizards-barcode-game/cover.webp
 coverAlt: "Playtesting Office Wizards: a laptop running the game, a barcode scanner in hand and printed barcode sheets on the table"
 priority: 5
 role: "Game developer"
+hook: "a wizard game played with barcode scanners"
 gallery:
   - src: /media/office-wizards-barcode-game/img-7888-2435be.webp
     alt: "A printer wrapped in moss and flowers, opened up as the game enclosure"

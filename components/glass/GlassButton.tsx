@@ -2,7 +2,9 @@
 
 import Link from 'next/link'
 import type { ReactNode } from 'react'
-import { LiquidGlass } from './LiquidGlass'
+import { Glass } from './react'
+import { glass } from './glass'
+import { InkLayer } from '@/components/motion/InkLayer'
 
 type Props = {
   children: ReactNode
@@ -18,11 +20,12 @@ type Props = {
 
 const isExternal = (href: string) => /^(https?:)?\/\//.test(href) || href.endsWith('.pdf')
 
-/** Pill glass button. Springs to 1.03 on hover and 0.97 on press (CSS, see .lg-btn). */
+/** Pill glass button: hover lift (CSS), spring press with touch-point glow (engine, interactive glass). */
 export function GlassButton({ children, href, onClick, solid, className = '', icon, type = 'button' }: Props) {
-  const cls = `lg-btn${solid ? ' lg-btn--solid' : ''}${className ? ` ${className}` : ''}`
+  const cls = `lg--pill lg-btn${solid ? ' lg-btn--solid' : ''}${className ? ` ${className}` : ''}`
   const inner = (
     <>
+      <InkLayer />
       {icon}
       <span>{children}</span>
     </>
@@ -38,14 +41,14 @@ export function GlassButton({ children, href, onClick, solid, className = '', ic
   }
   if (href) {
     return (
-      <LiquidGlass pill as={external ? 'a' : Link} className={cls} href={href} {...extra}>
+      <Glass effect={glass.regular.interactive()} shape="inherit" as={external ? 'a' : Link} className={cls} href={href} {...extra}>
         {inner}
-      </LiquidGlass>
+      </Glass>
     )
   }
   return (
-    <LiquidGlass pill as="button" className={cls} type={type} onClick={onClick}>
+    <Glass effect={glass.regular.interactive()} shape="inherit" as="button" className={cls} type={type} onClick={onClick}>
       {inner}
-    </LiquidGlass>
+    </Glass>
   )
 }
