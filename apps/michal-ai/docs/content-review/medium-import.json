@@ -1,0 +1,377 @@
+[
+  {
+    "id": "2277172dad0e",
+    "slug": "logic-probe-build-log",
+    "title": "Logic Probe Build Log",
+    "url": "https://halmic.medium.com/logic-probe-build-log-part-1-2277172dad0e",
+    "author": "Michal Bodzianowski",
+    "date": "2021-08-28",
+    "updated": "2021-09-10",
+    "tags": [
+      "DIY",
+      "Electronics",
+      "Education"
+    ],
+    "words": 973,
+    "mediumWordCount": 981,
+    "images": 40,
+    "captions": 13,
+    "cover": null,
+    "imagesWithoutAlt": 40,
+    "embeds": [],
+    "complete": true,
+    "notes": [
+      "lead image kept in the body: no alt text from Medium, so it cannot be a cover yet",
+      "link card \"E-Textile Logic Probe - Debugging Tool\" reduced to a plain link"
+    ],
+    "unresolved": [],
+    "warnings": []
+  },
+  {
+    "id": "b4035abc7622",
+    "slug": "creating-my-own-animated-logo",
+    "title": "Creating my own animated logo",
+    "url": "https://halmic.medium.com/creating-my-own-animated-stinger-b4035abc7622",
+    "author": "Michal Bodzianowski",
+    "date": "2021-09-01",
+    "updated": null,
+    "tags": [
+      "Motion Design",
+      "After Effects",
+      "Design",
+      "Motion"
+    ],
+    "words": 392,
+    "mediumWordCount": 390,
+    "images": 3,
+    "captions": 3,
+    "cover": null,
+    "imagesWithoutAlt": 3,
+    "embeds": [
+      "youtube HE_1ACRD4qw"
+    ],
+    "complete": true,
+    "notes": [],
+    "unresolved": [],
+    "warnings": []
+  },
+  {
+    "id": "cda34539ecac",
+    "slug": "making-a-literal-threadboard-constellation",
+    "title": "Making a (literal) ThreadBoard constellation!",
+    "url": "https://halmic.medium.com/making-a-literal-threadboard-constellation-cda34539ecac",
+    "author": "Michal Bodzianowski",
+    "date": "2021-09-08",
+    "updated": null,
+    "tags": [
+      "Electronics",
+      "DIY"
+    ],
+    "words": 910,
+    "mediumWordCount": 937,
+    "images": 21,
+    "captions": 7,
+    "cover": null,
+    "imagesWithoutAlt": 21,
+    "embeds": [
+      "youtube WEVobrq2EGM",
+      "youtube dbslHXH2qrw"
+    ],
+    "complete": true,
+    "notes": [],
+    "unresolved": [],
+    "warnings": []
+  },
+  {
+    "id": "58e52217cab0",
+    "slug": "making-a-kinetic-typography",
+    "title": "Making a Kinetic Typography",
+    "url": "https://halmic.medium.com/making-a-kinetic-typography-58e52217cab0",
+    "author": "Michal Bodzianowski",
+    "date": "2021-09-20",
+    "updated": null,
+    "tags": [
+      "Motion Graphics",
+      "Typography",
+      "Animation"
+    ],
+    "words": 195,
+    "mediumWordCount": 198,
+    "images": 0,
+    "captions": 0,
+    "cover": null,
+    "imagesWithoutAlt": 0,
+    "embeds": [
+      "youtube MflsgTYU8O8"
+    ],
+    "complete": true,
+    "notes": [],
+    "unresolved": [],
+    "warnings": []
+  },
+  {
+    "id": "b674611fd0d0",
+    "slug": "led-pong-and-more-adventures-with-the-arduino-nano-33-iot",
+    "title": "LED Pong and more adventures with the Arduino Nano 33 IoT",
+    "url": "https://halmic.medium.com/led-pong-and-more-adventures-with-the-arduino-nano-33-iot-b674611fd0d0",
+    "author": "Michal Bodzianowski",
+    "date": "2021-09-25",
+    "updated": null,
+    "tags": [
+      "Arduino",
+      "Electronics",
+      "Design"
+    ],
+    "words": 1106,
+    "mediumWordCount": 1093,
+    "images": 16,
+    "captions": 7,
+    "cover": null,
+    "imagesWithoutAlt": 16,
+    "embeds": [
+      "youtube rvVoF5p_hXM",
+      "gist -> link: https://gist.github.com/ItsMichal/83bbf5e1ecba49d85802d44381818a4b",
+      "youtube kQ4YILcm0zQ",
+      "youtube yHjq8IRvXc4",
+      "gist -> link: https://gist.github.com/ItsMichal/73bbc6190475ab6cd8c3e219c2e4cb9f",
+      "youtube HWMPAJ3ZoaI"
+    ],
+    "complete": true,
+    "notes": [
+      "lead image kept in the body: no alt text from Medium, so it cannot be a cover yet"
+    ],
+    "unresolved": [],
+    "warnings": []
+  },
+  {
+    "id": "f476a43631bb",
+    "slug": "small-projects-in-motion",
+    "title": "Small Projects in Motion",
+    "url": "https://halmic.medium.com/small-projects-in-motion-f476a43631bb",
+    "author": "Michal Bodzianowski",
+    "date": "2021-09-29",
+    "updated": null,
+    "tags": [
+      "Motion Design",
+      "Animation",
+      "Portfolio"
+    ],
+    "words": 79,
+    "mediumWordCount": 79,
+    "images": 0,
+    "captions": 0,
+    "cover": null,
+    "imagesWithoutAlt": 0,
+    "embeds": [
+      "youtube FgOu6kIFvKo"
+    ],
+    "complete": true,
+    "notes": [],
+    "unresolved": [],
+    "warnings": []
+  },
+  {
+    "id": "4d7112e943af",
+    "slug": "creating-my-first-pcb-object",
+    "title": "Creating my first PCB — Object",
+    "url": "https://halmic.medium.com/creating-my-first-pcb-object-4d7112e943af",
+    "author": "Michal Bodzianowski",
+    "date": "2021-10-15",
+    "updated": null,
+    "tags": [
+      "ATtiny85",
+      "Arduino",
+      "Hacking",
+      "Programming",
+      "Design"
+    ],
+    "words": 951,
+    "mediumWordCount": 933,
+    "images": 11,
+    "captions": 5,
+    "cover": null,
+    "imagesWithoutAlt": 11,
+    "embeds": [
+      "youtube yNP8Ox28alI",
+      "youtube cVro2o0g-ls",
+      "gist -> link: https://gist.github.com/ItsMichal/d6447a63577c7a86f83c25ce52554f1f"
+    ],
+    "complete": true,
+    "notes": [],
+    "unresolved": [],
+    "warnings": []
+  },
+  {
+    "id": "a604e5c4117d",
+    "slug": "quantum-computing-explained-in-1-minute",
+    "title": "Quantum Computing explained in 1 minute.",
+    "url": "https://halmic.medium.com/quantum-computing-explained-in-1-minute-a604e5c4117d",
+    "author": "Michal Bodzianowski",
+    "date": "2021-10-18",
+    "updated": null,
+    "tags": [
+      "Quantum Computing",
+      "Infographics",
+      "Design",
+      "Motion Design",
+      "Videos"
+    ],
+    "words": 165,
+    "mediumWordCount": 170,
+    "images": 0,
+    "captions": 0,
+    "cover": null,
+    "imagesWithoutAlt": 0,
+    "embeds": [
+      "youtube F9JuWoMWbgY"
+    ],
+    "complete": true,
+    "notes": [],
+    "unresolved": [],
+    "warnings": []
+  },
+  {
+    "id": "e7bbe87de941",
+    "slug": "medpuck-pcb-prototype",
+    "title": "MedPuck PCB Prototype",
+    "url": "https://halmic.medium.com/medpuck-pcb-prototype-e7bbe87de941",
+    "author": "Michal Bodzianowski",
+    "date": "2021-11-02",
+    "updated": null,
+    "tags": [
+      "Electronics",
+      "Design",
+      "Entrepreneurship",
+      "Product Development",
+      "DIY"
+    ],
+    "words": 785,
+    "mediumWordCount": 773,
+    "images": 9,
+    "captions": 4,
+    "cover": null,
+    "imagesWithoutAlt": 9,
+    "embeds": [
+      "youtube 84n9oLqIYtQ",
+      "gist -> link: https://gist.github.com/ItsMichal/d6447a63577c7a86f83c25ce52554f1f"
+    ],
+    "complete": true,
+    "notes": [],
+    "unresolved": [],
+    "warnings": []
+  },
+  {
+    "id": "e5d67d9e8d29",
+    "slug": "experiments-in-analog-and-a-failed-attempt-at-a-screaming-robot",
+    "title": "Experiments in Analog- and a failed attempt at a screaming robot.",
+    "url": "https://halmic.medium.com/experiments-in-analog-and-a-failed-attempt-at-a-screaming-robot-e5d67d9e8d29",
+    "author": "Michal Bodzianowski",
+    "date": "2021-11-06",
+    "updated": null,
+    "tags": [
+      "Fail",
+      "Arduino",
+      "Electronics",
+      "DIY",
+      "Robotics"
+    ],
+    "words": 1401,
+    "mediumWordCount": 1389,
+    "images": 11,
+    "captions": 7,
+    "cover": null,
+    "imagesWithoutAlt": 11,
+    "embeds": [
+      "youtube 1_BN7k59j90",
+      "youtube YxhLm9ipMy8",
+      "youtube unZIL3J9M_4"
+    ],
+    "complete": true,
+    "notes": [],
+    "unresolved": [],
+    "warnings": []
+  },
+  {
+    "id": "f937d06c6ba9",
+    "slug": "poznan-low-roar-mv",
+    "title": "Poznan — Low Roar MV",
+    "url": "https://halmic.medium.com/poznan-low-roar-mv-f937d06c6ba9",
+    "author": "Michal Bodzianowski",
+    "date": "2021-11-17",
+    "updated": null,
+    "tags": [],
+    "words": 6,
+    "mediumWordCount": 10,
+    "images": 0,
+    "captions": 0,
+    "cover": null,
+    "imagesWithoutAlt": 0,
+    "embeds": [
+      "youtube tXBO_86xsCU"
+    ],
+    "complete": true,
+    "notes": [],
+    "unresolved": [],
+    "warnings": []
+  },
+  {
+    "id": "1f8fe83cb6af",
+    "slug": "making-a-punching-bag-game-in-p5-js",
+    "title": "Making a punching bag game in P5.js",
+    "url": "https://halmic.medium.com/making-a-punching-bag-game-in-p5-js-1f8fe83cb6af",
+    "author": "Michal Bodzianowski",
+    "date": "2021-11-20",
+    "updated": null,
+    "tags": [
+      "Game Dev",
+      "Hardware",
+      "Arduino",
+      "Fun",
+      "Projects"
+    ],
+    "words": 941,
+    "mediumWordCount": 924,
+    "images": 3,
+    "captions": 2,
+    "cover": null,
+    "imagesWithoutAlt": 3,
+    "embeds": [
+      "gist -> link: https://gist.github.com/ItsMichal/a186eaf2f3f17f2ada46b8f19fec2e16",
+      "gist -> link: https://gist.github.com/ItsMichal/b28838b117930354e6e7a5ffd1b3e8fc",
+      "youtube hdnndI1rcKc"
+    ],
+    "complete": true,
+    "notes": [],
+    "unresolved": [],
+    "warnings": []
+  },
+  {
+    "id": "5c1fb9e6372c",
+    "slug": "taco-neko-development",
+    "title": "Taco Neko Development",
+    "url": "https://halmic.medium.com/taco-neko-development-5c1fb9e6372c",
+    "author": "Michal Bodzianowski",
+    "date": "2020-05-27",
+    "updated": "2020-11-10",
+    "tags": [
+      "Game Dev",
+      "Design",
+      "Process",
+      "itch.io",
+      "GB Studio"
+    ],
+    "words": 3218,
+    "mediumWordCount": 3151,
+    "images": 47,
+    "captions": 32,
+    "cover": null,
+    "imagesWithoutAlt": 47,
+    "embeds": [
+      "youtube WQFVbquhTQo (from a bare link)"
+    ],
+    "complete": true,
+    "notes": [],
+    "unresolved": [],
+    "warnings": []
+  }
+]
