@@ -134,7 +134,7 @@
 }
 @keyframes settle-o {
   from {
-    opacity: 0;
+    opacity: 0.01;
   }
 }
 @keyframes settle-b {
@@ -417,4 +417,14 @@
   .wrow__title {
     translate: none !important;
   }
+}
+
+/* InkLayer: sits over the host and soaks into it (multiply on paper, screen on basalt), never intercepting pointers. */
+.ink-layer {
+  z-index: 1;
+  mix-blend-mode: multiply;
+  border-radius: inherit;
+}
+:root[data-reading] .ink-layer {
+  mix-blend-mode: screen;
 }

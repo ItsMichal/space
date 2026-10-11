@@ -4,6 +4,7 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { Glass } from './react'
 import { glass } from './glass'
+import { InkLayer } from '@/components/motion/InkLayer'
 
 type Props = {
   children: ReactNode
@@ -17,27 +18,14 @@ type Props = {
   type?: 'button' | 'submit'
 }
 
-/** Ink-soak press: the stain starts exactly where the finger or pointer lands, then dries away slowly (craft.css `.ink`). */
-const soak = {
-  onPointerDown: (e: React.PointerEvent<HTMLElement>) => {
-    const el = e.currentTarget
-    const r = el.getBoundingClientRect()
-    el.style.setProperty('--x', `${e.clientX - r.left}px`)
-    el.style.setProperty('--y', `${e.clientY - r.top}px`)
-    el.dataset.soak = 'true'
-  },
-  onPointerUp: (e: React.PointerEvent<HTMLElement>) => void (e.currentTarget.dataset.soak = 'false'),
-  onPointerLeave: (e: React.PointerEvent<HTMLElement>) => void (e.currentTarget.dataset.soak = 'false'),
-  onPointerCancel: (e: React.PointerEvent<HTMLElement>) => void (e.currentTarget.dataset.soak = 'false'),
-}
-
 const isExternal = (href: string) => /^(https?:)?\/\//.test(href) || href.endsWith('.pdf')
 
 /** Pill glass button: hover lift (CSS), spring press with touch-point glow (engine, interactive glass). */
 export function GlassButton({ children, href, onClick, solid, className = '', icon, type = 'button' }: Props) {
-  const cls = `lg--pill lg-btn ink${solid ? ' lg-btn--solid' : ''}${className ? ` ${className}` : ''}`
+  const cls = `lg--pill lg-btn${solid ? ' lg-btn--solid' : ''}${className ? ` ${className}` : ''}`
   const inner = (
     <>
+      <InkLayer />
       {icon}
       <span>{children}</span>
     </>
@@ -53,13 +41,13 @@ export function GlassButton({ children, href, onClick, solid, className = '', ic
   }
   if (href) {
     return (
-      <Glass effect={glass.regular.interactive()} shape="inherit" as={external ? 'a' : Link} className={cls} href={href} {...extra} {...soak}>
+      <Glass effect={glass.regular.interactive()} shape="inherit" as={external ? 'a' : Link} className={cls} href={href} {...extra}>
         {inner}
       </Glass>
     )
   }
   return (
-    <Glass effect={glass.regular.interactive()} shape="inherit" as="button" className={cls} type={type} onClick={onClick} {...soak}>
+    <Glass effect={glass.regular.interactive()} shape="inherit" as="button" className={cls} type={type} onClick={onClick}>
       {inner}
     </Glass>
   )

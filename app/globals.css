@@ -230,6 +230,8 @@ body {
 
   /* ---------- Glass button ---------- */
   .lg-btn {
+    position: relative;
+    overflow: hidden;
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
