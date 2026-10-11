@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { GlassEffectContainer, GlassFold, GlassFoldItem, glass, useGlassNamespace } from '@/components/glass'
+import { StatusPill } from '@/components/ui/StatusPill'
 import { HalmicMark } from './HalmicMark'
 
 const links = [
@@ -60,7 +61,7 @@ export function NavBar() {
     <GlassEffectContainer
       as="header"
       spacing={16}
-      className="pointer-events-none fixed inset-x-0 z-50 flex justify-center"
+      className="pointer-events-none fixed inset-x-0 z-50 flex flex-col items-center gap-[10px]"
       style={{
         top: 'calc(env(safe-area-inset-top, 0px) + 12px)',
         paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))',
@@ -124,6 +125,7 @@ export function NavBar() {
           ))}
         </GlassFold>
       </div>
+      <StatusPill ns={ns} routeKey={pathname} />
     </GlassEffectContainer>
   )
 }
