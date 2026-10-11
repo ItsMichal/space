@@ -4,6 +4,8 @@
 export type Role = {
   company: string
   role: string
+  /** Year the role started, for the Experience timeline. Omit when unknown. */
+  since?: string
   /** Display years, e.g. "2020 to now". Omit when unknown. */
   years?: string
 }
@@ -48,10 +50,10 @@ export const profile = {
   ],
   /** Compact home page Experience list, newest first. */
   experience: [
-    { company: 'SpaceX', role: 'Software Engineer', years: '2024 to now' },
-    { company: 'Institute of Cognitive Science, CU Boulder (SHINE Lab, iSAT)', role: 'Software Engineer', years: '2020 to 2024' },
-    { company: 'AmedicaRx', role: 'Full stack developer (contract)', years: '2022 to 2023' },
-    { company: 'Windward Studios', role: 'Software development intern', years: '2019 to 2020' },
-    { company: 'Panther Industries', role: 'Augmented reality and marketing intern', years: '2018' },
+    { company: 'SpaceX', role: 'Software Engineer', since: '2024', years: '2024 to now' },
+    { company: 'Institute of Cognitive Science, CU Boulder (SHINE Lab, iSAT)', role: 'Software Engineer', since: '2020', years: '2020 to 2024' },
+    { company: 'AmedicaRx', role: 'Full stack developer (contract)', since: '2022', years: '2022 to 2023' },
+    { company: 'Windward Studios', role: 'Software development intern', since: '2019', years: '2019 to 2020' },
+    { company: 'Panther Industries', role: 'Augmented reality and marketing intern', since: '2018', years: '2018' },
   ] satisfies Role[],
 } as const

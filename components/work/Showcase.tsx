@@ -3,6 +3,10 @@ import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import type { Post } from '@/lib/content/types'
 import { Picture } from '@/components/media/Picture'
 import { ShaderImage } from '@/components/shader-image'
+import { PROJECT_FILTERS, matchesFilter } from '@/components/ui/segments'
+
+/** Filter buckets a post belongs to, for the /projects segmented control (all items stay in the HTML). */
+const buckets = (p: Post) => PROJECT_FILTERS.filter((f) => f.value !== 'all' && matchesFilter(p.tags, f.value)).map((f) => f.value).join(' ')
 
 const FEAT_SIZES = '100vw'
 const THUMB_SIZES = '(min-width: 768px) 176px, 104px'

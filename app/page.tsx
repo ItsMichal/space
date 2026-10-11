@@ -9,9 +9,21 @@ import { ProjectList } from '@/components/site/ProjectList'
 import { Showcase } from '@/components/work/Showcase'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { profile } from '@/content/profile'
+import { Timeline, type TimelineItem } from '@/components/ui/Timeline'
 import { homeMetadata, personJsonLd, websiteJsonLd } from '@/lib/seo'
 
 export const metadata = homeMetadata()
+
+// Oldest first, left to right; the plain list in the HTML keeps the same order.
+const experience: TimelineItem[] = [...profile.experience]
+  .sort((a, b) => Number(a.since) - Number(b.since))
+  .map((e) => ({
+    id: e.company.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    date: e.since,
+    dateLabel: e.years,
+    title: e.company,
+    summary: e.role,
+  }))
 
 const h2 = 'reveal mb-space-8 font-display text-[clamp(38px,10vw,44px)] font-normal leading-[1.05] tracking-[-0.015em] md:text-[56px]'
 
@@ -55,17 +67,9 @@ export default function Home() {
           <p>{profile.about[0]}</p>
           <p className="text-ink-muted">{profile.about[1]}</p>
         </div>
-        <ul aria-label="Experience" className="mt-space-8 max-w-[56ch] divide-y divide-hairline border-y border-hairline">
-          {profile.experience.map((e) => (
-            <li key={e.company} className="flex flex-col gap-space-1 py-space-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-space-4">
-              <span className="font-serif text-[18px] font-medium">
-                {e.company}
-                <span className="font-normal text-ink-muted"> · {e.role}</span>
-              </span>
-              {'years' in e ? <span className="font-serif text-body text-ink-muted">{e.years}</span> : null}
-            </li>
-          ))}
-        </ul>
+        <div className="mt-space-8 max-w-[640px]">
+          <Timeline items={experience} label="Experience" statusLabel="Experience" />
+        </div>
         <div className="mt-space-8 flex flex-wrap gap-space-3">
           <GlassButton href="/BodzianowskiResume.pdf" icon={<FileText aria-hidden />}>
             Resume

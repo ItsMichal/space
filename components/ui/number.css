@@ -1,0 +1,52 @@
+.nr {
+  position: relative;
+  display: inline-block;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.nr-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.nr-vis {
+  display: inline-flex;
+}
+.nr-col {
+  display: inline-block;
+  height: 1.15em;
+  line-height: 1.15;
+  overflow: hidden;
+  /* the mask lets the digits slip in and out softly, like ink on paper */
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 22%, #000 78%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 22%, #000 78%, transparent 100%);
+}
+.nr-strip {
+  display: flex;
+  flex-direction: column;
+  /* final position: the last digit shows */
+  transform: translateY(calc(var(--steps) * -1.15em));
+}
+.nr-strip > span {
+  display: block;
+  height: 1.15em;
+}
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .nr-strip {
+    animation: nr-roll 1500ms var(--ui-follow) both paused;
+    animation-delay: var(--d);
+  }
+  .nr--in .nr-strip {
+    animation-play-state: running;
+  }
+}
+@keyframes nr-roll {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(var(--steps) * -1.15em));
+  }
+}

@@ -4,6 +4,9 @@ import { ArrowUpRight } from 'lucide-react'
 import type { GalleryItem, PostLink } from '@/lib/content/types'
 import { Zoomable } from '@/components/media/Zoomable'
 import { Lightbox } from '@/components/media/Lightbox'
+import { Gallery } from '@/components/ui/Gallery'
+import { FactRows } from '@/components/ui/FactRows'
+import { ReadingToc } from '@/components/ui/ReadingToc'
 
 type Props = {
   title: string
@@ -99,54 +102,43 @@ export function ArticleLayout({
         <div className="h-space-12" />
       )}
       {kind === 'project' && (role || stack.length || links?.length) ? (
-        <dl className="facts" aria-label="Project facts">
-          <div>
-            <dt>Year</dt>
-            <dd>{years ?? date.slice(0, 4)}</dd>
-          </div>
-          {role ? (
-            <div>
-              <dt>Role</dt>
-              <dd>{role}</dd>
-            </div>
-          ) : null}
-          {stack.length ? (
-            <div className="facts__wide">
-              <dt>Stack</dt>
-              <dd>{stack.join(' · ')}</dd>
-            </div>
-          ) : null}
-          {links?.length ? (
-            <div className="facts__wide">
-              <dt>Links</dt>
-              <dd>
-                {links.map((l) => (
-                  <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer">
-                    {l.label}
-                    <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
-                  </a>
-                ))}
-              </dd>
-            </div>
-          ) : null}
-        </dl>
+        <FactRows
+          facts={[
+            { label: 'Year', value: years ?? date.slice(0, 4) },
+            ...(role ? [{ label: 'Role', value: role }] : []),
+            ...(stack.length ? [{ label: 'Stack', value: stack.join(' · ') }] : []),
+            ...(links?.length
+              ? [
+                  {
+                    label: 'Links',
+                    value: links.map((l) => (
+                      <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer">
+                        {l.label}
+                        <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
+                      </a>
+                    )),
+                  },
+                ]
+              : []),
+          ]}
+        />
       ) : null}
       {gallery?.length ? (
         <section className="gallery" aria-label="Gallery">
-          <ul className="gallery__list">
-            {gallery.map((g) => (
-              <li key={g.src}>
-                <figure className="gallery__item">
-                  <Zoomable src={g.src} alt={g.alt} caption={g.caption} sizes="(min-width: 1184px) 340px, (min-width: 768px) 30vw, 82vw" />
-                  {g.caption ? <figcaption>{g.caption}</figcaption> : null}
-                </figure>
-              </li>
-            ))}
-          </ul>
+          <Gallery
+            label="Project images"
+            autoplayMs={gallery.length > 2 ? 6500 : 0}
+            slides={gallery.map((g) => ({
+              key: g.src,
+              caption: g.caption,
+              node: <Zoomable src={g.src} alt={g.alt} caption={g.caption} sizes="(min-width: 900px) 760px, 90vw" />,
+            }))}
+          />
         </section>
       ) : null}
       <div className="prose">{children}</div>
       {after}
+      <ReadingToc />
       <Lightbox />
     </article>
   )
