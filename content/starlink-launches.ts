@@ -37,5 +37,5 @@ const rows: Row[] = [
   { id: "ug", date: "2026-09-01", title: "Uganda", summary: "Service became available in Uganda.", source: { href: "https://spaceinafrica.com/2026/09/01/starlink-is-now-live-in-uganda/", label: "spaceinafrica.com" }, confidence: "high" },
 ]
 
-export const starlinkLaunches: TimelineItem[] = rows.map(({ confidence: _c, ...it }) => it)
+export const starlinkLaunches: TimelineItem[] = [...rows].sort((a, b) => a.date.localeCompare(b.date)).map(({ confidence: _c, ...it }) => it)
 export const starlinkDatedCount = rows.length

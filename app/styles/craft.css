@@ -118,28 +118,32 @@
 }
 
 /* ---------- 2. Settling title ----------
-   The name arrives like a sheet being laid on the paper: each line comes down from a hair above and a degree off,
-   blur resolving to sharp, the second line 90ms behind, a spring follow-through. Once, on load. */
+   The name arrives like a sheet being laid on the paper. Three springs with different timings per line (SettleText's
+   maths, sampled into linear() on the server by components/site/NameHeader): opacity quick and critical, blur
+   resolving slowly after the text is already readable, rise plus a hair of rotation underdamped, so it overshoots
+   and settles. The second line starts seeded and a little later. Once, on load; no JS, nothing measured. */
 .settle > span {
   display: block;
   transform-origin: 0 100%;
-  animation: settle-line 1400ms var(--craft-spring) both;
-  animation-delay: calc(80ms + var(--i, 0) * 90ms);
+  animation:
+    settle-o var(--so-d, 400ms) var(--so-e, ease-out) var(--d, 80ms) both,
+    settle-b var(--sb-d, 700ms) var(--sb-e, ease-out) var(--d, 80ms) both,
+    settle-m var(--sm-d, 1000ms) var(--sm-e, ease-out) var(--d, 80ms) both;
 }
-@keyframes settle-line {
-  0% {
+@keyframes settle-o {
+  from {
     opacity: 0;
-    transform: translateY(-0.07em) rotate(-0.9deg);
-    filter: blur(7px);
   }
-  45% {
-    opacity: 1;
-    filter: blur(1.5px);
+}
+@keyframes settle-b {
+  from {
+    filter: blur(var(--nb, 6px));
   }
-  100% {
-    opacity: 1;
-    transform: none;
-    filter: blur(0);
+}
+@keyframes settle-m {
+  from {
+    translate: 0 var(--ny, -8px);
+    rotate: var(--nr, -0.7deg);
   }
 }
 @media (prefers-reduced-motion: reduce) {

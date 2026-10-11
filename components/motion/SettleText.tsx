@@ -135,18 +135,19 @@ export const SettleText = forwardRef<
       })
       ch.current.forEach(paint)
     }
-    build()
+    // Measure ONCE, after the display face has loaded (lines depend on it), never on a click or a first-paint fallback.
+    // Until then the real text stays put (visible, unsplit), so there is nothing to flash and nothing to re-flow.
     let alive = true
-    document.fonts?.ready.then(() => {
-      if (alive) {
-        build()
-        if (autoStart) settle(true)
-      }
-    })
-    if (autoStart) settle(true)
+    const begin = () => {
+      if (!alive) return
+      build()
+      if (autoStart) settle(true)
+    }
+    if (!document.fonts || document.fonts.status === 'loaded') begin()
+    else document.fonts.ready.then(begin)
     let width = host.clientWidth
     const ro = new ResizeObserver(() => {
-      if (host.clientWidth !== width) {
+      if (ch.current.length && host.clientWidth !== width) {
         width = host.clientWidth
         build()
         settle((ch.current[0]?.m.state.target ?? 0) === 1)
