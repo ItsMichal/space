@@ -11,6 +11,12 @@ import fs from 'node:fs'
 import path from 'node:path'
 import sharp from 'sharp'
 
+// `node scripts/botanical-soft.mjs own [id]` processes the owner's own photographs (scripts/botanical-own.mjs).
+if (process.argv[2] === 'own') {
+  await import('./botanical-own.mjs')
+  process.exit(0)
+}
+
 const SRC = 'assets-src/botanical-photo'
 const OUT = 'public/botanical/photo'
 const PAPER = [248, 246, 239]
