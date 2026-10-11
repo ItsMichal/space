@@ -1,0 +1,21 @@
+# halmic
+
+> halmic (also halmicTV) streams games and codes stupid things on Twitch, makes edited videos on YouTube and tiny games on itch.io, and designs logos and other things. This is its home page.
+
+## Where to find halmic
+- Twitch: https://www.twitch.tv/halmictv
+- YouTube: https://www.youtube.com/@halmic
+- itch.io: https://halmic.itch.io/
+- Medium: https://halmic.medium.com/
+- X: https://x.com/halmicc
+
+## Pages
+- https://halmic.com/ : home
+- https://halmic.com/games/ : little games
+- https://halmic.com/games/taco-neko/ : Taco Neko
+- https://halmic.com/games/soupman/ : Soupman
+- https://halmic.com/games/glass-gunslinger-dod/ : Glass Gunslinger - Drop of Doom
+- https://halmic.com/games/lvasion-du-criminel-de-sa-prison/ : L'évasion du Criminel de sa Prison (The escape of the criminal from his prison)
+- https://halmic.com/videos/ : videos
+- https://halmic.com/design/ : design
+- https://halmic.com/design/southeast-denver-dental/ : logo for Southeast Denver Dental

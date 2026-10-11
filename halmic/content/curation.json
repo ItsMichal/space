@@ -1,0 +1,11 @@
+{
+  "_note": "Draft copy in halmic's voice, written by the assistant for the owner to rewrite. tier: feature | more | off. alt = what the cover actually shows.",
+  "games": {
+    "taco-neko": { "tier": "feature", "line": "A stealth taco-making game. You are a very serious taco chef on an island full of robo-cats.", "alt": "Title card for Taco Neko: rough hand-drawn lettering, a taco with a paw print, and the line 'a stealth taco making game'." },
+    "soupman": { "tier": "feature", "line": "Defeat the Saladking. Claim your legacy. A tiny, absurd Bitsy game for the Mystery Soup jam, still in development.", "alt": "Soupman: a pale room with small sprites in Bitsy's two-colour style, a red crab-like enemy and furniture along the walls." },
+    "glass-gunslinger-dod": { "tier": "more", "line": "A shmup that is maybe not a shmup. Music by Roby Dugay, the rest by me.", "alt": "Glass Gunslinger: a tiny character with a gun falling through a dark blue sky inside a grey frame." },
+    "lvasion-du-criminel-de-sa-prison": { "tier": "more", "line": "A top-down stealth game in PuzzleScript. The French is terrible, sorry.", "alt": "Top-down grid view of a prison: a grey robot guard, a line of pink laser dots, and a small black thief." },
+    "flippy": { "tier": "off", "line": "Yet another Flappy Bird remake.", "alt": "Flippy: a yellow bird between green pipes on a blue sky." }
+  },
+  "featuredVideo": "AUML80zL8Bs"
+}

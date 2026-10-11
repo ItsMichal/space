@@ -4,6 +4,48 @@ Status: draft for the owner. Everything under "What I saw" was read from public 
 
 > INTERNAL: the owner has decided halmic is a persona and handle, not tied to his legal name. This document records the research trail and may mention the link in the "Internal notes" section only. Nothing in `halmic/site` or `halmic/brand` may contain the real name. Before moving this folder to its own repository, delete the "Internal notes" section.
 
+## Round 2 (supersedes the IA in section 3 and the questions in section 4)
+
+Owner direction: casual, "a testament to my creative work". halmic.com is one relaxed creative home, not an agency pitch. The studio/services/process framing is dropped; design appears as "things I've designed" next to streams, videos, games and writing. The real name must not ship on the site (pages, metadata, structured data, alt text, feeds, OG images). Ties between halmic and the portfolio are otherwise fine and need no engineering around; still no link from halmic.com to the portfolio unless he asks.
+
+**IA:** hero (wordmark, a modest status pill, one draft line in his words) / on the stream (what he plays, clips, week) / videos (curated feature + reel, click-to-load) / little games / things I've designed / writing (Medium link now, posts later) / say hi. Inner pages exist for every game, every video and the design entry (for search; see `seo.md`).
+
+### itch.io: https://halmic.itch.io/ (public profile and game pages, nothing played)
+Five games, all browser builds, all tiny. I judged them from their pages and cover art, not by playing them, so the "rough" calls are about presentation, not gameplay. Dates are mostly not shown by itch (Soupman: 4 Feb 2022); ratings are 1 vote each; no play counts are shown.
+
+| Game | Made with | What it is | Charming | Rough | Recommendation |
+| --- | --- | --- | --- | --- | --- |
+| Taco Neko | GB Studio (tag) | "Join Suavez on his taco adventure to Islas de Gatacos and their Robo-Cats!" A top-down stealth taco-making game, status prototype, 5.0 from 1 rating | The most developed and the most charming: hand-drawn title card, a full written premise ("the Gordon Ramsey of Tacos"), a distinct voice and look | Page is mostly story text, no screenshots beyond the cover; "prototype" | **Feature (lead).** |
+| Soupman | Bitsy | "Defeat the Saladking. Claim your legacy." Mystery Soup Bitsy Jam entry, in development, 5.0 from 1 rating | The pitch is a joke that commits; the Bitsy two-colour look suits the site; jam entries are exactly the "scrappy but honest" thing | Description says "more details to come", i.e. unfinished | **Feature (second).** Say "still in development" out loud. |
+| Glass Gunslinger - Drop of Doom | PICO-8 | Fragile Shmup Jam entry; "Is this really a shmup...?" | Honest author note ("really wish I coulda themed it a bit better"), original music credit (Roby Dugay) | His own words call it under-themed; the cover is a dark frame with a tiny sprite | **More experiments.** Credit the musician on the page (done). |
+| L'évasion du Criminel de sa Prison | PuzzleScript | Top-down stealth puzzle, "in terrible French... sorry", puzzle jam entry, released, 4.0 from 1 rating | The joke that the French is terrible; a clear mechanic (calling cards, buttons) | Niche to browse; needs the player to read a long note to understand it | **More experiments.** |
+| Flippy | PICO-8 | "Yet another Flappy Bird remake" | Nothing the other four do not do better | It is a remake with no twist and the page says so | **Leave off** the site (it stays on itch). |
+
+Overlap with the portfolio's Unity projects (Project Mountaintop, Office Wizards): none in the itch list; the portfolio's games are bigger Unity work. If he wants a single "games" story, the Unity projects would live on the portfolio and these jam games on halmic.com. Cross-linking is optional and not done.
+
+### Southeast Denver Dental (the logo entry)
+- Practice name as written on its site: **Southeast Denver Dental**, 7995 E. Hampden Ave, Suite 206, Denver, CO. The domain is sedenverdental.com ("SE"), but the site, title and logo alt text all say "Southeast Denver Dental", so the entry uses that.
+- The site credits no designer or agency anywhere (footer: "All Rights Reserved 2022"), so nothing beyond the owner's own statement supports "I designed the logo". The entry says exactly that and nothing more: logo only, not website, not brand strategy.
+- My own screenshots of the public site (header, footer, phone header) are cropped to the logo and stored in `site/public/work/`. No logo file was downloaded. The page's photos of staff and patients are not used. The favicon is described by the site's own alt text as orange; I did not capture it.
+- Logo as seen: an orange four-lobed "tooth flower" mark with leaf-blue accents, set beside "SOUTHEAST" in blue and "DENVER DENTAL" in orange condensed capitals; a white version in the blue footer.
+
+### YouTube (round 2 detail)
+- Lead video: **"Ted Lasso - S1E5 - 4,438 Miles Worth Of Space"**, 161K views, by far the channel's biggest. Flags: it is an edit of a TV show (the thumbnail is a still of the show, shown locally on the site; fine for a link-out but a copyright question if he cares), and it has no name issue. Alternatives: the robotics highlight reel (1.5K views, thumbnail shows two people). He decides.
+- Three feed entries are still held back by the name deny-list: check `content/videos.held.json` (ids and titles only). Per the owner's latest rule, only entries whose own text would print HIS real name stay held, and my pattern is broader than that (it also catches other people named Micha...). I have not read the held descriptions; he should look and release any that are fine.
+- Friends' first names in titles are fine now.
+
+### Questions for the owner (short, prioritised)
+1. **Domain:** remove the halmic.com redirect to the portfolio when you want the site live. (Blocker for launch and SEO.)
+2. **Tone:** is "I stream games, code stupid things, and design stuff." right? Rewrite the draft lines marked in amber (hero, games intro, design, writing, say hi).
+3. **Logo entry:** year; any sketches or explorations; the original files; is the practice fine being shown; is "I designed the logo" all you want claimed?
+4. **Games:** OK with feature Taco Neko + Soupman, quiet row for Glass Gunslinger and L'évasion, Flippy off? Any game or engine details to correct (Taco Neko's engine is only a tag)?
+5. **Videos:** keep the Ted Lasso edit as the lead? Release or confirm the three held videos.
+6. **h! mark:** which of the five "crosshair" readings did you mean (`brand/hmark.png`)? Is h! right for the avatar/favicon?
+7. **Blue:** cobalt `#3d7bff` (recommended) or one of the other two (`brand/specimen.png`).
+8. **Schedule and stream:** days/times, what the "code" streams are, which avatar/banner.
+9. **Writing:** move the Medium posts to halmic.com or just link? Contact: which email or form?
+10. **Accounts:** create the Twitch developer app (technical-plan.md) and make the profile links point to halmic.com (seo.md).
+
 ## 1. What I saw
 
 ### Twitch: https://www.twitch.tv/halmictv

@@ -10,7 +10,7 @@ halmic.com is its own brand and its own repository-to-be. It shares DNA with the
 | Motion standard: slow, interruptible, springs with 1 to 1.5% follow-through, no simple tweens, reduced-motion respected. Same `spring` toolkit and timing ladder names (press, fast, ui, slow, ambient). | Motion has a pulse: a continuous ambient signal (the level meter) plus on-air breathing; the portfolio is still and sits on paper. |
 | Token structure (`tokens.json` to CSS variables), spacing ladder 8/16/24/32/48/64/96/160, 12-col grid, 44px targets, safe-area insets. | Values differ: halmic palette below; wider max width (1280) and asymmetric, edge-to-edge layouts. |
 | Sentence case, no uppercase eyebrows, no letter-spaced small caps, no emoji in UI. | Voice: first person, direct, a little unruly. Short lines, jokes allowed ("code stupid things"). Never invented facts. |
-| Flat page, hairlines, no cards or boxes, at most one shadow. Focus ring: solid 2px, offset 2px. | Dark-first by default, with a paper-coloured "studio side" as a deliberate mode flip. No glass, no botanical imagery. |
+| Flat page, hairlines, no cards or boxes, at most one shadow. Focus ring: solid 2px, offset 2px. | Dark-first by default, with a paper-coloured "things I've designed" panel as a deliberate mode flip (its left edge leans 13 degrees). No glass, no botanical imagery. |
 | Real photography, real alt text; shape language avoids primitive decorative shapes (bars here are the mark's shapes, never plain rectangles). | Imagery is the work itself: thumbnails, clips, screenshots. Colour is a signal, not a mood. |
 | Accessibility: contrast AA minimum, keyboard everywhere, no scroll-jacking, mobile designed at 375 first. | Display type: the logotype is the display face (wordmark, oversized); headings in a rounded grotesque; the portfolio uses a serif. |
 | Performance: static-first, no third-party requests before interaction, lazy media. | Live state is a whole-page condition (colour, field, chip) and is the one dynamic thing the site fetches. |
@@ -23,16 +23,22 @@ halmic.com is its own brand and its own repository-to-be. It shares DNA with the
 | ink-2 / ink-3 / line | `#181621` / `#23202e` / `#2c2938` | raised surfaces, hairlines |
 | paper | `#f1ece1` | text on ink, and the studio mode ground |
 | mute | `#a29eae` | secondary text on ink (6.9:1) |
-| signal | `#ff4d2e` | "on air" coral: live state, primary button, the i dot. Used sparingly: one signal per screen except the field. |
+| blue (signal) | `#3d7bff` | primary button, links on ink (5.0:1). Cobalt, chosen over azure `#6ea8ff` and ultramarine `#5b6cff` (see `brand/specimen.png`). |
+| blue-live | `#7fa6ff` | the live state: a brighter tint of the same blue (8.1:1) plus a soft glow and motion, never a second hue |
+| blue-paper | `#1d4fe0` | the same blue on paper (5.5:1) |
 | paper-mute | `#5d5848` | secondary text on paper |
-| placeholder red | `#c02a0f` on paper | owner-content markers (prototype only) |
+| placeholder amber | `#f0b44c` on ink, `#8a5200` on paper | owner-content markers (prototype only) |
 
-Why darker and more vivid than the portfolio: it is a stage (streams are watched in a dark room, and "live" needs a colour that is not decoration), and the paper studio panel gives the calm half. Coral on ink is 6.1:1; coral on paper fails for small text, so the accent version of the logotype is dark-ground only.
+Why darker and more vivid than the portfolio: it is a stage (streams are watched in a dark room, and "live" needs a colour that is not decoration), and the paper studio panel gives the calm half. Blue on ink is 5.0:1; the deeper paper blue is 5.5:1 on paper; the live tint is 8.1:1.
 
 ## Type
 
-- Display: the wordmark itself at hero scale; headings in a rounded grotesque, 700, tracking -2.5%, line-height about 1. Prototype uses the system stack (`ui-rounded`, SF Pro Rounded) so it is self-contained. Proposed production pair, to self-host after a licence check: **Bricolage Grotesque** (display) and **Geist** or **Inter Tight** (UI/body). Do not use a serif here.
+- **Geist** (variable, SIL OFL 1.1), self-hosted: one 28 KB latin woff2 plus latin-ext, preloaded, with a size-adjusted fallback. Headings 700 to 750, tracking -2.5% to -3%, line-height about 1; body 400 at 17px. Its round dots and near-geometric bowls sit with the logotype. Display scale is carried by the wordmark itself. No serif here. (Geist was already on this machine inside the portfolio repo's dependencies, so no download was made.)
 - Body 17px/1.5, sentence case, one weight step up (500 to 600) for ledes.
+
+## Marks
+
+halmic has its own mark: **h!** (the h plus the bar and dot of the old "!"), used for the favicon, the avatar and the header. The old monogram stays as the portfolio's. Five "crosshair" readings are in `brand/hmark.png`; h! is the recommendation.
 
 ## The logotype as a living system
 

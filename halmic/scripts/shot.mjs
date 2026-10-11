@@ -32,14 +32,14 @@ try {
   await sleep(waitMs);
   if (scrollY) { await send('Runtime.evaluate', { expression: `window.scrollTo(0, ${scrollY})` }); await sleep(900); }
   let clip;
-  if (full) {
+  if (full || clipArg) {
     // walk down the page so lazy images load, then return to the top
     const hh = (await send('Runtime.evaluate', { expression: 'document.documentElement.scrollHeight', returnByValue: true })).result.result.value;
     for (let y = 0; y < hh; y += +H * 0.8) { await send('Runtime.evaluate', { expression: `window.scrollTo(0, ${y})` }); await sleep(250); }
     await send('Runtime.evaluate', { expression: 'window.scrollTo(0, 0)' }); await sleep(600);
     const m = await send('Page.getLayoutMetrics');
     const h = Math.ceil(m.result.cssContentSize.height);
-    clip = { x: 0, y: 0, width: +W, height: Math.min(h, 12000), scale: 1 };
+    if (full) clip = { x: 0, y: 0, width: +W, height: Math.min(h, 12000), scale: 1 };
   }
   if (clipArg) clip = { x: clipArg[0], y: clipArg[1], width: clipArg[2], height: clipArg[3], scale: 1 };
   const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: !!(full || clipArg), ...(clip ? { clip } : {}) });
