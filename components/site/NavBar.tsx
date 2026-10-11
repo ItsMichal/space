@@ -120,7 +120,7 @@ export function NavBar() {
                 href={l.href}
                 onClick={close}
                 aria-current={l.match && pathname.startsWith(l.match) ? 'page' : undefined}
-                className={`${linkClass(!!l.match && pathname.startsWith(l.match))} sheet-row min-h-[52px] w-full font-display text-[28px] leading-none tracking-[-0.01em]`}
+                className={`${linkClass(!!l.match && pathname.startsWith(l.match))} sheet-row min-h-[52px] w-full !text-ink font-display text-[28px] leading-none tracking-[-0.01em]`}
               >
                 {l.label}
               </Link>

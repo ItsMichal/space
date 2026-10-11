@@ -528,7 +528,7 @@ export class Field {
     tintLight: [0.98, 0.976, 0.953, 0.44] as RGBA,
     tintDark: [0.106, 0.125, 0.106, 0.48] as RGBA,
     rim: [1, 1, 1, 0.95] as RGBA,
-    edge: [0, 0, 0, 0.1] as RGBA,
+    edge: [0, 0, 0, 0.05] as RGBA,
     blur: 10,
     sat: 1.6,
     refraction: 36,
@@ -864,7 +864,7 @@ export class Field {
     c.tintLight = resolveColor(h, 'var(--glass-tint-light, rgba(251,249,243,.44))', c.tintLight)
     c.tintDark = resolveColor(h, 'var(--glass-tint-dark, rgba(27,32,27,.48))', c.tintDark)
     c.rim = resolveColor(h, 'var(--glass-rim, rgba(255,255,255,.9))', c.rim)
-    c.edge = resolveColor(h, 'var(--glass-edge, rgba(0,0,0,.2))', c.edge)
+    c.edge = resolveColor(h, 'var(--glass-edge, rgba(24,33,27,.07))', c.edge)
     c.blur = this.opts.blur ?? cssNumber(h, '--glass-blur', 10)
     c.sat = this.opts.saturate ?? cssNumber(h, '--glass-saturate', 1.6)
     c.refraction = this.opts.refraction ?? cssNumber(h, '--glass-refraction', 36)
