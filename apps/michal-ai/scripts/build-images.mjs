@@ -94,6 +94,25 @@ for (const file of walk(SRC).sort()) {
   made++
 }
 
+// Share cards: WebP covers get a 1200x630 JPEG twin in public/media/_og/ (older LinkedIn/Slack unfurlers
+// handle WebP poorly), and the default card is the portrait on paper. lib/seo.ts points og:image at these.
+const OG = path.join(SRC, '_og')
+const PAPER = '#f4f1e8'
+const ogJobs = walk(SRC)
+  .filter((f) => /\/cover\.webp$/i.test(f))
+  .map((f) => ({ from: f, to: path.join(OG, path.relative(SRC, path.dirname(f)) + '.jpg') }))
+ogJobs.push({ from: path.join(ROOT, 'public', 'michal.png'), to: path.join(OG, 'default.jpg'), contain: true })
+for (const { from, to, contain } of ogJobs) {
+  if (!fs.existsSync(from)) continue
+  if (fs.existsSync(to) && fs.statSync(to).mtimeMs >= fs.statSync(from).mtimeMs) continue
+  fs.mkdirSync(path.dirname(to), { recursive: true })
+  const img = sharp(from).rotate()
+  const out = contain
+    ? img.resize(1200, 630, { fit: 'contain', background: PAPER })
+    : img.resize(1200, 630, { fit: 'cover', position: 'attention' })
+  await out.flatten({ background: PAPER }).jpeg({ quality: 82, mozjpeg: true }).toFile(to)
+}
+
 // Prune variants whose source is gone or renamed.
 const prune = (dir) => {
   if (!fs.existsSync(dir)) return
