@@ -127,7 +127,7 @@ export function Backdrop({ paths = ['/'] }: Props) {
       const brkDoc = brk != null ? brk + window.scrollY : docH * 0.6
       anchors = [
         // hero: cherry blossom enters from the top-right corner, bleeding off both edges
-        small ? [vw * 0.92, vh * 0.0, 0, vw * 0.9] : [vw * 0.86, vh * 0.3, 0, Math.min(vw * 0.5, 760)],
+        small ? [vw * 0.97, vh * 0.1, 0, vw * 0.8] : [vw * 0.8, vh * 0.34, 0, Math.min(vw * 0.56, 820)],
         // mid page: hydrangea haze at the far right, level with the about section
         small
           ? [vw * 0.96, vh * 0.4, Math.max(0, brkDoc - vh * 0.4), vw * 1.25]
@@ -211,9 +211,9 @@ export function Backdrop({ paths = ['/'] }: Props) {
         return f * f * (3 - 2 * f)
       })
       gl.uniform3f(u.fade, fade[0], fade[1], fade[2])
-      gl.uniform1f(u.quiet, vw < 700 ? 0.985 : 0.94)
+      gl.uniform1f(u.quiet, vw < 700 ? 0.985 : 0.9)
       gl.uniform1f(u.debug, q === 'raw' ? 2 : S.debugZones ? 1 : 0)
-      gl.uniform1f(u.feather, vw < 700 ? 84 : 120)
+      gl.uniform1f(u.feather, vw < 700 ? 84 : 200)
       gl.uniform1i(u.qn, n)
       gl.uniform4fv(u.q, quiet)
       for (let i = 0; i < 3; i++) {

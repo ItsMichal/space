@@ -70,7 +70,7 @@ float luma(vec3 c) { return dot(c, vec3(0.299, 0.587, 0.114)); }
 // along a torn, watercolor-like line that is different for every image.
 float edgeMask(vec2 px, vec2 off) {
   float m = min(uSize.x, uSize.y);
-  float F = clamp(m * 0.3, 26.0, 120.0);
+  float F = clamp(m * 0.2, 22.0, 84.0);
   float d = min(min(px.x, uSize.x - px.x), min(px.y, uSize.y - px.y));
   float n = fbm(px / min(F * 3.4, m * 0.6) + off);
   float w = (n - 0.5) * F * 1.5 + (vnoise(px / (F * 1.1) + off * 1.7) - 0.5) * F * 0.12;
@@ -178,7 +178,7 @@ void main() {
   c = mix(c, c * vec3(0.96, 1.0, 0.95), rim);
 
   vec4 img = vec4(c * rv, rv);
-  float visDots = max(dots, band * 0.75);
+  float visDots = max(dots, uVariant == 0 ? band * 0.75 : 0.0);
   vec4 res = img;
   if (visDots > 0.002) {
     float cs = clamp(uSize.x / 105.0, 5.0, 9.0);

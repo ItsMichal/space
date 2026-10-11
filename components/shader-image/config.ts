@@ -3,7 +3,7 @@ export type ShaderVariant = 'stipple' | 'scan' | 'bleed'
 export const SHADER_VARIANTS: ShaderVariant[] = ['stipple', 'scan', 'bleed']
 
 /** Recommended default. See docs/shaders/design.md. */
-export const DEFAULT_VARIANT: ShaderVariant = 'stipple'
+export const DEFAULT_VARIANT: ShaderVariant = 'bleed'
 
 export const VARIANT_INDEX: Record<ShaderVariant, number> = { stipple: 0, scan: 1, bleed: 2 }
 

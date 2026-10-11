@@ -496,31 +496,34 @@ body {
     .work-feat__img {
       aspect-ratio: 21 / 9;
     }
+    /* Meta above the title, description under it, and the call to action at the far end of the description row, so
+       the big title never leaves an empty column beside or beneath it. */
     .work-feat__cap {
-      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      grid-template-columns: minmax(0, 1fr) auto;
       column-gap: var(--space-8);
       row-gap: var(--space-3);
       margin-top: var(--space-8);
-      align-items: start;
+      align-items: end;
       align-content: start;
     }
+    .work-feat__meta {
+      grid-column: 1 / -1;
+      grid-row: 1;
+    }
     .work-feat__title {
-      grid-column: 1;
-      grid-row: 1 / span 3;
+      grid-column: 1 / -1;
+      grid-row: 2;
       font-size: clamp(72px, 7.4vw, 108px);
     }
-    .work-feat__meta {
-      grid-column: 2;
-      grid-row: 1;
-      padding-top: 10px;
-    }
     .work-feat__desc {
-      grid-column: 2;
-      grid-row: 2;
+      grid-column: 1;
+      grid-row: 3;
+      max-width: 52ch;
     }
     .work-feat__cta {
       grid-column: 2;
       grid-row: 3;
+      align-self: end;
     }
 
     .wrow {
