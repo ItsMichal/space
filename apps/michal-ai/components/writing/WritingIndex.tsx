@@ -12,15 +12,15 @@ const month = (iso: string) =>
 /** One compact row: optional small thumbnail, title, one-line description, date. */
 function Row({ post, thumb = false }: { post: Post; thumb?: boolean }) {
   return (
-    <Link href={postPath(post)} className="wrow" data-thumb={thumb && post.cover ? '' : undefined}>
+    <Link href={postPath(post)} className="wrt" data-thumb={thumb && post.cover ? '' : undefined}>
       {thumb && post.cover ? (
-        <Picture src={post.cover} alt="" sizes="72px" aspect="1 / 1" focus={post.coverFocus} className="wrow__img" />
+        <Picture src={post.cover} alt="" sizes="72px" aspect="1 / 1" focus={post.coverFocus} className="wrt__img" />
       ) : null}
-      <span className="wrow__text">
-        <span className="wrow__title">{post.title}</span>
-        <span className="wrow__desc">{post.description}</span>
+      <span className="wrt__text">
+        <span className="wrt__title">{post.title}</span>
+        <span className="wrt__desc">{post.description}</span>
       </span>
-      <time className="wrow__date" dateTime={post.date}>
+      <time className="wrt__date" dateTime={post.date}>
         {month(post.date)}
       </time>
     </Link>
