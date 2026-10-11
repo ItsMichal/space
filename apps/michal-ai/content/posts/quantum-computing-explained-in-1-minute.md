@@ -13,7 +13,7 @@ Warning- massive oversimplifications! But that should have been obvious…
 
 ::youtube{id="F9JuWoMWbgY"}
 
-**Transcript** —
+## Transcript
 
 Quantum Computers. The name sounds scary, but they really only are a fancy way of flipping coins.
 
