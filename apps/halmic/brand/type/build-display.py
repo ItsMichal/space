@@ -16,6 +16,7 @@ Pipeline (all scripted, nothing hand-drawn for the alphabet):
 
 Usage: python3 build-display.py [out_dir]    (needs fonttools, brotli, skia-pathops, uharfbuzz; see README.md)
 """
+import io
 import json
 import math
 import os
@@ -139,6 +140,10 @@ def main():
 
     # decomposed, upright records of every glyph
     rec = {g: decomposed(font, g) for g in font.getGlyphOrder()}
+    rec0 = dict(rec)                               # the skeleton as it is, for the optical pair matching in step 6
+    skeleton_buf = io.BytesIO()
+    font.save(skeleton_buf)
+    skeleton = hb.Font(hb.Face(skeleton_buf.getvalue()))
 
     # 3. lift ascenders of b d f j k ----------------------------------------------------------
     y_ramp0, y_ramp1 = xh_base + 55, xh_base + 135
@@ -188,7 +193,9 @@ def main():
 
     base_side = {}
     for ch in LETTERS:
-        g = gname(ch)
+        # sidebearings come from the skeleton's own letter, except l: Nunito's l has a curved tail, the logotype's does not,
+        # so l borrows the plain-stem sidebearings of i (otherwise l crowds its right-hand neighbour)
+        g = gname("i" if ch == "l" else ch)
         b0 = bounds(font, g)
         adv = hmtx[g][0]
         base_side[ch] = (b0[0], adv - b0[2])       # lsb, rsb of the skeleton's own letter
@@ -225,6 +232,10 @@ def main():
         p.draw(Cu2QuPen(tp, max_err=0.5, reverse_direction=True))
         glyf[g] = tp.glyph()
         glyf[g].recalcBounds(glyf)
+    # fontTools draws a glyph at (lsb - xMin), so the left side bearings must match the slanted outlines before overlaps are removed
+    for g in font.getGlyphOrder():
+        glyf[g].recalcBounds(glyf)
+        hmtx[g] = (hmtx[g][0], getattr(glyf[g], "xMin", 0) if glyf[g].numberOfContours else 0)
     removeOverlaps(font)
     for g in font.getGlyphOrder():
         glyf[g].recalcBounds(glyf)
@@ -239,8 +250,65 @@ def main():
         kern = offset - new_adv[a] - lsb_b + lsb_a
         pairs.append((gname(a), gname(b), round(kern)))
     expected = {a + b: (logo_x[b][0] - logo_x[a][0]) - base_side[b][0] + base_side[a][0] for a, b in zip(LETTERS, LETTERS[1:])}
+    wordmark_pairs = {(a, b) for a, b, _ in pairs}
+    # every other pair that involves a logotype letter: place it so the mean white in the x-height band equals what the
+    # skeleton had for the same pair (the same measure the wordmark's own spacing uses), so h a l m i c sit evenly in text
+    levels = [xh_base * (i + 0.5) / 8 for i in range(8)]
+
+    def profile(r):
+        """per level: (left ink edge, right ink edge) or None"""
+        p = pathops.Path()
+        replay(r, p.getPen())
+        out = []
+        for y in levels:
+            band = pathops.Path()
+            bp = band.getPen()
+            bp.moveTo((-4000, y - 2)); bp.lineTo((6000, y - 2)); bp.lineTo((6000, y + 2)); bp.lineTo((-4000, y + 2)); bp.closePath()
+            hit = pathops.op(p, band, pathops.PathOp.INTERSECTION)
+            xs = [pt[0] for c in hit.contours for seg in c.segments for pt in seg[1]]
+            out.append((min(xs), max(xs)) if xs else None)
+        return out
+
+    prof_old = {g: profile(rec0[g]) for g in font.getGlyphOrder() if g not in ("space", "nbspace", ".notdef")}
+    prof_new = {g: profile(rec[g]) for g in prof_old}
+
+    def mean_white(left, right, ln, rn):
+        """mean over levels of (right glyph left edge - left glyph right edge), skipping levels where either is empty"""
+        vals = [pr[0] - pl[1] for pl, pr in zip(left, right) if pl and pr]
+        return sum(vals) / len(vals) if len(vals) >= 3 else None
+
+    def skeleton_advance(a, b):
+        buf = hb.Buffer()
+        buf.add_str(chr(a) + chr(b))
+        buf.guess_segment_properties()
+        hb.shape(skeleton, buf, {"kern": True})
+        return buf.glyph_positions[0].x_advance
+
+    partners = [c for c in map(chr, UNICODES) if c.isalnum() or c in ".,:;!?-'’‘“”—–"]
+    optical = []
+    for L in LETTERS:
+        for X in partners:
+            for first, second in ((X, L), (L, X)):
+                ga, gb = gname(first), gname(second)
+                if ga not in prof_old or gb not in prof_old:
+                    continue
+                if first in LETTERS and second in LETTERS and (first, second) in {(a, b) for a, b in zip(LETTERS, LETTERS[1:])}:
+                    continue
+                m_old = mean_white(prof_old[ga], prof_old[gb], None, None)
+                m_new = mean_white(prof_new[ga], prof_new[gb], None, None)
+                if m_old is None or m_new is None:
+                    continue
+                d_old = skeleton_advance(ord(first), ord(second))
+                kern = d_old + (m_old - m_new) - hmtx[ga][0]
+                # clamp: never loosen a pair. The skeleton opens V-i, W-i etc. by about 44 units (room for its centred i dot
+                # under a slanted arm); the logotype i's dot is not under the arm, and the slant already makes diagonals look loose
+                kern = max(-150, min(0, kern))
+                optical.append((ga, gb, round(kern)))
+    merged = {(a, b): k for a, b, k in optical}
+    merged.update({(a, b): k for a, b, k in pairs})      # the wordmark's own pairs win
+    pairs = [(a, b, k) for (a, b), k in merged.items()]
     add_pair_kerns(font, pairs)
-    print("pair kerns:", [(a, b, k) for a, b, k in pairs])
+    print("wordmark pair kerns:", [(a, b, k) for a, b, k in pairs if (a, b) in wordmark_pairs], "; optical pair kerns:", len(optical))
 
     # 7. metadata -----------------------------------------------------------------------------
     set_names(font)

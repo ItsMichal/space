@@ -5,11 +5,11 @@
 .wordmark { display: block; width: 100%; height: auto; fill: var(--text); overflow: visible; }
 .wordmark .idot { transition: fill .8s var(--ease); transform-box: fill-box; transform-origin: center; }
 [data-live="1"] .wordmark .idot { fill: var(--blue-live); animation: onair 2.8s var(--ease) infinite; }
-.lede { margin: var(--s2) 0 0; font: 650 clamp(22px, 3vw, 32px)/1.2 var(--display); letter-spacing: -.02em; max-width: 26ch; text-wrap: balance; }
+.lede { margin: var(--s2) 0 0; font: 650 clamp(22px, 3vw, 32px)/1.2 var(--display); letter-spacing: var(--dtrack); max-width: 26ch; text-wrap: balance; }
 .cta { margin: 0; display: flex; flex-wrap: wrap; gap: 12px; }
 .blk { padding: var(--s8) 0; border-top: 1px solid var(--line); }
-h2 { margin: 0 0 var(--s4); font: 750 clamp(26px, 3.4vw, 36px)/1.1 var(--display); letter-spacing: -.025em; }
-h3 { margin: var(--s6) 0 var(--s2); font: 650 20px/1.2 var(--display); letter-spacing: -.01em; }
+h2 { margin: 0 0 var(--s4); font: 750 clamp(26px, 3.4vw, 36px)/1.1 var(--display); letter-spacing: var(--dtrack); }
+h3 { margin: var(--s6) 0 var(--s2); font: 650 20px/1.2 var(--display); letter-spacing: var(--dtrack); }
 .rows { list-style: none; margin: 0; padding: 0; }
 .rows li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 24px; padding: 16px 0; border-top: 1px solid var(--line); }
 .rows li:last-child { border-bottom: 1px solid var(--line); }

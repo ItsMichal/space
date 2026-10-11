@@ -33,7 +33,8 @@ Why darker and more vivid than the portfolio: it is a stage (streams are watched
 
 ## Type
 
-- **Geist** (variable, SIL OFL 1.1), self-hosted: one 28 KB latin woff2 plus latin-ext, preloaded, with a size-adjusted fallback. Headings 700 to 750, tracking -2.5% to -3%, line-height about 1; body 400 at 17px. Its round dots and near-geometric bowls sit with the logotype. Display scale is carried by the wordmark itself. No serif here. (Geist was already on this machine inside the portfolio repo's dependencies, so no download was made.)
+- **Halmic Display** (headings; derived from Nunito, SIL OFL 1.1, built by `brand/type/build-display.py`): Nunito at the weight whose stem matches the logotype bar, slanted 13 degrees, with the logotype's own h a l m i c, kerned so "halmic" typed in it reproduces the wordmark spacing. One weight, 10 KB woff2, preloaded, with a size-adjusted fallback. Tracking is 0 (the face carries its spacing); line-height about 1.
+- **Nunito Sans** (body and UI, variable 400 to 800, SIL OFL 1.1), self-hosted as latin and latin-ext woff2; body 400 at 17px. Same family lineage as the display face, calmer and upright. (Replaced Geist; `brand/type/specimen.png` has the comparison.) Display scale is carried by the wordmark itself. No serif here.
 - Body 17px/1.5, sentence case, one weight step up (500 to 600) for ledes.
 
 ## Marks
