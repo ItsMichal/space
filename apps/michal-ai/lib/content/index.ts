@@ -70,7 +70,7 @@ const byOrder = (a: Post, b: Post) => (a.order ?? 1e9) - (b.order ?? 1e9) || a.d
 /** Series of top-level articles: posts without a `parent` that share a `series`, in reading order. Needs 2+ posts. */
 export function getArticleSeries(opts: { includeDrafts?: boolean } = {}): SeriesGroup[] {
   const map = new Map<string, Post[]>()
-  for (const p of getBlogPosts(opts)) if (p.series) map.set(p.series, [...(map.get(p.series) ?? []), p])
+  for (const p of getTopLevel('article', opts)) if (p.series) map.set(p.series, [...(map.get(p.series) ?? []), p])
   return [...map]
     .filter(([, posts]) => posts.length > 1)
     .map(([name, posts]) => ({ name, id: seriesId(name), posts: posts.sort(byOrder) }))
