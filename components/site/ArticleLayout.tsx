@@ -5,6 +5,8 @@ import type { GalleryItem, PostLink } from '@/lib/content/types'
 import { Zoomable } from '@/components/media/Zoomable'
 import { Lightbox } from '@/components/media/Lightbox'
 import { Gallery } from '@/components/ui/Gallery'
+import { FactRows } from '@/components/ui/FactRows'
+import { ReadingToc } from '@/components/ui/ReadingToc'
 
 type Props = {
   title: string
@@ -98,37 +100,26 @@ export function ArticleLayout({
         <div className="h-space-12" />
       )}
       {kind === 'project' && (role || tags.length || links?.length) ? (
-        <dl className="facts" aria-label="Project facts">
-          <div>
-            <dt>Year</dt>
-            <dd>{years ?? date.slice(0, 4)}</dd>
-          </div>
-          {role ? (
-            <div>
-              <dt>Role</dt>
-              <dd>{role}</dd>
-            </div>
-          ) : null}
-          {tags.length ? (
-            <div className="facts__wide">
-              <dt>Stack</dt>
-              <dd>{tags.join(' · ')}</dd>
-            </div>
-          ) : null}
-          {links?.length ? (
-            <div className="facts__wide">
-              <dt>Links</dt>
-              <dd>
-                {links.map((l) => (
-                  <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer">
-                    {l.label}
-                    <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
-                  </a>
-                ))}
-              </dd>
-            </div>
-          ) : null}
-        </dl>
+        <FactRows
+          facts={[
+            { label: 'Year', value: years ?? date.slice(0, 4) },
+            ...(role ? [{ label: 'Role', value: role }] : []),
+            ...(tags.length ? [{ label: 'Stack', value: tags.join(' · ') }] : []),
+            ...(links?.length
+              ? [
+                  {
+                    label: 'Links',
+                    value: links.map((l) => (
+                      <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer">
+                        {l.label}
+                        <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
+                      </a>
+                    )),
+                  },
+                ]
+              : []),
+          ]}
+        />
       ) : null}
       {gallery?.length ? (
         <section className="gallery" aria-label="Gallery">
@@ -145,6 +136,7 @@ export function ArticleLayout({
       ) : null}
       <div className="prose">{children}</div>
       {after}
+      <ReadingToc />
       <Lightbox />
     </article>
   )

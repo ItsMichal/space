@@ -17,6 +17,7 @@ import { Embed } from '@/components/mdx/Embed'
 import { Callout } from '@/components/mdx/Callout'
 import { Picture } from '@/components/media/Picture'
 import { Zoomable } from '@/components/media/Zoomable'
+import { PostPreviewLink } from '@/components/ui/PostPreviewLink'
 
 // Turn directive nodes into hast elements with custom tag names that we map to components.
 // Only leaf (`::name`) and container (`:::name`) directives are components; inline `:name` text
@@ -62,6 +63,7 @@ function rehypeUnwrapImages() {
 type Props = Record<string, unknown>
 
 const components = {
+  a: (p: Props & { children?: ReactNode }) => <PostPreviewLink {...(p as never)} />,
   'mdx-youtube': (p: Props) => <YouTube id={String(p.id)} title={p.title as string | undefined} />,
   'mdx-embed': (p: Props) => <Embed url={String(p.url)} title={p.title as string | undefined} ratio={p.ratio as string | undefined} />,
   'mdx-callout': (p: Props & { children?: ReactNode }) => <Callout type={(p.type as string) ?? 'note'}>{p.children}</Callout>,
