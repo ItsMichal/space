@@ -383,3 +383,59 @@
 :root[data-reading] .ink-layer {
   mix-blend-mode: screen;
 }
+
+/* ---------- Nav sheet (phones) ----------
+   Open, the sheet is nearly opaque paper over a soft scrim so the links are always perfectly legible; the rows are
+   separated by the same fine hand-drawn hair that links rest on. */
+:root {
+  --nav-sheet-tint: rgba(246, 243, 235, 0.9);
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-reading] {
+    --nav-sheet-tint: rgba(20, 25, 20, 0.9);
+  }
+}
+.nav-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: color-mix(in srgb, var(--paper) 42%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 320ms var(--craft-in);
+}
+.nav-scrim[data-open] {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 520ms var(--craft-out);
+}
+@media (min-width: 640px) {
+  .nav-scrim {
+    display: none;
+  }
+}
+.sheet-row {
+  position: relative;
+  --t-rest: var(--t-rest-1);
+}
+:root[data-reading] .sheet-row {
+  --t-rest: var(--t-rest-dark-1);
+}
+.sheet-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -3px;
+  height: 6px;
+  background: var(--t-rest) no-repeat 0 50% / 100% 100%;
+  pointer-events: none;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .nav-scrim {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}

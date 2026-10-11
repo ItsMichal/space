@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { createSpring, type Spring } from '@/lib/motion/spring'
 import { makeStroke, type Pt } from '@/lib/motion/handStroke'
 import { bladePath, leafPath } from './craft/stroke'
@@ -19,8 +19,10 @@ type Props = {
   items: readonly TimelineItem[]
   /** Accessible name, e.g. "Experience". */
   label: string
-  /** Pixels between items. */
+  /** Pixels between items (the minimum when `fit` is on). */
   pitch?: number
+  /** When every item fits across the available width at `pitch` or more, spread them to fill it and stop scrubbing (tap or arrow keys still change the item). */
+  fit?: boolean
   /** Item focused on first paint (server and client agree). Default: the last. */
   initial?: number
   /** When given, scrubbing publishes "<statusLabel> · <item title>" to the nav's status pill. */
@@ -41,8 +43,12 @@ const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v
  * settle on the nearest item. All details are in the HTML (stacked, cross-fading), and without JS the strip hides and the
  * details read as a plain vertical list.
  */
-export function Timeline({ items, label, pitch = 120, initial, statusLabel, withDay = false, className = '' }: Props) {
+export function Timeline({ items, label, pitch: basePitch = 120, fit = false, initial, statusLabel, withDay = false, className = '' }: Props) {
   const n = items.length
+  const [layout, setLayout] = useState({ pitch: basePitch, fits: false })
+  const { pitch, fits } = layout
+  const fitsRef = useRef(false)
+  fitsRef.current = fits
   const start = clamp(initial ?? n - 1, 0, n - 1)
   const uid = useId()
   const [active, setActive] = useState(start)
@@ -93,7 +99,7 @@ export function Timeline({ items, label, pitch = 120, initial, statusLabel, with
   const paint = useCallback(
     (p: number) => {
       const f = fx.current
-      if (track.current) track.current.style.transform = `translate3d(${-p * pitch}px,0,0)`
+      if (track.current) track.current.style.transform = `translate3d(${-(fitsRef.current ? (n - 1) / 2 : p) * pitch}px,0,0)`
       const x = PAD + clamp(p, 0, n - 1) * pitch
       const head = geometry.uOf(x)
       f.els?.stem?.setAttribute('d', geometry.stroke.d(0, head, Math.max(0, Math.min(1, Math.abs(f.p - f.prevP) * 6)) * 1.4))
@@ -210,6 +216,33 @@ export function Timeline({ items, label, pitch = 120, initial, statusLabel, with
     },
   })
 
+  // Fit: measure the strip once the face is loaded and whenever it resizes. Everything fits -> spread and rest.
+  useLayoutEffect(() => {
+    if (!fit) return
+    const el = vp.current
+    if (!el) return
+    const measure = () => {
+      const W = el.clientWidth
+      const each = Math.floor(W / n)
+      const next = each >= basePitch ? { pitch: Math.min(each, 240), fits: true } : { pitch: basePitch, fits: false }
+      setLayout((cur) => (cur.pitch === next.pitch && cur.fits === next.fits ? cur : next))
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [fit, n, basePitch])
+
+  // Re-seat the strip whenever the layout changes.
+  useEffect(() => {
+    const f = fx.current
+    if (!f.els) return
+    strip.jump(activeRef.current)
+    paint(activeRef.current)
+    fxKick()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pitch, fits])
+
   // First paint: hand the DOM to the imperative layer.
   useEffect(() => {
     const svg = track.current?.querySelector('svg')
@@ -250,9 +283,9 @@ export function Timeline({ items, label, pitch = 120, initial, statusLabel, with
   }
 
   return (
-    <section className={`tl ${className}`} aria-label={label} style={{ ['--tl-pitch' as string]: `${pitch}px` }}>
-      <div ref={vp} className="tl-vp" {...strip.bind}>
-        <div ref={track} className="tl-track" style={{ transform: `translate3d(${-start * pitch}px,0,0)`, height: 132 }}>
+    <section className={`tl ${className}`} aria-label={label} style={{ ['--tl-pitch' as string]: `${pitch}px` }} data-fit={fits ? '' : undefined}>
+      <div ref={vp} className={`tl-vp${fits ? ' tl-vp--fit' : ''}`} {...(fits ? {} : strip.bind)}>
+        <div ref={track} className="tl-track" style={{ transform: `translate3d(${-(fits ? (n - 1) / 2 : start) * pitch}px,0,0)`, height: 132 }}>
           <svg className="tl-svg" width={geometry.W} height={RAIL_Y + 14} style={{ left: -PAD }} aria-hidden focusable="false">
             <g transform={`translate(0 ${RAIL_Y})`}>
               <path className="tl-rail" d={geometry.rail} />

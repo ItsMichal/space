@@ -374,3 +374,11 @@
   pointer-events: none;
   opacity: 0.8;
 }
+
+/* Everything fits: no edge fade, no grab cursor, nothing to drag. */
+.tl-vp--fit {
+  -webkit-mask-image: none;
+  mask-image: none;
+  cursor: default;
+  touch-action: auto;
+}

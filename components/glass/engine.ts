@@ -1049,7 +1049,7 @@ export class Field {
       tintDark: c.tintDark,
       rim: c.rim,
       edge: c.edge,
-      shadow: [8, 22, dark ? 0.5 : 0.2],
+      shadow: [10, 40, dark ? 0.32 : 0.075],
       shadowCol: dark ? [0, 0, 0] : [0.094, 0.129, 0.106],
       glow: dark ? [1, 1, 1, 0.3] : [1, 1, 1, 0.55],
       themeDark: dark,

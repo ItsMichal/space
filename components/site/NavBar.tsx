@@ -58,6 +58,8 @@ export function NavBar() {
     `flex min-h-[44px] items-center rounded-sm text-body-strong transition-colors duration-150 hover:text-ink ${current ? 'text-ink' : 'text-ink-muted'}`
 
   return (
+    <>
+    <div aria-hidden className="nav-scrim" data-open={open ? '' : undefined} onClick={close} />
     <GlassEffectContainer
       as="header"
       spacing={16}
@@ -75,14 +77,14 @@ export function NavBar() {
         <GlassFold
           as="nav"
           aria-label="Main"
-          effect={glass.regular}
+          effect={open ? glass.regular.tint('var(--nav-sheet-tint)') : glass.regular}
           shape={{ cornerRadius: 28 }}
           id="pill"
           namespace={ns}
           open={open}
           panelId="nav-sheet"
           className="pointer-events-auto min-w-0 flex-1 sm:flex-none"
-          headerClassName="relative flex min-h-[52px] items-center justify-between gap-space-3 pl-space-4 pr-[4px] sm:gap-space-6 sm:pr-space-4"
+          headerClassName="relative flex min-h-[48px] items-center justify-between gap-space-3 pl-space-4 pr-[4px] sm:gap-space-6 sm:pr-space-4"
           panelClassName="flex flex-col px-space-4 pb-space-3 pt-space-1 sm:hidden"
           header={
             <>
@@ -118,7 +120,7 @@ export function NavBar() {
                 href={l.href}
                 onClick={close}
                 aria-current={l.match && pathname.startsWith(l.match) ? 'page' : undefined}
-                className={`${linkClass(!!l.match && pathname.startsWith(l.match))} w-full border-t border-hairline text-title`}
+                className={`${linkClass(!!l.match && pathname.startsWith(l.match))} sheet-row min-h-[52px] w-full font-display text-[28px] leading-none tracking-[-0.01em]`}
               >
                 {l.label}
               </Link>
@@ -127,5 +129,6 @@ export function NavBar() {
         </GlassFold>
       </div>
     </GlassEffectContainer>
+    </>
   )
 }
