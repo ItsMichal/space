@@ -1,0 +1,5 @@
+fonttools>=4.66
+brotli
+skia-pathops
+uharfbuzz
+pillow

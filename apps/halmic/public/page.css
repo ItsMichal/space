@@ -1,8 +1,8 @@
 /* inner pages (game, video, design): same dark stage, plain reading column */
 .pg { padding-top: 120px; padding-bottom: var(--s12); max-width: 1040px; }
-.pg h1 { margin: 0 0 var(--s4); font: 750 clamp(32px, 5vw, 64px)/1 var(--display); letter-spacing: -.03em; text-wrap: balance; }
+.pg h1 { margin: 0 0 var(--s4); font: 750 clamp(32px, 5vw, 64px)/1 var(--display); letter-spacing: var(--dtrack); text-wrap: balance; }
 .pg .crumb { margin: 0 0 var(--s2); } .pg .crumb a { color: var(--mute); } .pg .crumb a:hover { color: var(--blue-live); }
-.lede2 { font: 600 clamp(20px, 2.4vw, 28px)/1.25 var(--display); letter-spacing: -.015em; margin: 0 0 var(--s3); max-width: 36ch; }
+.lede2 { font: 600 clamp(20px, 2.4vw, 28px)/1.25 var(--display); letter-spacing: var(--dtrack); margin: 0 0 var(--s3); max-width: 36ch; }
 .pg p { max-width: 62ch; } .pg a { text-underline-offset: 4px; }
 .pg .more a, .pg p a { text-decoration: underline; text-decoration-color: #ffffff44; }
 .pg .btn { text-decoration: none; }
@@ -12,5 +12,4 @@
 .ggrid { display: grid; gap: var(--s6) var(--s4); grid-template-columns: 1fr; margin-top: var(--s6); } @media (min-width: 700px) { .ggrid { grid-template-columns: repeat(2, 1fr); } }
 .vgrid { display: grid; gap: var(--s4) var(--s3); grid-template-columns: 1fr; } @media (min-width: 640px) { .vgrid { grid-template-columns: repeat(2, 1fr); } } @media (min-width: 960px) { .vgrid { grid-template-columns: repeat(3, 1fr); } }
 .pg .shots { display: flex; flex-wrap: wrap; gap: 16px; margin: var(--s4) 0; } .pg .shot { margin: 0; background: #fff; border-radius: 14px; overflow: hidden; } .pg .shot img { height: 120px; width: auto; max-width: none; }
-.h2s { margin: var(--s8) 0 var(--s3); font: 700 clamp(22px, 2.4vw, 30px)/1.1 var(--display); letter-spacing: -.02em; max-width: none; }
-.pg .tourn { max-width: 820px; }
+.h2s { margin: var(--s8) 0 var(--s3); font: 700 clamp(22px, 2.4vw, 30px)/1.1 var(--display); letter-spacing: var(--dtrack); max-width: none; }
