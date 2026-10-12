@@ -29,7 +29,7 @@ Without them `/api/live` answers `{ "live": false, "unknown": true }` and the pa
 
 ## Launch checklist
 1. Add the halmic.com zone in the Cloudflare account (nameservers at the registrar).
-2. Uncomment the `routes` line in `wrangler.jsonc` (custom domains for `halmic.com` and `www.halmic.com`).
+2. `wrangler.jsonc` already has the `routes` for `halmic.com` and `www.halmic.com` and turns the workers.dev address off; the deploy fails until the zone exists.
 3. `npm run deploy:halmic`, then set the two Twitch secrets above.
 4. Remove the registrar's URL forward for the domain.
 5. In GitHub, set repository variables `DEPLOY_HALMIC=true` and `HALMIC_URL=https://halmic.com` so merges to main deploy and are smoke-tested.
