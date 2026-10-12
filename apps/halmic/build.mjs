@@ -1,6 +1,7 @@
-// Static build, no dependencies: src/*.html templates + content/*.json + brand SVGs -> public/ (pages, sitemap, robots, rss, llms.txt).
+// Static build for halmic.com, no dependencies: src/*.html templates + content/*.json + brand SVGs -> public/ (pages, sitemap, robots, rss, llms.txt).
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -9,6 +10,8 @@ const read = (p) => fs.readFileSync(path.join(here, p), 'utf8');
 const json = (p) => JSON.parse(read(p));
 const write = (p, s) => { fs.mkdirSync(path.dirname(path.join(here, 'public', p)), { recursive: true }); fs.writeFileSync(path.join(here, 'public', p), s); };
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+// css/js are not fingerprinted by name, so every page links them with ?v=<content hash> and _headers can cache them for a year
+const V = (f) => `/${f}?v=${crypto.createHash('sha1').update(fs.readFileSync(path.join(here, 'public', f))).digest('hex').slice(0, 8)}`;
 const BUILD_DATE = new Date().toISOString().slice(0, 10);
 
 const parts = json('./brand/wordmark-parts.json');
@@ -67,31 +70,29 @@ const ldTag = (graph) => `<script type="application/ld+json">${JSON.stringify({ 
 // ---- page chrome ----
 const NAV = `<nav aria-label="Primary"><a href="/#stream">stream</a><a href="/#videos">videos</a><a href="/#games">games</a><a href="/#design">design</a><a href="/#hi">say hi</a></nav>`;
 const FOOT = `<footer class="foot"><div class="wrap"><p>© ${new Date().getFullYear()} halmic</p><p class="links"><a href="https://www.twitch.tv/halmictv" rel="me">Twitch</a><a href="https://www.youtube.com/@halmic" rel="me">YouTube</a><a href="https://halmic.itch.io/" rel="me">itch.io</a><a href="https://halmic.medium.com/" rel="me">Medium</a><a href="https://x.com/halmicc" rel="me">X</a><a href="https://discord.gg/4xvveJ8jS5">Discord</a></p></div></footer>`;
-const head = ({ title, desc, path: p, og, ld, css = ['/bold.css'], type = 'website' }) => `<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>${esc(title)}</title><meta name="description" content="${esc(desc)}"><link rel="canonical" href="${SITE}${p}"><meta name="theme-color" content="#0f0e13">
+const head = ({ title, desc, path: p, og, ld, css = ['bold.css'], type = 'website', noindex = false }) => `<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>${esc(title)}</title><meta name="description" content="${esc(desc)}">${noindex ? '<meta name="robots" content="noindex">' : `<link rel="canonical" href="${SITE}${p}">`}<meta name="theme-color" content="#0f0e13">
 <meta property="og:site_name" content="halmic productions"><meta property="og:type" content="${type}"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${SITE}${p}"><meta property="og:image" content="${SITE}${og}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${esc(title)}"><meta name="twitter:description" content="${esc(desc)}"><meta name="twitter:image" content="${SITE}${og}">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="alternate" type="application/rss+xml" title="halmic" href="/rss.xml"><link rel="preload" href="/fonts/halmic-display.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/halmic-text-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/base.css">${css.map((c) => `<link rel="stylesheet" href="${c}">`).join('')}${ld ? ldTag(ld) : ''}`;
-const dockHtml = (cur2) => `<div class="dock" aria-label="Prototype controls"><span class="tag">prototype</span><div><a data-dock="live" data-val="0" href="${cur2}">offline</a><a data-dock="live" data-val="1" href="${cur2}">live</a></div><div><a data-dock="dir" data-val="index" href="/index.html">bold</a><a data-dock="dir" data-val="calm" href="/calm.html">calm</a></div></div>`;
-const inner = ({ title, desc, path: p, og, ld, body, type }) => `<!doctype html><html lang="en"><head>${head({ title, desc, path: p, og, ld, css: ['/bold.css', '/page.css'], type })}</head><body data-live="0">
+<link rel="stylesheet" href="${V('base.css')}">${css.map((c) => `<link rel="stylesheet" href="${V(c)}">`).join('')}${ld ? ldTag(ld) : ''}`;
+const inner = ({ title, desc, path: p, og, ld, body, type, noindex }) => `<!doctype html><html lang="en"><head>${head({ title, desc, path: p, og, ld, css: ['bold.css', 'page.css'], type, noindex })}</head><body>
 <header class="top"><div class="wrap"><a href="/" aria-label="halmic, home">${mark}</a>${NAV}</div></header>
-<main class="pg wrap">${body}</main>${FOOT}<script src="/app.js" defer></script></body></html>`;
+<main class="pg wrap">${body}</main>${FOOT}<script src="${V('app.js')}" defer></script></body></html>`;
 
 // ---- home templates ----
 const subs = {
   wordmark: wordmark('c'), mark, year: String(new Date().getFullYear()),
-  vseries: `<div class="series"><div class="series-head"><h3>${esc(vc.series.title)}</h3><p>${esc(vc.series.line)} <span class="draft">[draft]</span></p></div>
+  vseries: `<div class="series"><div class="series-head"><h3>${esc(vc.series.title)}</h3><p>${esc(vc.series.line)}</p></div>
     <div class="series-grid"><div class="vfeat">${vcard(latestEp, 'vid-featured', `Episode ${latestEp.ep}, the latest`)}</div><ol class="eps">${earlierEps.slice().reverse().map((v) => `<li>${vcard(v, 'vid-ep')}</li>`).join('')}</ol></div>
     <p class="more"><a href="https://www.youtube.com/playlist?list=${vc.series.playlist}" rel="noopener">The whole series on YouTube</a></p></div>`,
   vother: `<h3 class="sub-h">Other edits</h3><div class="reel" role="list">${others.map((v) => vcard(v)).join('')}</div>`,
-  vsmash: `<p class="intro">${esc(smash.line)} <span class="draft">[draft]</span></p><div class="reel" role="list">${smash.sets.map((s) => `<a class="vid" role="listitem" href="https://www.youtube.com/watch?v=${s.id}" rel="noopener"><span class="thumb"><img src="/videos/${s.id}.jpg" width="640" height="360" loading="lazy" decoding="async" alt="Thumbnail of the stream overlay for the set ${esc(s.event)}, ${esc(s.round)}, halmic vs ${esc(s.opp)}"></span><span class="vt">${esc(s.event)}: ${esc(s.round)}</span><span class="vm">${esc(`vs ${s.opp} · ${s.date}`)}</span></a>`).join('')}</div><p class="gmeta">${esc(smash.credit)}</p>`,
+  vsmash: `<p class="intro">${esc(smash.line)}</p><div class="reel" role="list">${smash.sets.map((s) => `<a class="vid" role="listitem" href="https://www.youtube.com/watch?v=${s.id}" rel="noopener"><span class="thumb"><img src="/videos/${s.id}.jpg" width="640" height="360" loading="lazy" decoding="async" alt="Thumbnail of the stream overlay for the set ${esc(s.event)}, ${esc(s.round)}, halmic vs ${esc(s.opp)}"></span><span class="vt">${esc(s.event)}: ${esc(s.round)}</span><span class="vm">${esc(`vs ${s.opp} · ${s.date}`)}</span></a>`).join('')}</div><p class="gmeta">${esc(smash.credit)}</p>`,
   clips: clipRows,
   gfeature: gFeature.map((g, i) => gcard(g, i ? 'g-sm' : 'g-lg')).join(''), gmore: gMore.map((g) => gcard(g, 'g-xs')).join(''),
-  head_bold: head({ title: 'halmic productions: streams, videos, games and design', desc: 'halmic productions: an assortment of various somewhat creative work I’ve done. Twitch (halmictv), YouTube, tiny itch.io games and logo design, all in one place.', path: '/', og: '/og/home.png', ld: [PERSON, { '@type': 'WebSite', '@id': `${SITE}/#site`, url: `${SITE}/`, name: 'halmic productions', alternateName: 'halmic', description: 'An assortment of various somewhat creative work I’ve done.', publisher: { '@id': `${SITE}/#halmic` } }, ...pageVideos.map(videoLd), ...gl.map(gameLd), designLd], css: ['/bold.css'] }),
-  head_calm: head({ title: 'halmic productions: streams, videos, games and design', desc: 'halmic productions: an assortment of various somewhat creative work I’ve done. Twitch (halmictv), YouTube, tiny itch.io games and logo design, all in one place.', path: '/', og: '/og/home.png', ld: [PERSON], css: ['/calm.css'] }),
-  dock_bold: dockHtml('/index.html'), dock_calm: dockHtml('/calm.html'), nav: NAV, foot: FOOT,
-  design_shots: ['header', 'footer', 'phone'].map((k) => `<figure class="shot shot-${k}"><img src="/work/southeast-denver-dental-${k}.png" loading="lazy" decoding="async" alt="${{ header: 'The Southeast Denver Dental logo in the header of their website: an orange and blue four-lobed tooth mark beside the name in blue and orange capitals.', footer: 'The same logo in white on the blue footer of their website.', phone: 'The logo in the phone header of their website, next to a menu button.' }[k]}"></figure>`).join(''),
+  head_bold: head({ title: 'halmic productions: streams, videos, games and design', desc: 'halmic productions: an assortment of various somewhat creative work I’ve done. Twitch (halmictv), YouTube, tiny itch.io games and logo design, all in one place.', path: '/', og: '/og/home.png', ld: [PERSON, { '@type': 'WebSite', '@id': `${SITE}/#site`, url: `${SITE}/`, name: 'halmic productions', alternateName: 'halmic', description: 'An assortment of various somewhat creative work I’ve done.', publisher: { '@id': `${SITE}/#halmic` } }, ...pageVideos.map(videoLd), ...gl.map(gameLd), designLd], css: ['bold.css'] }),
+  nav: NAV, appjs: V('app.js'), foot: FOOT,
+  design_shots: ['header', 'footer', 'phone'].map((k) => { const png = fs.readFileSync(path.join(here, `public/work/southeast-denver-dental-${k}.png`)); return `<figure class="shot shot-${k}"><img src="/work/southeast-denver-dental-${k}.png" width="${png.readUInt32BE(16)}" height="${png.readUInt32BE(20)}" loading="lazy" decoding="async" alt="${{ header: 'The Southeast Denver Dental logo in the header of their website: an orange and blue four-lobed tooth mark beside the name in blue and orange capitals.', footer: 'The same logo in white on the blue footer of their website.', phone: 'The logo in the phone header of their website, next to a menu button.' }[k]}"></figure>`; }).join(''),
 };
 for (const d of ['videos', 'games']) { const dir = path.join(here, 'public', d); if (fs.existsSync(dir)) for (const e of fs.readdirSync(dir, { withFileTypes: true })) if (e.isDirectory()) fs.rmSync(path.join(dir, e.name), { recursive: true, force: true }); }
 fs.rmSync(path.join(here, 'public/design'), { recursive: true, force: true });
@@ -113,7 +114,7 @@ for (const g of gl) {
     body: `<p class="crumb"><a href="/#games">games</a></p><h1>${esc(g.title)}</h1><div class="gpage"><img class="gcover" src="${g.coverLocal}" width="640" height="508" alt="${esc(g.alt)}"><div><p class="lede2">${esc(g.line)}</p>${g.description ? `<p>${esc(g.description)}</p>` : ''}<p class="gmeta">${esc([g.status, g.madeWith, g.genre?.replace(/ ,/g, ','), g.jam].filter(Boolean).join(' · '))}</p><p><a class="btn btn-blue" href="${g.url}" rel="noopener">Play on itch.io</a></p></div></div><p class="more"><a href="/#games">More little games</a> · <a href="/#videos">Videos</a> · <a href="https://www.twitch.tv/halmictv">halmic on Twitch</a></p>`,
   }));
 }
-write('games/index.html', inner({ title: 'Games by halmic: tiny jam games and experiments', desc: 'Tiny games made by halmic in PICO-8, PuzzleScript, Bitsy and GB Studio. Play them in the browser on itch.io.', path: '/games/', og: '/og/home.png', ld: [PERSON, ...gl.map(gameLd)], body: `<h1>Little games</h1><p class="lede2">Jam entries and experiments, mostly in tiny engines. <i class="ph">[owner: rewrite this line]</i></p><div class="ggrid">${gl.map((g) => gcard(g)).join('')}</div>` }));
+write('games/index.html', inner({ title: 'Games by halmic: tiny jam games and experiments', desc: 'Tiny games made by halmic in PICO-8, PuzzleScript, Bitsy and GB Studio. Play them in the browser on itch.io.', path: '/games/', og: '/og/home.png', ld: [PERSON, ...gl.map(gameLd)], body: `<h1>Little games</h1><p class="lede2">Jam entries and experiments, mostly in tiny engines.</p><div class="ggrid">${gl.map((g) => gcard(g)).join('')}</div>` }));
 for (const v of pageVideos) {
   urls.push({ loc: `/videos/${vslug(v)}/`, pri: 0.6 });
   write(`videos/${vslug(v)}/index.html`, inner({
@@ -126,8 +127,25 @@ write('videos/index.html', inner({ title: 'Videos by halmic: edits, highlights a
 write('design/index.html', inner({ title: 'Design by halmic: logos and things I made', desc: 'Things halmic has designed: a logo for Southeast Denver Dental and the halmic logotype itself.', path: '/design/', og: '/og/home.png', ld: [PERSON, designLd], body: `<h1>Things I’ve designed</h1><p class="lede2"><a href="/design/southeast-denver-dental/">The logo for Southeast Denver Dental</a>, and <a href="/#design">the halmic logotype</a>.</p>` }));
 write('design/southeast-denver-dental/index.html', inner({
   title: 'Logo for Southeast Denver Dental | halmic productions', desc: 'halmic designed the logo for Southeast Denver Dental, a dental practice in Denver, Colorado. See it in use on their website.', path: '/design/southeast-denver-dental/', og: '/og/design-sedd.png', ld: [PERSON, designLd],
-  body: `<p class="crumb"><a href="/#design">design</a></p><h1>Logo for Southeast Denver Dental</h1><p class="lede2">I designed the logo for Southeast Denver Dental, a dental practice in Denver, Colorado. The logo only; the site and everything else is theirs.</p><div class="shots">${subs.design_shots}</div><p>Screenshots are of their public website. <a href="https://www.sedenverdental.com/" rel="noopener">Visit sedenverdental.com</a>.</p><p class="gmeta"><i class="ph">[owner: year, a line on how it came about, early sketches or explorations, and whether the practice is happy to be shown]</i></p>`,
+  body: `<p class="crumb"><a href="/#design">design</a></p><h1>Logo for Southeast Denver Dental</h1><p class="lede2">I designed the logo for Southeast Denver Dental, a dental practice in Denver, Colorado. The logo only; the site and everything else is theirs.</p><div class="shots">${subs.design_shots}</div><p>Screenshots are of their public website. <a href="https://www.sedenverdental.com/" rel="noopener">Visit sedenverdental.com</a>.</p>`,
 }));
+
+// ---- 404 (served by the assets layer for unknown paths: not_found_handling "404-page"; noindex, not in the sitemap) ----
+write('404.html', inner({ title: 'Not here | halmic productions', desc: 'This page does not exist.', path: '/404.html', og: '/og/home.png', noindex: true, body: `<h1>Not here.</h1><p class="lede2">Nothing lives at this address.</p><p class="more"><a href="/">Back to halmic</a></p>` }));
+
+// ---- _headers (generated; Cloudflare static-assets headers file; /api/* responses get theirs from worker/index.js) ----
+// CSP matches the site as built: no inline script/style (JSON-LD is a data block), fonts and images are self-hosted, the only
+// third-party request is the click-to-load youtube-nocookie player iframe. connect-src 'self' covers /api/live.
+const CSP = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src https://www.youtube-nocookie.com; media-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'";
+const rule = (p, h) => `${p}\n${Object.entries(h).map(([k, v]) => `  ${k}: ${v}`).join('\n')}\n`;
+write('_headers', [
+  rule('/*', { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'X-Frame-Options': 'DENY', 'Permissions-Policy': 'camera=(), microphone=(), geolocation=()', 'Content-Security-Policy': CSP }),
+  rule('/fonts/*', { 'Cache-Control': 'public, max-age=31536000, immutable' }),
+  // css/js are linked with ?v=<hash> (see V() above), so they can be immutable
+  rule('/*.css', { 'Cache-Control': 'public, max-age=31536000, immutable' }),
+  rule('/*.js', { 'Cache-Control': 'public, max-age=31536000, immutable' }),
+  ...['jpg', 'png', 'svg'].map((e) => rule(`/*.${e}`, { 'Cache-Control': 'public, max-age=86400' })),
+].join('\n'));
 
 // ---- sitemap, robots, rss, llms ----
 write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map((u) => `<url><loc>${SITE}${u.loc}</loc><lastmod>${BUILD_DATE}</lastmod><priority>${u.pri}</priority></url>`).join('')}</urlset>\n`);

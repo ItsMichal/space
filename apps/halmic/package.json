@@ -6,7 +6,8 @@
     "dev": "node build.mjs && node serve.mjs",
     "build": "node build.mjs",
     "deploy": "node build.mjs && wrangler deploy",
-    "sync:youtube": "node ./scripts/sync-youtube.mjs"
+    "sync:youtube": "node ./scripts/sync-youtube.mjs",
+    "test": "node --test worker/live.test.mjs && node scripts/check-links.mjs"
   },
   "devDependencies": {
     "wrangler": "^4.149.0"

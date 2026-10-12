@@ -15,8 +15,8 @@
   <div class="wrap hero-in">
     <p class="status" role="status">
       <span class="meter" data-meter data-count="6" data-t="4" data-pitch="8" data-h="20" aria-hidden="true"></span>
-      <span class="on"><b>on air</b> <span class="sub">now playing <i class="ph">[category]</i></span></span>
-      <span class="off"><b>offline</b> <span class="sub">last stream <i class="ph">[date]</i></span></span>
+      <span class="on"><b>on air</b> <span class="sub" data-game hidden>now playing <span data-game-name></span></span></span>
+      <span class="off"><b>offline</b></span>
     </p>
     <h1 class="wm">{{wordmark}}</h1>
     <div class="hero-foot">
@@ -37,7 +37,7 @@
       <li><b>VALORANT</b><span>College league matches, clutches included.</span></li>
       <li><b>F1 23</b><span>League seasons, qualifying and races.</span></li>
       <li><b>Among Us</b><span>Discord friends doing amogus.</span></li>
-      <li><b>Code</b><span>Stupid things. <i class="ph">[what do you build on stream?]</i></span></li>
+      <li><b>Code</b><span>Stupid things.</span></li>
     </ol>
   </div>
   <div class="wrap two" id="clips">
@@ -48,8 +48,7 @@
   <div class="wrap two" id="when">
     <h2>When</h2>
     <div>
-      <div class="week" aria-hidden="true"><i style="--h:56%"></i><i style="--h:78%"></i><i style="--h:40%"></i><i style="--h:92%"></i><i style="--h:64%"></i><i style="--h:100%"></i><i style="--h:48%"></i></div>
-      <p class="muted">No schedule is set on Twitch yet. <i class="ph">[days and times, then the site picks them up]</i></p>
+      <p class="muted">No set schedule. <a href="https://www.twitch.tv/halmictv" rel="me noopener">Follow on Twitch</a> and it will tell you when I’m live.</p>
     </div>
   </div>
 </section>
@@ -68,7 +67,7 @@
 <section class="sec" id="games">
   <div class="wrap">
     <h2 class="wide">Little games</h2>
-    <p class="intro">Jam entries and experiments, mostly in tiny engines. Some are rough, which is half the fun. <span class="draft">[draft]</span></p>
+    <p class="intro">Jam entries and experiments, mostly in tiny engines. Some are rough, which is half the fun.</p>
     <div class="gfeat">{{gfeature}}</div>
     <h3 class="sub-h">More experiments</h3>
     <div class="gmore">{{gmore}}</div>
@@ -84,7 +83,7 @@
         <h3>Logo for Southeast Denver Dental</h3>
         <p class="big">I designed the logo for a dental practice in Denver, Colorado. The logo only; the website and the rest are theirs.</p>
         <div class="shots">{{design_shots}}</div>
-        <p class="dnote">Screenshots of <a href="https://www.sedenverdental.com/" rel="noopener">their public website</a>. <a href="/design/southeast-denver-dental/">More on this one</a>. <i class="ph">[year, sketches, client OK]</i></p>
+        <p class="dnote">Screenshots of <a href="https://www.sedenverdental.com/" rel="noopener">their public website</a>. <a href="/design/southeast-denver-dental/">More on this one</a>.</p>
       </article>
       <article class="dentry">
         <h3>This logotype</h3>
@@ -94,17 +93,16 @@
     </div>
     <div class="writing" id="writing">
       <h3>Writing</h3>
-      <p class="big">Some posts live on <a href="https://halmic.medium.com/">Medium</a>. <i class="ph">[moving them here is pending]</i></p>
+      <p class="big">Some posts live on <a href="https://halmic.medium.com/">Medium</a>.</p>
     </div>
     <div class="contact" id="hi">
-      <p class="big">Want something made? Say hi. <i class="ph">[contact email or form]</i></p>
-      <a class="btn btn-ink" href="#hi">Say hi <i class="ph">[link]</i></a>
+      <p class="big">Want something made? Say hi.</p>
+      <p class="hi-btns"><a class="btn btn-ink" href="https://discord.gg/4xvveJ8jS5" rel="noopener">Discord</a><a class="btn btn-ink" href="https://x.com/halmicc" rel="me noopener">X</a></p>
     </div>
   </div>
 </section>
 </main>
 {{foot}}
-{{dock_bold}}
-<script src="/app.js" defer></script>
+<script src="{{appjs}}" defer></script>
 </body>
 </html>

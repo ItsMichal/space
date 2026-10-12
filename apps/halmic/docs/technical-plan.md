@@ -5,7 +5,7 @@ Static-first Next.js (App Router, `output: export`-style prerender for every pag
 
 ## Live status endpoint (`GET /api/live`)
 - Twitch Helix `GET https://api.twitch.tv/helix/streams?user_login=halmictv` with an **app access token** (client-credentials grant). No user login, no chat scopes.
-- Token cached in KV (`twitch:token`, TTL = `expires_in - 300s`); refreshed lazily on 401.
+- Token cached in memory and in `caches.default` under a synthetic key (TTL = `expires_in - 300s`); refreshed once on 401. No KV, so deploy needs no setup.
 - Response cached with the Cache API for 45 seconds, `stale-while-revalidate=300`, so any number of visitors costs about 1 Helix call per minute.
 - Returns only what the UI needs: `{ live, title, game, startedAt, thumbnail?, checkedAt }`. No viewer count (the stream is small and the number would hurt more than help).
 - Fallback ladder: fresh, stale (served and revalidated), last-known from KV, then `{ live: false, unknown: true }`. The page then shows "offline" without a date, never an error, and the field/bars simply rest.
