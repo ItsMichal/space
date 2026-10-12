@@ -29,7 +29,7 @@ describe('rehypeDropDeadEmbeds', () => {
 
   it('only closes a section at a heading of the same or higher level (a parent heading is kept)', () => {
     expect(run([el('h2', {}, [text('Demos')]), el('h3', {}, [text('Clips')]), yt('dead1')])).toEqual(['h2'])
-    expect(run([el('h3', {}, [text('Clips')]), el('h2', {}, [text('Next')]), yt('dead1')])).toEqual(['h3', 'h2'])
+    expect(run([el('h3', {}, [text('Clips')]), el('h2', {}, [text('Next')]), yt('dead1')])).toEqual(['h3'])
   })
 
   it('leaves headings that were already empty alone', () => {

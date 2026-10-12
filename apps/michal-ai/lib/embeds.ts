@@ -14,8 +14,8 @@ const RANK = /^h([1-6])$/
 const isBlank = (n: RootContent) => n.type === 'text' && !n.value.trim()
 
 /** Is this top-level node an embed the manifest says is dead? */
-function isDeadEmbed(n: RootContent, dead: (n: Element) => boolean): n is Element {
-  return n.type === 'element' && dead(n)
+function isDeadEmbed(n: RootContent, dead: (n: Element) => boolean): boolean {
+  return n.type === 'element' && dead(n as Element)
 }
 
 /**
