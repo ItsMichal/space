@@ -1,0 +1,104 @@
+[
+  {
+    "file": "writing-top-1440-light.png",
+    "vw": 1440,
+    "hOverflow": 0,
+    "col": {
+      "left": 416,
+      "right": 416,
+      "width": 608
+    },
+    "centered": true,
+    "ul": {
+      "items": 0,
+      "markers": 0
+    },
+    "measureCh": 76,
+    "bad": []
+  },
+  {
+    "file": "writing-top-1440-dark.png",
+    "vw": 1440,
+    "hOverflow": 0,
+    "col": {
+      "left": 416,
+      "right": 416,
+      "width": 608
+    },
+    "centered": true,
+    "ul": {
+      "items": 0,
+      "markers": 0
+    },
+    "measureCh": 76,
+    "bad": []
+  },
+  {
+    "file": "writing-top-1920-light.png",
+    "vw": 1920,
+    "hOverflow": 0,
+    "col": {
+      "left": 656,
+      "right": 656,
+      "width": 608
+    },
+    "centered": true,
+    "ul": {
+      "items": 0,
+      "markers": 0
+    },
+    "measureCh": 76,
+    "bad": []
+  },
+  {
+    "file": "writing-top-1920-dark.png",
+    "vw": 1920,
+    "hOverflow": 0,
+    "col": {
+      "left": 656,
+      "right": 656,
+      "width": 608
+    },
+    "centered": true,
+    "ul": {
+      "items": 0,
+      "markers": 0
+    },
+    "measureCh": 76,
+    "bad": []
+  },
+  {
+    "file": "writing-top-375-light.png",
+    "vw": 375,
+    "hOverflow": 0,
+    "col": {
+      "left": 16,
+      "right": 16,
+      "width": 343
+    },
+    "centered": true,
+    "ul": {
+      "items": 0,
+      "markers": 0
+    },
+    "measureCh": 48,
+    "bad": []
+  },
+  {
+    "file": "writing-top-375-dark.png",
+    "vw": 375,
+    "hOverflow": 0,
+    "col": {
+      "left": 16,
+      "right": 16,
+      "width": 343
+    },
+    "centered": true,
+    "ul": {
+      "items": 0,
+      "markers": 0
+    },
+    "measureCh": 48,
+    "bad": []
+  }
+]

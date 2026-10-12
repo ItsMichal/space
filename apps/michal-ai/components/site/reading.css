@@ -1,0 +1,112 @@
+/* Reading-view grid (projects, project logs, writing). One rule: the text column is centred in the viewport at every width.
+
+     viewport ......................................................... centred
+        gutter | ---------------- wide track (900px) --------------- | gutter
+                       |  text column (34rem, about 68 characters) |
+
+   - Everything in the article is in the text column by default: title block, facts, body text, lists, quotes, callouts,
+     page-end blocks. The article itself is the column (max-width + auto margins), so nothing can sit off-centre.
+   - Media, tables, code, galleries, timelines and embeds may break out to the wide track: add `reading__wide`, or rely on
+     the `.prose` rules below. They are centred on the same axis (negative auto margins), never pushed to one side.
+   - Nothing is full-bleed on reading pages. On phones the wide track collapses to the text column.
+   - Side rails (the "On this page" list) are fixed to the margin outside the wide track, so they can never move the column.
+
+   Measure: 34rem at the 20px prose size is about 68 characters of Newsreader (measured by scripts/article-shots.mjs).
+   Precedent: stripe.com/blog and vercel.com/blog (one centred text column with wider figures), apple.com/newsroom (a text column
+   with wide imagery), medium.com (a centred column). See docs/design-references.md. */
+:root {
+  --gutter: var(--space-4);
+  --text: 34rem;
+  --wide: 900px;
+  /* 100vw includes a classic scrollbar (about 15px); the gutter absorbs it. */
+  --wide-w: min(var(--wide), calc(100vw - 2 * var(--gutter)));
+}
+@media (min-width: 768px) {
+  :root {
+    --gutter: var(--space-8);
+  }
+}
+
+.reading {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: calc(var(--text) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding: 120px var(--gutter) var(--space-16);
+}
+@media (min-width: 768px) {
+  .reading {
+    padding-top: 160px;
+  }
+}
+
+.reading__head > :first-child {
+  margin-top: 0;
+}
+
+/* Break out of the text column and stay centred on its axis. */
+.reading__wide,
+.reading .prose > :is(figure, .table-scroll, [data-rehype-pretty-code-figure], .embed, .tl, .postextra) {
+  width: var(--wide-w);
+  max-width: none;
+  margin-inline: calc(50% - var(--wide-w) / 2);
+}
+.reading .postextra {
+  width: var(--wide-w);
+  max-width: none;
+  margin-inline: calc(50% - var(--wide-w) / 2);
+}
+
+@media print {
+  .reading {
+    max-width: none;
+    padding: 0;
+  }
+  .reading__wide,
+  .reading .prose > :is(figure, .table-scroll, [data-rehype-pretty-code-figure], .embed, .tl, .postextra),
+  .reading .postextra {
+    width: auto;
+    margin-inline: 0;
+  }
+  .toc,
+  .reactionbar,
+  .lb {
+    display: none !important;
+  }
+  .prose {
+    font-size: 11pt;
+    line-height: 1.5;
+    color: #000;
+  }
+  .prose h2 {
+    font-size: 20pt;
+  }
+  .prose h3 {
+    font-size: 15pt;
+  }
+  .prose :is(pre, blockquote, figure, .callout, .table-scroll, li) {
+    break-inside: avoid;
+  }
+  .prose .table-scroll {
+    overflow: visible;
+  }
+  .prose pre {
+    white-space: pre-wrap;
+  }
+  .prose a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.8em;
+    vertical-align: baseline;
+    color: #000;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .prose a,
+  .prose :is(h2, h3, h4) > a::after {
+    transition: none;
+  }
+}
