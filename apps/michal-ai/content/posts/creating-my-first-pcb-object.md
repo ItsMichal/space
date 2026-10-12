@@ -2,15 +2,14 @@
 title: "Creating my first PCB — Object"
 slug: creating-my-first-pcb-object
 kind: article
-description: "But before we get to that… let’s talk processing."
+description: "But before we get to that… let’s talk processing. I’ve been using the Arduino as the brains for my projects for a while now."
 date: 2021-10-15
-tags: ["ATtiny85", "Arduino", "Hacking", "Programming", "Design"]
-cover: /media/creating-my-first-pcb-object/03-377c87.webp
+tags: ["Arduino", "ATtiny85", "Electronics", "Design"]
+cover: /media/creating-my-first-pcb-object/cover.webp
 coverAlt: "Sketch of the MedPuck: a pill bottle on a round base, labelled pressure switch, LED ring, coin cell and timer circuit"
 series: "Object"
 order: 4
-draft: true
-canonical: "https://halmic.medium.com/creating-my-first-pcb-object-4d7112e943af"
+originalUrl: "https://halmic.medium.com/creating-my-first-pcb-object-4d7112e943af"
 ---
 
 But before we get to that… let’s talk processing. I’ve been using the Arduino as the brains for my projects for a while now. It’s gotten a bit…boring (not really, but it is time to move on!) What’s the next natural step after spending over a month tinkering with an Arduino? More microcontrollers!

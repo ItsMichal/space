@@ -9,6 +9,11 @@ export const SITE_URL = siteConfig.url.replace(/\/$/, '')
 export const SITE_NAME = siteConfig.title
 export const AUTHOR_NAME = profile.name
 export const DEFAULT_OG_IMAGE = '/michal.png'
+/** 1200x630 JPEG share card (built by scripts/build-images.mjs); the portrait stays DEFAULT_OG_IMAGE for JSON-LD. */
+export const DEFAULT_SHARE_IMAGE = '/media/_og/default.jpg'
+
+/** WebP covers have a JPEG twin under /media/_og/ for share cards; other formats are used as they are. */
+export const shareImagePath = (cover: string) => cover.replace(/^\/media\/(.+)\/cover\.webp$/i, '/media/_og/$1.jpg')
 
 /** Pass to `metadata.metadataBase` in the root layout so relative URLs resolve to https://michal.ai. */
 export const metadataBase = new URL(SITE_URL)
@@ -60,21 +65,48 @@ export const personJsonLd = {
   ],
 }
 
+/** ProfilePage wrapper for the home page; its mainEntity is the Person node (same @id the posts reference). */
+export const profilePageJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ProfilePage',
+  '@id': `${SITE_URL}/#profilepage`,
+  url: SITE_URL,
+  name: `${AUTHOR_NAME} — ${profile.titleTagline}`,
+  inLanguage: 'en-US',
+  isPartOf: { '@id': `${SITE_URL}/#website` },
+  mainEntity: { ...personJsonLd, '@context': undefined },
+}
+
 export const websiteJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   '@id': `${SITE_URL}/#website`,
   url: SITE_URL,
   name: SITE_NAME,
+  alternateName: profile.asciiName,
   inLanguage: 'en-US',
   publisher: { '@id': `${SITE_URL}/#person` },
 }
+
+const HOME_TITLE = `${profile.name} — ${profile.titleTagline}`
 
 /** Metadata fragment for the home page: canonical + profile OG. Spread into the page's `metadata`. */
 export function homeMetadata(): Metadata {
   return {
     alternates: { canonical: SITE_URL },
-    openGraph: { type: 'profile', url: SITE_URL, siteName: SITE_NAME, firstName: profile.firstName, lastName: profile.lastName },
+    // Next replaces (not merges) `openGraph` per page, so the layout's og:image/title/description must be repeated here.
+    openGraph: {
+      type: 'profile',
+      url: SITE_URL,
+      siteName: SITE_NAME,
+      locale: 'en_US',
+      title: HOME_TITLE,
+      description: profile.description,
+      images: [{ url: absoluteUrl(DEFAULT_SHARE_IMAGE) }],
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+    },
+    twitter: { ...siteMetadata.twitter, title: HOME_TITLE, description: profile.description, images: [absoluteUrl(DEFAULT_SHARE_IMAGE)] },
   }
 }
 
@@ -91,8 +123,19 @@ export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
   }
 }
 
+/** Display name of the site a post first appeared on, from its URL: "https://x.medium.com/y" gives "Medium". */
+export function originalSite(url: string): string | undefined {
+  try {
+    const parts = new URL(url).hostname.replace(/^www\./, '').split('.')
+    const name = parts.length > 1 ? parts[parts.length - 2] : parts[0]
+    return name ? name[0].toUpperCase() + name.slice(1) : undefined
+  } catch {
+    return undefined
+  }
+}
+
 export function postImage(post: Post) {
-  return absoluteUrl(post.cover ?? DEFAULT_OG_IMAGE)
+  return absoluteUrl(post.cover ? shareImagePath(post.cover) : DEFAULT_SHARE_IMAGE)
 }
 
 export function postMetadata(post: Post): Metadata {
@@ -147,6 +190,7 @@ export function postJsonLd(post: Post, parent?: Pick<Post, 'title' | 'slug' | 'p
     inLanguage: 'en-US',
     isPartOf: parent ? { '@type': 'CreativeWork', '@id': `${parentUrl}#work`, name: parent.title, url: parentUrl } : { '@id': `${SITE_URL}/#website` },
     mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    ...(post.originalUrl ? { sameAs: post.originalUrl } : {}),
     author,
   }
   const entity =
@@ -188,9 +232,9 @@ export function listMetadata(kind: PostKind, title: string, description: string)
       title,
       description,
       siteName: SITE_NAME,
-      images: [{ url: absoluteUrl(DEFAULT_OG_IMAGE) }],
+      images: [{ url: absoluteUrl(DEFAULT_SHARE_IMAGE) }],
     },
-    twitter: { card: 'summary_large_image', title, description, images: [absoluteUrl(DEFAULT_OG_IMAGE)] },
+    twitter: { card: 'summary_large_image', title, description, images: [absoluteUrl(DEFAULT_SHARE_IMAGE)] },
   }
 }
 

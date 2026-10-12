@@ -1,7 +1,7 @@
 name: CI
 
-# Verification only. Nothing here deploys; Cloudflare Workers Builds deploys each app
-# (see "Deploying" in the root README).
+# Verification only. Nothing here deploys; merges to main deploy through deploy.yml
+# (see "Deploying" in the root README). Shared steps live in .github/actions/.
 on:
   pull_request:
   push:
@@ -33,6 +33,7 @@ jobs:
               - 'package-lock.json'
               - 'scripts/**'
               - '.github/workflows/ci.yml'
+              - '.github/actions/**'
             halmic:
               - 'apps/halmic/**'
               - 'packages/**'
@@ -40,21 +41,15 @@ jobs:
               - 'package-lock.json'
               - 'scripts/**'
               - '.github/workflows/ci.yml'
+              - '.github/actions/**'
 
   checks:
     # typecheck + lint + unit tests + identity check for the whole workspace; cheap, always runs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm run lint
-      - run: npm test
-      - run: npm run check:identity
+      - uses: ./.github/actions/setup
+      - uses: ./.github/actions/checks
 
   build-michal:
     needs: changes
@@ -62,11 +57,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
+      - uses: ./.github/actions/setup
+      - uses: ./.github/actions/media-cache
       - run: npm run build:michal
       - name: OpenNext bundle (same output the Worker deploys)
         working-directory: apps/michal-ai
@@ -85,13 +77,8 @@ jobs:
         id: present
         run: |
           if [ -f apps/halmic/package.json ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; fi
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup
         if: steps.present.outputs.present == 'true'
-        with:
-          node-version: 22
-          cache: npm
-      - if: steps.present.outputs.present == 'true'
-        run: npm ci
       - if: steps.present.outputs.present == 'true'
         run: npm run build:halmic
       - if: steps.present.outputs.present == 'true'

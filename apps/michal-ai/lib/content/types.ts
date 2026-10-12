@@ -14,12 +14,14 @@ export type PostFrontmatter = {
   /* CSS object-position for cropped covers, e.g. "50% 30%" */
   coverFocus?: string
   priority?: number
-  /* Projects only: shown large at the top of Selected work */
+  /* Projects: shown large at the top of Selected work. Articles: listed first on /writing. */
   featured?: boolean
   /* Slug of a parent project. The post then lives at /projects/<parent>/<slug>, is listed on the parent's page
      (not in /writing or the project index) and gets prev/next navigation among its siblings. */
   parent?: string
-  /* Heading for the parent's list of children, e.g. "Progress log". Taken from the first child that sets it. */
+  /* Heading for the parent's list of children, e.g. "Progress log". Taken from the first child that sets it.
+     Top-level articles that share a `series` (no `parent`) form a series on their own: grouped on /writing and
+     linked with previous/next at the end of each post. */
   series?: string
   /* Position among siblings (ascending); falls back to date. */
   order?: number
@@ -32,6 +34,9 @@ export type PostFrontmatter = {
   gallery?: GalleryItem[]
   draft?: boolean
   canonical?: string
+  /* Where the post first appeared elsewhere (e.g. a Medium article). Shown as a quiet "Originally published on ..."
+     link at the end of the post and emitted as `sameAs` in the JSON-LD. The page still canonicalises to itself. */
+  originalUrl?: string
 }
 export type Post = PostFrontmatter & {
   body: string /* markdown source */

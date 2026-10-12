@@ -28,7 +28,7 @@ Each app builds and deploys on its own. Nothing in `packages/` talks to the netw
 | `npm run typecheck` / `lint` / `test` | across all workspaces that define the script |
 | `npm run check:identity` | content identity guard (see below) |
 | `npm run check` | typecheck + lint + test + identity |
-| `npm run deploy:michal` / `deploy:halmic` | build and deploy one Worker (needs `wrangler login`) |
+| `npm run deploy:michal` / `deploy:halmic` | build and deploy one Worker by hand (needs `wrangler login`; merges to main do this in CI) |
 
 Inside an app directory the usual scripts still work: `cd apps/michal-ai && npm run deploy`.
 Build-time scripts under `apps/michal-ai/scripts/` `chdir` to the app root themselves, so
@@ -55,16 +55,53 @@ the app root; Next, vitest, OpenNext and `npm -w` all start there.
 
 ## Deploying
 
-Deploys are manual (`npm run deploy:michal`) or through Cloudflare Workers Builds. CI in this repo only verifies.
+Merges to `main` deploy automatically through `.github/workflows/deploy.yml` (`ci.yml` still only verifies PRs).
 
-To use Workers Builds (owner action in the Cloudflare dashboard, once per Worker):
+On a push to `main`, for each app whose files (or `packages/`, `scripts/`, `package.json`, `package-lock.json`, the workflow or
+`.github/actions/`) changed:
 
-- Worker `space` (portfolio): Root directory `apps/michal-ai`; build command `(cd ../.. && npm ci) && npx opennextjs-cloudflare build` (workspaces install from the repo root);
-  deploy command `npx opennextjs-cloudflare deploy`. Watch paths: `apps/michal-ai/**`, `packages/**`.
-- Worker `halmic`: Root directory `apps/halmic`; build and deploy commands as defined in that app's README.
-  Watch paths: `apps/halmic/**`, `packages/**`.
+1. `preflight` checks that the `CLOUDFLARE_API_TOKEN` secret exists; if not, the deploy jobs are skipped with a warning (no red run).
+2. `deploy-michal` (GitHub environment `production`, https://michal.ai): `npm ci`, typecheck + lint + tests + identity check,
+   restore the generated-image cache, `npm run deploy:michal` (OpenNext build, then `opennextjs-cloudflare deploy`), then a smoke
+   test of `/`, `/sitemap.xml`, `/robots.txt` and `/projects/isat-dashboard` with retries. The Worker version id is printed and put
+   in the run summary. Deploys queue (one at a time, never cancelled mid-flight).
+3. `deploy-halmic` is dormant until launch: it only runs when the variable `DEPLOY_HALMIC` is `true` (or on a manual run that
+   chooses halmic). It runs the identity check against the build output, deploys the Worker `halmic`, and smoke-tests `HALMIC_URL` if set.
 
-Keep the two Workers on separate Cloudflare projects/routes so a build of one never touches the other.
+Generated images are cached between runs (`.github/actions/media-cache`): a cold image build takes minutes, a warm one seconds.
+
+**Manual deploy:** GitHub, Actions, Deploy, Run workflow, pick `michal`, `halmic` or `both` (ignores change detection). Or locally
+from the repo root after `npx wrangler login`: `npm run deploy:michal` / `npm run deploy:halmic`.
+
+**Roll back:** from the app directory (wrangler reads its `wrangler.jsonc`):
+
+```
+cd apps/michal-ai && npx wrangler rollback            # previous version of Worker `space`
+cd apps/michal-ai && npx wrangler deployments list    # find a version id, then: npx wrangler rollback <version-id>
+```
+
+Use `apps/halmic` for the `halmic` Worker. It needs the same Cloudflare login or `CLOUDFLARE_API_TOKEN`. Rollback also works from
+the Cloudflare dashboard (Workers, `space`, Deployments). To roll back through the repository instead, revert the commit on `main`
+and the revert deploys itself. A rollback is overwritten by the next merge that deploys.
+
+**One-time setup (owner):**
+
+| Where | Name | Value |
+| --- | --- | --- |
+| Settings, Secrets and variables, Actions, *Secrets* (repository secret, not environment-scoped) | `CLOUDFLARE_API_TOKEN` | API token below |
+| Same page, *Variables* | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account id (Workers dashboard sidebar) |
+| Same page, *Variables*, at halmic launch | `DEPLOY_HALMIC` | `true` |
+| Same page, *Variables*, optional | `HALMIC_URL` | e.g. `https://halmic.com`, smoke-tested after deploy |
+| Settings, Environments | `production` | created on first run; add required reviewers there for an approval gate |
+
+Token: Cloudflare dashboard, My Profile, API Tokens, Create Token, start from the "Edit Cloudflare Workers" template, then restrict
+Account Resources to this one account and drop the zone resources. The minimal set the current config needs is **Account, Workers
+Scripts, Edit** (the Worker, its static assets and the Durable Object migration all go through it; `CLOUDFLARE_ACCOUNT_ID` is
+provided, so no account-lookup permission is needed). The custom domains are already attached and no `wrangler.jsonc` declares
+`routes`, so `wrangler deploy` does not touch zone settings. Add Zone, Workers Routes, Edit only if you later add `routes` or
+`custom_domain` to a wrangler config. Never commit the token or paste it into logs.
+
+If Cloudflare Workers Builds is also connected to these Workers, disconnect it, or every merge deploys twice.
 
 ## Identity separation
 

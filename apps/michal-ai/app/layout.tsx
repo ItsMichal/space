@@ -11,7 +11,7 @@ import { Atmosphere } from '@/components/site/Atmosphere'
 import { ShaderCanvasProvider } from '@/components/shader-image'
 import { Backdrop } from '@/components/backdrop/Backdrop'
 import { display } from './fonts/display'
-import { siteMetadata } from '@/lib/seo'
+import { DEFAULT_SHARE_IMAGE, siteMetadata } from '@/lib/seo'
 import { profile } from '@/content/profile'
 
 const sans = Schibsted_Grotesk({
@@ -52,13 +52,15 @@ export const metadata: Metadata = {
   title: { default: TITLE, template: `%s — ${profile.name}` },
   description: DESCRIPTION,
   robots: { index: true, follow: true },
+  // Google wants a crawlable square icon in a multiple of 48px; the file-based favicon.ico/icon.svg stay as they are.
+  icons: { icon: [{ url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }] },
   openGraph: {
     ...siteMetadata.openGraph,
     title: TITLE,
     description: DESCRIPTION,
-    images: [{ url: '/michal.png' }],
+    images: [{ url: DEFAULT_SHARE_IMAGE }],
   },
-  twitter: { ...siteMetadata.twitter, images: ['/michal.png'] },
+  twitter: { ...siteMetadata.twitter, images: [DEFAULT_SHARE_IMAGE] },
 }
 
 export default function RootLayout({

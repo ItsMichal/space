@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import { notFound } from 'next/navigation'
-import { getChildren, getPost } from '@/lib/content'
+import { getChildren, getPost, getSeriesOf } from '@/lib/content'
+import { OriginalLink } from '@/components/content/OriginalLink'
+import { SeriesNav } from '@/components/content/SeriesNav'
 import { renderMarkdown } from '@/lib/content/render'
 import { ArticleLayout } from '@/components/site/ArticleLayout'
 import { PostNav } from '@/components/content/PostNav'
@@ -49,6 +51,7 @@ export async function PostPage({ kind, slug, parent }: { kind: PostKind; slug: s
   const children = post.parent ? [] : getChildren(post.slug)
   const siblings = post.parent ? getChildren(post.parent) : []
   const at = siblings.findIndex((s) => s.slug === post.slug)
+  const series = getSeriesOf(post)
   return (
     <>
       <ReadingTheme />
@@ -71,7 +74,9 @@ export async function PostPage({ kind, slug, parent }: { kind: PostKind; slug: s
         back={parentPost ? { href: `/projects/${parentPost.slug}`, label: parentPost.title, series: post.series } : undefined}
         after={
           <>
+            <OriginalLink url={post.originalUrl} />
             <PostExtras slug={post.slug} />
+            {series ? <SeriesNav name={series.name} id={series.id} posts={series.posts} current={post.slug} /> : null}
             <PostNav
             parent={parentPost}
             items={children}

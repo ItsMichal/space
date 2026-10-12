@@ -10,7 +10,7 @@ import { Showcase } from '@/components/work/Showcase'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { profile } from '@/content/profile'
 import { Timeline, type TimelineItem } from '@/components/ui/Timeline'
-import { homeMetadata, personJsonLd, websiteJsonLd } from '@/lib/seo'
+import { homeMetadata, profilePageJsonLd, websiteJsonLd } from '@/lib/seo'
 
 export const metadata = homeMetadata()
 
@@ -36,7 +36,7 @@ export default function Home() {
 
   return (
     <div className="mx-auto max-w-content px-space-4 md:px-space-8">
-      <JsonLd data={[personJsonLd, websiteJsonLd]} />
+      <JsonLd data={[profilePageJsonLd, websiteJsonLd]} />
       <NameHeader
         first={profile.firstName}
         last={profile.lastName}
@@ -48,7 +48,7 @@ export default function Home() {
         <h2 id="work-h" className={h2}>
           Selected work
         </h2>
-        <Showcase posts={projects} base="/projects" limit={5} shader />
+        <Showcase posts={projects} base="/projects" limit={5} shader priority />
       </section>
 
       {articles.length > 0 ? (

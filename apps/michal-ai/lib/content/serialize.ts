@@ -26,6 +26,7 @@ const KEY_ORDER: (keyof PostFrontmatter)[] = [
   'gallery',
   'draft',
   'canonical',
+  'originalUrl',
 ]
 
 function toIsoDate(v: unknown): string {
@@ -120,6 +121,7 @@ export function frontmatterFromData(data: Record<string, unknown>, fileSlug: str
     ...(gallery.length ? { gallery } : {}),
     ...(data.draft ? { draft: true } : {}),
     ...(data.canonical ? { canonical: String(data.canonical) } : {}),
+    ...(data.originalUrl ? { originalUrl: String(data.originalUrl) } : {}),
   }
 }
 
