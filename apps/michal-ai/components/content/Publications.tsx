@@ -1,4 +1,4 @@
-import { getPublication, doiUrl, citationParts, publicationJsonLd } from '@/lib/publications'
+import { getPublication, doiUrl, authorLine, venueLine, publicationJsonLd } from '@/lib/publications'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { ArrowUpRight } from 'lucide-react'
 import { profile } from '@/content/profile'
@@ -13,29 +13,28 @@ export function Publications({ ids }: { ids?: string[] }) {
       <h2 id="pubs-h" className="pubs__h">
         Publication
       </h2>
-      {pubs.map((p) => {
-        const c = citationParts(p)
-        return (
-          <article key={p.id} className="pubs__item">
-            <JsonLd data={publicationJsonLd(p)} />
-            <p className="pubs__cite">
-              {c.authors.split(', ').map((a, i, all) => (
-                <span key={a}>
+      {pubs.map((p) => (
+        <article key={p.id} className="pubs__item">
+          <JsonLd data={publicationJsonLd(p)} />
+          <p className="pubs__cite">
+            {authorLine(p)
+              .split(', ')
+              .map((a, i, all) => (
+                <span key={`${a}-${i}`}>
                   {a === profile.asciiName ? <strong className="pubs__me">{a}</strong> : a}
                   {i < all.length - 1 ? ', ' : ''}
                 </span>
               ))}
-              . {c.year}. {c.title}. In <em>{c.venue}</em>
-              {c.pages ? `, ${c.pages}` : ''}. {c.publisher}.{' '}
-              <a href={doiUrl(p)} className="link" target="_blank" rel="noopener noreferrer">
-                doi:{p.doi}
-                <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden className="pubs__arrow" />
-              </a>
-            </p>
-            <blockquote className="pubs__role">{p.role}</blockquote>
-          </article>
-        )
-      })}
+            . {p.year}. {p.title}. In <em>{venueLine(p)}</em>
+            {p.publisher ? `. ${p.publisher}` : ''}.{' '}
+            <a href={doiUrl(p)} className="link" target="_blank" rel="noopener noreferrer">
+              doi:{p.doi}
+              <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden className="pubs__arrow" />
+            </a>
+          </p>
+          {p.role ? <blockquote className="pubs__role">{p.role}</blockquote> : null}
+        </article>
+      ))}
     </section>
   )
 }
