@@ -15,3 +15,5 @@ export function postPath(post: PostRef): string
 export function michalPathFor(postId: string, posts: PostRef[]): string | undefined
 export function halmicLinkFor(postId: string): { href: string; domain: string; title: string } | undefined
 export function michalLinkFor(halmicPath: string, posts: PostRef[]): { href: string; domain: string; title: string | null } | undefined
+export const FOR_HALMIC: { origin: string; domain: string; mark: Mark; pairLink: typeof michalLinkFor }
+export const FOR_MICHAL: { origin: string; domain: string; mark: Mark; pairLink: typeof halmicLinkFor }

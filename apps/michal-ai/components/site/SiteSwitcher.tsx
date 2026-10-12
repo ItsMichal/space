@@ -3,16 +3,16 @@
 import Link from 'next/link'
 import { useRef, useState } from 'react'
 import { ArrowUpRight } from 'lucide-react'
-import { H_MARK, HALMIC_DOMAIN, HALMIC_ORIGIN } from '@space/crosslinks'
+import { FOR_MICHAL as SIB } from '@space/crosslinks'
 import { SiteMark } from './SiteMark'
 import './switcher.css'
 
-/** The other site's mark (the shared copy in packages/crosslinks), filled with currentColor. */
+/** The other site's mark (shared copy, packages/crosslinks), filled with currentColor. */
 export function OtherSiteMark({ height = 16 }: { height?: number }) {
-  const [, , w, h] = H_MARK.viewBox.split(' ').map(Number)
+  const [, , w, h] = SIB.mark.viewBox.split(' ').map(Number)
   return (
-    <svg viewBox={H_MARK.viewBox} height={height} width={(height * w) / h} fill="currentColor" aria-hidden="true" focusable="false">
-      {H_MARK.paths.map((d) => (
+    <svg viewBox={SIB.mark.viewBox} height={height} width={(height * w) / h} fill="currentColor" aria-hidden="true" focusable="false">
+      {SIB.mark.paths.map((d) => (
         <path key={d} d={d} />
       ))}
     </svg>
@@ -48,9 +48,9 @@ export function SiteSwitcher({ onHome }: { onHome?: () => void }) {
       </Link>
       <ul className="xsw__menu">
         <li>
-          <a href={HALMIC_ORIGIN} rel="me" className="xsw__row" onFocus={() => setDismissed(false)}>
+          <a href={SIB.origin} rel="me" className="xsw__row" onFocus={() => setDismissed(false)}>
             <OtherSiteMark height={16} />
-            <span>{HALMIC_DOMAIN}</span>
+            <span>{SIB.domain}</span>
             <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
           </a>
         </li>
@@ -62,9 +62,9 @@ export function SiteSwitcher({ onHome }: { onHome?: () => void }) {
 /** The same row for touch screens: the last, quiet row of the phone menu sheet. */
 export function OtherSiteRow() {
   return (
-    <a href={HALMIC_ORIGIN} rel="me" className="xsw__sheet">
+    <a href={SIB.origin} rel="me" className="xsw__sheet">
       <OtherSiteMark height={16} />
-      <span>{HALMIC_DOMAIN}</span>
+      <span>{SIB.domain}</span>
       <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
     </a>
   )

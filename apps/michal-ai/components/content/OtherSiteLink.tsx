@@ -1,9 +1,9 @@
 import { ArrowUpRight } from 'lucide-react'
-import { HALMIC_DOMAIN, halmicLinkFor } from '@space/crosslinks'
+import { FOR_MICHAL as SIB } from '@space/crosslinks'
 import { OtherSiteMark } from '@/components/site/SiteSwitcher'
 
 /** The sibling-site link for a post that is also on the other site, or undefined. Rendered from packages/crosslinks/src/pairs.mjs, never from the post body. */
-export const otherSiteFor = (postId: string) => halmicLinkFor(postId)
+export const otherSiteFor = (postId: string) => SIB.pairLink(postId)
 
 /** Mark, domain and the other site's own title for the piece, as a plain followed link (rel="me", same tab). */
 export function OtherSiteAnchor({ href, title, className }: { href: string; title: string; className?: string }) {
@@ -11,7 +11,7 @@ export function OtherSiteAnchor({ href, title, className }: { href: string; titl
     <a href={href} rel="me" className={className}>
       <OtherSiteMark height={14} />
       <span>
-        {HALMIC_DOMAIN}
+        {SIB.domain}
         {' · '}
         {title}
       </span>

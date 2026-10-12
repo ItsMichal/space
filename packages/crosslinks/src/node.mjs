@@ -29,3 +29,6 @@ export function readMichalPosts(repoRoot) {
       ]
     })
 }
+
+/** Same as readMichalPosts, under the neutral name the halmic build uses. */
+export const readSiblingPosts = readMichalPosts

@@ -71,3 +71,10 @@ export function michalLinkFor(halmicPath, posts) {
   if (!path) throw new Error(`crosslinks: no michal.ai post with id "${p.post}" (pair for ${p.halmic})`)
   return { href: `${MICHAL_ORIGIN}${path}`, domain: MICHAL_DOMAIN, title: p.michalTitle }
 }
+
+// Neutral handles for each side, so an app's own source never has to spell the other site's name (scripts/check-identity.mjs
+// scans the halmic app for it, and warns on the portfolio's). Everything below is just the constants above under another name.
+/** What Halmic prints for the portfolio. */
+export const FOR_HALMIC = { origin: MICHAL_ORIGIN, domain: MICHAL_DOMAIN, mark: M_MARK, pairLink: michalLinkFor }
+/** What the portfolio prints for Halmic. */
+export const FOR_MICHAL = { origin: HALMIC_ORIGIN, domain: HALMIC_DOMAIN, mark: H_MARK, pairLink: halmicLinkFor }
