@@ -183,10 +183,10 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     } else {
       const h1 = document.querySelector<HTMLElement>('h1[data-hero-text]')?.getBoundingClientRect()
       const box = document.querySelector<HTMLElement>('h1[data-hero-text]')?.parentElement?.getBoundingClientRect()
-      const D = Math.max(64, Math.min(100, Math.round(vw * 0.22)))
+      const D = Math.max(64, Math.min(96, Math.round(vw * 0.2)))
       width = height = D
       left = (box?.right ?? vw - 16) - D
-      bottom = (h1?.top ?? 84) - 4 + D
+      bottom = (h1?.top ?? 84) - 10 + D
       cellW = 1.7
       circle = true
       crop = [0.148, 0.1, 0.688, 0.505]
@@ -194,11 +194,15 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     }
     // Glyphs where they resolve (desktop); density dots on a square grid in the small circle, where a glyph would be a smudge.
     const cellH = cellW / s.portrait.aspect
-    const dots = circle || new URLSearchParams(window.location.search).get('portrait') === 'dots' || cellH * sc < 4.5
+    // Measured: at 1x the glyphs (5-6 px tall) smear into a texture and the face is lost; halftone dots on a square 2.4 px grid hold the likeness.
+    // From 1.5x device pixels the glyphs resolve, so desktop gets real monospace glyphs there. `?portrait=dots|glyphs` forces one.
+    const force = new URLSearchParams(window.location.search).get('portrait')
+    const dots = circle || force === 'dots' || (force !== 'glyphs' && sc < 1.4)
+    const sq = circle ? cellW : Math.min(cellW, 2.4)
     s.pspec = {
       rect: [(left - w.left) * sc, px - (bottom - w.top) * sc, width * sc, height * sc],
       crop,
-      cell: dots ? [cellW * sc, cellW * sc] : [cellW * sc, cellH * sc],
+      cell: dots ? [sq * sc, sq * sc] : [cellW * sc, cellH * sc],
       circle,
       dots,
       strength,
