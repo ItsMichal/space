@@ -203,3 +203,98 @@ a.card:hover .goi, a.card:focus-visible .goi { background: var(--paper); color: 
   .playing .cm, .playing .thumb, .playing .vframe { animation: none; } }
 
 @media (prefers-reduced-motion: reduce) { * { transition-duration: .01s !important; animation-duration: .01s !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; } }
+
+/* ===== bento: the home page and the inner index pages =====
+   One dark canvas, tiles of three sizes (1x1, 2x1, 2x2) packed on a square unit grid with small even gaps. Every tile is one idea: a picture, a big word or
+   number, or a brand mark, plus a short title bottom left. The column count follows the width of the bento itself (container query), not the window:
+   4 from 880px, 3 from 640px, else 2. app.js sets the width of the one data-flex tile so the last row is always full. */
+.bsec { position: relative; scroll-margin-top: 24px; }
+.anc { position: absolute; top: -24px; left: 0; width: 1px; height: 1px; }
+.cards .bsec + .bsec, .cards .bsec + .duo, .cards .duo + .bsec { margin-top: clamp(40px, 6vw, 72px); }
+.pgw .bsec + .bsec { margin-top: var(--s6); }
+.duo { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(40px, 6vw, 72px) 16px; margin-top: clamp(40px, 6vw, 72px); }
+.cards .bsec:first-child { margin-top: 0; }
+.cards .duo .bsec + .bsec { margin-top: 0; }
+@media (min-width: 1100px) { .duo { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; } }
+.sh { display: flex; align-items: baseline; justify-content: space-between; gap: 6px 20px; flex-wrap: wrap; margin: 0 4px 14px; }
+.sh h2 { margin: 0; font: 800 14px/1.2 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+.sl { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: -14px -8px -14px 0; padding: 0 8px; border-radius: 999px; font: 700 14px/1 var(--sans); color: var(--mute); transition: color .25s var(--ease); }
+.sl:hover { color: var(--text); } .sl:hover .ic-end { transform: translateX(2px); } .sl .ic-end { width: 1em; height: 1em; }
+.sl-note { display: block; min-height: 0; margin: 0; padding: 0; font-weight: 500; max-width: 70ch; }
+.bq { container-type: inline-size; }
+.bento { --gap: 12px; --cols: 2; --r: 20px; display: grid; gap: var(--gap); grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); grid-auto-rows: calc((100cqw - var(--gap) * (var(--cols) - 1)) / var(--cols)); grid-auto-flow: dense; }
+@container (min-width: 640px) { .bento { --cols: 3; --gap: 14px; --r: 26px; } }
+@container (min-width: 880px) { .bento { --cols: 4; --gap: 16px; --r: 28px; } }
+/* default width of the flex tile (what app.js computes: it fills the last row); keeps the layout whole before the script runs */
+.b-watch [data-flex], .b-work [data-flex] { grid-column: span 2; } .b-play [data-flex], .b-else [data-flex] { grid-column: span 1; }
+@container (min-width: 640px) { .b-watch [data-flex], .b-work [data-flex] { grid-column: span 3; } .b-play [data-flex] { grid-column: span 2; } .b-else [data-flex] { grid-column: span 3; } }
+@container (min-width: 880px) { .b-watch [data-flex], .b-work [data-flex] { grid-column: span 2; } .b-play [data-flex], .b-else [data-flex] { grid-column: span 1; } }
+
+.tile { position: relative; display: block; min-width: 0; min-height: 0; border-radius: var(--r); overflow: hidden; isolation: isolate; background: var(--ink-2); color: var(--text); container-type: size; scroll-margin-top: 24px; }
+.tile:focus-visible { outline: 3px solid var(--blue-live); outline-offset: 3px; }
+.w2 { grid-column: span 2; } .lead { grid-row: span 2; }
+/* picture tiles: the media fills the tile, a gradient under the title */
+.tbg { position: absolute; inset: 0; z-index: -1; background: var(--ink-3); }
+.tbg img, .tbg video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(var(--z, 1)); transition: transform .5s cubic-bezier(.4, 0, .25, 1); }
+.tbg .yt-img { --z: 1.334; }   /* YouTube's 4:3 thumbnails carry black bars: in a square tile the picture is zoomed past them */
+.w2:not(.lead) .tbg .yt-img { --z: 1; }
+a.tile:hover .tbg img, a.tile:hover .tbg video { transform: scale(calc(var(--z, 1) * 1.04)); }
+.tm::after { content: ""; position: absolute; inset: 0; z-index: 0; background: linear-gradient(to top, #0f0e13ee 0, #0f0e13a0 30%, #0f0e1300 62%); pointer-events: none; }
+.tg .tbg { background: var(--ink-2); } .tg .tbg img { object-fit: contain; object-position: 50% 36%; image-rendering: pixelated; }
+.tpaper { background: var(--paper); }
+.tm-nopic .tbg { display: grid; place-items: center; background: linear-gradient(150deg, #2a2340, var(--ink-2)); }
+.tm-nopic .ghost { width: 34cqi; height: 34cqi; opacity: .22; }
+.tcap { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; display: flex; align-items: flex-end; gap: 10px; padding: max(12px, 6.5cqi); min-width: 0; }
+.w2 .tcap { padding-right: 88px; } .t-link .tcap, .t-stat .tcap { padding-right: max(12px, 6.5cqi); }
+.tx { min-width: 0; }
+.tt { margin: 0; font: 750 clamp(15px, 7.5cqi, 24px)/1.1 var(--display); letter-spacing: var(--dtrack); text-wrap: balance; overflow-wrap: break-word; color: var(--paper); }
+.w2 .tt { font-size: clamp(18px, 4.2cqi, 30px); } .lead .tt { font-size: clamp(22px, 6.4cqi, 46px); }
+.ts { margin: 5px 0 0; font: 600 clamp(13px, 4.2cqi, 16px)/1.3 var(--sans); color: #f1ece1d0; text-wrap: balance; }
+.gart { flex: none; width: clamp(30px, 13cqi, 52px); aspect-ratio: 3 / 4; object-fit: cover; border-radius: 7px; box-shadow: 0 0 0 1.5px #ffffff48, 0 4px 14px #0009; background: var(--ink-3); }
+.bdg { position: absolute; z-index: 2; top: max(10px, 3.6cqi); left: max(10px, 3.6cqi); display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; color: #fff; font-size: 18px; box-shadow: 0 2px 10px #0006; }
+.lead .bdg { width: 44px; height: 44px; font-size: 24px; }
+.bdg-tw { background: #9146ff; } .bdg-yt { background: #f00; } .bdg-k { background: #0f0e13b8; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--paper); }
+.tile .chip { top: max(10px, 3.6cqi); right: max(10px, 3.6cqi); bottom: auto; }
+.tile .play { left: auto; right: max(12px, 4cqi); bottom: max(12px, 4cqi); z-index: 2; }
+a.tile:hover .chip { background: var(--blue); color: var(--ink); }
+a.tile:is(:hover, :focus-visible) .play { background: var(--blue); color: var(--ink); transform: scale(1.08); box-shadow: none; }
+/* stat tiles: a big word or number in the display face, one caption */
+/* cq units on a container's own properties resolve against the container above it, so the padding lives on the children, not on the tile */
+.t-stat { display: flex; flex-direction: column; justify-content: flex-start; background: var(--ink-3); }
+.num { display: block; font: 900 min(54cqh, 80cqw)/.8 var(--display); letter-spacing: -.01em; margin: max(14px, 7cqi) 0 0 max(12px, 6.5cqi); }
+.num.word { font-size: min(50cqh, 44cqw); }
+.t-stat.w2 .num { font-size: min(58cqh, 40cqw); }
+.t-stat .tcap { position: static; margin-top: auto; z-index: 1; }   /* the caption sits under the number in the flow, so the two can never overlap */
+.t-stat.tpaper { background: var(--paper); color: var(--paper-ink); } .tpaper .tt { color: var(--paper-ink); }
+.t-stat.tblue { background: var(--blue); color: var(--ink); } .tblue .tt { color: var(--ink); }
+.tdim .tbg { z-index: -1; } .tdim .tbg img { opacity: .5; } .tdim::after { content: ""; position: absolute; inset: 0; z-index: 0; background: linear-gradient(to top, #0f0e13f2 0, #0f0e1366 55%, #0f0e1333); pointer-events: none; }
+.t-stat .num, .t-stat .lg { position: relative; z-index: 1; }
+.t-stat .lg-s { position: absolute; top: max(12px, 6.5cqi); left: max(12px, 6.5cqi); margin: 0; font-size: 28px; }
+/* link-out tiles: the brand mark large on the brand colour; the whole tile is the link */
+.t-link { display: flex; flex-direction: column; justify-content: flex-start; color: #fff; }
+.lg { display: block; font-size: min(30cqh, 84px); line-height: 1; margin: max(12px, 6.5cqi) 0 0 max(12px, 6.5cqi); }
+.lg .ic { width: 1em; height: 1em; vertical-align: top; }
+.t-link .tt { color: inherit; font-size: clamp(19px, 8.2cqi, 30px); } .t-link .ts { color: inherit; opacity: .92; }
+.tl-tw { background: #9146ff; } .tl-yt { background: #f00; } .tl-dc { background: #5865f2; }
+.tl-itch { background: #fa5c5c; color: var(--ink); }
+.tl-x { background: #000; box-shadow: inset 0 0 0 1px #ffffff26; }
+.tl-md { background: var(--paper); color: var(--paper-ink); }
+.tile .goi { top: max(12px, 4cqi); right: max(12px, 4cqi); width: 40px; height: 40px; background: #0000003d; color: #fff; }
+.tl-itch .goi, .tl-md .goi, .tpaper .goi { background: #0f0e1320; color: var(--ink); }
+.tblue .goi { background: #0f0e1326; color: var(--ink); }
+a.tile:is(:hover, :focus-visible) .goi { background: var(--paper); color: var(--ink); transform: rotate(45deg); }
+.tl-md:is(:hover, :focus-visible) .goi, .tpaper:is(:hover, :focus-visible) .goi, .tl-itch:is(:hover, :focus-visible) .goi { background: var(--ink); color: var(--paper); }
+a.tile:hover .goi .ic { transform: rotate(-45deg); }
+/* the Twitch tile follows the live state the hero already sets on <html data-live> */
+.ldot { display: inline-block; width: .42em; height: .42em; margin-right: .35em; border-radius: 50%; background: #fff; vertical-align: .12em; animation: onair 2.8s var(--ease) infinite; }
+.ton { display: none; } [data-live="1"] .toff { display: none; } [data-live="1"] .ton { display: inline; }
+.t-note { display: grid; place-items: end start; background: transparent; box-shadow: inset 0 0 0 1.5px var(--line); }
+.t-note p { margin: max(14px, 6cqi); color: var(--mute); font: 500 clamp(13px, 4cqi, 16px)/1.4 var(--sans); }
+/* a playing tile grows to 2x2: the player on top, the title and the Close / Open buttons beneath */
+.tile.playing { grid-column: span 2; grid-row: span 2; display: flex; flex-direction: column; background: var(--ink-2); container-type: normal; }
+.playing .tp { position: relative; flex: none; aspect-ratio: 16 / 9; background: #000; animation: pin .18s var(--ease) both; }
+.playing .tp .vframe { animation: pin .18s var(--ease) both; }
+.playing .pb { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 16px 20px 18px; }
+.playing .pb .tt { font-size: clamp(18px, 2.2vw, 28px); } .playing .pb .crow { margin-top: 10px; }
+.playing .tp .pclose { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .tbg img, .tbg video, a.tile .goi, a.tile .play, .ic-end { transform: none !important; } .playing .tp, .playing .tp .vframe { animation: none; } .ldot { animation: none; } }
