@@ -7,12 +7,7 @@
    moves. The whole tile is one link. */
 
 .work {
-  --tile-r: var(--radius-card);
-}
-@media (min-width: 900px) {
-  .work {
-    --tile-r: var(--radius-lg);
-  }
+  --tile-r: var(--card-r);
 }
 .tiles {
   margin: 0;
@@ -57,6 +52,42 @@
 
 @media (min-width: 640px) {
   .tile--feature .tile__media {
+    aspect-ratio: 16 / 6;
+  }
+  .tiles--row,
+  .tiles--grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+    margin-inline: 0;
+    padding: 0;
+    overflow: visible;
+    scroll-snap-type: none;
+  }
+  .tiles--row > li {
+    flex: none;
+  }
+  .tiles__feature {
+    grid-column: 1 / -1;
+  }
+}
+@media (min-width: 1100px) {
+  .tiles--row,
+  .tiles--grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ---- the tile: the shared card surface (app/styles/card.css: .surface, .surface--glass, .surface--link) plus tile layout.
+   Glass only on the home page, where the hero tint and the paper grid sit behind it; /projects and /writing use the same
+   surface with a near-solid tint. The image is NOT under glass: it stays an opaque picture clipped by the card radius. */
+.tile {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.tile__media {
     aspect-ratio: 16 / 6;
   }
   .tiles--row,
@@ -207,20 +238,20 @@
   flex: 1;
   flex-direction: column;
   gap: var(--space-1);
-  padding: var(--space-4) var(--space-6) var(--space-6);
+  padding: var(--card-pad);
   min-width: 0;
 }
+/* Title first, directly under the image at a fixed offset: a row of tiles shares one title baseline. Two lines are always
+   reserved so descriptions also start together; the meta line is pinned to the foot so those align too. */
 .tile__title {
   font-size: 28px;
-  margin-top: 2px;
-  min-height: 1.15em;
+  min-height: 2.3em;
   text-wrap: balance;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.tile__meta,
 .tile__desc {
   color: color-mix(in srgb, var(--ink) 90%, var(--paper));
   text-wrap: pretty;
@@ -229,10 +260,25 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+/* tertiary: the smallest size on the scale (t-meta), muted ink, pinned to the foot of the card */
+.tile__meta {
+  margin-top: auto;
+  padding-top: var(--space-3);
+  color: var(--ink-muted);
+  text-wrap: balance;
+}
+.tile__meta + .tile__meta {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.tile--feature .tile__title {
+  min-height: 0;
+}
 
 /* feature: image beside the text from 900px up */
 @media (min-width: 900px) {
-  .tile--feature {
+  .surface.tile--feature {
     flex-direction: row;
   }
   .tile--feature .tile__media {
@@ -266,7 +312,7 @@
 /* ---- direction: cap (feature tile). A full-bleed image with a glass caption floating over its foot, like an iOS 26 media card.
    On the home and projects pages only the feature tile uses it, from 640px up; below that it is a normal tile. */
 @media (min-width: 640px) {
-  .tile--feature {
+  .surface.tile--feature {
     flex-direction: column;
     min-height: clamp(380px, 40vw, 500px);
     justify-content: flex-end;
@@ -287,7 +333,7 @@
     z-index: 2;
     flex: none;
     margin: 0 0 var(--space-4) var(--space-4);
-    padding: var(--space-6);
+    padding: var(--card-pad);
     width: min(460px, calc(100% - var(--space-8)));
     border-radius: calc(var(--tile-r) - var(--space-3));
     /* 0.82 so the muted text on it keeps 4.5:1 over the darkest part of the photograph */
@@ -323,7 +369,7 @@
 .tile--fill {
   aspect-ratio: 4 / 5;
 }
-.tile--cap {
+.surface.tile--cap {
   justify-content: flex-end;
   background: var(--paper-sunk);
   -webkit-backdrop-filter: none;

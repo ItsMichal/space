@@ -1,6 +1,7 @@
 import './globals.css'
 import './styles/craft.css'
 import './styles/type.css'
+import './styles/card.css'
 import type { Metadata, Viewport } from 'next'
 import { IBM_Plex_Mono, Newsreader } from 'next/font/google'
 import React, { StrictMode } from 'react'
