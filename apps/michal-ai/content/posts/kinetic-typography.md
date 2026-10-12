@@ -1,6 +1,6 @@
 ---
 title: "Making a Kinetic Typography"
-slug: making-a-kinetic-typography
+slug: kinetic-typography
 kind: article
 description: "For my Motion course, I was tasked with making a Kinetic typography animation."
 date: 2021-09-20

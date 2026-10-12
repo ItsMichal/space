@@ -1,6 +1,6 @@
 ---
 title: "Starlink.com"
-slug: spacex-starlink-general-projects
+slug: starlink
 kind: project
 description: "Growing the Starlink.com platform for millions and then billions worldwide, through technical excellence and collaboration with business stakeholders."
 date: 2025-06-04

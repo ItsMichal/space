@@ -20,6 +20,7 @@ import { Zoomable } from '@/components/media/Zoomable'
 import { PostPreviewLink } from '@/components/ui/PostPreviewLink'
 import { LIVE_REACTIONS_ENABLED } from '@/lib/presence/flag'
 import { blockIds } from '@/lib/presence/blocks'
+import { rehypeDropDeadEmbeds } from '@/lib/embeds'
 
 // Turn directive nodes into hast elements with custom tag names that we map to components.
 // Only leaf (`::name`) and container (`:::name`) directives are components; inline `:name` text
@@ -116,6 +117,7 @@ export async function renderMarkdown(source: string): Promise<ReactNode> {
     .use(remarkDirectiveToHast)
     .use(remarkRehype)
     .use(rehypeUnwrapImages)
+    .use(rehypeDropDeadEmbeds)
     .use(rehypeSlug)
     .use(LIVE_REACTIONS_ENABLED ? rehypeBlockIds : () => () => {})
     .use(rehypeAutolinkHeadings, { behavior: 'wrap' })
