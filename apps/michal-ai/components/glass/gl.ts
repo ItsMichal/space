@@ -29,6 +29,8 @@ export type DrawParams = {
   tintDark: RGBA
   rim: RGBA
   edge: RGBA
+  rimDark: RGBA
+  edgeDark: RGBA
   shadow: [number, number, number]
   shadowCol: [number, number, number]
   glow: RGBA
@@ -39,7 +41,7 @@ export type DrawParams = {
 
 const UNIFORMS = [
   'uPass', 'uN', 'uRect', 'uPar', 'uTint', 'uMisc', 'uFold', 'uK', 'uUnionK', 'uWin', 'uWinPx', 'uPx', 'uBezel',
-  'uPeak', 'uLight', 'uLightK', 'uTintLight', 'uTintDark', 'uRim', 'uEdge', 'uShadow', 'uShadowCol', 'uGlow',
+  'uPeak', 'uLight', 'uLightK', 'uTintLight', 'uTintDark', 'uRim', 'uEdge', 'uRimD', 'uEdgeD', 'uShadow', 'uShadowCol', 'uGlow',
   'uThemeDark', 'uReadback', 'uFrost',
 ] as const
 
@@ -207,6 +209,8 @@ export class GlassGL {
     gl.uniform4f(L.uTintDark, ...p.tintDark)
     gl.uniform4f(L.uRim, ...p.rim)
     gl.uniform4f(L.uEdge, ...p.edge)
+    gl.uniform4f(L.uRimD, ...p.rimDark)
+    gl.uniform4f(L.uEdgeD, ...p.edgeDark)
     gl.uniform4f(L.uShadow, p.shadow[0], p.shadow[1], p.shadow[2], 0)
     gl.uniform3f(L.uShadowCol, ...p.shadowCol)
     gl.uniform4f(L.uGlow, ...p.glow)

@@ -167,7 +167,7 @@ body {
     box-shadow:
       inset 1px 1px 0 0 var(--glass-rim),
       inset -1px -1px 0 0 var(--glass-edge),
-      inset 0 0 12px 0 rgba(255, 255, 255, 0.08),
+      inset 0 0 12px 0 color-mix(in srgb, var(--glass-rim) 8%, transparent),
       var(--shadow-glass);
     -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
     backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));

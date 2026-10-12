@@ -21,7 +21,6 @@ import {
   MORPH,
   RIM_PEAK,
   clamp,
-  flipTone,
   resolveRadius,
   springSettled,
   stepSpring,
@@ -39,6 +38,7 @@ import {
 import { GlassGL, type DrawParams, type MapTicket } from './gl'
 import { MAX_SHAPES } from './shaders'
 import { lightFor } from './lighting'
+import { decideTone, type Tone } from './theme'
 
 export type GlassTransition = 'materialize' | 'matchedGeometry' | 'identity'
 export type GlassAppearance = 'auto' | 'light' | 'dark'
@@ -118,7 +118,7 @@ function initEnv() {
   q('(prefers-color-scheme: dark)').addEventListener('change', onTheme)
   new MutationObserver(onTheme).observe(document.documentElement, {
     attributes: true,
-    attributeFilter: ['class', 'data-theme', 'data-color-scheme'],
+    attributeFilter: ['class', 'data-theme', 'data-color-scheme', 'data-reading'],
   })
 }
 
@@ -282,6 +282,7 @@ class ShapeState {
   dark = 0
   darkTarget = 0
   darkBool = false
+  toneSet = false
   group = -1
   tint: RGBA = [0, 0, 0, 0]
   clear = 0
@@ -328,9 +329,9 @@ class ShapeState {
     go(this.fold, this.tfold, MORPH, 0.004)
     go(this.scale, this.tscale, PRESS, 0.0008)
     if (this.soft && !moving) this.soft = false
-    // adaptive tone eases slowly (~400ms)
+    // tone cross-fades in about 200ms (tint here, glyph colour via the CSS transition on the same attribute)
     if (Math.abs(this.dark - this.darkTarget) > 0.002) {
-      this.dark += (this.darkTarget - this.dark) * (1 - Math.exp(-dt / 0.16))
+      this.dark += (this.darkTarget - this.dark) * (1 - Math.exp(-dt / 0.07))
       moving = true
     } else this.dark = this.darkTarget
     return moving
@@ -549,6 +550,10 @@ export class Field {
     tintDark: [0.106, 0.125, 0.106, 0.48] as RGBA,
     rim: [1, 1, 1, 0.95] as RGBA,
     edge: [0, 0, 0, 0.05] as RGBA,
+    rimDark: [1, 1, 1, 0.28] as RGBA,
+    edgeDark: [0, 0, 0, 0.55] as RGBA,
+    fgLight: [0.094, 0.129, 0.106, 1] as RGBA,
+    fgDark: [0.922, 0.906, 0.855, 1] as RGBA,
     blur: 10,
     sat: 1.6,
     refraction: 36,
@@ -877,6 +882,7 @@ export class Field {
 
   themeChanged() {
     this.cssEpoch = -1
+    this.lastProbe = 0 // re-decide every tone now, not at the next 240ms probe
     this.invalidate(true)
   }
 
@@ -890,12 +896,17 @@ export class Field {
     const paper = resolveColor(h, 'var(--paper)', [0.96, 0.95, 0.91, 1])
     c.pageLum = colorLuminance(paper)
     c.themeDark = c.pageLum < 0.25 ? 1 : 0
-    c.tintLight = resolveColor(h, 'var(--glass-tint-light, rgba(251,249,243,.44))', c.tintLight)
-    c.tintDark = resolveColor(h, 'var(--glass-tint-dark, rgba(27,32,27,.48))', c.tintDark)
-    c.rim = resolveColor(h, 'var(--glass-rim, rgba(255,255,255,.9))', c.rim)
-    c.edge = resolveColor(h, 'var(--glass-edge, rgba(24,33,27,.07))', c.edge)
-    c.blur = this.opts.blur ?? cssNumber(h, '--glass-blur', 10)
-    c.sat = this.opts.saturate ?? cssNumber(h, '--glass-saturate', 1.6)
+    c.tintLight = resolveColor(h, 'var(--glass-tint-light, rgba(251,249,243,.64))', c.tintLight)
+    c.tintDark = resolveColor(h, 'var(--glass-tint-dark, rgba(18,22,18,.8))', c.tintDark)
+    c.rim = resolveColor(h, 'var(--glass-rim-light, rgba(255,255,255,.95))', c.rim)
+    c.edge = resolveColor(h, 'var(--glass-edge-light, rgba(24,33,27,.1))', c.edge)
+    c.rimDark = resolveColor(h, 'var(--glass-rim-dark, rgba(255,255,255,.28))', c.rimDark)
+    c.edgeDark = resolveColor(h, 'var(--glass-edge-dark, rgba(0,0,0,.55))', c.edgeDark)
+    // frost blur and saturation follow the page theme (dark pages get Apple's heavier dark material)
+    const blurLight = cssNumber(h, '--glass-blur', 10)
+    const satLight = cssNumber(h, '--glass-saturate', 1.6)
+    c.blur = this.opts.blur ?? (c.themeDark ? cssNumber(h, '--glass-blur-dark', blurLight) : blurLight)
+    c.sat = this.opts.saturate ?? (c.themeDark ? cssNumber(h, '--glass-saturate-dark', satLight) : satLight)
     c.refraction = this.opts.refraction ?? cssNumber(h, '--glass-refraction', 36)
   }
 
@@ -996,16 +1007,26 @@ export class Field {
 
   private probeTone(m: ShapeState, hr: DOMRect) {
     const eff = m.cfg.effect
-    let target: boolean
-    if (eff.variant === 'clear') target = false
-    else if (m.cfg.appearance === 'dark') target = true
-    else if (m.cfg.appearance === 'light') target = false
+    let tone: Tone
+    if (eff.variant === 'clear') tone = 'light'
     else {
-      const lum = probeBackdrop(hr.left + m.cx.x, hr.top + m.cy.x, this.host)
-      target = flipTone(lum ?? this.css.pageLum, m.darkBool)
+      const adaptiveText = m.el.hasAttribute('data-glass-adaptive-text')
+      const wantsBackdrop = m.cfg.appearance === 'auto' && adaptiveText
+      tone = decideTone({
+        appearance: m.cfg.appearance,
+        adaptiveText,
+        pageTheme: this.css.themeDark ? 'dark' : 'light',
+        backdropLum: wantsBackdrop ? probeBackdrop(hr.left + m.cx.x, hr.top + m.cy.x, this.host) : null,
+        prev: m.darkBool ? 'dark' : 'light',
+      })
     }
+    const target = tone === 'dark'
     m.darkBool = target
     m.darkTarget = target ? 1 : 0
+    if (!m.toneSet) {
+      m.toneSet = true
+      m.dark = m.darkTarget // first decision: no fade-in from the wrong tone
+    }
   }
 
   private signature(shapes: ShapeState[], hr: DOMRect, light: { x: number; y: number; k: number }): string {
@@ -1083,6 +1104,8 @@ export class Field {
       tintDark: c.tintDark,
       rim: c.rim,
       edge: c.edge,
+      rimDark: c.rimDark,
+      edgeDark: c.edgeDark,
       shadow: [10, 40, dark ? 0.32 : 0.075],
       shadowCol: dark ? [0, 0, 0] : [0.094, 0.129, 0.106],
       glow: dark ? [1, 1, 1, 0.3] : [1, 1, 1, 0.55],

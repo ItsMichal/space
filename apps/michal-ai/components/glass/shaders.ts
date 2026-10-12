@@ -40,6 +40,8 @@ uniform vec4 uTintLight;   // glass body tint (straight rgb, alpha) on light bac
 uniform vec4 uTintDark;
 uniform vec4 uRim;         // specular rim colour, alpha = strength
 uniform vec4 uEdge;        // dark inner edge colour
+uniform vec4 uRimD;        // rim / edge for dark-toned glass (mixed by the per-shape tone)
+uniform vec4 uEdgeD;
 uniform vec4 uShadow;      // offset y, blur, alpha, 0
 uniform vec3 uShadowCol;
 uniform vec4 uGlow;        // touch illumination colour
@@ -172,6 +174,8 @@ void main() {
   if (cov <= 0.0 && sh <= 0.002 && d > 6.0) { outColor = vec4(0.0); return; }
 
   Attr a = attrs(p);
+  vec4 RIM = mix(uRim, uRimD, a.dark);
+  vec4 EDGE = mix(uEdge, uEdgeD, a.dark);
   float depth = max(-d, 0.0);
 
   vec4 body = vec4(0.0);
@@ -192,9 +196,9 @@ void main() {
     float dy = p.y - a.foldY;
     float line = exp(-dy * dy / 2.2) * a.fold;
     float flap = smoothstep(0.0, 26.0, dy) * (1.0 - smoothstep(26.0, 120.0, dy)) * a.fold;
-    body.rgb += uRim.rgb * line * 0.55 * uRim.a;
+    body.rgb += RIM.rgb * line * 0.55 * RIM.a;
     body.a = max(body.a, line * 0.5);
-    vec4 fl = vec4(uEdge.rgb * flap * 0.18 * uEdge.a, flap * 0.18 * uEdge.a);
+    vec4 fl = vec4(EDGE.rgb * flap * 0.18 * EDGE.a, flap * 0.18 * EDGE.a);
     body = fl + body * (1.0 - fl.a);
   }
 
@@ -213,25 +217,25 @@ void main() {
   float l2 = pow(max(dot(n, -uLight), 0.0), 2.2) * 0.55;
   float spec = (l1 + l2) * uLightK;
   float rimI = band * (0.32 + 0.95 * spec) + broad * 0.2 * spec;
-  rimI *= mix(1.0, 0.8, a.clear) * (1.0 - 0.4 * abs(a.dark - uThemeDark));
-  vec3 rimC = uRim.rgb * (uRim.a * rimI);
+  rimI *= mix(1.0, 0.8, a.clear);
+  vec3 rimC = RIM.rgb * (RIM.a * rimI);
   body.rgb += rimC;
   // soft water-drop gloss: a faint sheen hugging the upper inner edge
-  float gloss = exp(-depth / max(uBezel * 1.3, 6.0)) * max(-n.y, 0.0) * 0.16 * uLightK * (1.0 - 0.6 * a.dark) * (1.0 - 0.5 * a.clear);
+  float gloss = exp(-depth / max(uBezel * 1.3, 6.0)) * max(-n.y, 0.0) * 0.16 * uLightK * (1.0 - 0.85 * a.dark) * (1.0 - 0.5 * a.clear);
   body.rgb += vec3(0.92, 0.97, 1.0) * gloss;
   body.a = clamp(body.a + gloss * 0.6, 0.0, 1.0);
   if (uFrost == 1) {
     // no lens without a real backdrop: suggest glass thickness with a bevel (light side lifts, far side sinks)
     float bevel = exp(-depth / max(uBezel * 0.8, 5.0)) * dot(n, uLight);
-    vec3 lift = vec3(1.0) * max(bevel, 0.0) * 0.16 * (1.0 - 0.5 * a.clear);
-    vec4 sink = vec4(uEdge.rgb * max(-bevel, 0.0) * 0.5 * uEdge.a, max(-bevel, 0.0) * 0.5 * uEdge.a * 0.6);
+    vec3 lift = vec3(1.0) * max(bevel, 0.0) * 0.16 * (1.0 - 0.5 * a.clear) * (1.0 - 0.8 * a.dark);
+    vec4 sink = vec4(EDGE.rgb * max(-bevel, 0.0) * 0.5 * EDGE.a, max(-bevel, 0.0) * 0.5 * EDGE.a * 0.6);
     body.rgb += lift;
-    body.a = clamp(body.a + max(bevel, 0.0) * 0.1, 0.0, 1.0);
+    body.a = clamp(body.a + max(bevel, 0.0) * 0.1 * (1.0 - 0.8 * a.dark), 0.0, 1.0);
     body = sink + body * (1.0 - sink.a);
   }
-  body.a = clamp(max(body.a, rimI * uRim.a), 0.0, 1.0);
+  body.a = clamp(max(body.a, rimI * RIM.a), 0.0, 1.0);
   float edgeI = band * (1.0 - clamp(spec, 0.0, 1.0)) * 0.7;
-  vec4 ed = vec4(uEdge.rgb * edgeI * uEdge.a, edgeI * uEdge.a);
+  vec4 ed = vec4(EDGE.rgb * edgeI * EDGE.a, edgeI * EDGE.a);
   body = ed + body * (1.0 - ed.a);
 
   body *= cov * a.mat;
