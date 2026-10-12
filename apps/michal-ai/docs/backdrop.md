@@ -35,17 +35,17 @@ Layers, back to front, in one canvas and one WebGL2 context:
    stars built as SDFs per cell, constellation segments from `- | / \` with `*` nodes, and a rare shooting star (one every 80s,
    five seconds to cross) leaving a fading trail. Glyphs gather where colour gathers (the density comes from the same blob
    weights plus a cluster noise) and are rare in voids. Ink is the globe's ink (`0.13 0.13 0.11`), alpha capped at 0.22, slow
-   opacity-only twinkle, thinned to 0.45 behind the reading column. Parallax 0.32 of scroll.
+   opacity-only twinkle, thinned to 0.3 of that across the reading column. Parallax 0.32 of scroll.
 5. Static paper grain on top.
 
 Render path: pass 1 draws layers 1 to 3 plus the glyph density at 1/6 resolution into a texture; pass 2 composites at device
-resolution (DPR capped at 2) with the glyph SDFs, lensing and grain. Soft layers are cheap and smooth at 1/6; glyphs need
+resolution (DPR capped at 1.5) with the glyph SDFs, lensing and grain. Soft layers are cheap and smooth at 1/6; glyphs need
 device pixels, so they are drawn in the full-resolution pass. Both passes are one context and one `requestAnimationFrame` loop.
 
 ## Glass lensing
 
 Any element matching `[data-glass-lens], .tile` is tracked (up to 16). Their viewport rects and corner radii are read from
-`getBoundingClientRect` each drawn frame (one passive scroll listener is not even needed: the loop reads `scrollY`), offscreen ones
+`getBoundingClientRect` each drawn frame (the loop reads `scrollY` itself, so no scroll listener is needed), offscreen ones
 are dropped by an `IntersectionObserver`, and the set is rescanned (debounced) when the DOM changes. In the composite pass, for
 pixels inside a rect (early-out by bounding box), the sample position is bent by a rounded-rect SDF profile: strongest
 within 15px of the edge (11px of displacement at the very edge), near zero in the middle, with 2.5 percent magnification, a
@@ -96,7 +96,7 @@ See the file for the current values; the important ones:
 | `lens.*` | edge band, bend, magnification, channel split, rim width and strength |
 | `parallax.*` | fraction of page scroll per layer |
 | `fps.idle / scroll` | redraw rates: 12 idle, 30 while scrolling with no glass on screen (60 with glass) |
-| `lowResDivisor`, `maxDpr` | 6, 2 |
+| `lowResDivisor`, `maxDpr` | 6, 1.5 |
 
 ## Contrast
 
@@ -104,7 +104,61 @@ The luma floor is enforced in the shader (a scale on the ink amount, so it is co
 pixel is below `lumFloorLight` of the paper's luma, whatever the blob overlap. Measured numbers (from `bake-backdrop.mjs --report`,
 which renders 24 time and scroll combinations and scans every pixel) are in the PR description and below.
 
-CONTRAST_TABLE
+Measured over 24 time/scroll combinations per theme (blobs, rays, floor; no glyphs, no grain), 960x600 frames, every pixel scanned.
+Contrast is WCAG 2.x on the token colours: `--ink` and `--ink-muted` (light `#18211b`, `#525c4f`; dark `#ebe7da`, `#a4ab99`).
+
+| | Light | Dark |
+| --- | --- | --- |
+| Paper | `#f4f1e8`, Y 0.880 | `#121612`, Y 0.0075 |
+| Darkest (light) / brightest (dark) backdrop pixel | `#e0e0db`, Y 0.743 = 0.844 of paper's Y | `#272f2f`, Y 0.0267 (a 3.6x lift of a near-black, still near-black) |
+| Luma floor / ratio (encoded sRGB luma vs paper) | enforced 0.93; measured min 0.928 (8-bit rounding), max 0.945 | n/a (ceiling on Y instead) |
+| `--ink` on that pixel | 12.46 | 11.07 |
+| `--ink-muted` on that pixel | **5.28** | **5.78** |
+| `--ink` on that pixel plus a glyph at the in-column cap (0.22 x 0.3 thinning) and grain pushing the wrong way | 10.87 | 9.03 |
+| `--ink-muted`, same worst case | **4.60** | **4.71** |
+| Margins only (no body text there): glyph at the full 0.22 cap | ink 7.97, muted 3.38 | ink 5.77, muted 3.01 |
+| For reference: ink / muted on plain paper | 14.62 / 6.19 | 14.77 / 7.71 |
+
+So 4.5:1 holds for both inks everywhere inside the reading column (`|x - centre| < min(540px, half the viewport)`, which is the whole
+screen on a phone), even at the single worst pixel with a glyph exactly under it. Outside the column the glyphs run at the full
+0.22 cap and muted text would dip to 3.4 over the worst glyph pixel; nothing but decoration lives there on the pages checked.
+The glyph cap is below the globe's own dot opacity (0.28 to 0.42 of ink) for exactly this reason: at the globe's opacity muted
+text on a glyph pixel falls under 4.5. Glass cards put a 58 to 82 percent paper tint over the backdrop, which should raise contrast
+for text on them; that was not measured on pixels.
+
+## Lensing versus the cards' `backdrop-filter`
+
+Checked with a translucent demo panel tagged `data-glass-lens` over the glyph field (`zoom-lens-demo-blur*` in `backdrop-shots/`).
+With `blur(0)` the rim reads and glyph specks at the panel edge visibly bend into ovals. At `blur(4px)` the specks are already
+smeared into soft dots and the bend is gone; at `blur(10px)` (the cards' current value) nothing of the lens survives. The
+lensing only reads at about 0 to 1.5px of blur. The real `.tile` cards are opaque photographs, so lensing is hidden under them
+anyway; it shows on translucent glass (nav pill, captions, anything tagged `data-glass-lens`). When `html[data-backdrop-lens="on"]`
+the card owner can lower the blur (and keep `saturate`) for glass that should show the lens, for example:
+
+```css
+html[data-backdrop-lens='on'] .some-glass { backdrop-filter: blur(1px) saturate(1.5); }
+```
+
+## Cost
+
+Measured on an Apple M1 Pro with a real GPU (headless Chrome, ANGLE Metal): 40 full draws (both passes), each followed by a 1px
+readback so the GPU has finished. The readback adds a fixed ~0.6ms, so these are upper bounds. Run `bake-backdrop.mjs --bench`.
+
+| Viewport | ms per frame | of which glyph SDFs |
+| --- | --- | --- |
+| 1440x900 at DPR 1 | 1.2 | 0.25 |
+| 1440x900 at DPR 2 (canvas capped to DPR 1.5) | 2.5 | 1.0 |
+| 375x812 at DPR 3 (canvas capped to DPR 1.5) | 1.1 | 0.3 |
+
+Idle redraw is 12 per second, scroll redraw 30 per second (60 while glass rects are on screen). Not measured: an integrated
+Intel GPU, a real scroll trace over glass cards, battery impact. The 1.5ms target is met at DPR 1 and exceeded at DPR 1.5
+on this GPU (with the readback overhead included in the number).
+
+## Context loss
+
+The home page has three WebGL contexts (this canvas, the hero globe, the shared shader canvas). `scripts/backdrop-contextloss.mjs`
+loses and restores the backdrop's context: the CSS fallback appears at once, the globe and the shared shader canvas stay live,
+and the canvas returns after restore.
 
 ## Verification
 
