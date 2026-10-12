@@ -2,6 +2,7 @@
 title: "Poznan — Low Roar MV"
 slug: poznan-low-roar-mv
 kind: article
+id: poznan-low-roar-mv
 description: "Poznan — Low Roar MV. Made an MV for Motion."
 date: 2021-11-17
 tags: ["Motion Design"]

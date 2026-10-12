@@ -78,8 +78,8 @@ export async function PostPage({ kind, slug, parent }: { kind: PostKind; slug: s
         after={
           <>
             <Publications ids={post.publications} />
-            {/* presence: reactions (dark behind LIVE_REACTIONS_ENABLED in lib/presence/flag.ts) */}
-            {LIVE_REACTIONS_ENABLED ? <LiveReactions slug={post.slug} /> : null}
+            {/* reactions and views row (flags in lib/presence/flag.ts, kill switch LIVE_KILL) */}
+            {LIVE_REACTIONS_ENABLED ? <LiveReactions postId={post.id ?? post.slug} /> : null}
             <OriginalLink url={post.originalUrl} />
             <PostExtras slug={post.slug} />
             {series ? <SeriesNav name={series.name} id={series.id} posts={series.posts} current={post.slug} /> : null}

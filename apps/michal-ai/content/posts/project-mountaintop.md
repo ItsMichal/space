@@ -2,6 +2,7 @@
 title: "Project Mountaintop"
 slug: project-mountaintop
 kind: project
+id: project-mountaintop
 description: "A Unity rhythm game about hiking, played with custom Arduino hiking-pole controllers."
 date: 2023-12-09
 tags: ["Unity", "Arduino", "Game Dev", "C#"]

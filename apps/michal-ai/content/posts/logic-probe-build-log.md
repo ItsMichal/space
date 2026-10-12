@@ -2,6 +2,7 @@
 title: "Logic Probe Build Log"
 slug: logic-probe-build-log
 kind: article
+id: logic-probe-build-log
 description: "This year I’m taking some cool courses as part of my Creative Technology & Design major at CU Boulder."
 date: 2021-08-28
 updated: 2021-09-10

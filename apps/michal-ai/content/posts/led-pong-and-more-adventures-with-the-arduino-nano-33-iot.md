@@ -2,6 +2,7 @@
 title: "LED Pong and more adventures with the Arduino Nano 33 IoT"
 slug: led-pong-and-more-adventures-with-the-arduino-nano-33-iot
 kind: article
+id: led-pong-and-more-adventures-with-the-arduino-nano-33-iot
 description: "This version comes pre-soldered so prototyping with breadboards was a breeze. And well, that’s exactly what we did."
 date: 2021-09-25
 tags: ["Arduino", "Electronics", "Design"]

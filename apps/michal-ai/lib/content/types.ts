@@ -4,6 +4,8 @@ export type GalleryItem = { src: string; alt: string; caption?: string }
 export type PostFrontmatter = {
   title: string
   slug: string
+  /* Stable id for per-post state (views, reactions). Never changes, even when the slug is renamed. Falls back to the slug. */
+  id?: string
   kind: PostKind
   description: string
   date: string /* ISO yyyy-mm-dd */

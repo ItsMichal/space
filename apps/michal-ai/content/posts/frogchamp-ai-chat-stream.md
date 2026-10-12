@@ -2,6 +2,7 @@
 title: "Frogchamp"
 slug: frogchamp-ai-chat-stream
 kind: project
+id: frogchamp-ai-chat-stream
 description: "A streamer dashboard, currently on hold, that uses LLMs and data visualization to show realtime chat behavior and sentiment."
 date: 2023-12-11
 tags: ["TypeScript", "Web", "AI/ML"]

@@ -2,6 +2,7 @@
 title: "Danny Rankin - Mentor Extraordinaire"
 slug: mountaintop-danny-rankin-mentor-extraordinaire
 kind: article
+id: mountaintop-danny-rankin-mentor-extraordinaire
 description: "Playtest feedback from mentor Danny Rankin that shaped Project Mountaintop: the hiking pole controls, polish priorities and a six-input scheme."
 date: 2023-02-23
 tags: ["Project Mountaintop"]

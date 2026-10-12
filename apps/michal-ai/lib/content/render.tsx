@@ -18,7 +18,7 @@ import { Callout } from '@/components/mdx/Callout'
 import { Picture } from '@/components/media/Picture'
 import { Zoomable } from '@/components/media/Zoomable'
 import { PostPreviewLink } from '@/components/ui/PostPreviewLink'
-import { LIVE_REACTIONS_ENABLED } from '@/lib/presence/flag'
+import { LIVE_BLOCK_REACTIONS } from '@/lib/presence/flag'
 import { blockIds } from '@/lib/presence/blocks'
 
 // Turn directive nodes into hast elements with custom tag names that we map to components.
@@ -123,7 +123,7 @@ export async function renderMarkdown(source: string): Promise<ReactNode> {
     .use(remarkRehype)
     .use(rehypeUnwrapImages)
     .use(rehypeSlug)
-    .use(LIVE_REACTIONS_ENABLED ? rehypeBlockIds : () => () => {})
+    .use(LIVE_BLOCK_REACTIONS ? rehypeBlockIds : () => () => {})
     .use(rehypeAutolinkHeadings, { behavior: 'wrap' })
     .use(rehypePrettyCode, {
       theme: { light: 'github-light', dark: 'github-dark' },

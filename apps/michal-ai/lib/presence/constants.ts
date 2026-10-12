@@ -51,4 +51,11 @@ export const LIVE_LIMITS = {
   reactRowsMax: 50_000,
   /** Distinct highlight blocks tracked per post. */
   reactBlocksMax: 400,
+  /** All reaction writes to one post, any client, per minute (per object). */
+  reactPostWritesPerMin: 600,
+  /** View writes: per client (salted IP hash) and for the whole post, per minute. */
+  viewWritesPerMin: 20,
+  viewPostWritesPerMin: 300,
+  /** Visitors remembered per post per UTC day for de-duplication; further visitors that day are not counted. */
+  viewRowsPerDay: 20_000,
 } as const

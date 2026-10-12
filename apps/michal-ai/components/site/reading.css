@@ -2,7 +2,7 @@
 
      viewport ......................................................... centred
         gutter | ---------------- wide track (900px) --------------- | gutter
-                       |  text column (34rem, about 68 characters) |
+                       |  text column (35rem, about 67 characters) |
 
    - Everything in the article is in the text column by default: title block, facts, body text, lists, quotes, callouts,
      page-end blocks. The article itself is the column (max-width + auto margins), so nothing can sit off-centre.
@@ -11,12 +11,12 @@
    - Nothing is full-bleed on reading pages. On phones the wide track collapses to the text column.
    - Side rails (the "On this page" list) are fixed to the margin outside the wide track, so they can never move the column.
 
-   Measure: 34rem at the 20px prose size is about 68 characters of Newsreader (measured by scripts/article-shots.mjs).
+   Measure: 35rem at the 20px prose size is about 67 characters of Newsreader (measured by scripts/article-shots.mjs).
    Precedent: stripe.com/blog and vercel.com/blog (one centred text column with wider figures), apple.com/newsroom (a text column
    with wide imagery), medium.com (a centred column). See docs/design-references.md. */
 :root {
   --gutter: var(--space-4);
-  --text: 34rem;
+  --text: 35rem;
   --wide: 900px;
   /* 100vw includes a classic scrollbar (about 15px); the gutter absorbs it. */
   --wide-w: min(var(--wide), calc(100vw - 2 * var(--gutter)));

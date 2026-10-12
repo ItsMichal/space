@@ -2,6 +2,7 @@
 title: "Starlink.com"
 slug: spacex-starlink-general-projects
 kind: project
+id: spacex-starlink-general-projects
 description: "Growing the Starlink.com platform for millions and then billions worldwide, through technical excellence and collaboration with business stakeholders."
 date: 2025-06-04
 tags: ["Web", "TypeScript", "Next.js"]

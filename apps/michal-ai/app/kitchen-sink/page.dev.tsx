@@ -46,6 +46,8 @@ Text straight after a heading, then lists.
 - [x] Task list, done
 - [ ] Task list, open
 
+A paragraph between lists.
+
 - A loose list item
 
   With a second paragraph inside it.
@@ -125,7 +127,7 @@ export default async function KitchenSink() {
               </Disclosure>
             </section>
             <Publications ids={pub ? [pub] : []} />
-            <LiveReactions slug="kitchen-sink" />
+            <LiveReactions postId="kitchen-sink" />
           </>
         }
       >

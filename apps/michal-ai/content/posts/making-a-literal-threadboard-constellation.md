@@ -2,6 +2,7 @@
 title: "Making a (literal) ThreadBoard constellation!"
 slug: making-a-literal-threadboard-constellation
 kind: article
+id: making-a-literal-threadboard-constellation
 description: "First off- obligatory explanation of what the heck a threadboard is."
 date: 2021-09-08
 tags: ["Electronics", "DIY"]
