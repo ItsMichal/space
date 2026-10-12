@@ -8,9 +8,9 @@
   z-index: -2;
   pointer-events: none;
   background-image:
-    linear-gradient(rgb(24 33 27 / 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(24 33 27 / 0.08) 1px, transparent 1px),
-    radial-gradient(circle at 12px 12px, rgb(24 33 27 / 0.34) 1.5px, transparent 2px);
+    linear-gradient(rgb(24 33 27 / 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(24 33 27 / 0.1) 1px, transparent 1px),
+    radial-gradient(circle at 12px 12px, rgb(24 33 27 / 0.42) 2.2px, transparent 2.8px);
   background-size: 96px 96px, 96px 96px, 24px 24px;
   background-position: 0 0, 0 0, 0 0;
 }

@@ -86,7 +86,7 @@
 /* ---- the tile: glass over a graph-paper page
    Glass needs something behind it to blur. The home page now carries a fixed dot-and-line grid (components/site/paper-grid.css),
    so as the page scrolls the grid slides under the cards and the blur visibly works. The surface follows Apple's material
-   (measured: `saturate(1.8) blur(20px)` over a translucent tint): a translucent paper tint, `blur(9px) saturate(1.4)` (lower than Apple's 20px because a 24px dot grid vanishes under a heavier blur: the dots must stay
+   (measured: `saturate(1.8) blur(20px)` over a translucent tint): a translucent paper tint, `blur(5px) saturate(1.5)` (lower than Apple's 20px because a 24px dot grid vanishes under a heavier blur: the dots must stay
    visible, diffused, for the glass to read),
    a 1px inner highlight brightest on the top-left (a masked gradient ring), an outer hairline, a two-layer soft shadow.
    The image is NOT under glass: it stays an opaque picture clipped by the card radius; only the text block is on glass.
@@ -99,9 +99,9 @@
   min-width: 0;
   overflow: hidden;
   border-radius: var(--tile-r);
-  background: color-mix(in srgb, var(--paper-raised) 42%, transparent);
-  -webkit-backdrop-filter: blur(9px) saturate(1.4);
-  backdrop-filter: blur(9px) saturate(1.4);
+  background: color-mix(in srgb, var(--paper-raised) 34%, transparent);
+  -webkit-backdrop-filter: blur(5px) saturate(1.5);
+  backdrop-filter: blur(5px) saturate(1.5);
   box-shadow:
     0 0 0 1px rgb(24 33 27 / 0.1),
     0 2px 4px rgb(24 33 27 / 0.05),
@@ -131,7 +131,7 @@
 }
 @media (hover: hover) {
   .tile:hover {
-    background: color-mix(in srgb, var(--paper-raised) 54%, transparent);
+    background: color-mix(in srgb, var(--paper-raised) 46%, transparent);
   }
   .tile:hover::before {
     opacity: 1;
@@ -220,8 +220,9 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.tile__meta,
 .tile__desc {
-  color: color-mix(in srgb, var(--ink) 76%, var(--paper));
+  color: color-mix(in srgb, var(--ink) 78%, var(--paper));
   text-wrap: pretty;
   display: -webkit-box;
   -webkit-line-clamp: 3;
