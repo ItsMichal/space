@@ -52,6 +52,27 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     return out
   }, [pins, presence])
 
+  // Where the hero text sits, in canvas pixels: the dots thin out behind it (see the shader). Measured on resize and when fonts
+  // arrive, never per frame. Elements opt in with data-hero-text; the value is how much of the dot alpha stays behind them.
+  const measureText = () => {
+    const s = st.current
+    const el = wrap.current
+    if (!s.r || !el || !s.size) return
+    const w = el.getBoundingClientRect()
+    const sc = Math.round(s.size * s.dpr) / (w.width || 1)
+    const px = Math.round(s.size * s.dpr)
+    const list: { box: [number, number, number, number]; dim: number }[] = []
+    document.querySelectorAll<HTMLElement>('[data-hero-text]').forEach((t) => {
+      const range = document.createRange()
+      range.selectNodeContents(t)
+      const r = range.getBoundingClientRect()
+      if (!r.width || !r.height) return
+      const dim = Number(t.dataset.heroText) || 0.15
+      list.push({ box: [(r.left - w.left) * sc, px - (r.bottom - w.top) * sc, (r.right - w.left) * sc, px - (r.top - w.top) * sc], dim })
+    })
+    s.r.setBoxes(list, 26 * sc)
+  }
+
   const draw = () => {
     const s = st.current
     s.raf = 0
@@ -118,6 +139,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
         st.current.r = r
         r.resize(st.current.size || 300, st.current.dpr)
         setMode('gl')
+        void document.fonts?.ready.then(() => measureText())
       })
       .catch(() => !cancelled && setMode('fallback'))
     return () => {
@@ -131,8 +153,9 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     const apply = () => {
       const s = st.current
       s.size = el.clientWidth
-      s.dpr = Math.min(2, window.devicePixelRatio || 1)
+      s.dpr = Math.min(1.5, window.devicePixelRatio || 1)
       s.r?.resize(s.size, s.dpr)
+      measureText()
       kick()
     }
     apply()

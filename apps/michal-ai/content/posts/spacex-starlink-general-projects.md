@@ -5,10 +5,9 @@ kind: project
 description: "Smaller full-stack projects from my time on the Consumer Platform team at Starlink, from security fixes to database migrations."
 date: 2025-06-04
 tags: ["Web", "TypeScript", "Next.js"]
-cover: /media/spacex-starlink-general-projects/cover.webp
-coverAlt: "Close-up of a black and gold jet wing and engine with SpaceX branding, lit at dusk"
-coverFocus: "28% 60%"
-cardImage: none
+cover: /media/spacex-starlink-general-projects/starlink-night-sky.webp
+coverAlt: "A Starlink dish on the corner of a roof under a night sky full of stars and the Milky Way"
+coverFocus: "70% 52%"
 priority: 10
 featured: true
 role: "Software engineer"

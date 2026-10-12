@@ -38,7 +38,7 @@ import {
 } from './backdrop'
 import { GlassGL, type DrawParams, type MapTicket } from './gl'
 import { MAX_SHAPES } from './shaders'
-import { lightFor, subscribeLight } from './lighting'
+import { lightFor } from './lighting'
 
 export type GlassTransition = 'materialize' | 'matchedGeometry' | 'identity'
 export type GlassAppearance = 'auto' | 'light' | 'dark'
@@ -516,7 +516,27 @@ export class Field {
   private io: IntersectionObserver | null = null
   private ro: ResizeObserver | null = null
   private mo: MutationObserver | null = null
-  private unsubLight: (() => void) | null = null
+  private hover: { x: number; y: number } | null = null
+  private hoverPt = { x: 0, y: 0 }
+  private hoverT = 0
+  private onPointerEnter = (e: PointerEvent) => {
+    if (e.pointerType === 'touch') return
+    this.hover = this.hoverPt = { x: e.clientX, y: e.clientY }
+    this.invalidate()
+  }
+  private onPointerLeave = () => {
+    this.hover = null
+    this.invalidate()
+  }
+  private onFocusIn = () => {
+    const r = this.host.getBoundingClientRect()
+    this.hover = this.hoverPt = { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+    this.invalidate()
+  }
+  private onFocusOut = () => {
+    this.hover = null
+    this.invalidate()
+  }
   private lastSig = ''
   private dirty = true
   private pollUntil = 0
@@ -593,7 +613,12 @@ export class Field {
     this.mo.observe(host, { childList: true })
     for (const t of ['transitionrun', 'transitionstart', 'transitionend', 'transitioncancel', 'animationstart', 'animationend', 'animationcancel'])
       host.addEventListener(t, this.transitionEvt)
-    this.unsubLight = subscribeLight(() => this.invalidate())
+    // The glass reacts to the pointer only while it is over THIS element (or focused): listeners live on the host, none on window.
+    host.addEventListener('pointerenter', this.onPointerEnter, { passive: true })
+    host.addEventListener('pointermove', this.onPointerEnter, { passive: true })
+    host.addEventListener('pointerleave', this.onPointerLeave, { passive: true })
+    host.addEventListener('focusin', this.onFocusIn)
+    host.addEventListener('focusout', this.onFocusOut)
     this.resolveMode()
   }
 
@@ -731,7 +756,11 @@ export class Field {
     this.io?.disconnect()
     this.ro?.disconnect()
     this.mo?.disconnect()
-    this.unsubLight?.()
+    this.host.removeEventListener('pointerenter', this.onPointerEnter)
+    this.host.removeEventListener('pointermove', this.onPointerEnter)
+    this.host.removeEventListener('pointerleave', this.onPointerLeave)
+    this.host.removeEventListener('focusin', this.onFocusIn)
+    this.host.removeEventListener('focusout', this.onFocusOut)
     for (const t of ['transitionrun', 'transitionstart', 'transitionend', 'transitioncancel', 'animationstart', 'animationend', 'animationcancel'])
       this.host.removeEventListener(t, this.transitionEvt)
     this.members.forEach((m) => m.detachDom())
@@ -948,7 +977,12 @@ export class Field {
     }
 
     const shapes = list.length > MAX_SHAPES ? list.slice(0, MAX_SHAPES) : list
-    const light = lightFor(hr.left + hr.width / 2, hr.top + hr.height / 2)
+    // Ease the local light in and out (about 250ms); once settled at rest nothing here keeps the loop alive.
+    const want = this.hover ? 1 : 0
+    this.hoverT += (want - this.hoverT) * Math.min(1, dt * 9)
+    if (Math.abs(want - this.hoverT) < 0.01) this.hoverT = want
+    if (this.hoverT !== want) moving = true
+    const light = lightFor(hr.left + hr.width / 2, hr.top + hr.height / 2, this.hoverT > 0 ? { x: this.hoverPt.x, y: this.hoverPt.y, w: this.hoverT } : null)
     const sig = this.signature(shapes, hr, light)
     if (sig !== this.lastSig) {
       this.lastSig = sig

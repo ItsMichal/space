@@ -22,14 +22,32 @@
   z-index: 0;
   --hero-globe-opacity: var(--hero-globe-opacity-slot, 0.28);
 }
-/* The name is about 760px wide from 907px up, so the free space to its right is 100vw - 824px (at most 296px). The globe is
-   shown from 1024px, right-aligned to the content column and never wider than that space, so it cannot touch the name. */
+/* The globe sits BEHIND the name and tagline (z-order: tint < globe < text); the shader thins its dots behind each text block, so
+   contrast comes from the shader, not from a scrim. Phones: large and low-alpha, bleeding off the right edge. Tablet: about
+   80% of the width. From 1024px: two thirds of the viewport, capped at 880px, bleeding a little off the right and top. */
+.hero-globe--slot {
+  display: block;
+  position: absolute;
+  z-index: 0;
+  width: 118vw;
+  right: -36vw;
+  top: 24px;
+  --hero-globe-opacity: var(--hero-globe-opacity-slot, 0.3);
+}
+@media (min-width: 768px) {
+  .hero-globe--slot {
+    width: 84vw;
+    right: -16vw;
+    top: -10px;
+    --hero-globe-opacity: var(--hero-globe-opacity-slot, 0.34);
+  }
+}
 @media (min-width: 1024px) {
   .hero-globe--slot {
-    display: block;
-    width: min(300px, calc(100vw - 840px));
-    right: max(32px, calc((100vw - 1120px) / 2 + 32px));
-    top: 96px;
+    width: min(66vw, 880px);
+    right: -4vw;
+    top: -50px;
+    --hero-globe-opacity: var(--hero-globe-opacity-slot, 0.4);
   }
 }
 /* Bleed: runs off the right and top edge (the parent must clip). Not used on the homepage. */

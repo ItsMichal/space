@@ -5,12 +5,14 @@
   position: absolute;
   inset: 0 0 auto 0;
   z-index: -1;
-  height: min(100svh, 760px);
+  /* The atmosphere runs on down behind the first card row, so the glass cards have colour to pick up; it fades out well
+     before the next section. */
+  height: min(100svh + 560px, 1340px);
   overflow: hidden;
   pointer-events: none;
   contain: strict;
-  -webkit-mask-image: linear-gradient(180deg, #000 0, #000 55%, transparent 100%);
-  mask-image: linear-gradient(180deg, #000 0, #000 55%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, #000 0, #000 52%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0, #000 52%, transparent 100%);
 }
 .hero-atm__layer {
   position: absolute;
@@ -39,7 +41,9 @@
   position: absolute;
   inset: 0 0 auto 0;
   z-index: -1;
-  height: min(100svh, 760px);
+  height: min(100svh + 560px, 1340px);
   overflow: hidden;
   pointer-events: none;
+  -webkit-mask-image: linear-gradient(180deg, #000 0, #000 52%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0, #000 52%, transparent 100%);
 }
