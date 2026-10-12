@@ -17,7 +17,8 @@
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "check:identity": "node scripts/check-identity.mjs",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run check:identity"
+    "check": "npm run typecheck && npm run lint && npm run test && npm run check:identity && npm run check:slugs",
+    "check:slugs": "node scripts/check-slugs.mjs"
   },
   "devDependencies": {
     "prettier": "^3.9.9"
