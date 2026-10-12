@@ -21,7 +21,7 @@ export function PostNav({ parent, items, prev, next, position }: Props) {
   if (!parent) {
     const heading = items.find((c) => c.series)?.series ?? 'More from this project'
     return (
-      <section aria-labelledby="children-h" className="postnav card surface">
+      <section aria-labelledby="children-h" className="postnav card surface reading__wide">
         <h2 id="children-h" className="postnav__h">
           {heading}
         </h2>
@@ -56,7 +56,7 @@ export function PostNav({ parent, items, prev, next, position }: Props) {
     )
   }
   return (
-    <nav aria-label={`${parent.title} ${position ? 'entries' : 'navigation'}`} className="postnav card surface postnav--nav">
+    <nav aria-label={`${parent.title} ${position ? 'entries' : 'navigation'}`} className="postnav card surface reading__wide postnav--nav">
       {position ? (
         <p className="postnav__pos">
           Entry {position.n} of {position.of} · <Link href={`/projects/${parent.slug}`} className="link">Back to {parent.title}</Link>

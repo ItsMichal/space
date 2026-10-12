@@ -173,3 +173,8 @@ a.card__row:focus-visible {
 .card.postnav--nav {
   padding: 0;
 }
+
+/* the reactions row is a card only while the bar renders (it renders nothing when the live feature is off) */
+.live-reactions:not(:has(.reactionbar)) {
+  display: none;
+}

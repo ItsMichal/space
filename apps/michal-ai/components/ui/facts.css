@@ -3,7 +3,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: var(--space-4) var(--space-6);
-  margin: 0 0 var(--space-12);
+  margin-top: 0;
+  margin-bottom: var(--space-12);
 }
 .fr-row {
   min-width: 0;

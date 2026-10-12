@@ -31,7 +31,14 @@ const send = (method, params = {}) => new Promise((res) => { const i = ++id; pen
 const ev = async (expression) => (await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true })).result.result.value
 await send('Page.enable')
 
-const pages = [
+const READING = [
+  ['starlink', '/projects/starlink'],
+  ['mountaintop', '/projects/project-mountaintop'],
+  ['jia', '/projects/jia-webapp'],
+  ['child', '/projects/project-mountaintop/week-5-6-space'],
+  ['post', '/writing/creating-my-first-pcb-object'],
+]
+const pages = process.env.SET === 'reading' ? READING : [
   ['home', '/', '#about'],
   ['home-work', '/', '#work'],
   ['projects', '/projects'],
@@ -41,7 +48,7 @@ const pages = [
   ['post', '/writing/creating-my-first-pcb-object'],
   ['404', '/does-not-exist'],
 ]
-const sizes = [['1440', 1440, 900, 1], ['768', 768, 1024, 1], ['375', 375, 812, 2]]
+const sizes = [['1440', 1440, 900, 1], ['768', 768, 1024, 1], ['1920', 1920, 1080, 1], ['375', 375, 812, 2]]
 const schemes = ['light', 'dark']
 // every row of cards: group titles by their offsetTop-of-card row and report spread of title tops
 const ASSERT = `(() => {
@@ -68,6 +75,12 @@ const ASSERT = `(() => {
   }
   return out
 })()`
+// every direct child of the article, and the card/figure blocks inside it, must share the viewport's centre axis
+const CENTRE = `(() => {
+  const mid = document.documentElement.clientWidth / 2
+  const els = [...document.querySelectorAll('[data-post] > header, [data-post] > figure, [data-post] > .fr, [data-post] > .pubs, [data-post] > .postnav, [data-post] > .prose, [data-post] .postextra, [data-post] .reactionbar, [data-post] > .gallery')]
+  return els.filter((e) => e.getBoundingClientRect().width > 0).map((e) => { const r = e.getBoundingClientRect(); return { el: e.tagName.toLowerCase() + '.' + String(e.className).split(' ')[0], w: Math.round(r.width), off: Math.round((r.left + r.width / 2 - mid) * 10) / 10 } })
+})()`
 let fails = 0
 for (const scheme of schemes) {
   await send('Emulation.setEmulatedMedia', { media: '', features: [{ name: 'prefers-color-scheme', value: scheme }, { name: 'prefers-reduced-motion', value: 'reduce' }] })
@@ -88,6 +101,12 @@ for (const scheme of schemes) {
       const res = await ev(ASSERT)
       for (const r of res ?? []) { if (r.spread > 1 || r.descSpread > 1 || (r.oneLineGaps ?? []).some((g) => g > 6)) { fails++; console.log('TITLE MISALIGNED', scheme, sname, name, JSON.stringify(r)) } }
       if (res?.length) console.log('rows ok/checked', scheme, sname, name, JSON.stringify(res))
+      if (process.env.SET === 'reading') {
+        const cs = await ev(CENTRE)
+        const off = (cs ?? []).filter((c) => Math.abs(c.off) > 1)
+        console.log('centre', scheme, sname, name, JSON.stringify((cs ?? []).map((c) => `${c.el}:${c.w}:${c.off}`)))
+        if (off.length) { fails++; console.log('OFF-CENTRE', scheme, sname, name, JSON.stringify(off)) }
+      }
       // overflow check
       const ov = await ev('document.documentElement.scrollWidth - document.documentElement.clientWidth')
       if (ov > 0) console.log('HORIZONTAL OVERFLOW', ov, scheme, sname, name)

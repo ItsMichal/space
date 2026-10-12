@@ -10,7 +10,7 @@ export type Fact = { label: string; value: ReactNode }
  */
 export function FactRows({ facts, label = 'Project facts' }: { facts: Fact[]; label?: string }) {
   return (
-    <dl className="fr card surface" aria-label={label}>
+    <dl className="fr card surface reading__wide" aria-label={label}>
       {facts.map((f, i) => (
         <div key={f.label} className="fr-row" style={{ ['--i' as string]: i }}>
           <dt>{f.label}</dt>
