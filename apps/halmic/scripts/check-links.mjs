@@ -51,6 +51,18 @@ const sedd = fs.readFileSync(path.join(pub, 'design/southeast-denver-dental/inde
 if (!/<video\b[^>]*data-loop/.test(sedd) || !sedd.includes('Footage from the')) bad.push('design/southeast-denver-dental: in-use loop or its caption missing');
 if (!/media-src 'self'/.test(fs.readFileSync(path.join(pub, '_headers'), 'utf8'))) bad.push('_headers: media-src should be self');
 for (const e of ['webm', 'mp4']) if (fs.statSync(path.join(pub, `work/southeast-denver-dental-inuse.${e}`)).size > 900 * 1024) bad.push(`dental loop .${e} is over 900 KB`);
+// hero reel: muted, inline, no source until hero.js starts it (preload none, no autoplay), poster only as data-poster so it can never be the LCP; every file hero.js points at exists and stays inside its size budget
+const reelVid = home.match(/<div class="reel"[^>]*aria-hidden="true">[\s\S]*?<video\b[^>]*>/)?.[0] ?? '';
+const reelTag = reelVid.slice(reelVid.indexOf('<video'));
+if (!/<canvas\b/.test(reelVid) || !/<video\b[^>]*\bmuted\b[^>]*\bloop\b[^>]*\bplaysinline\b[^>]*\bpreload="none"/.test(reelTag) || /\s(autoplay|controls|src|poster)[=\s>]/.test(reelTag)) bad.push('index.html: hero reel video must be muted loop playsinline preload="none", without autoplay/controls/src/poster, inside an aria-hidden .reel with a canvas');
+const reelPoster = reelTag.match(/data-poster="([^"]+)"/)?.[1];
+if (!reelPoster || !resolve(reelPoster)) bad.push('index.html: hero reel video needs a data-poster that resolves');
+if (!/<script src="\/hero\.js\?v=[0-9a-f]+" defer>/.test(home)) bad.push('index.html: hero.js should load with defer and a content hash');
+const heroJs = fs.readFileSync(path.join(pub, 'hero.js'), 'utf8');
+if (/\beval\(|new Function\(|\.innerHTML\s*=|\.style\.cssText|setAttribute\(\s*['"]style/.test(heroJs)) bad.push('hero.js: eval/inline-style patterns are not allowed (CSP)');
+for (const m of heroJs.matchAll(/'(\/hero\/[^']+)'/g)) if (!resolve(m[1])) bad.push(`hero.js: ${m[1]} does not exist`);
+for (const [f, max] of [['reel-720.webm', 2.5], ['reel-720.mp4', 3], ['reel-540.webm', 1.2]]) { const fp = path.join(pub, 'hero', f); if (!fs.existsSync(fp)) bad.push(`hero/${f} missing`); else if (fs.statSync(fp).size > max * 1024 * 1024) bad.push(`hero/${f} is over ${max} MB`); }
+if (fs.existsSync(path.join(pub, 'hero/reel-poster.jpg')) && fs.statSync(path.join(pub, 'hero/reel-poster.jpg')).size > 60 * 1024) bad.push('hero/reel-poster.jpg is over 60 KB');
 const px = fs.readFileSync(path.join(pub, 'work/pokemon-phoenix-rising/index.html'), 'utf8');
 if (!/Videos by <a href="https:\/\/www\.youtube\.com\/@PhoenixRisingGame"/.test(px) || (px.match(/data-vid="/g) ?? []).length < 2) bad.push('work/pokemon-phoenix-rising: channel credit or videos missing');
 const mtDir = path.join(pub, 'work/project-mountaintop');

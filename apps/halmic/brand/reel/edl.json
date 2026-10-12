@@ -1,0 +1,25 @@
+{
+  "note": "Moments cut from the owner's own published videos and clips (YouTube @halmic, Twitch halmictv). Source footage is not in the repo; download video-only <=720p (see README.md). Times are source seconds. crop is w:h:x:y on the 1280x720 source and always excludes HUD text, captions, credits and facecam.",
+  "fps": 24,
+  "speed": 0.45,
+  "srcSeconds": 1.5,
+  "crossfadeFrames": 10,
+  "moments": [
+    { "src": "yt-Et47QCJ3-3g", "site": "youtube", "id": "Et47QCJ3-3g", "title": "Robomaster 2019 Robotics Competition - Highlight Reel", "in": 121.0, "crop": "720:405:150:90", "why": "arena fight, robots clustering around the red tower" },
+    { "src": "yt-pl6lJAYPLgc", "site": "youtube", "id": "pl6lJAYPLgc", "title": "CU Boulder Racing Team - IMI Motorsports 01:09:59 (PB)", "in": 10.0, "crop": "960:540:0:0", "why": "onboard, hard corner, sky and track sweeping past; lap timer cropped out" },
+    { "src": "yt-2jM2QSTSte4", "site": "youtube", "id": "2jM2QSTSte4", "title": "FIFA With the Boys - Episode 3", "in": 226.0, "crop": "900:506:240:130", "why": "gameplay only, centre circle, players moving; scoreboard banner and crest cropped out" },
+    { "src": "tw-3935634116", "site": "twitch", "id": "GlamorousFrozenStorkBloodTrail", "title": "4k clutch on Bind", "in": 17.0, "crop": "800:450:300:140", "why": "first-person fight with an ability burst; HUD and name overlay cropped out" },
+    { "src": "yt-Et47QCJ3-3g", "site": "youtube", "id": "Et47QCJ3-3g", "title": "Robomaster highlight reel", "in": 190.5, "crop": "720:405:150:90", "why": "cyan-lit arena, strong geometry" },
+    { "src": "yt-Gv-xMeMM8m4", "site": "youtube", "id": "Gv-xMeMM8m4", "title": "Project Mountaintop demo", "in": 26.0, "crop": "900:506:0:0", "why": "the rhythm game on screen, bright streaks of colour; people not in frame" },
+    { "src": "yt-N7HKj1dYZjU", "site": "youtube", "id": "N7HKj1dYZjU", "title": "FIFA With The Boys - Episode 4(EVER)", "in": 376.0, "crop": "960:540:150:90", "why": "gameplay only, wide pitch and goal" },
+    { "src": "tw-3298804610", "site": "twitch", "id": "MistySleepyNuggetsWOOP", "title": "Barbarian Chop Off the Top", "in": 6.0, "crop": "800:450:100:60", "why": "Smash Ultimate exchange with light effects; facecam, overlay and names cropped out" },
+    { "src": "yt-pl6lJAYPLgc", "site": "youtube", "id": "pl6lJAYPLgc", "title": "CU Boulder Racing Team onboard", "in": 54.5, "crop": "960:540:0:0", "why": "second onboard stretch, wide bend" },
+    { "src": "yt-Et47QCJ3-3g", "site": "youtube", "id": "Et47QCJ3-3g", "title": "Robomaster highlight reel", "in": 329.0, "crop": "720:405:150:90", "why": "multi-robot melee; lower-third caption cropped out" }
+  ],
+  "excluded": [
+    "Special Force 1 and 2 (faces, credit names)",
+    "FIFA episode intros and press-conference scenes (faces, names)",
+    "Twitch clips' facecam strips and overlay handles",
+    "any frame range with in-game handles large enough to read, scoreboards, captions or logos filling the frame"
+  ]
+}
