@@ -6,6 +6,8 @@ import { fileURLToPath } from 'node:url';
 const pub = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
 const SITE = 'https://halmic.com';
 const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]));
+const sprite = fs.readFileSync(path.join(pub, 'icons.svg'), 'utf8');
+const symbols = new Set([...sprite.matchAll(/<symbol id="([^"]+)"/g)].map((m) => m[1]));
 const htmls = walk(pub).filter((f) => f.endsWith('.html'));
 const bad = [];
 const resolve = (u) => {
@@ -24,6 +26,9 @@ for (const f of htmls) {
   const rel = path.relative(pub, f), h = fs.readFileSync(f, 'utf8');
   for (const m of h.matchAll(/\b(?:href|src)="([^"]*)"/g)) check(rel, m[1]);
   for (const m of h.matchAll(/<meta property="og:image" content="([^"]*)"|<meta name="twitter:image" content="([^"]*)"|<link rel="canonical" href="([^"]*)"/g)) check(rel, m[1] ?? m[2] ?? m[3]);
+  for (const m of h.matchAll(/<use href="([^"#]*)#([^"]+)"/g)) { if (!/^\/icons\.svg(\?v=[0-9a-f]+)?$/.test(m[1])) bad.push(`${rel}: icon sprite href ${m[1]}`); if (!symbols.has(m[2])) bad.push(`${rel}: icon "${m[2]}" is missing from icons.svg`); }
+  for (const m of h.matchAll(/\bposter="([^"]*)"/g)) check(rel, m[1]);
+  if (/<video\b/.test(h) && !/<video\b[^>]*\bmuted\b[^>]*\bpreload="none"/.test(h)) bad.push(`${rel}: video must be muted with preload="none"`);
   for (const m of h.matchAll(/<img\b[^>]*>/g)) if (!/\balt="/.test(m[0]) || !/\bwidth="/.test(m[0]) || !/\bheight="/.test(m[0])) bad.push(`${rel}: img without alt/width/height: ${m[0].slice(0, 80)}`);
   if (/MISSING:|class="(ph|draft)\b|\[(owner|draft|date|category|link)[^\]]*\]/.test(h)) bad.push(`${rel}: placeholder or draft marker`);
   if ((h.match(/<h1[\s>]/g) ?? []).length !== 1) bad.push(`${rel}: expected exactly one h1`);
@@ -39,7 +44,13 @@ for (const id of ['stream', 'videos', 'games', 'design', 'hi', 'clips-all']) if 
 if (/id="clips"|id="when"|class="plays"|On the stream/.test(home)) bad.push('index.html: the old stream section is back');
 if ((home.match(/<h2>/g) ?? []).length < 5) bad.push('index.html: expected the group headers as h2');
 if ((home.match(/<a class="card/g) ?? []).length < 20) bad.push('index.html: fewer cards than expected');
-if (!home.includes('href="/#stream">clips<')) bad.push('index.html: nav item should be "clips"');
+if (!home.includes('href="/#stream"><svg') || !home.includes('<span>clips</span>')) bad.push('index.html: nav item should be "clips"');
+if (!home.includes('href="/#work"') || /href="\/#design"/.test(home)) bad.push('index.html: nav should point at #work (#design stays as an anchor alias)');
+if (!home.includes('id="design"')) bad.push('index.html: #design alias missing');
+const sedd = fs.readFileSync(path.join(pub, 'design/southeast-denver-dental/index.html'), 'utf8');
+if (!/<video\b[^>]*data-loop/.test(sedd) || !sedd.includes('Footage from the')) bad.push('design/southeast-denver-dental: in-use loop or its caption missing');
+if (!/media-src 'self'/.test(fs.readFileSync(path.join(pub, '_headers'), 'utf8'))) bad.push('_headers: media-src should be self');
+for (const e of ['webm', 'mp4']) if (fs.statSync(path.join(pub, `work/southeast-denver-dental-inuse.${e}`)).size > 900 * 1024) bad.push(`dental loop .${e} is over 900 KB`);
 const px = fs.readFileSync(path.join(pub, 'work/pokemon-phoenix-rising/index.html'), 'utf8');
 if (!/Videos by <a href="https:\/\/www\.youtube\.com\/@PhoenixRisingGame"/.test(px) || (px.match(/data-vid="/g) ?? []).length < 2) bad.push('work/pokemon-phoenix-rising: channel credit or videos missing');
 const mtDir = path.join(pub, 'work/project-mountaintop');
