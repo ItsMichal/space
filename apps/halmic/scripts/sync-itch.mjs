@@ -35,7 +35,7 @@ function parseGame(html) {
   for (const m of html.matchAll(/<tr><td>([^<]+)<\/td><td>([\s\S]*?)<\/td><\/tr>/g)) info[text(m[1])] = text(m[2]);
   const desc = html.match(/class="formatted_description user_formatted">([\s\S]*?)<\/div>/)?.[1];
   return {
-    status: info.Status ?? null, madeWith: info['Made with'] ?? null, genre: info.Genre ?? null, tags: info.Tags ? info.Tags.split(',').map((t) => t.trim()) : [],
+    status: info.Status ?? null, madeWith: info['Made with'] ?? (info.Tags?.toLowerCase().includes('gbstudio') ? 'GB Studio' : null), genre: info.Genre ?? null, tags: info.Tags ? info.Tags.split(',').map((t) => t.trim()) : [],
     rating: info.Rating ?? null,
     jam: [...html.matchAll(/<a[^>]*href="https:\/\/itch\.io\/jam\/[^"]*"[^>]*>([^<]+)<\/a>/g)].map((m) => text(m[1]))[0] ?? null,
     published: html.match(/<abbr title="([^"]+)"/)?.[1] ?? null,

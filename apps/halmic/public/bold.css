@@ -15,7 +15,8 @@
 .lede { margin: 0; font: 500 clamp(18px, 1.9vw, 24px)/1.35 var(--sans); max-width: 34ch; text-wrap: balance; }
 .cta { margin: 0; display: flex; flex-wrap: wrap; gap: 12px; }
 @media (min-width: 900px) { .hero-foot { grid-template-columns: 1.3fr 1fr; } .cta { justify-content: flex-end; } }
-@media (max-width: 899px) { .hero { justify-content: flex-start; padding-top: 104px; } .hero .field { height: 52%; } .hero-in { gap: var(--s3); } .hero .cta { margin-top: 4px; } .hero .btn { min-height: 48px; padding: 0 22px; font-size: 16px; } }
+/* below 900px the hero sizes to its content (no 100svh): the bar field sits under the buttons and the next heading starts inside the first 812px viewport */
+@media (max-width: 899px) { .hero { min-height: 0; justify-content: flex-start; padding: 104px 0 var(--s8); } .hero .field { height: 52%; } .hero-in { gap: var(--s3); } .hero .cta { margin-top: 4px; } .hero .btn { min-height: 48px; padding: 0 22px; font-size: 16px; } }
 
 .sec { padding-block: var(--s12) 0; }
 .two { display: grid; gap: var(--s3); padding-block: 0 var(--s12); }
@@ -71,7 +72,6 @@ h2.wide { max-width: none; margin-bottom: var(--s4); }
 .figs { display: flex; flex-wrap: wrap; gap: var(--s4); align-items: center; }
 .figs img:first-child { width: min(100%, 640px); height: auto; border-radius: 16px; }
 .figs .hm { width: 120px; height: auto; border-radius: 26px; }
-.writing { margin-top: var(--s12); } .writing h3 { margin: 0 0 var(--s2); font: 700 24px/1.1 var(--display); letter-spacing: var(--dtrack); }
 .contact { margin-top: var(--s12); display: flex; flex-wrap: wrap; gap: var(--s3); align-items: center; justify-content: space-between; border-top: 1px solid #0f0e1330; padding-top: var(--s6); }
 .contact .big { margin: 0; max-width: 20ch; }
 .hi-btns { margin: 0; display: flex; flex-wrap: wrap; gap: var(--s2); }
