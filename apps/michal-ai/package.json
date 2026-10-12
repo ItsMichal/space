@@ -17,7 +17,8 @@
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check:do": "node scripts/check-do-exports.mjs",
+    "check:social": "node scripts/check-social.mjs",
+    "check:do":"node scripts/check-do-exports.mjs",
     "typecheck": "tsc --noEmit && tsc --noEmit -p worker/tsconfig.json"
   },
   "dependencies": {

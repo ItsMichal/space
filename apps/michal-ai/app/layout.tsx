@@ -11,7 +11,7 @@ import { PaperGrid } from '@/components/site/PaperGrid'
 import { ShaderCanvasProvider } from '@/components/shader-image'
 import { Backdrop } from '@/components/backdrop/Backdrop'
 import { display } from './fonts/display'
-import { DEFAULT_SHARE_IMAGE, siteMetadata } from '@/lib/seo'
+import { siteMetadata } from '@/lib/seo'
 import { getMenuPreviews } from '@/lib/menu'
 import { profile } from '@/content/profile'
 
@@ -48,13 +48,9 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   // Google wants a crawlable square icon in a multiple of 48px; the file-based favicon.ico/icon.svg stay as they are.
   icons: { icon: [{ url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }] },
-  openGraph: {
-    ...siteMetadata.openGraph,
-    title: TITLE,
-    description: DESCRIPTION,
-    images: [{ url: DEFAULT_SHARE_IMAGE }],
-  },
-  twitter: { ...siteMetadata.twitter, images: [DEFAULT_SHARE_IMAGE] },
+  // og:image comes from app/opengraph-image.tsx (and the per-route ones); no `images` here, they would replace the card.
+  openGraph: { ...siteMetadata.openGraph, title: TITLE, description: DESCRIPTION },
+  twitter: { ...siteMetadata.twitter, title: TITLE, description: DESCRIPTION },
 }
 
 export default function RootLayout({
