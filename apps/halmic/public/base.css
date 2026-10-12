@@ -194,6 +194,7 @@ a.card:hover .goi, a.card:focus-visible .goi { background: var(--paper); color: 
 @keyframes pin { from { opacity: 0; scale: .985; } to { opacity: 1; scale: 1; } }
 .crow { margin: 14px 0 0; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; max-width: none; }
 .cb .crow { margin-top: 18px; }
+@media (max-width: 430px) { .crow .btn-sm { padding: 0 14px; gap: 7px; } .crow { gap: 8px; } }
 .pclose { position: absolute; z-index: 3; top: 12px; right: 12px; opacity: 0; }
 .playing :is(.cm, .thumb):is(:hover, :focus-within) .pclose, .pclose:focus-visible { opacity: 1; }
 @media (hover: none) { .pclose { opacity: 1; } }
