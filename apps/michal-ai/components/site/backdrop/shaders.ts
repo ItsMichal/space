@@ -113,25 +113,27 @@ void main(){
   vec2 p = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y);   // device px, y down
   vec2 pd = p;                                               // position after lensing
   float rim = 0.; vec2 splitDir = vec2(0.); float splitK = 0.;
+  int hit = -1;
+  float pad = 3. * uDpr;
   for (int i = 0; i < ${NL}; i++) {
     if (i >= uLensN) break;
-    vec4 b = uLens[i];
-    float pad = 3. * uDpr;
-    if (p.x < b.x - pad || p.x > b.z + pad || p.y < b.y - pad || p.y > b.w + pad) continue;
+    vec4 bb = uLens[i];
+    if (p.x >= bb.x - pad && p.x <= bb.z + pad && p.y >= bb.y - pad && p.y <= bb.w + pad) { hit = i; break; }
+  }
+  if (hit >= 0) {
+    vec4 b = uLens[hit]; float rad = uLensR[hit];
     vec2 c = (b.xy + b.zw) * .5, h = (b.zw - b.xy) * .5;
-    float d = sdRBox(p, c, h, uLensR[i]);
-    if (d > 1.) continue;
-    float depth = max(-d, 0.);
-    vec2 e = vec2(1., 0.);
-    vec2 n = normalize(vec2(sdRBox(p + e.xy, c, h, uLensR[i]) - sdRBox(p - e.xy, c, h, uLensR[i]),
-                            sdRBox(p + e.yx, c, h, uLensR[i]) - sdRBox(p - e.yx, c, h, uLensR[i])) + 1e-5);
-    float t = 1. - smoothstep(0., uLensP.x, depth);
-    pd = p + n * uLensP.y * t * t + (c - p) * -uLensP.z;      // bend at the slab edge, slight magnification inside
-    splitDir = n; splitK = t * t * uLensP.w;
-    vec2 L = normalize(vec2(-.7, -.7));
-    float facing = .3 + .7 * max(dot(n, L), 0.);
-    rim = (1. - smoothstep(0., uRim.x, depth)) * facing * (step(0., -d + .01));
-    break;
+    float d = sdRBox(p, c, h, rad);
+    if (d < 1.) {
+      float depth = max(-d, 0.);
+      vec2 n = normalize(vec2(sdRBox(p + vec2(1., 0.), c, h, rad) - sdRBox(p - vec2(1., 0.), c, h, rad),
+                              sdRBox(p + vec2(0., 1.), c, h, rad) - sdRBox(p - vec2(0., 1.), c, h, rad)) + 1e-5);
+      float t = 1. - smoothstep(0., uLensP.x, depth);
+      pd = p + n * uLensP.y * t * t + (c - p) * uLensP.z;     // bend at the slab edge, slight magnification inside
+      splitDir = n; splitK = t * t * uLensP.w;
+      float facing = .3 + .7 * max(dot(n, normalize(vec2(-.7, -.7))), 0.);
+      rim = (1. - smoothstep(0., uRim.x, depth)) * facing * step(0., -d + .01);
+    }
   }
   // backdrop colour (with a C/M channel split at glass edges)
   vec2 uvp = toUv(pd);
