@@ -94,10 +94,12 @@ export function ProjectCard({
         <p id={`${id}-d`} className="tile__desc t-text">
           {post.description}
         </p>
-        <p className="tile__meta t-meta">
-          <MetaParts parts={metaParts} />
-        </p>
-        {pub ? <p className="tile__meta tile__pub t-meta">Published at {pub.venueShort}</p> : null}
+        <div className="tile__foot">
+          <p className="tile__meta t-meta">
+            <MetaParts parts={metaParts} />
+          </p>
+          {pub ? <p className="tile__meta tile__pub t-meta">Published at {pub.venueShort}</p> : null}
+        </div>
       </div>
     </Link>
   )

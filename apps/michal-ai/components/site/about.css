@@ -50,6 +50,7 @@
 .pub__ref {
   grid-column: 1;
   margin: 0;
+  text-wrap: pretty;
 }
 .pub__year {
   grid-column: 2;

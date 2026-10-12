@@ -58,7 +58,12 @@ const ASSERT = `(() => {
     for (const [k, ts] of rows) {
       if (ts.length < 2) continue
       const tops = ts.map((t) => Math.round(t.getBoundingClientRect().top + scrollY))
-      out.push({ row: k, n: ts.length, spread: Math.max(...tops) - Math.min(...tops) })
+      // when no title in the row wraps, the title-to-description gap is the normal 4px (no reserved empty line)
+      const real = ts.filter((t) => t.classList.contains('tile__title'))
+      const one = real.length === ts.length && real.every((t) => t.getBoundingClientRect().height < parseFloat(getComputedStyle(t).lineHeight) * 1.5)
+      const gaps = one ? real.map((t) => Math.round(t.closest('.tile').querySelector('.tile__desc').getBoundingClientRect().top - t.getBoundingClientRect().bottom)) : []
+      const descTops = ts.map((t) => t.closest('.tile')?.querySelector('.tile__desc')).filter(Boolean).map((d) => Math.round(d.getBoundingClientRect().top + scrollY))
+      out.push({ row: k, n: ts.length, spread: Math.max(...tops) - Math.min(...tops), descSpread: descTops.length ? Math.max(...descTops) - Math.min(...descTops) : 0, oneLineGaps: gaps })
     }
   }
   return out
@@ -81,7 +86,7 @@ for (const scheme of schemes) {
       for (let y = 0; y < total; y += 600) { await ev(`scrollTo(0, ${y})`); await sleep(120) }
       await sleep(600)
       const res = await ev(ASSERT)
-      for (const r of res ?? []) { if (r.spread > 1) { fails++; console.log('TITLE MISALIGNED', scheme, sname, name, JSON.stringify(r)) } }
+      for (const r of res ?? []) { if (r.spread > 1 || r.descSpread > 1 || (r.oneLineGaps ?? []).some((g) => g > 6)) { fails++; console.log('TITLE MISALIGNED', scheme, sname, name, JSON.stringify(r)) } }
       if (res?.length) console.log('rows ok/checked', scheme, sname, name, JSON.stringify(res))
       // overflow check
       const ov = await ev('document.documentElement.scrollWidth - document.documentElement.clientWidth')

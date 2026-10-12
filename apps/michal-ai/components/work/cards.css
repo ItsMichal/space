@@ -143,11 +143,11 @@
   padding: var(--card-pad);
   min-width: 0;
 }
-/* Title first, directly under the image at a fixed offset: a row of tiles shares one title baseline. Two lines are always
-   reserved so descriptions also start together; the meta line is pinned to the foot so those align too. */
+/* Title first, directly under the image at a fixed offset: a row of tiles shares one title baseline. Where the browser has
+   subgrid (below) each row of tiles shares image / title / description / meta tracks, so the title track is only as tall as
+   the tallest title in that row and a row of one-line titles has no empty line. Without subgrid, two title lines are reserved. */
 .tile__title {
   font-size: 28px;
-  min-height: 2.3em;
   text-wrap: balance;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -163,18 +163,60 @@
   overflow: hidden;
 }
 /* tertiary: the smallest size on the scale (t-meta), muted ink, pinned to the foot of the card */
-.tile__meta {
+.tile__foot {
   margin-top: auto;
   padding-top: var(--space-3);
+}
+.tile__meta {
   color: var(--ink-muted);
   text-wrap: balance;
 }
-.tile__meta + .tile__meta {
-  margin-top: 0;
-  padding-top: 0;
+
+/* no subgrid: reserve two title lines so descriptions still start together; phone snap rows are flex, so they always reserve */
+@supports not (grid-template-rows: subgrid) {
+  .tile__title {
+    min-height: 2.3em;
+  }
 }
-.tile--feature .tile__title {
-  min-height: 0;
+@media (max-width: 639px) {
+  .tiles--row .tile__title {
+    min-height: 2.3em;
+  }
+}
+
+/* subgrid: li spans four tracks of the list grid (image, title, description, meta), the tile and its body re-use them */
+@supports (grid-template-rows: subgrid) {
+  @media (min-width: 640px) {
+    .tiles > li:not(.tiles__feature) {
+      display: grid;
+      grid-row: span 4;
+      grid-template-rows: subgrid;
+      row-gap: 0;
+    }
+    .tiles > li:not(.tiles__feature) > .tile {
+      display: grid;
+      grid-row: 1 / -1;
+      grid-template-rows: subgrid;
+      row-gap: 0;
+    }
+    .tiles > li:not(.tiles__feature) .tile__media {
+      grid-row: 1;
+    }
+    .tiles > li:not(.tiles__feature) .tile__body {
+      display: grid;
+      grid-row: 2 / span 3;
+      grid-template-rows: subgrid;
+      row-gap: var(--space-1);
+    }
+    .tiles > li:not(.tiles__feature) .tile__foot {
+      align-self: end;
+    }
+  }
+}
+@media (min-width: 640px) {
+  .tiles .tile--feature .tile__title {
+    min-height: 0;
+  }
 }
 
 /* feature: image beside the text from 900px up */
