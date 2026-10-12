@@ -72,8 +72,8 @@ export function Showcase({
   variant?: 'bento' | 'grid'
 }) {
   const shown = limit ? posts.slice(0, limit) : posts
-  const cell = (p: Post, size: CardSize, i: number) => (
-    <li key={p.slug} className="reveal" data-buckets={buckets(p)} style={{ ['--i' as string]: i }}>
+  const cell = (p: Post, size: CardSize, i: number, span?: number) => (
+    <li key={p.slug} className="reveal" data-buckets={buckets(p)} style={{ ['--i' as string]: i, ...(span ? { ['--span' as string]: span } : {}) }}>
       <ProjectCard post={p} href={`${base}/${p.slug}`} size={size} priority={priority && i === 0} />
     </li>
   )
@@ -84,13 +84,22 @@ export function Showcase({
       </div>
     )
   }
-  // Bento: Large, Medium / Medium, Large, so the two bigger cards alternate sides; DOM order stays the priority order.
+  // Bento in two rows of 12 columns. The DOM stays in priority order. In each row the card that has an image takes the
+  // wide cell (7) and a type-only card the narrow one (5), so a type-only card never fills the biggest slot; when both or
+  // neither have an image the rows alternate (wide first, then wide last).
   const top = shown.slice(0, 4)
   const rest = shown.slice(4)
-  const topSizes: CardSize[] = ['l', 'm', 'm', 'l']
+  const hasPlate = (p: Post) => (p.cardImage === 'none' ? false : Boolean(p.cardImage ?? p.cover))
+  const spans: number[] = []
+  for (let r = 0; r < top.length; r += 2) {
+    const a = top[r]
+    const b = top[r + 1]
+    if (b && hasPlate(a) !== hasPlate(b)) spans.push(hasPlate(a) ? 7 : 5, hasPlate(b) ? 7 : 5)
+    else spans.push(r === 0 ? 7 : 5, r === 0 ? 5 : 7)
+  }
   return (
     <div className="work">
-      <ul className="work-bento">{top.map((p, i) => cell(p, topSizes[i], i))}</ul>
+      <ul className="work-bento">{top.map((p, i) => cell(p, spans[i] === 7 ? 'l' : 'm', i, spans[i]))}</ul>
       {rest.length > 0 ? (
         <ul className="work-row" aria-label="More projects">
           {rest.map((p, i) => cell(p, 's', i))}

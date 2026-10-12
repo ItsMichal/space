@@ -49,6 +49,10 @@
 .hook__link:focus-visible {
   background-image: linear-gradient(currentColor, currentColor);
 }
+/* The last word and the arrow stay together. */
+.hook__end {
+  white-space: nowrap;
+}
 /* Phrases that are not on screen share the grid cell: they draw no rule and no arrow. */
 .hook__item:not([data-current]) .hook__link {
   background-image: none;

@@ -28,7 +28,6 @@
   scroll-snap-type: x proximity;
   scroll-padding-inline: var(--space-4);
   scrollbar-width: none;
-  align-items: flex-start;
 }
 .work-bento::-webkit-scrollbar {
   display: none;
@@ -88,20 +87,12 @@
     overflow: visible;
     scroll-snap-type: none;
   }
-  .work-bento {
-    align-items: stretch;
-  }
   .work-bento > li {
     flex: none;
   }
   /* Large, Medium / Medium, Large: the big cards alternate sides. */
-  .work-bento > li:nth-child(1),
-  .work-bento > li:nth-child(4) {
-    grid-column: span 7;
-  }
-  .work-bento > li:nth-child(2),
-  .work-bento > li:nth-child(3) {
-    grid-column: span 5;
+  .work-bento > li {
+    grid-column: span var(--span, 6);
   }
   .work-row {
     display: grid;
