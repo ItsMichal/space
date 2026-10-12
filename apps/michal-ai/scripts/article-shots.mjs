@@ -29,6 +29,9 @@ const SCHEMES = ['light', 'dark']
 const SHOTS = [
   { name: 'starlink-list', path: '/projects/spacex-starlink-general-projects', at: '.prose ul' },
   { name: 'starlink-timeline', path: '/projects/spacex-starlink-general-projects', at: '.tl' },
+  { name: 'starlink-end', path: '/projects/spacex-starlink-general-projects', at: 'end' },
+  { name: 'mountaintop-project-end', path: '/projects/project-mountaintop', at: 'end' },
+  { name: 'mountaintop-log-end', path: '/projects/project-mountaintop/mountaintop-first-steps-week-1-2-recap', at: 'end' },
   { name: 'writing-top', path: '/writing/creating-my-first-pcb-object', at: 'top' },
   { name: 'writing-end', path: '/writing/creating-my-first-pcb-object', at: 'end' },
   { name: 'mountaintop-log', path: '/projects/project-mountaintop/mountaintop-first-steps-week-1-2-recap', at: 'top' },
