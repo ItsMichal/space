@@ -14,6 +14,7 @@ const out = path.resolve(OUT)
 fs.mkdirSync(out, { recursive: true })
 const CHROME = process.env.CHROME ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const PORT = 9333 + Math.floor(Math.random() * 300)
+const ONLY = process.env.ONLY // 'michal' or 'halmic' to run one site only
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const chrome = spawn(CHROME, [`--remote-debugging-port=${PORT}`, '--headless=new', '--hide-scrollbars', '--no-first-run', `--user-data-dir=${fs.mkdtempSync(path.join(process.env.TMPDIR ?? '/tmp', 'sw-chrome-'))}`, 'about:blank'], { stdio: 'ignore' })
 process.on('exit', () => chrome.kill())
@@ -62,6 +63,7 @@ let fail = 0
 const check = (name, ok, got) => { console.log(JSON.stringify({ name, ok, got })); if (!ok) fail = 1 }
 
 // ---------------- michal.ai ----------------
+if (!ONLY || ONLY === 'michal') {
 const mClip = (r) => ({ x: Math.max(0, r.x - 40), y: 0, width: Math.min(1440, r.w + 80), height: 200 })
 for (const [tag, url, dark] of [['light', `${M}/`, false], ['dark-reading', `${M}/projects/project-mountaintop/week-3-4-integration`, true]]) {
   await open(url, { w: 1440, h: 900, dark })
@@ -114,7 +116,10 @@ await ev(`document.querySelector('a[rel="me"][href*="halmic.com/work"]')?.scroll
 await sleep(900)
 await shot('michal-mountaintop-log-end', { x: 240, y: 200, width: 960, height: 500 })
 
+}
+
 // ---------------- halmic ----------------
+if (!ONLY || ONLY === 'halmic') {
 await open(`${H}/`, { w: 1440, h: 900 })
 await shot('halmic-header-closed', { x: 0, y: 0, width: 1440, height: 160 })
 const hl = await rect('.xs-logo')
@@ -152,6 +157,7 @@ const xl = await rect('p.xl')
 await shot('halmic-mountaintop-project-link', { x: 0, y: Math.max(0, xl.y - 200), width: 1440, height: 400 })
 await open(`${H}/work/project-mountaintop/week-3-4-integration/`, { w: 1440, h: 900 })
 await shot('halmic-mountaintop-log-link', { x: 0, y: 0, width: 1440, height: 560 })
+}
 
 chrome.kill()
 process.exit(fail)
