@@ -8,7 +8,7 @@ Status: draft for the owner. Everything under "What I saw" was read from public 
 
 Owner direction: casual, "a testament to my creative work". halmic.com is one relaxed creative home, not an agency pitch. The studio/services/process framing is dropped; design appears as "things I've designed" next to streams, videos, games and writing. The real name must not ship on the site (pages, metadata, structured data, alt text, feeds, OG images). Ties between halmic and the portfolio are otherwise fine and need no engineering around; still no link from halmic.com to the portfolio unless he asks.
 
-**IA:** hero (wordmark, a modest status pill, one draft line in his words) / on the stream (what he plays, clips, week) / videos (curated feature + reel, click-to-load) / little games / things I've designed / writing (Medium link now, posts later) / say hi. Inner pages exist for every game, every video and the design entry (for search; see `seo.md`).
+**IA:** hero (wordmark, a modest status pill, one draft line in his words) / on the stream (what he plays, clips, week) / videos (curated feature + reel, click-to-load) / little games / things I've designed / say hi (Discord and X). The Medium "writing" block was removed (owner decision, see below). Inner pages exist for every game, every video and the design entry (for search; see `seo.md`).
 
 ### itch.io: https://halmic.itch.io/ (public profile and game pages, nothing played)
 Five games, all browser builds, all tiny. I judged them from their pages and cover art, not by playing them, so the "rough" calls are about presentation, not gameplay. Dates are mostly not shown by itch (Soupman: 4 Feb 2022); ratings are 1 vote each; no play counts are shown.
@@ -144,3 +144,8 @@ Static-first Next.js on Cloudflare Workers (OpenNext), same as the portfolio, sh
 - The mark is the portfolio's logo, an "M" plus "!" monogram. Reusing it ties the two visually, which is the owner's intent ("use my logotype"), but it is the one place the persona and the real name share a glyph.
 - halmic.com 302 to the portfolio is a live tie between persona and name.
 - The Medium profile and some YouTube descriptions carry the real name (held back, not read in full).
+
+## Owner decisions at launch
+- **Medium removed entirely** from the shipped site (home block, footer link, JSON-LD `sameAs`, `rel="me"`, llms.txt): the Medium profile shows the real name. No `/writing/` page. This closes question 8 and the Medium part of question 9.
+- Contact stays as the Discord and X buttons (no email). Bold is the only visual mode (calm is gone).
+- Games: Taco Neko and Soupman featured; Glass Gunslinger and L'évasion under "More experiments"; Flippy off. Special Force 1/2 keep their neutral one-liners; the Smash block keeps its thumbnails; the dental logo entry stays.

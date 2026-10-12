@@ -5,7 +5,7 @@ The site for halmic.com: streams, videos, tiny games and design. A static build 
 - `src/index.html` + `build.mjs`: the home template and the generator for every other page (games, videos, design, 404), `sitemap.xml`, `robots.txt`, `rss.xml`, `llms.txt` and `_headers`. `content/` holds the data, `brand/` the logotype generator and SVGs.
 - `public/`: hand-kept files (`*.css`, `app.js`, fonts, images) and build output (html, sitemap, rss, robots, llms.txt, `_headers`); all tracked. CSS/JS are linked as `?v=<content hash>` by the build, which is why `_headers` can cache them for a year.
 - `worker/index.js`: `GET /api/live` (Twitch Helix, cached 45s, no KV). Only `/api/*` runs the Worker (`assets.run_worker_first`); everything else is served from `public/`.
-- `scripts/`: `check-links.mjs` (runs in `npm test`), `sync-youtube.mjs`, `sync-itch.mjs`, `build-og.mjs`, `shot.mjs` (headless Chrome screenshots, needs `ws`).
+- `scripts/`: `check-links.mjs` (runs in `npm test`), `sync-youtube.mjs`, `sync-itch.mjs`, `build-og.mjs`, `shot.mjs` (headless Chrome screenshots, needs `ws`; Chrome from `CHROME_PATH`, else macOS Chrome, else `/opt/pw-browsers/chromium`).
 - `docs/`: discovery (contains an INTERNAL section), design system, technical plan, SEO notes.
 
 ## Develop
@@ -29,7 +29,7 @@ Without them `/api/live` answers `{ "live": false, "unknown": true }` and the pa
 
 ## Launch checklist
 1. Add the halmic.com zone in the Cloudflare account (nameservers at the registrar).
-2. Uncomment the `routes` line in `wrangler.jsonc` (custom domains for `halmic.com` and `www.halmic.com`).
+2. `wrangler.jsonc` already has the `routes` for `halmic.com` and `www.halmic.com` and turns the workers.dev address off; the deploy fails until the zone exists.
 3. `npm run deploy:halmic`, then set the two Twitch secrets above.
 4. Remove the registrar's URL forward for the domain.
 5. In GitHub, set repository variables `DEPLOY_HALMIC=true` and `HALMIC_URL=https://halmic.com` so merges to main deploy and are smoke-tested.

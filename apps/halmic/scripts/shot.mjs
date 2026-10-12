@@ -16,7 +16,9 @@ const clipArg = flags.find((f) => f.startsWith('clip='))?.slice(5).split(',').ma
 const scrollY = +(flags.find((f) => /^y\d+$/.test(f))?.slice(1) ?? 0);
 const port = 9300 + Math.floor(Math.random() * 400);
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'shot-'));
-const chrome = spawn('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-first-run', `--remote-debugging-port=${port}`, `--user-data-dir=${dir}`, 'about:blank'], { stdio: 'ignore' });
+const chromePath = [process.env.CHROME_PATH, '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/opt/pw-browsers/chromium'].find((p) => p && fs.existsSync(p));
+if (!chromePath) { console.error('No Chrome found: set CHROME_PATH'); process.exit(1); }
+const chrome = spawn(chromePath, [...(process.platform === 'linux' ? ['--no-sandbox'] : []), '--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-first-run', `--remote-debugging-port=${port}`, `--user-data-dir=${dir}`, 'about:blank'], { stdio: 'ignore' });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 try {
   let targets;
