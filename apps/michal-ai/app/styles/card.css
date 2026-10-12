@@ -149,7 +149,6 @@
 }
 /* a row that is a link: tints on hover, inset focus ring (the card clips overflow) */
 a.card__row {
-  display: block;
   color: inherit;
   text-decoration: none;
   transition: background-color 150ms var(--ease-out-soft);

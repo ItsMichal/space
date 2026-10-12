@@ -38,7 +38,7 @@ const pages = [
   ['writing', '/writing'],
   ['mountaintop', '/projects/project-mountaintop'],
   ['jia', '/projects/jia-webapp'],
-  ['post', '/writing/hello-paper'],
+  ['post', '/writing/creating-my-first-pcb-object'],
   ['404', '/does-not-exist'],
 ]
 const sizes = [['1440', 1440, 900, 1], ['375', 375, 812, 2]]
@@ -70,6 +70,9 @@ for (const scheme of schemes) {
     await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: dpr, mobile: w < 600 })
     for (const [name, url, anchor] of pages) {
       if (only && !`${name}-${sname}-${scheme}`.includes(only)) continue
+      // leave the previous page first (the home page's WebGL globe keeps the tab busy otherwise)
+      await send('Page.navigate', { url: 'about:blank' })
+      await sleep(300)
       await send('Page.navigate', { url: base + url })
       await sleep(2500)
       await ev(`document.querySelectorAll('img').forEach(i => { i.loading = 'eager' })`)
