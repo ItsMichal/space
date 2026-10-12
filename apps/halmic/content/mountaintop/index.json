@@ -1,0 +1,95 @@
+{
+  "_note": "Project Mountaintop: copy rewritten from the owner's own project page and dev logs with names, bylines and personal links removed (see README). Logs are content/mountaintop/<slug>.md.",
+  "title": "Project Mountaintop",
+  "role": "Game developer, UI/UX and music",
+  "hook": "A rhythm game you play with hiking poles.",
+  "line": "A Unity rhythm game about hiking, played with custom Arduino hiking-pole controllers.",
+  "cover": "cover.webp",
+  "coverAlt": "Project Mountaintop title screen on a monitor, with a laptop running the game in front of it.",
+  "video": "Gv-xMeMM8m4",
+  "videoPublished": "2023-06-14",
+  "logs": [
+    {
+      "slug": "first-steps-week-1-2-recap",
+      "hero": "sketch.webp",
+      "heroAlt": "Hand-drawn sketch of a hiker running past ghosts toward a hit guide, with helmet light, water and night cycle ideas"
+    },
+    {
+      "slug": "stay-on-beat-week-2-3-recap",
+      "hero": "hit-targets.webp",
+      "heroAlt": "Project Mountaintop in play: glowing hit targets with Z and X key prompts, a 1x multiplier and a Perfect rating"
+    },
+    {
+      "slug": "week-3-4-integration",
+      "hero": "arduino.webp",
+      "heroAlt": "Laptop running the Unity game next to an Arduino prototype wired to a breadboard"
+    },
+    {
+      "slug": "week-4-5-deluxe-combos",
+      "hero": "combos.webp",
+      "heroAlt": "Project Mountaintop gameplay with combo and score UI"
+    },
+    {
+      "slug": "week-5-6-spaaaaace",
+      "hero": "space.webp",
+      "heroAlt": "Project Mountaintop gameplay on a space theme: an astronaut running over Earth with score, hit tallies and a combo counter"
+    },
+    {
+      "slug": "danny-mentor-extraordinaire",
+      "hero": "cover.webp",
+      "heroAlt": "Project Mountaintop title screen on a monitor, with a laptop running the game in front of it"
+    }
+  ],
+  "images": {
+    "arduino.webp": {
+      "w": 1280,
+      "h": 829
+    },
+    "blender-rig.webp": {
+      "w": 1280,
+      "h": 980
+    },
+    "combos.webp": {
+      "w": 1280,
+      "h": 640
+    },
+    "cover.webp": {
+      "w": 1280,
+      "h": 960
+    },
+    "hit-targets.webp": {
+      "w": 1280,
+      "h": 647
+    },
+    "midi-editor.webp": {
+      "w": 1280,
+      "h": 555
+    },
+    "prototype.webp": {
+      "w": 1280,
+      "h": 719
+    },
+    "sketch.webp": {
+      "w": 1280,
+      "h": 894
+    },
+    "space.webp": {
+      "w": 1280,
+      "h": 646
+    }
+  },
+  "videos": {
+    "Gv-xMeMM8m4": "Project Mountaintop - ATLAS Expo 2023 Demo Video",
+    "EngAOffWsa4": "Mountaintop - Hand Movement WIP",
+    "2DPVz25OXSM": "Mountaintop - Rhythm Demo...? WIP",
+    "LEA6cLfjWCw": "Mountaintop - Some more details",
+    "XJyu9yzEtCU": "Mountaintop - Nearing First Demo Release",
+    "uMgTF9HTlwI": "Integration Demo",
+    "kcZ4TMbLG3M": "Integration Closeup",
+    "p2UTKh5S_t8": "ProMo - The super super early proof of concept MIDI roll",
+    "hGpmhvgz9vY": "ProMo - MIDI Test",
+    "Bo3wJLjhHhk": "ProMo- Nino Feedback #1",
+    "8oJoEXIenfU": "MountainTop - Combos, Music, and More! (Genesis Build)",
+    "GrNBZuSuJQ0": "First 100+ combo  Space Theme Test but its a real video - ProMo"
+  }
+}
