@@ -70,3 +70,11 @@ Glass pointer light: the only global listeners were in `components/glass/lightin
 Cards lab: `/cards` (dev only) shows three directions with real content: 1 newsroom tile on glass, 2 fill tile, 3 glass caption over the image. Round-1 critique: (1) clean and calm but the glass is invisible on pale paper; (2) the image fills the card, which crops our UI screenshots too hard and makes them look blown up; (3) works for photographs (Starlink), muddy over dark UI screenshots. Chosen: 3 for the feature tile (photograph), 1 for the rest. Round 2 (spacing rhythm, baseline grid across a row, per-project crop focus) was not done.
 
 Globe: tilted 23 degrees, two thirds of the viewport (cap 880px), behind the name and tagline. The shader thins the dots behind each text box (boxes measured on resize). Worst-case contrast on rendered pixels, text hidden, darkest background pixel: name 7.3 to 8.7 (needs 3), tagline 5.2 to 5.4 (needs 4.5), rotating line 11.9 to 12.4. Checked at 375, 768, 1024, 1440, 1920.
+
+### Glass decision (option b)
+
+Behind the lower card rows there is flat paper, so a blurred translucent card there is only frosted white (flat backdrop, nothing to blur). I did not fake a backdrop. Glass is kept where imagery sits behind it: the feature caption over the Starlink photograph (82% paper tint, `blur(24px) saturate(1.4)`, 1px inner top-left highlight, outer hairline, two-layer shadow), the nav bar and the phone menu. The other tiles are calm raised paper with a hairline. Caption text contrast: tint raised to 0.82 and muted text mixed toward ink so it holds 4.5:1 over the darkest part of the photo (not re-measured on pixels).
+
+Numbers (headless Chrome with software GL, so only relative values mean anything): idle with the pointer elsewhere, the only rAF source is the globe's draw loop; the glass engine's loop runs only while the pointer is over the nav (about 10 callbacks a second) and is at zero 3 seconds after leaving. Globe frame interval on a 4x CPU throttle, 1440 wide: p50 66ms, p95 133ms idle; 375 wide: p50 33ms, p95 67ms.
+
+Starlink image: the build makes 480/960/1600/2400 AVIF and WebP variants. Served at 1440 (1x): 1600w AVIF, 111 KB. At 375 (2x): 960w AVIF, 41 KB. The 1.8 MB original is not served.
