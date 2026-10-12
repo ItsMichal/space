@@ -142,8 +142,9 @@ async function main() {
               : shot.at === 'end'
                 ? 'window.scrollTo(0, document.body.scrollHeight)'
                 : `(()=>{const e=document.querySelector(${JSON.stringify(shot.at)}); if(e){const y=e.getBoundingClientRect().top+scrollY-120; window.scrollTo(0,Math.max(0,y))}})()`
+                    await c.send('Runtime.evaluate', { expression: "document.documentElement.style.scrollBehavior='auto'" })
           await c.send('Runtime.evaluate', { expression: scroll })
-          await sleep(900)
+          await sleep(shot.at === 'end' ? 2500 : 900)
           let clip
           if (shot.full) {
             const h = (await c.send('Runtime.evaluate', { expression: 'document.documentElement.scrollHeight', returnByValue: true })).result.value

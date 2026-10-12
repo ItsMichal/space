@@ -13,7 +13,7 @@
       "items": 10,
       "markers": 0
     },
-    "measureCh": 66,
+    "measureCh": 84,
     "tl": {
       "left": 192,
       "right": 650
@@ -25,78 +25,94 @@
   },
   {
     "file": "starlink-list-1440-dark.png",
-    "vw": 640,
-    "hOverflow": 0,
-    "ul": {
-      "items": 0,
-      "markers": 0
-    },
-    "bad": []
-  },
-  {
-    "file": "starlink-list-1920-light.png",
-    "vw": 640,
+    "vw": 1440,
     "hOverflow": 0,
     "col": {
-      "left": 16,
-      "right": 16,
-      "width": 608
+      "left": 192,
+      "right": 519.6,
+      "width": 728
     },
-    "centered": true,
+    "centered": false,
     "ul": {
       "items": 10,
       "markers": 0
     },
-    "measureCh": 61,
+    "measureCh": 84,
     "tl": {
-      "left": 16,
-      "right": 26
+      "left": 192,
+      "right": 650
     },
     "bad": [
+      "NOT CENTRED",
+      "MARKERS 0/10"
+    ]
+  },
+  {
+    "file": "starlink-list-1920-light.png",
+    "vw": 1920,
+    "hOverflow": 0,
+    "col": {
+      "left": 432,
+      "right": 759.6,
+      "width": 728
+    },
+    "centered": false,
+    "ul": {
+      "items": 10,
+      "markers": 0
+    },
+    "measureCh": 84,
+    "tl": {
+      "left": 432,
+      "right": 890
+    },
+    "bad": [
+      "NOT CENTRED",
       "MARKERS 0/10"
     ]
   },
   {
     "file": "starlink-list-1920-dark.png",
-    "vw": 640,
+    "vw": 1920,
     "hOverflow": 0,
     "col": {
-      "left": 16,
-      "right": 16,
-      "width": 608
+      "left": 432,
+      "right": 759.6,
+      "width": 728
     },
-    "centered": true,
+    "centered": false,
     "ul": {
       "items": 10,
       "markers": 0
     },
-    "measureCh": 61,
+    "measureCh": 84,
     "tl": {
-      "left": 16,
-      "right": 26
+      "left": 432,
+      "right": 890
     },
     "bad": [
+      "NOT CENTRED",
       "MARKERS 0/10"
     ]
   },
   {
     "file": "starlink-list-375-light.png",
-    "vw": 640,
+    "vw": 375,
     "hOverflow": 0,
     "col": {
       "left": 16,
       "right": 16,
-      "width": 608
+      "width": 343
     },
     "centered": true,
     "ul": {
       "items": 10,
       "markers": 0
     },
-    "measureCh": 61,
+    "measureCh": 38,
     "tl": {
       "left": 16,
-      "right": 26
+      "right": 16
     },
     "bad": [
       "MARKERS 0/10"
@@ -104,22 +120,22 @@
   },
   {
     "file": "starlink-list-375-dark.png",
-    "vw": 640,
+    "vw": 375,
     "hOverflow": 0,
     "col": {
       "left": 16,
       "right": 16,
-      "width": 608
+      "width": 343
     },
     "centered": true,
     "ul": {
       "items": 10,
       "markers": 0
     },
-    "measureCh": 61,
+    "measureCh": 38,
     "tl": {
       "left": 16,
-      "right": 26
+      "right": 16
     },
     "bad": [
       "MARKERS 0/10"
@@ -127,70 +143,73 @@
   },
   {
     "file": "starlink-timeline-1440-light.png",
-    "vw": 640,
+    "vw": 1440,
     "hOverflow": 0,
     "col": {
-      "left": 16,
-      "right": 16,
-      "width": 608
+      "left": 192,
+      "right": 519.6,
+      "width": 728
     },
-    "centered": true,
+    "centered": false,
     "ul": {
       "items": 10,
       "markers": 0
     },
-    "measureCh": 61,
+    "measureCh": 84,
     "tl": {
-      "left": 16,
-      "right": 26
+      "left": 192,
+      "right": 650
     },
     "bad": [
+      "NOT CENTRED",
       "MARKERS 0/10"
     ]
   },
   {
     "file": "starlink-timeline-1440-dark.png",
-    "vw": 640,
+    "vw": 1440,
     "hOverflow": 0,
     "col": {
-      "left": 16,
-      "right": 16,
-      "width": 608
+      "left": 192,
+      "right": 519.6,
+      "width": 728
     },
-    "centered": true,
+    "centered": false,
     "ul": {
       "items": 10,
       "markers": 0
     },
-    "measureCh": 61,
+    "measureCh": 84,
     "tl": {
-      "left": 16,
-      "right": 26
+      "left": 192,
+      "right": 650
     },
     "bad": [
+      "NOT CENTRED",
       "MARKERS 0/10"
     ]
   },
   {
     "file": "starlink-timeline-1920-light.png",
-    "vw": 640,
+    "vw": 1920,
     "hOverflow": 0,
     "col": {
-      "left": 16,
-      "right": 16,
-      "width": 608
+      "left": 432,
+      "right": 759.6,
+      "width": 728
     },
-    "centered": true,
+    "centered": false,
     "ul": {
       "items": 10,
       "markers": 0
     },
-    "measureCh": 61,
+    "measureCh": 84,
     "tl": {
-      "left": 16,
-      "right": 26
+      "left": 432,
+      "right": 890
     },
     "bad": [
+      "NOT CENTRED",
       "MARKERS 0/10"
     ]
   },
@@ -208,7 +227,7 @@
       "items": 10,
       "markers": 0
     },
-    "measureCh": 66,
+    "measureCh": 84,
     "tl": {
       "left": 432,
       "right": 890
@@ -232,7 +251,7 @@
       "items": 10,
       "markers": 0
     },
-    "measureCh": 35,
+    "measureCh": 38,
     "tl": {
       "left": 16,
       "right": 16
@@ -255,7 +274,7 @@
       "items": 10,
       "markers": 0
     },
-    "measureCh": 35,
+    "measureCh": 38,
     "tl": {
       "left": 16,
       "right": 16

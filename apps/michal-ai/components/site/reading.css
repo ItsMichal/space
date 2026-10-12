@@ -56,6 +56,32 @@
   max-width: none;
   margin-inline: calc(50% - var(--wide-w) / 2);
 }
+/* The scrubbable timeline uses the whole wide track; its heading and text stay on the text column's axis. */
+.reading .postextra > :not(.tl) {
+  max-width: var(--text);
+  margin-inline: auto;
+}
+.reading .postextra__lede {
+  margin-top: 0;
+  margin-bottom: var(--space-1);
+  font: 400 17px/25px var(--font-serif);
+  color: var(--ink-muted);
+}
+/* The keyboard hint is tertiary text: smaller, quiet, still above 4.5:1 in both themes (ink-muted). */
+.reading .postextra__hint {
+  margin-top: 0;
+  margin-bottom: var(--space-4);
+  font: 400 15px/22px var(--font-serif);
+  color: var(--ink-muted);
+}
+.reading .postextra .tl {
+  margin-inline: auto;
+}
+/* The strip uses the wide track; the detail under it lines up with the text column. */
+.reading .postextra .tl-panels {
+  max-width: var(--text);
+  margin-inline: auto;
+}
 
 @media print {
   .reading {

@@ -14,8 +14,9 @@ function StarlinkLaunches() {
         Launches since I joined
       </h2>
       <p className="postextra__lede">
-        I joined on 15 April 2024. Here are launches since then that I could date and source. Drag, swipe or use the arrow keys.
+        I joined on 15 April 2024. Here are launches since then that I could date and source.
       </p>
+      <p className="postextra__hint">Drag, swipe or use the arrow keys.</p>
       <Timeline items={starlinkLaunches} label="Starlink markets opened since 15 April 2024" statusLabel="Starlink launches" withDay />
     </section>
   )

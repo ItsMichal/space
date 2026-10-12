@@ -197,6 +197,10 @@ export function Timeline({ items, label, pitch: basePitch = 120, fit = false, in
           </div>
         </div>
       </div>
+      {/* The current value, announced politely as it changes (by drag, swipe, tap or arrow keys). */}
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {itemDate(items[active], withDay)} {items[active].title}
+      </p>
       <ol className="tl-panels">
         {items.map((it, i) => (
           <li
