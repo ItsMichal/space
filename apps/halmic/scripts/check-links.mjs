@@ -40,11 +40,24 @@ for (const f of htmls) {
   if (/data-dock|calm\.(html|css)/.test(h)) bad.push(`${rel}: prototype leftovers`);
 }
 const home = fs.readFileSync(path.join(pub, 'index.html'), 'utf8');
-for (const id of ['stream', 'videos', 'games', 'design', 'hi', 'clips-all']) if (!home.includes(`id="${id}"`)) bad.push(`index.html: missing #${id}`);
+for (const id of ['stream', 'videos', 'games', 'work', 'design', 'hi', 'twitch', 'elsewhere']) if (!home.includes(`id="${id}"`)) bad.push(`index.html: missing #${id}`);
 if (/id="clips"|id="when"|class="plays"|On the stream/.test(home)) bad.push('index.html: the old stream section is back');
-if ((home.match(/<h2>/g) ?? []).length < 5) bad.push('index.html: expected the group headers as h2');
-if ((home.match(/<a class="card/g) ?? []).length < 20) bad.push('index.html: fewer cards than expected');
-if (!home.includes('href="/#stream"><svg') || !home.includes('<span>clips</span>')) bad.push('index.html: nav item should be "clips"');
+if ((home.match(/<h2>/g) ?? []).length < 4) bad.push('index.html: expected the bento labels as h2');
+if ((home.match(/<a class="tile /g) ?? []).length < 20) bad.push('index.html: fewer tiles than expected');
+if (/class="[^"]*\b(ey|cb|card|ct|cx)\b/.test(home)) bad.push('index.html: old card/eyebrow markup is back (the home page is bento tiles)');
+if (/\b(clip|video)\b/i.test([...home.matchAll(/<span class="chip">[\s\S]*?<\/span><\/span>/g)].map((m) => m[0]).join(''))) bad.push('index.html: a chip says clip/video (platforms are shown by icon)');
+for (const m of home.matchAll(/<span class="bdg[^>]*>/g)) if (!/role="img"/.test(m[0]) || !/aria-label="[^"]+"/.test(m[0])) bad.push(`index.html: badge without an accessible name ${m[0].slice(0, 70)}`);
+for (const [id, name] of [['tw', 'Twitch'], ['yt', 'YouTube']]) if (!new RegExp(`class="bdg bdg-${id}" role="img" aria-label="${name}"`).test(home)) bad.push(`index.html: no ${name} badge`);
+for (const [kind, href, extra] of [['tw', 'https://www.twitch.tv/halmictv', 'id="twitch"'], ['yt', 'https://www.youtube.com/@halmic', ''], ['itch', 'https://halmic.itch.io/', ''], ['dc', 'https://discord.gg/4xvveJ8jS5', 'id="hi"'], ['x', 'https://x.com/halmicc', ''], ['md', 'https://halmic.medium.com/', '']]) {
+  const m = home.match(new RegExp(`<a class="tile t-link tl-${kind}[^"]*" href="([^"]+)"[^>]*>`));
+  if (!m) bad.push(`index.html: link tile ${kind} missing`);
+  else { if (m[1] !== href) bad.push(`index.html: link tile ${kind} points at ${m[1]}`); if (extra && !m[0].includes(extra)) bad.push(`index.html: link tile ${kind} lost ${extra}`); }
+}
+for (const m of home.matchAll(/<a class="tile [^"]*"[^>]*>([\s\S]*?)<\/a>/g)) if (!/<h3 class="tt">/.test(m[1])) bad.push(`index.html: tile without a title ${m[0].slice(0, 80)}`);
+if (!/<h2>Watch<\/h2>/.test(home) || !/<h2>Play<\/h2>/.test(home) || !/<h2>Work<\/h2>/.test(home)) bad.push('index.html: Watch / Play / Work bentos expected');
+if (/<h2>(Clips|Videos)<\/h2>/.test(home)) bad.push('index.html: separate Clips / Videos groups are back (one Watch bento)');
+for (const t of ['watch', 'play', 'work', 'say hi']) if (!home.includes(`<span>${t}</span>`)) bad.push(`index.html: nav item "${t}" missing`);
+if (!home.includes('href="/#stream"')) bad.push('index.html: nav should point at #stream');
 if (!home.includes('href="/#work"') || /href="\/#design"/.test(home)) bad.push('index.html: nav should point at #work (#design stays as an anchor alias)');
 if (!home.includes('id="design"')) bad.push('index.html: #design alias missing');
 const sedd = fs.readFileSync(path.join(pub, 'design/southeast-denver-dental/index.html'), 'utf8');
@@ -60,11 +73,12 @@ const mtLogLinks = [...mtHome.matchAll(/<a class="card[^"]*" href="(\/work\/proj
 if (mtLogLinks.length < 6) bad.push(`work/project-mountaintop: expected 6 dev-log cards, found ${mtLogLinks.length}`);
 for (const l of mtLogLinks) { const h = fs.readFileSync(path.join(pub, l, 'index.html'), 'utf8'); if (!/<article class="log">/.test(h) || !/"@type":"BlogPosting"/.test(h)) bad.push(`${l}: not a dev-log article with BlogPosting JSON-LD`); }
 for (const f of walk(mtDir).filter((x) => x.endsWith('.html'))) { const h = fs.readFileSync(f, 'utf8'); if (/<iframe/.test(h)) bad.push(`${path.relative(pub, f)}: pre-loaded iframe (embeds must be click-to-load)`); }
-if (!/<a class="card[^"]*" href="\/work\/project-mountaintop\/"/.test(home)) bad.push('index.html: Project Mountaintop card missing from Work');
+if (!/<a class="tile [^"]*" href="\/work\/project-mountaintop\/"/.test(home)) bad.push('index.html: Project Mountaintop tile missing from Work');
 const games = fs.readFileSync(path.join(pub, 'games/index.html'), 'utf8');
-const gOrder = [...games.matchAll(/<a class="card[^"]*" href="\/games\/([^/"]+)\//g)].map((m) => m[1]);
+const gOrder = [...games.matchAll(/<a class="tile [^"]*" href="\/games\/([^/"]+)\//g)].map((m) => m[1]);
 if (gOrder[0] !== 'glass-gunslinger-dod' || gOrder[1] !== 'lvasion-du-criminel-de-sa-prison') bad.push(`games/index.html: featured games should come first (got ${gOrder.slice(0, 2)})`);
-if ((games.match(/class="card px w2 gf big"/g) ?? []).length !== 2) bad.push('games/index.html: expected exactly two featured (gf) cards');
+for (const f of ['games/index.html', 'videos/index.html', 'design/index.html']) { const h = fs.readFileSync(path.join(pub, f), 'utf8'); if (/class="[^"]*\b(ey|cb)\b/.test(h)) bad.push(`${f}: eyebrow/card markup on an index page`); if (!/class="bento /.test(h)) bad.push(`${f}: bento expected`); }
+if ((games.match(/class="tile tm tg lead w2"/g) ?? []).length !== 1) bad.push('games/index.html: expected exactly one lead game tile');
 const sm = fs.readFileSync(path.join(pub, 'sitemap.xml'), 'utf8');
 for (const m of sm.matchAll(/<loc>([^<]+)<\/loc>/g)) { check('sitemap.xml', m[1]); if (/calm|404/.test(m[1])) bad.push(`sitemap.xml: ${m[1]}`); }
 if (!/name="robots" content="noindex"/.test(fs.readFileSync(path.join(pub, '404.html'), 'utf8'))) bad.push('404.html: not noindex');
