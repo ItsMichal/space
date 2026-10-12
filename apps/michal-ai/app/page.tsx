@@ -20,7 +20,7 @@ export const metadata = homeMetadata()
 
 // Most recent first; the current role leads. A row links to its project when the site has one.
 const ROLE_LINKS: Record<string, string> = {
-  SpaceX: '/projects/spacex-starlink-general-projects',
+  SpaceX: '/projects/starlink',
   'Institute of Cognitive Science, CU Boulder (SHINE Lab, iSAT)': '/projects/isat-dashboard',
 }
 const experience: ExperienceItem[] = profile.experience.map((e) => ({

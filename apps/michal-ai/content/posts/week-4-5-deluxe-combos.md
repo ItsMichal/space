@@ -1,6 +1,6 @@
 ---
 title: "Week 4→5 - Deluxe Combos"
-slug: mountaintop-week-4-5-deluxe-combos
+slug: week-4-5-deluxe-combos
 kind: article
 description: "MIDI-driven beatmaps, music, combos, SFX and the first standalone build of Project Mountaintop, plus playtester and mentor feedback."
 date: 2023-02-16

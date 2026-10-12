@@ -3,7 +3,7 @@ import { starlinkLaunches } from '@/content/starlink-launches'
 
 /** Per-project additions that are not part of the markdown body. Keyed by slug; unknown slugs render nothing. */
 export function PostExtras({ slug }: { slug: string }) {
-  if (slug === 'spacex-starlink-general-projects') return <StarlinkLaunches />
+  if (slug === 'starlink') return <StarlinkLaunches />
   return null
 }
 
