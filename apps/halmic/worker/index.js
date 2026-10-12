@@ -53,7 +53,8 @@ async function getToken(env, deps, force) {
   return state.token;
 }
 
-const deps_ = (deps) => ({ fetchFn: deps.fetchFn ?? fetch, cache: deps.cache ?? globalThis.caches?.default, now: deps.now ?? Date.now(), state: deps.state ?? mem, ids: deps.ids ?? idMem, thumbs: deps.thumbs ?? thumbMem });
+const deps_ = (deps) => ({ fetchFn: deps.fetchFn ?? ((...a) => fetch(...a)),   // never call the global through an object: workerd throws "Illegal invocation"
+   cache: deps.cache ?? globalThis.caches?.default, now: deps.now ?? Date.now(), state: deps.state ?? mem, ids: deps.ids ?? idMem, thumbs: deps.thumbs ?? thumbMem });
 const hasSecrets = (env) => !!(env?.TWITCH_CLIENT_ID && env?.TWITCH_CLIENT_SECRET);
 
 // One Helix GET with the app token; a 401 (token revoked or expired early) refreshes the token once and retries.

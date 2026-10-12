@@ -19,7 +19,8 @@
   }
   async function poll() {
     try {
-      const r = await fetch('/api/live', { headers: { accept: 'application/json' } });
+      // no-store: the zone's Browser Cache TTL rewrites max-age to hours; the edge cache still shields Twitch
+      const r = await fetch('/api/live', { cache: 'no-store', headers: { accept: 'application/json' } });
       if (!r.ok) return;
       const d = await r.json();
       setLive(d.live === true, typeof d.game === 'string' ? d.game : '');
@@ -165,7 +166,7 @@
       renderClips(demo.map(([title, game, duration], i) => ({ id: `DemoClip${i}`, title, game, duration, url: 'https://www.twitch.tv/halmictv/clips', thumb: '/clips/demo.svg' })));
     } else (async () => {
       try {
-        const r = await fetch('/api/clips', { headers: { accept: 'application/json' } });
+        const r = await fetch('/api/clips', { cache: 'no-store', headers: { accept: 'application/json' } });
         if (!r.ok) return;
         const d = await r.json();
         const ok = Array.isArray(d.clips) ? d.clips.filter((c) => c && /^[A-Za-z0-9_-]+$/.test(c.id) && typeof c.title === 'string' && typeof c.url === 'string' && c.url.startsWith('https://') && Number.isFinite(c.duration) && c.thumb === `/api/clip-thumb/${c.id}`) : [];
