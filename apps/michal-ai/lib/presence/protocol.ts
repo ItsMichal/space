@@ -1,24 +1,50 @@
-// Shared presence wire protocol (compact JSON). DOM-free: imported by both the
-// Durable Object (worker/presence-room.ts) and the browser client.
-//
-// Coordinates are viewport-normalized and quantized to integers 0..COORD_MAX.
+// Wire types for /api/live/*. DOM-free; imported by the Worker and the browser client.
 
-export const COORD_MAX = 10000
-export const COLOR_COUNT = 6
-export const MAX_PTS_PER_MSG = 40
-export const MAX_MSG_BYTES = 1024
-
-/** client -> server */
-export type ClientMsg = { t: 'm'; p: [number, number][] }
-
-export interface PeerInfo {
+/** A visitor on the globe. `id` is a random per-connection public id, unrelated to the client's session id. */
+export interface LivePin {
   id: string
-  color: number // 1..COLOR_COUNT
+  lat: number
+  lon: number
+  city: string
+  country: string
+  emoji: string
 }
 
-/** server -> client */
+/** A recent visitor who is not online now. */
+export interface PastPin {
+  lat: number
+  lon: number
+  city: string
+  country: string
+  emoji: string
+  day: string
+}
+
+export interface Welcome {
+  t: 'welcome'
+  /** This visitor, as everyone else sees them (null when the edge gave no location). */
+  you: LivePin | null
+  /** City / region / country for the greeting. */
+  where: { city: string; region: string; country: string }
+  live: LivePin[]
+  past: PastPin[]
+}
+
 export type ServerMsg =
-  | { t: 'welcome'; id: string; color: number; peers: PeerInfo[]; n: number; ro?: 1 }
-  | { t: 'join'; id: string; color: number; n: number }
-  | { t: 'leave'; id: string; n: number }
-  | { t: 'move'; id: string; p: [number, number][] }
+  | Welcome
+  | { t: 'd'; add?: LivePin[]; rm?: string[]; em?: [string, string][]; n: number }
+  | { t: 'full' }
+
+export interface ReactionTotals {
+  v: 1
+  slug: string
+  post: Record<string, number>
+  blocks: Record<string, Record<string, number>>
+}
+
+export interface ReactionResult {
+  v: 1
+  target: string
+  counts: Record<string, number>
+  mine: string[]
+}

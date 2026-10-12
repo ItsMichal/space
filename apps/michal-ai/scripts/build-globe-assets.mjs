@@ -1,0 +1,124 @@
+// Bakes Natural Earth 110m land (public domain, via the world-atlas TopoJSON redistribution) into:
+//   public/globe/land.bin      compact ring data the WebGL globe loads lazily
+//   lib/presence/globe-fallback.ts   a pre-drawn ink SVG of the same coastlines (server-rendered placeholder / no-WebGL fallback)
+// Run manually (`node scripts/build-globe-assets.mjs`); outputs are committed so builds need no dev dependency.
+//
+// land.bin format: u16 ringCount, then per ring: u16 pointCount, then pointCount (dx, dy) zigzag varints in 1/4 degree
+// units; the first point is absolute (lon+180, lat+90 in quarter degrees).
+import fs from 'node:fs'
+import path from 'node:path'
+import { createRequire } from 'node:module'
+import { feature } from 'topojson-client'
+
+const require = createRequire(import.meta.url)
+const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
+const topo = JSON.parse(fs.readFileSync(require.resolve('world-atlas/land-110m.json'), 'utf8'))
+const land = feature(topo, topo.objects.land)
+
+const Q = 4
+const rings = []
+for (const f of land.features ?? [land]) {
+  const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates
+  for (const poly of polys) {
+    // Outer rings only: lakes/holes are not in land-110m anyway, and the coast reads cleaner without them.
+    const ring = poly[0].map(([lon, lat]) => [Math.round((lon + 180) * Q), Math.round((lat + 90) * Q)])
+    // Drop consecutive duplicates after quantisation.
+    const r = ring.filter((p, i) => i === 0 || p[0] !== ring[i - 1][0] || p[1] !== ring[i - 1][1])
+    if (r.length >= 4) rings.push(r)
+  }
+}
+
+const bytes = []
+const u16 = (n) => bytes.push(n & 255, n >> 8)
+const zig = (n) => (n << 1) ^ (n >> 31)
+const varint = (n) => {
+  let v = zig(n) >>> 0
+  while (v > 127) {
+    bytes.push((v & 127) | 128)
+    v >>>= 7
+  }
+  bytes.push(v)
+}
+u16(rings.length)
+for (const r of rings) {
+  u16(r.length)
+  let px = 0
+  let py = 0
+  for (const [x, y] of r) {
+    varint(x - px)
+    varint(y - py)
+    px = x
+    py = y
+  }
+}
+fs.mkdirSync(path.join(root, 'public', 'globe'), { recursive: true })
+fs.writeFileSync(path.join(root, 'public', 'globe', 'land.bin'), Buffer.from(bytes))
+
+// ---- static ink SVG (orthographic, centred on the Americas, hand-wobbled with a seeded noise) ----
+const W = 400
+const R = 176
+const C = W / 2
+let seed = 7
+const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296)
+const rad = Math.PI / 180
+const view = { lat: 22 * rad, lon: -100 * rad }
+function project(lon, lat) {
+  const la = lat * rad
+  const lo = lon * rad - view.lon
+  const x = Math.cos(la) * Math.sin(lo)
+  const y = Math.cos(view.lat) * Math.sin(la) - Math.sin(view.lat) * Math.cos(la) * Math.cos(lo)
+  const z = Math.sin(view.lat) * Math.sin(la) + Math.cos(view.lat) * Math.cos(la) * Math.cos(lo)
+  return { x: C + x * R, y: C - y * R, z }
+}
+function pathFor(pts, dx) {
+  let d = ''
+  let pen = false
+  for (const [lon, lat] of pts) {
+    const p = project(lon, lat)
+    if (p.z < 0.02) {
+      pen = false
+      continue
+    }
+    const jx = (rnd() - 0.5) * 0.9 + dx
+    const jy = (rnd() - 0.5) * 0.9 + dx * 0.6
+    d += `${pen ? 'L' : 'M'}${(p.x + jx).toFixed(1)} ${(p.y + jy).toFixed(1)}`
+    pen = true
+  }
+  return d
+}
+const deg = rings.map((r) => r.map(([x, y]) => [x / Q - 180, y / Q - 90]))
+let coast1 = ''
+let coast2 = ''
+for (const r of deg) {
+  if (r.every(([, lat]) => lat < -62)) continue
+  coast1 += pathFor(r, 0)
+  coast2 += pathFor(r, 0.7)
+}
+let grat = ''
+for (let lat = -60; lat <= 60; lat += 30) {
+  const pts = []
+  for (let lon = -180; lon <= 180; lon += 4) pts.push([lon, lat])
+  grat += pathFor(pts, 0)
+}
+for (let lon = -180; lon < 180; lon += 30) {
+  const pts = []
+  for (let lat = -88; lat <= 88; lat += 4) pts.push([lon, lat])
+  grat += pathFor(pts, 0)
+}
+const hp = project(-118.3526, 33.9164)
+const svg =
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${W}" fill="none" stroke-linecap="round" stroke-linejoin="round">` +
+  `<circle cx="${C}" cy="${C}" r="${R}" fill="#f4f1e8"/>` +
+  `<path d="${grat}" stroke="#6b6558" stroke-opacity=".22" stroke-width=".6"/>` +
+  `<path d="${coast2}" stroke="#2a2a22" stroke-opacity=".55" stroke-width=".8"/>` +
+  `<path d="${coast1}" stroke="#23231c" stroke-opacity=".9" stroke-width="1.15"/>` +
+  `<circle cx="${C}" cy="${C}" r="${R}" stroke="#23231c" stroke-width="1.3"/>` +
+  `<circle cx="${C}" cy="${C}" r="${R + 2.2}" stroke="#23231c" stroke-opacity=".35" stroke-width=".7"/>` +
+  `<g transform="translate(${hp.x.toFixed(1)} ${hp.y.toFixed(1)})" stroke="#2f5d3a" stroke-width="1.6"><path d="M0 0V-9M0 -5Q-5 -6 -6 -10M0 -6Q4 -7 5 -11"/><circle r="2" fill="#2f5d3a"/></g>` +
+  `</svg>`
+fs.writeFileSync(path.join(root, 'public', 'globe', 'fallback.svg'), svg)
+fs.writeFileSync(
+  path.join(root, 'lib', 'presence', 'globe-fallback.ts'),
+  `// Generated by scripts/build-globe-assets.mjs from Natural Earth 110m land. Do not edit.\n// The drawing itself is /globe/fallback.svg; this is its projection, so HTML pins can sit on it.\nexport const GLOBE_FALLBACK_VIEW = { lat: 22, lon: -100, size: ${W}, radius: ${R} } as const\n`,
+)
+console.log(`rings ${rings.length}, land.bin ${bytes.length} bytes, svg ${svg.length} chars`)
