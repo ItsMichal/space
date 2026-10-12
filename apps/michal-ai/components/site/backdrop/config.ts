@@ -45,7 +45,7 @@ export const BACKDROP = {
   /** Dark mode: the brightest backdrop pixel may be at most this relative luminance (WCAG Y). Paper is about 0.008. */
   lumCeilDark: 0.022,
   /** Dark mode blob glow (added, dim). */
-  darkGlow: 0.09,
+  darkGlow: 0.2,
 
   rays: {
     strength: 0.55, // how far the paper lifts toward the warm highlight inside a shaft (0..1)
@@ -65,10 +65,10 @@ export const BACKDROP = {
     shootingFor: 5, // seconds a shooting star takes to cross
     inkLight: [0.13, 0.13, 0.11], // same ink the globe uses
     inkDark: [0.92, 0.91, 0.85],
-    /** Glyphs thin out behind the reading column: half width (CSS px, capped at 46% of the viewport), feather, and the factor in the middle. */
-    thinHalfWidth: 380,
-    thinFeather: 220,
-    thinFactor: 0.45,
+    /** Glyphs thin out behind the reading column: half width (CSS px, capped at half the viewport, so on phones it covers everything), feather, and the factor in the middle. */
+    thinHalfWidth: 540,
+    thinFeather: 140,
+    thinFactor: 0.3,
   },
 
   /** Shader lensing of the backdrop under glass elements (`[data-glass-lens]`, `.tile`). */
@@ -93,7 +93,7 @@ export const BACKDROP = {
    *  backdrop-filter are not invalidated at 60Hz. */
   fps: { idle: 12, scroll: 30 },
   lowResDivisor: 6, // soft layers at 1/6 of CSS resolution
-  maxDpr: 2,
+  maxDpr: 1.5,
   fadeInMs: 1100,
   /** Static frame used for reduced motion and the baked fallback images (seconds). Outside any shooting star window. */
   staticTime: 37,

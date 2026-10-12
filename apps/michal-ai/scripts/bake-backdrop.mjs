@@ -13,12 +13,13 @@ const sharp = require('sharp')
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
 const base = process.argv.find((a) => a.startsWith('http')) ?? 'http://localhost:3411'
 const report = process.argv.includes('--report')
+const bench = process.argv.includes('--bench') // real GPU (no SwiftShader flags): ms per frame with readback sync
 
 const port = 9400 + Math.floor(Math.random() * 300)
 const dir = path.join(process.env.TMPDIR ?? '/tmp', `chrome-bake-${port}`)
 const chrome = spawn(
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-  ['--headless=new', `--remote-debugging-port=${port}`, `--user-data-dir=${dir}`, '--no-first-run', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', 'about:blank'],
+  ['--headless=new', `--remote-debugging-port=${port}`, `--user-data-dir=${dir}`, '--no-first-run', ...(bench ? ['--enable-gpu', '--ignore-gpu-blocklist'] : ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist']), 'about:blank'],
   { stdio: 'ignore' },
 )
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -43,8 +44,8 @@ const evalJs = async (expression) => (await send('Runtime.evaluate', { expressio
 await send('Page.enable')
 
 let loaded = false
-async function frame({ scheme, t, scroll, glyphs = 0, w = 640, h = 640 }) {
-  await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile: false })
+async function frame({ scheme, t, scroll, glyphs = 0, w = 640, h = 640, dsf = 1 }) {
+  await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: dsf, mobile: false })
   if (!loaded) {
     await send('Page.navigate', { url: `${base}/?backdrop=bake` })
     for (let i = 0; i < 300; i++) {
@@ -63,12 +64,20 @@ const lum = (r, g, b) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
 const luma = (r, g, b) => 0.2126 * r + 0.7152 * g + 0.0722 * b // encoded (gamma) luma
 const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16))
 const contrast = (a, b) => { const [x, y] = [lum(...a), lum(...b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05) }
-if (report) {
+if (bench) {
+  for (const [w, h, dsf] of [[1440, 900, 1], [1440, 900, 2], [375, 812, 3]]) {
+    await frame({ scheme: 'light', t: 37, scroll: 0, glyphs: 1, w, h, dsf })
+    const info = await evalJs(`(()=>{const g=document.createElement('canvas').getContext('webgl2'); const e=g.getExtension('WEBGL_debug_renderer_info'); return e? g.getParameter(e.UNMASKED_RENDERER_WEBGL):'?'})()`)
+    const ms = await evalJs(`window.__bench(40, 0)`)
+    const msNoGlyphs = await evalJs(`window.__bench(40, 0, false)`)
+    console.log(JSON.stringify({ w, h, dsf, renderer: info, msPerFrame: +ms.toFixed(2), msWithoutGlyphs: +msNoGlyphs.toFixed(2) }))
+  }
+} else if (report) {
   const T = {
     light: { paper: hex('#f4f1e8'), ink: hex('#18211b'), muted: hex('#525c4f'), glyph: [0.13 * 255, 0.13 * 255, 0.11 * 255] },
     dark: { paper: hex('#121612'), ink: hex('#ebe7da'), muted: hex('#a4ab99'), glyph: [0.92 * 255, 0.91 * 255, 0.85 * 255] },
   }
-  const GLYPH_ALPHA = 0.22
+  const GLYPH_ALPHA = 0.22, THIN = 0.3 // glyph alpha cap, and the factor it is thinned by inside the reading column (config.ts)
   const GRAIN = 0.012 * 255 / 2 // grain adds up to +-0.006 of full scale
   for (const scheme of ['light', 'dark']) {
     const t = T[scheme]
@@ -88,15 +97,17 @@ if (report) {
     }
     const Yp = lum(...t.paper), Lp = luma(...t.paper)
     // Worst case for text: the extreme backdrop pixel, a glyph at the alpha cap on top of it, and grain pushing the wrong way.
-    const worst = (px) => px.map((c, k) => c * (1 - GLYPH_ALPHA) + t.glyph[k] * GLYPH_ALPHA + (scheme === 'light' ? -GRAIN : GRAIN))
+    const worst = (px, a) => px.map((c, k) => c * (1 - a) + t.glyph[k] * a + (scheme === 'light' ? -GRAIN : GRAIN))
     const bad = scheme === 'light' ? minPx : maxPx
-    const bg = worst(bad)
+    const bgCol = worst(bad, GLYPH_ALPHA * THIN) // inside the thinned reading column
+    const bgMargin = worst(bad, GLYPH_ALPHA) // outside it, where there is no body text
     console.log(JSON.stringify({
       scheme, paperY: +Yp.toFixed(4), backdropMinY: +min.toFixed(4), minYRatioToPaper: +(min / Yp).toFixed(4), lumaFloorRatio: +(minLuma / Lp).toFixed(4), lumaMaxRatio: +(maxLuma / Lp).toFixed(4),
       backdropMaxY: +max.toFixed(4), minPx, maxPx,
       contrast: {
         ink_on_extreme_backdrop: +contrast(t.ink, bad).toFixed(2), muted_on_extreme_backdrop: +contrast(t.muted, bad).toFixed(2),
-        ink_on_extreme_plus_glyph: +contrast(t.ink, bg).toFixed(2), muted_on_extreme_plus_glyph: +contrast(t.muted, bg).toFixed(2),
+        ink_in_column_plus_glyph: +contrast(t.ink, bgCol).toFixed(2), muted_in_column_plus_glyph: +contrast(t.muted, bgCol).toFixed(2),
+        ink_margin_glyph_full: +contrast(t.ink, bgMargin).toFixed(2), muted_margin_glyph_full: +contrast(t.muted, bgMargin).toFixed(2),
         ink_on_paper: +contrast(t.ink, t.paper).toFixed(2), muted_on_paper: +contrast(t.muted, t.paper).toFixed(2),
       },
     }))

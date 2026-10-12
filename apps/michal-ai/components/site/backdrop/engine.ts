@@ -238,7 +238,7 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
     gl.uniform1f(b.uTwinkle, G.twinkle)
     gl.uniform1f(b.uConst, G.constellationChance)
     gl.uniform1f(b.uGrain, bake && !glyphsOn ? 0 : C.grain)
-    gl.uniform4f(b.uThin, (cssW / 2) * dpr, Math.min(G.thinHalfWidth, cssW * 0.46) * dpr, G.thinFeather * dpr, G.thinFactor)
+    gl.uniform4f(b.uThin, (cssW / 2) * dpr, Math.min(G.thinHalfWidth, cssW * 0.5) * dpr, G.thinFeather * dpr, G.thinFactor)
     gl.uniform2f(b.uShoot, G.shootingEvery, G.shootingFor)
     gl.uniform4fv(b.uLens, lensArr)
     gl.uniform1fv(b.uLensR, lensR)
@@ -265,6 +265,21 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
       sizeTargets()
       draw(performance.now())
       return canvas.toDataURL('image/png')
+    }
+    // Frame cost: n full draws (both passes), each followed by a 1px readback so the GPU has really finished; ms per frame.
+    ;(window as unknown as Record<string, unknown>).__bench = (n: number, scroll: number, glyphs = true) => {
+      const px = new Uint8Array(4)
+      bakeScroll = scroll
+      glyphsOn = glyphs
+      draw(performance.now())
+      gl!.readPixels(0, 0, 1, 1, gl!.RGBA, gl!.UNSIGNED_BYTE, px)
+      const a = performance.now()
+      for (let i = 0; i < n; i++) {
+        bakeScroll = scroll + i * 3
+        draw(performance.now())
+        gl!.readPixels(0, 0, 1, 1, gl!.RGBA, gl!.UNSIGNED_BYTE, px)
+      }
+      return (performance.now() - a) / n
     }
   }
 
