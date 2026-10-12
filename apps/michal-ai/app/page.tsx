@@ -60,7 +60,7 @@ export default function Home() {
         <h2 id="work-h" className={h2}>
           Selected work
         </h2>
-        <Showcase posts={projects} base="/projects" variant="bento" priority />
+        <Showcase posts={projects} base="/projects" variant="row" priority />
       </section>
 
       {articles.length > 0 ? (

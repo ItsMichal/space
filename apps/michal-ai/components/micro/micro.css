@@ -240,7 +240,7 @@
   transition: transform 320ms var(--ease-in-out-soft);
 }
 .m-row__t {
-  font: 600 21px/1.25 var(--font-sans);
+  font: 500 21px/1.25 var(--font-sans);
   letter-spacing: -0.01em;
   transition:
     transform 500ms var(--ease-out-soft),

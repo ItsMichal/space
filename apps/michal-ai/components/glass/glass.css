@@ -184,13 +184,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font: 500 16px/22px var(--font-sans);
+  font: 400 20px/1.2 var(--font-display);
+  letter-spacing: -0.01em;
 }
 .sheet-prow__sub {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font: 400 14px/20px var(--font-serif);
+  font: 400 15px/22px var(--font-serif);
   color: var(--ink-muted);
 }
 @media (max-width: 639px) {
