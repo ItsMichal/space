@@ -72,7 +72,8 @@ export async function getLive(env, deps = {}) {
     const r = await helixGet(HELIX_URL, env, d);
     if (!r.ok) throw new Error(`helix ${r.status}`);
     return buildResponse(mapStreams(await r.json()), d.now);
-  } catch {
+  } catch (e) {
+    console.warn('live: twitch failed:', e?.message);   // status codes only, never credentials
     return unknown(d.now, UNKNOWN_ERROR);
   }
 }
@@ -132,7 +133,8 @@ export async function getClips(env, deps = {}) {
     d.thumbs.map = thumbs; d.thumbs.exp = d.now + THUMBS_TTL * 1000;
     if (d.cache) await d.cache.put(THUMBS_KEY, new Response(JSON.stringify(thumbs), { headers: { 'cache-control': `max-age=${THUMBS_TTL}` } })).catch(() => {});
     return { body: { clips: mapClips(payload, games), checkedAt: new Date(d.now).toISOString() }, maxAge: CLIPS_FRESH };
-  } catch {
+  } catch (e) {
+    console.warn('clips: twitch failed:', e?.message);
     return clipsUnknown(d.now, UNKNOWN_ERROR);
   }
 }
