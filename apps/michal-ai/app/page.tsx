@@ -60,7 +60,7 @@ export default function Home() {
       </section>
 
       {articles.length > 0 ? (
-        <section id="writing" aria-labelledby="writing-h" className="mt-space-12">
+        <section id="writing" aria-labelledby="writing-h" className="home-writing mt-space-12">
           <h2 id="writing-h" className={h2}>
             Writing
           </h2>

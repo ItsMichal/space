@@ -19,7 +19,7 @@ export function PageEnd() {
     { label: 'GitHub', href: siteConfig.github, external: true },
   ]
   return (
-    <div className="mx-auto mt-space-16 max-w-content px-space-4 md:px-space-8">
+    <div className="mx-auto mt-space-12 w-full max-w-content px-space-4 md:px-space-8">
       <NextLinks label="More" links={links} />
     </div>
   )

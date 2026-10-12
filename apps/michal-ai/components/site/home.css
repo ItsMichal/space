@@ -51,3 +51,10 @@
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
+
+/* Home Writing section: two rows on phones, three from tablet up (the rest is one tap away). */
+@media (max-width: 639px) {
+  .home-writing .plist > li:nth-child(n + 3) {
+    display: none;
+  }
+}

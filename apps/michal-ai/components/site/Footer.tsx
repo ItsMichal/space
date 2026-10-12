@@ -7,7 +7,7 @@ const linkCls = 'text-ink-muted transition-colors duration-150 hover:text-accent
 
 export function Footer() {
   return (
-    <footer className="relative mx-auto mt-space-16 max-w-content px-space-4 pb-space-12 md:px-space-8">
+    <footer className="relative mx-auto mt-space-12 w-full max-w-content px-space-4 pb-space-12 md:px-space-8">
       <div className="flex flex-col gap-space-4 border-t border-hairline pt-space-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-space-3 text-ink">
           <Link href="/" aria-label="Home" className="rounded-sm">
