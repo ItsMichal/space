@@ -54,8 +54,10 @@
   --space-12: 48px;
   --space-16: 64px;
   --space-24: 96px;
+  --radius-xs: 8px;
   --radius-sm: 6px;
   --radius-md: 14px;
+  --radius-card: 16px;
   --radius-lg: 28px;
   --radius-pill: 999px;
   --glass-blur: 10px;

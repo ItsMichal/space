@@ -32,3 +32,14 @@
     opacity: 1 !important;
   }
 }
+
+/* Slot for a decorative hero element (for example the globe). Same box as the tint layer, painted above it and below the
+   text, never interactive. Empty by default. */
+.hero-slot {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: -1;
+  height: min(100svh, 760px);
+  overflow: hidden;
+  pointer-events: none;
+}

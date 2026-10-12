@@ -1,12 +1,13 @@
 /* ---------- Project cards ----------
    Paper surfaces, not photographs. A card is a tinted sheet (one of the palette tints from the tokens) with a hairline
    edge and a soft, layered shadow, and it holds together with no image at all. An image, when there is one, is a small
-   inset plate with a fixed ratio and rounded corners, never full width. Hover lifts the card on a spring (compositor:
-   transform and the opacity of a pre-rendered deeper shadow), keyboard focus draws a ring. Cards are one real link. */
+   inset plate with a fixed ratio and rounded corners, never full width. Hover lifts the card 4px in 240ms on
+   cubic-bezier(.25,1,.5,1) (stripe.com's measured card/button curve; apple.com uses 240-320ms), as transform plus the
+   opacity of a pre-rendered deeper shadow, so only the compositor works. Keyboard focus draws a ring. One real link. */
 
 .work {
-  --card-r: 24px;
-  --plate-r: 14px;
+  --card-r: var(--radius-card);
+  --plate-r: var(--radius-xs);
 }
 .work-bento,
 .work-grid,
@@ -115,7 +116,7 @@
     inset 0 1px 0 rgb(255 255 255 / 0.75),
     0 1px 2px rgb(24 33 27 / 0.05),
     0 10px 24px -14px rgb(24 33 27 / 0.2);
-  transition: transform var(--lift-d, 700ms) var(--lift-e, ease);
+  transition: transform 240ms cubic-bezier(0.25, 1, 0.5, 1);
   -webkit-tap-highlight-color: transparent;
 }
 /* The deeper shadow is drawn once and cross-faded, so hover never repaints a shadow. */
@@ -130,7 +131,7 @@
     0 18px 36px -14px rgb(24 33 27 / 0.24),
     0 34px 60px -30px rgb(24 33 27 / 0.28);
   opacity: 0;
-  transition: opacity var(--lift-d, 700ms) var(--lift-e, ease);
+  transition: opacity 240ms cubic-bezier(0.25, 1, 0.5, 1);
 }
 .pcard:focus-visible {
   outline: 2px solid var(--focus);
@@ -182,7 +183,7 @@
   font: 500 15px/1 var(--font-sans);
 }
 .pcard__cta svg {
-  transition: transform var(--lift-d, 700ms) var(--lift-e, ease);
+  transition: transform 240ms cubic-bezier(0.25, 1, 0.5, 1);
 }
 @media (hover: hover) {
   .pcard:hover .pcard__cta svg {

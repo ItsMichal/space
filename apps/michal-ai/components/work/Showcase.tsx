@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import type { CSSProperties } from 'react'
-import { linearSpring } from '@space/motion/linearSpring'
 import type { Post } from '@/lib/content/types'
 import { tintFor } from '@/lib/tints'
 import { Picture } from '@/components/media/Picture'
@@ -13,11 +12,6 @@ import './cards.css'
 const buckets = (p: Post) => PROJECT_FILTERS.filter((f) => f.value !== 'all' && matchesFilter(p.tags, f.value)).map((f) => f.value).join(' ')
 
 const year = (p: Post) => p.years ?? p.date.slice(0, 4)
-
-// Hover and press motion: a sampled spring as a CSS linear() easing, so it runs on the compositor and retargets from
-// wherever it is when the pointer leaves halfway (transitions are interruptible).
-const LIFT = linearSpring({ response: 0.7, damping: 0.78 })
-const springVars = { '--lift-e': LIFT.easing, '--lift-d': `${LIFT.duration}ms` } as CSSProperties
 
 export type CardSize = 'l' | 'm' | 's'
 
@@ -83,7 +77,7 @@ export function Showcase({
   )
   if (variant === 'grid') {
     return (
-      <div className="work" style={springVars}>
+      <div className="work">
         <ul className="work-grid">{shown.map((p, i) => cell(p, p.cover ? 'm' : 's', i))}</ul>
       </div>
     )
@@ -93,7 +87,7 @@ export function Showcase({
   const rest = shown.slice(4)
   const topSizes: CardSize[] = ['l', 'm', 'm', 'l']
   return (
-    <div className="work" style={springVars}>
+    <div className="work">
       <ul className="work-bento">{top.map((p, i) => cell(p, topSizes[i], i))}</ul>
       {rest.length > 0 ? (
         <ul className="work-row" aria-label="More projects">

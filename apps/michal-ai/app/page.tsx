@@ -42,6 +42,9 @@ export default function Home() {
     <div className="mx-auto max-w-content px-space-4 md:px-space-8">
       <JsonLd data={[profilePageJsonLd, websiteJsonLd]} />
       {hooks.length ? <HeroAtmosphere tints={tints} /> : null}
+      {/* Hero background slot: a positioned layer behind the text and above the tint cross-fade, empty by default. A decorative
+          component (aria-hidden, pointer-events none) can be dropped in here; the hero text keeps its own contrast. */}
+      <div className="hero-slot" data-hero-slot="background" aria-hidden />
       <NameHeader
         first={profile.firstName}
         last={profile.lastName}
