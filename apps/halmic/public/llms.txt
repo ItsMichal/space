@@ -18,3 +18,4 @@
 - https://halmic.com/videos/ : videos
 - https://halmic.com/design/ : design
 - https://halmic.com/design/southeast-denver-dental/ : logo for Southeast Denver Dental
+- https://halmic.com/work/pokemon-phoenix-rising/ : QA developer on Pokémon Phoenix Rising, a fan-made game

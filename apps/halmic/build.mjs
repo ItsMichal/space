@@ -48,17 +48,47 @@ const gl = games.slice().sort((a, b) => order.indexOf(a.slug) - order.indexOf(b.
 const gFeature = gl.filter((g) => g.tier === 'feature'), gMore = gl.filter((g) => g.tier === 'more');
 
 const vtitle = (v) => (v.ep ? `Episode ${v.ep}` : v.title.replace(/ - /g, ': ').replace(/\s+/g, ' '));
-const vcard = (v, cls = '', eyebrowless = '') => `<a class="vid ${cls}" href="/videos/${vslug(v)}/" data-vid="${v.id}" data-title="${esc(v.title)}">
-  <span class="thumb"><img src="${v.thumb}" width="640" height="360" loading="lazy" decoding="async" alt="Thumbnail for the video ${esc(v.title)}">${v.ep ? `<span class="epn" aria-hidden="true">${v.ep}</span>` : ''}<span class="play" aria-hidden="true"><i></i><i></i><i></i></span></span>
-  <span class="vt">${esc(eyebrowless || (v.ep ? `Episode ${v.ep}` : v.title))}</span><span class="vm">${esc([v.kind, v.length, when(v)].filter(Boolean).join(' · '))}</span></a>`;
 const ldDesc = (v) => v.desc || v.excerpt || v.title;
-const gmeta = (g) => [g.madeWith, g.jam && `${g.jam}`].filter(Boolean).join(' · ');
-const gcard = (g, cls = '') => `<article class="game ${cls}">
-  <a class="gthumb" href="/games/${g.slug}/"><img src="${g.coverLocal}" width="640" height="508" loading="lazy" decoding="async" alt="${esc(g.alt)}"></a>
-  <h3><a href="/games/${g.slug}/">${esc(g.title.replace(/ \(.*\)$/, ''))}</a></h3><p class="gline">${esc(g.line)}</p>
-  <p class="gmeta">${esc(gmeta(g))}</p><a class="gplay" href="${g.url}" rel="noopener">Play on itch.io</a></article>`;
+const pr = json('./content/phoenix-rising.json');
+
+// ---- cards: one component for the home page and the inner index pages (a link, or a plain div when there is nothing to link to) ----
+const PLAY = '<span class="play" aria-hidden="true"><i></i><i></i><i></i></span>';
+const media = (src, alt, { w = 640, h = 360, play = false, cls = '' } = {}) => `<div class="cm${cls ? ` ${cls}` : ''}"><img src="${src}" width="${w}" height="${h}" loading="lazy" decoding="async" alt="${esc(alt)}">${play ? PLAY : ''}</div>`;
+const card = ({ href, cls = '', m = '', ey = '', title, text = '', attrs = '', rel = 'noopener', go = false }) => {
+  const inner = `${m}<div class="cb"><p class="ey">${esc(ey)}</p><h3 class="ct">${esc(title)}${go ? ' <span class="go" aria-hidden="true">→</span>' : ''}</h3>${text ? `<p class="cx">${esc(text)}</p>` : ''}</div>`;
+  if (!href) return `<div class="card ${cls}"${attrs}>${inner}</div>`;
+  return `<a class="card ${cls}" href="${href}"${/^https?:/.test(href) ? ` rel="${rel}"` : ''}${attrs}>${inner}</a>`;
+};
+const gh = (title, id = '', note = '') => `<div class="gh"${id ? ` id="${id}"` : ''}><h2>${esc(title)}</h2>${note ? `<p>${esc(note)}</p>` : ''}</div>`;
+const vcard = (v, cls = '', o = {}) => card({ href: `/videos/${vslug(v)}/`, cls, attrs: ` data-vid="${v.id}" data-title="${esc(v.title)}"`, m: media(v.thumb, `Thumbnail for the video ${v.title}`, { play: true }), ey: o.ey ?? ['video', v.length, when(v)].filter(Boolean).join(' · '), title: o.title ?? vtitle(v), text: o.text });
+const gcard = (g, cls = '') => card({ href: `/games/${g.slug}/`, cls: `px ${cls}`, m: media(g.coverLocal, g.alt, { w: 640, h: 508 }), ey: ['game', g.madeWith, g.jam].filter(Boolean).join(' · '), title: g.title.replace(/ \(.*\)$/, ''), text: g.line });
+const smashCard = (s) => card({ href: `https://www.youtube.com/watch?v=${s.id}`, m: media(`/videos/${s.id}.jpg`, `Thumbnail of the stream overlay for the set ${s.event}, ${s.round}, halmic vs ${s.opp}`, { play: true }), ey: `video · ${s.date}`, title: `${s.event}: ${s.round}`, text: `vs ${s.opp}` });
+const gamesGroup = () => [gcard(gFeature[0], 'w2 h4 big ov'), ...[...gFeature.slice(1), ...gMore].map((g) => gcard(g)), card({ href: 'https://halmic.itch.io/', cls: 'c-paper txt', ey: 'itch.io', title: 'Everything on itch.io', text: 'Every jam game and experiment, playable in the browser.', go: true })].join('');
+const SEDD_ALT = 'The Southeast Denver Dental logo in the header of their website: an orange and blue four-lobed tooth mark beside the name in blue and orange capitals.';
+const pngSize = (f) => { const png = fs.readFileSync(path.join(here, `public/work/${f}`)); return `width="${png.readUInt32BE(16)}" height="${png.readUInt32BE(20)}"`; };
+const seddCard = (cls) => card({ href: '/design/southeast-denver-dental/', cls: `c-paper side ${cls}`, m: `<div class="cm shots"><img src="/work/southeast-denver-dental-header.png" ${pngSize('southeast-denver-dental-header.png')} loading="lazy" decoding="async" alt="${SEDD_ALT}"><img src="/work/southeast-denver-dental-footer.png" ${pngSize('southeast-denver-dental-footer.png')} loading="lazy" decoding="async" alt="The same logo in white on the blue footer of their website."></div>`, ey: 'design', title: 'Logo for Southeast Denver Dental', text: 'I designed the logo for a dental practice in Denver, Colorado.' });
+const phoenixCard = (cls) => card({ href: '/work/pokemon-phoenix-rising/', cls: `c-3 side ${cls}`, m: media(`/videos/${pr.thumb}.jpg`, pr.alt), ey: 'QA', title: `${pr.role} on ${pr.title}`, text: pr.line });
+const hiCard = (cls, id = '') => card({ href: 'https://discord.gg/4xvveJ8jS5', cls: `c-blue txt ${cls}`, attrs: id ? ` id="${id}"` : '', ey: 'say hi', title: 'Want something made? Say hi.', text: 'Find me on Discord.', go: true });
 const clips = [['CREEPER, AW MAN', 'Minecraft', '0:40'], ['4k clutch on Bind', 'VALORANT', '0:39'], ['Hbox would be proud', '', '0:19'], ['5 kills no win :<', '', '0:59'], ['cross map tomahawk on miami', 'VALORANT', '0:24'], ['run 6 dies after blaze rods...', 'Minecraft', '0:51']];
-const clipRows = clips.map(([t, g, d]) => `<li><a href="https://www.twitch.tv/halmictv/clips?range=all"><span class="ct">${esc(t)}</span><span class="cg">${esc(g)}</span><span class="cd">${d}</span></a></li>`).join('');
+const CLIPS_URL = 'https://www.twitch.tv/halmictv/clips?range=all';
+// the built clip cards are text-only (no thumbnails to show without the API); /api/clips replaces them in the browser
+const clipCards = clips.map(([t, g, d], i) => card({ href: CLIPS_URL, cls: `txt${i ? '' : ' w4 big'}`, attrs: ' data-clipcard', ey: ['clip', g, d].filter(Boolean).join(' · '), title: t })).join('');
+
+const homeCards = () => [
+  gh('Clips', 'stream'), clipCards, card({ href: CLIPS_URL, cls: 'c-blue txt f3 f2', attrs: ' id="clips-all"', ey: 'twitch', title: 'All clips on Twitch', text: 'No set schedule: follow halmictv and it will tell you when I’m live.', go: true }),
+  gh('Videos', 'videos'),
+  vcard(latestEp, 'w2 h2 big', { ey: ['latest episode', latestEp.length, when(latestEp)].filter(Boolean).join(' · '), title: `${vc.series.title}: Episode ${latestEp.ep}`, text: vc.series.line }),
+  card({ href: `https://www.youtube.com/playlist?list=${vc.series.playlist}`, cls: 'c-paper txt', ey: `series · ${episodes.length} episodes`, title: vc.series.title, text: `All ${episodes.length} episodes on YouTube.`, go: true }),
+  ...earlierEps.slice().reverse().map((v) => vcard(v)),
+  ...others.map((v) => vcard(v, '', { ey: [v.kind, v.length].filter(Boolean).join(' · ') })),
+  card({ href: '/videos/#smash', cls: 'c-3 txt w2 t3', ey: 'video · Smash Ultimate', title: 'Smash sets from SmashDEN', text: smash.line, go: true }),
+  card({ href: '/videos/', cls: 'c-blue txt w2 t3', ey: 'youtube', title: 'All the videos', text: 'Every edit, plus the Smash sets.', go: true }),
+  gh('Games', 'games', 'Jam entries and experiments, mostly in tiny engines.'), gamesGroup(),
+  gh('Work', 'design'), seddCard('w2 t3'), phoenixCard('w2 t3'),
+  gh('Elsewhere'), hiCard('w2', 'hi'),
+  card({ href: 'https://x.com/halmicc', cls: 'c-3 txt', ey: 'social', title: 'halmic on X', text: '@halmicc', rel: 'me noopener', go: true }),
+  card({ href: 'https://www.twitch.tv/halmictv', cls: 'c-paper txt t3', ey: 'schedule', title: 'No set schedule', text: 'Follow on Twitch and it will tell you when I’m live.', rel: 'me noopener', go: true }),
+].join('');
 
 const SAME_AS = ['https://www.twitch.tv/halmictv', 'https://www.youtube.com/@halmic', 'https://halmic.itch.io/', 'https://x.com/halmicc'];
 const PERSON = { '@type': 'Person', '@id': `${SITE}/#halmic`, name: 'halmic', alternateName: ['halmicTV', 'Halmic'], url: `${SITE}/`, description: 'halmic productions: an assortment of various somewhat creative work I’ve done.', image: `${SITE}/og/home.png`, sameAs: SAME_AS };
@@ -68,7 +98,7 @@ const designLd = { '@type': 'CreativeWork', name: 'Logo for Southeast Denver Den
 const ldTag = (graph) => `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@graph': graph })}</script>`;
 
 // ---- page chrome ----
-const navLinks = [['stream', '/#stream'], ['videos', '/#videos'], ['games', '/#games'], ['design', '/#design'], ['say hi', '/#hi']];
+const navLinks = [['clips', '/#stream'], ['videos', '/#videos'], ['games', '/#games'], ['design', '/#design'], ['say hi', '/#hi']];
 const navFor = (section) => `<nav aria-label="Primary">${navLinks.map(([t, h]) => `<a href="${h}"${t === section ? ' aria-current="true"' : ''}>${t}</a>`).join('')}</nav>`;   // on an inner page the link to its own section is marked as current
 const NAV = navFor();
 const SKIP = '<a class="skip" href="#main">Skip to content</a>';
@@ -79,29 +109,22 @@ const head = ({ title, desc, path: p, og, ld, css = ['bold.css'], type = 'websit
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${esc(title)}"><meta name="twitter:description" content="${esc(desc)}"><meta name="twitter:image" content="${SITE}${og}">
 <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16"><link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32"><link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="alternate" type="application/rss+xml" title="halmic" href="/rss.xml"><link rel="preload" href="/fonts/halmic-display.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/halmic-text-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="${V('base.css')}">${css.map((c) => `<link rel="stylesheet" href="${V(c)}">`).join('')}${ld ? ldTag(ld) : ''}`;
-const inner = ({ title, desc, path: p, og, ld, body, type, noindex, section }) => `<!doctype html><html lang="en"><head>${head({ title, desc, path: p, og, ld, css: ['bold.css', 'page.css'], type, noindex })}</head><body>
+const inner = ({ title, desc, path: p, og, ld, body, type, noindex, section, wide = false }) => `<!doctype html><html lang="en"><head>${head({ title, desc, path: p, og, ld, css: ['bold.css', 'page.css'], type, noindex })}</head><body>
 ${SKIP}<header class="top"><div class="wrap"><a href="/" aria-label="halmic, home">${mark}</a>${navFor(section)}</div></header>
-<main id="main" class="pg wrap">${body}</main>${FOOT}<script src="${V('app.js')}" defer></script></body></html>`;
+<main id="main" class="pg wrap${wide ? ' pgw' : ''}">${body}</main>${FOOT}<script src="${V('app.js')}" defer></script></body></html>`;
 
 // ---- home templates ----
 const subs = {
   wordmark: wordmark('c'), mark, year: String(new Date().getFullYear()),
-  vseries: `<div class="series"><div class="series-head"><h3>${esc(vc.series.title)}</h3><p>${esc(vc.series.line)}</p></div>
-    <div class="series-grid"><div class="vfeat">${vcard(latestEp, 'vid-featured', `Episode ${latestEp.ep}, the latest`)}</div><ol class="eps">${earlierEps.slice().reverse().map((v) => `<li>${vcard(v, 'vid-ep')}</li>`).join('')}</ol></div>
-    <p class="more"><a href="https://www.youtube.com/playlist?list=${vc.series.playlist}" rel="noopener">The whole series on YouTube</a></p></div>`,
-  vother: `<h3 class="sub-h">Other edits</h3><div class="reel" role="list">${others.map((v) => vcard(v)).join('')}</div>`,
-  vsmash: `<p class="intro">${esc(smash.line)}</p><div class="reel" role="list">${smash.sets.map((s) => `<a class="vid" role="listitem" href="https://www.youtube.com/watch?v=${s.id}" rel="noopener"><span class="thumb"><img src="/videos/${s.id}.jpg" width="640" height="360" loading="lazy" decoding="async" alt="Thumbnail of the stream overlay for the set ${esc(s.event)}, ${esc(s.round)}, halmic vs ${esc(s.opp)}"></span><span class="vt">${esc(s.event)}: ${esc(s.round)}</span><span class="vm">${esc(`vs ${s.opp} · ${s.date}`)}</span></a>`).join('')}</div><p class="gmeta">${esc(smash.credit)}</p>`,
-  clips: clipRows,
-  gfeature: gFeature.map((g, i) => gcard(g, i ? 'g-sm' : 'g-lg')).join(''), gmore: gMore.map((g) => gcard(g, 'g-xs')).join(''),
-  head_bold: head({ title: 'halmic productions: streams, videos, games and design', desc: 'halmic productions: an assortment of various somewhat creative work I’ve done. Twitch (halmictv), YouTube, tiny itch.io games and logo design, all in one place.', path: '/', og: '/og/home.png', ld: [PERSON, { '@type': 'WebSite', '@id': `${SITE}/#site`, url: `${SITE}/`, name: 'halmic productions', alternateName: 'halmic', description: 'An assortment of various somewhat creative work I’ve done.', publisher: { '@id': `${SITE}/#halmic` } }, ...pageVideos.map(videoLd), ...gl.map(gameLd), designLd], css: ['bold.css'] }),
+  cards: homeCards(),
+  head_bold: head({ title: 'halmic productions: streams, videos, games and design', desc: 'halmic productions: an assortment of various somewhat creative work I’ve done. Twitch (halmictv) clips, YouTube videos, tiny itch.io games, logo design and QA work, all in one place.', path: '/', og: '/og/home.png', ld: [PERSON, { '@type': 'WebSite', '@id': `${SITE}/#site`, url: `${SITE}/`, name: 'halmic productions', alternateName: 'halmic', description: 'An assortment of various somewhat creative work I’ve done.', publisher: { '@id': `${SITE}/#halmic` } }, ...pageVideos.map(videoLd), ...gl.map(gameLd), designLd], css: ['bold.css'] }),
   nav: NAV, skip: SKIP, appjs: V('app.js'), foot: FOOT,
   design_shots: ['header', 'footer', 'phone'].map((k) => { const png = fs.readFileSync(path.join(here, `public/work/southeast-denver-dental-${k}.png`)); return `<figure class="shot shot-${k}"><img src="/work/southeast-denver-dental-${k}.png" width="${png.readUInt32BE(16)}" height="${png.readUInt32BE(20)}" loading="lazy" decoding="async" alt="${{ header: 'The Southeast Denver Dental logo in the header of their website: an orange and blue four-lobed tooth mark beside the name in blue and orange capitals.', footer: 'The same logo in white on the blue footer of their website.', phone: 'The logo in the phone header of their website, next to a menu button.' }[k]}"></figure>`; }).join(''),
 };
 for (const d of ['videos', 'games']) { const dir = path.join(here, 'public', d); if (fs.existsSync(dir)) for (const e of fs.readdirSync(dir, { withFileTypes: true })) if (e.isDirectory()) fs.rmSync(path.join(dir, e.name), { recursive: true, force: true }); }
 fs.rmSync(path.join(here, 'public/design'), { recursive: true, force: true });
-fs.mkdirSync(path.join(here, 'public/brand'), { recursive: true });
+fs.rmSync(path.join(here, 'public/work/pokemon-phoenix-rising'), { recursive: true, force: true });
 fs.copyFileSync(path.join(here, './brand/svg/hmark-3-small.svg'), path.join(here, 'public/favicon.svg'));
-for (const f of ['construction-c.svg', 'hmark-3-blue.svg']) fs.copyFileSync(path.join(here, './brand/svg', f), path.join(here, 'public/brand', f));
 for (const f of fs.readdirSync(path.join(here, 'src')).filter((n) => n.endsWith('.html'))) {
   write(f, read(`src/${f}`).replace(/\{\{(\w+)\}\}/g, (_, k) => subs[k] ?? `MISSING:${k}`));
 }
@@ -117,7 +140,7 @@ for (const g of gl) {
     body: `<p class="crumb"><a href="/#games">games</a></p><h1>${esc(g.title)}</h1><div class="gpage"><img class="gcover" src="${g.coverLocal}" width="640" height="508" fetchpriority="high" alt="${esc(g.alt)}"><div><p class="lede2">${esc(g.line)}</p>${g.description ? `<p>${esc(g.description)}</p>` : ''}<p class="gmeta">${esc([g.status, g.madeWith, g.genre?.replace(/ ,/g, ','), g.jam].filter(Boolean).join(' · '))}</p><p><a class="btn btn-blue" href="${g.url}" rel="noopener">Play on itch.io</a></p></div></div><p class="more"><a href="/#games">More little games</a> · <a href="/#videos">Videos</a> · <a href="https://www.twitch.tv/halmictv">halmic on Twitch</a></p>`,
   }));
 }
-write('games/index.html', inner({ title: 'Games by halmic: tiny jam games and experiments', desc: 'Tiny games made by halmic in PICO-8, PuzzleScript, Bitsy and GB Studio. Play them in the browser on itch.io.', path: '/games/', og: '/og/home.png', section: 'games', ld: [PERSON, ...gl.map(gameLd)], body: `<h1>Little games</h1><p class="lede2">Jam entries and experiments, mostly in tiny engines.</p><div class="ggrid">${gl.map((g) => gcard(g)).join('')}</div>` }));
+write('games/index.html', inner({ title: 'Games by halmic: tiny jam games and experiments', desc: 'Tiny games made by halmic in PICO-8, PuzzleScript, Bitsy and GB Studio. Play them in the browser on itch.io.', path: '/games/', og: '/og/home.png', section: 'games', wide: true, ld: [PERSON, ...gl.map(gameLd)], body: `<h1>Little games</h1><p class="lede2">Jam entries and experiments, mostly in tiny engines.</p><div class="grid">${gamesGroup()}</div>` }));
 for (const v of pageVideos) {
   urls.push({ loc: `/videos/${vslug(v)}/`, pri: 0.6 });
   write(`videos/${vslug(v)}/index.html`, inner({
@@ -125,12 +148,18 @@ for (const v of pageVideos) {
     body: `<p class="crumb"><a href="/#videos">videos</a></p><h1>${esc(v.title)}</h1><div class="vfeat">${vplayer(v)}</div><p class="gmeta">${esc([v.ep && `${vc.series.title}, episode ${v.ep}`, v.kind, v.length, when(v)].filter(Boolean).join(' · '))} · <a href="${v.url}" rel="noopener">Watch on YouTube</a> · <a href="https://www.youtube.com/@halmic?sub_confirmation=1" rel="noopener">Subscribe</a></p>${v.desc ? `<p>${esc(v.desc)}</p>` : v.excerpt ? `<p>${esc(v.excerpt)}</p>` : ''}<p class="more"><a href="/#videos">More videos</a> · <a href="/#games">Little games</a></p>`,
   }));
 }
-const vindex = `<h1>Videos</h1><h2 class="h2s">${esc(vc.series.title)}</h2><div class="vgrid">${episodes.slice().reverse().map((v) => vcard(v)).join('')}</div><h2 class="h2s">Other edits</h2><div class="vgrid">${others.map((v) => vcard(v)).join('')}</div><h2 class="h2s">Smash</h2>${subs.vsmash.replace('class="reel"', 'class="vgrid"')}`;
-write('videos/index.html', inner({ title: 'Videos by halmic: edits, highlights and friends', desc: 'Videos from halmic on YouTube: edits, highlight reels and friends playing games.', path: '/videos/', og: '/og/home.png', section: 'videos', ld: [PERSON, ...pageVideos.map(videoLd)], body: vindex }));
-write('design/index.html', inner({ title: 'Design by halmic: logos and things I made', desc: 'Things halmic has designed: a logo for Southeast Denver Dental and the halmic logotype itself.', path: '/design/', og: '/og/home.png', section: 'design', ld: [PERSON, designLd], body: `<h1>Things I’ve designed</h1><p class="lede2"><a href="/design/southeast-denver-dental/">The logo for Southeast Denver Dental</a>, and <a href="/#design">the halmic logotype</a>.</p>` }));
+const vindex = `<h1>Videos</h1><p class="gmeta">On YouTube as <a href="https://www.youtube.com/@halmic" rel="noopener">@halmic</a> · <a href="https://www.youtube.com/@halmic?sub_confirmation=1" rel="noopener">Subscribe</a></p><div class="grid">${gh(vc.series.title)}${episodes.slice().reverse().map((v) => vcard(v)).join('')}${gh('Other edits')}${others.map((v) => vcard(v, '', { ey: [v.kind, v.length].filter(Boolean).join(' · ') })).join('')}${gh('Smash', 'smash', smash.line)}${smash.sets.map(smashCard).join('')}${card({ cls: 'c-3 txt w2', ey: 'credit', title: smash.credit })}</div>`;
+write('videos/index.html', inner({ title: 'Videos by halmic: edits, highlights and friends', desc: 'Videos from halmic on YouTube: edits, highlight reels and friends playing games.', path: '/videos/', og: '/og/home.png', section: 'videos', wide: true, ld: [PERSON, ...pageVideos.map(videoLd)], body: vindex }));
+write('design/index.html', inner({ title: 'Design by halmic: logos and things I made', desc: 'Things halmic has designed: a logo for Southeast Denver Dental.', path: '/design/', og: '/og/home.png', section: 'design', wide: true, ld: [PERSON, designLd], body: `<h1>Things I’ve designed</h1><div class="grid">${seddCard('w2 t3')}${hiCard('w2 t3')}</div>` }));
 write('design/southeast-denver-dental/index.html', inner({
   title: 'Logo for Southeast Denver Dental | halmic productions', desc: 'halmic designed the logo for Southeast Denver Dental, a dental practice in Denver, Colorado. See it in use on their website.', path: '/design/southeast-denver-dental/', og: '/og/design-sedd.png', section: 'design', ld: [PERSON, designLd],
-  body: `<p class="crumb"><a href="/#design">design</a></p><h1>Logo for Southeast Denver Dental</h1><p class="lede2">I designed the logo for Southeast Denver Dental, a dental practice in Denver, Colorado. The logo only; the site and everything else is theirs.</p><div class="shots">${subs.design_shots}</div><p>Screenshots are of their public website. <a href="https://www.sedenverdental.com/" rel="noopener">Visit sedenverdental.com</a>.</p>`,
+  body: `<p class="crumb"><a href="/#design">design</a></p><h1>Logo for Southeast Denver Dental</h1><p class="lede2">I designed the logo for Southeast Denver Dental, a dental practice in Denver, Colorado.</p><div class="shots">${subs.design_shots}</div><p>Screenshots are of their public website. <a href="https://www.sedenverdental.com/" rel="noopener">Visit sedenverdental.com</a>.</p>`,
+}));
+
+urls.push({ loc: '/work/pokemon-phoenix-rising/', pri: 0.6 });
+write('work/pokemon-phoenix-rising/index.html', inner({
+  title: `${pr.role} on ${pr.title} | halmic productions`, desc: `halmic was a ${pr.role} on ${pr.title}. ${pr.line}`, path: '/work/pokemon-phoenix-rising/', og: '/og/home.png', section: 'design', ld: [PERSON], wide: true,
+  body: `<p class="crumb"><a href="/#design">work</a></p><h1>${esc(pr.role)} on ${esc(pr.title)}</h1><p class="lede2">${esc(pr.line)}</p><div class="grid g3">${pr.videos.map((v, i) => card({ href: `https://www.youtube.com/watch?v=${v.id}`, cls: i ? '' : 'w2', attrs: ` data-vid="${v.id}" data-title="${esc(v.title)}"`, m: media(`/videos/${v.id}.jpg`, `Thumbnail for the video ${v.title}`, { play: true }), ey: `video · ${v.length} · ${v.published.slice(0, 4)}`, title: v.title, text: `Video by ${pr.channel.name}` })).join('')}</div><p class="gmeta">Videos by <a href="${pr.channel.url}" rel="noopener">${esc(pr.channel.name)}</a>, the game’s official YouTube channel. Each one loads from YouTube only when you press it.</p><p class="more"><a href="/#design">More work</a> · <a href="/#videos">Videos</a></p>`,
 }));
 
 // ---- 404 (served by the assets layer for unknown paths: not_found_handling "404-page"; noindex, not in the sitemap) ----
@@ -155,5 +184,5 @@ write('_headers', [
 write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map((u) => `<url><loc>${SITE}${u.loc}</loc><lastmod>${BUILD_DATE}</lastmod><priority>${u.pri}</priority></url>`).join('')}</urlset>\n`);
 write('robots.txt', `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`);
 write('rss.xml', `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>halmic productions</title><link>${SITE}/</link><description>Videos, games and other things from halmic.</description><language>en</language>${pageVideos.map((v) => `<item><title>${esc(v.title)}</title><link>${SITE}/videos/${vslug(v)}/</link><guid isPermaLink="true">${SITE}/videos/${vslug(v)}/</guid>${v.published ? `<pubDate>${new Date(v.published).toUTCString()}</pubDate>` : ''}<description>${esc(ldDesc(v))}</description></item>`).join('')}</channel></rss>\n`);
-write('llms.txt', `# halmic productions\n\n> halmic productions (also halmic, halmicTV): an assortment of various somewhat creative work I’ve done. It streams games and codes stupid things on Twitch, makes edited videos on YouTube and tiny games on itch.io, and designs logos and other things. This is its home page.\n\n## Where to find halmic\n- Twitch: https://www.twitch.tv/halmictv\n- YouTube: https://www.youtube.com/@halmic\n- itch.io: https://halmic.itch.io/\n- X: https://x.com/halmicc\n\n## Pages\n- ${SITE}/ : home\n- ${SITE}/games/ : little games\n${gl.map((g) => `- ${SITE}/games/${g.slug}/ : ${g.title}`).join('\n')}\n- ${SITE}/videos/ : videos\n- ${SITE}/design/ : design\n- ${SITE}/design/southeast-denver-dental/ : logo for Southeast Denver Dental\n`);
+write('llms.txt', `# halmic productions\n\n> halmic productions (also halmic, halmicTV): an assortment of various somewhat creative work I’ve done. It streams games and codes stupid things on Twitch, makes edited videos on YouTube and tiny games on itch.io, and designs logos and other things. This is its home page.\n\n## Where to find halmic\n- Twitch: https://www.twitch.tv/halmictv\n- YouTube: https://www.youtube.com/@halmic\n- itch.io: https://halmic.itch.io/\n- X: https://x.com/halmicc\n\n## Pages\n- ${SITE}/ : home\n- ${SITE}/games/ : little games\n${gl.map((g) => `- ${SITE}/games/${g.slug}/ : ${g.title}`).join('\n')}\n- ${SITE}/videos/ : videos\n- ${SITE}/design/ : design\n- ${SITE}/design/southeast-denver-dental/ : logo for Southeast Denver Dental\n- ${SITE}/work/pokemon-phoenix-rising/ : QA developer on Pokémon Phoenix Rising, a fan-made game\n`);
 console.log('built', fs.readdirSync(path.join(here, 'src')).join(', '), '+', urls.length, 'urls');

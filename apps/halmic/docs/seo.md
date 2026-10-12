@@ -8,7 +8,7 @@ Goal: when someone types "halmic", "halmictv", "halmic twitch", "halmic games", 
 | --- | --- | --- |
 | halmic | `/` | title "halmic: streams, videos, games and design", H1 is the wordmark (SVG with `<title>halmic</title>`), Person JSON-LD named halmic, `sameAs` to every halmic profile |
 | halmictv, halmic tv | `/` | `alternateName: halmicTV`, the Twitch link text, llms.txt, "Watch on Twitch" |
-| halmic twitch | `/` (stream section) | section "On the stream" in plain text: categories, clips, schedule; link to twitch.tv/halmictv with `rel="me"` |
+| halmic twitch | `/` (Clips group, `#stream`) | top Twitch clips as cards (real titles, games and durations as text), the "no set schedule" card; link to twitch.tv/halmictv with `rel="me"` |
 | halmic youtube | `/videos/` | "Videos" H1, subscribe link, VideoObject per video, RSS |
 | halmic games, halmic itch | `/games/` | "Little games" H1, VideoGame per game, link to itch.io profile |
 | taco neko, soupman, glass gunslinger, flippy-style names | `/games/<slug>/` | one static page per game: H1 = title, description, cover with real alt text, "Play on itch.io", VideoGame JSON-LD, own OG image |
@@ -47,3 +47,5 @@ Goal: when someone types "halmic", "halmictv", "halmic twitch", "halmic games", 
 
 ## Ongoing
 Link to the game and video pages when sharing them (the OG images are made for it). Keep titles human: the page title is the thing people search for.
+
+- Home is one grid of cards (Clips, Videos, Games, Work, Elsewhere). Added `/work/pokemon-phoenix-rising/` (QA entry, three official videos from the project's channel, click-to-load). The "On the stream" typographic list and the "This logotype" entry are gone; the line "The logo only; ..." is removed everywhere.

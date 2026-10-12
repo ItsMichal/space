@@ -1,6 +1,6 @@
 # halmic
 
-The site for halmic.com: streams, videos, tiny games and design. A static build (zero runtime dependencies) plus one small Worker for the live status. Deploys as the Cloudflare Worker `halmic`.
+The site for halmic.com: streams, videos, tiny games and design. A static build (zero runtime dependencies) plus one small Worker (`/api/live`, `/api/clips`, `/api/clip-thumb/<id>`). Deploys as the Cloudflare Worker `halmic`.
 
 - `src/index.html` + `build.mjs`: the home template and the generator for every other page (games, videos, design, 404), `sitemap.xml`, `robots.txt`, `rss.xml`, `llms.txt` and `_headers`. `content/` holds the data, `brand/` the logotype generator and SVGs.
 - `public/`: hand-kept files (`*.css`, `app.js`, fonts, images) and build output (html, sitemap, rss, robots, llms.txt, `_headers`); all tracked. CSS/JS are linked as `?v=<content hash>` by the build, which is why `_headers` can cache them for a year.
