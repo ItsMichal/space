@@ -143,7 +143,8 @@ const CSP = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 's
 const rule = (p, h) => `${p}\n${Object.entries(h).map(([k, v]) => `  ${k}: ${v}`).join('\n')}\n`;
 write('_headers', [
   rule('/*', { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'X-Frame-Options': 'DENY', 'Permissions-Policy': 'camera=(), microphone=(), geolocation=()', 'Content-Security-Policy': CSP }),
-  rule('/fonts/*', { 'Cache-Control': 'public, max-age=31536000, immutable' }),
+  // fonts are not fingerprinted by name, so a month rather than immutable; HTML gets the assets layer's default (revalidate on every load, etag)
+  rule('/fonts/*', { 'Cache-Control': 'public, max-age=2592000' }),
   // css/js are linked with ?v=<hash> (see V() above), so they can be immutable
   rule('/*.css', { 'Cache-Control': 'public, max-age=31536000, immutable' }),
   rule('/*.js', { 'Cache-Control': 'public, max-age=31536000, immutable' }),
