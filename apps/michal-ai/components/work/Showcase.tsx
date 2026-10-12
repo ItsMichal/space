@@ -45,7 +45,7 @@ export function ProjectCard({
           <Picture
             src={src}
             alt={alt}
-            sizes={feature ? '(min-width: 1100px) 640px, (min-width: 640px) 90vw, 78vw' : '(min-width: 1100px) 380px, (min-width: 640px) 45vw, 78vw'}
+            sizes={feature ? '(min-width: 1160px) 1120px, (min-width: 640px) 94vw, 78vw' : '(min-width: 1100px) 380px, (min-width: 640px) 45vw, 78vw'}
             priority={priority}
             className="tile__img"
             focus={post.cardImage ? undefined : post.coverFocus}

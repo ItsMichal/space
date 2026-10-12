@@ -8,7 +8,7 @@ updated: 2023-12-11
 tags: ["TypeScript", "AWS", "AI/ML", "DataViz"]
 cover: /media/isat-dashboard/cover.webp
 coverAlt: "iSAT Interactive Display: a grid of per-team gauges and charts for noise, conversation and collaboration"
-coverFocus: "50% 0%"
+coverFocus: "0% 0%"
 priority: 4
 role: "Developer, SHINE Lab"
 hook: "a teacher's dashboard for group activity"
