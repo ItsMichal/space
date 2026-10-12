@@ -1,0 +1,21 @@
+{
+  "_note": "Pokémon Phoenix Rising QA entry. Facts only: role as stated by the owner; the game line is neutral and sourced from public pages (RAWG, ComicBook.com, the project's PokéCommunity release thread). No dates, team size or duties are claimed.",
+  "title": "Pokémon Phoenix Rising",
+  "role": "QA developer",
+  "line": "A free, fan-made, episodic Pokémon RPG made with RPG Maker XP.",
+  "alt": "Phoenix Rising title card: a red and gold phoenix emblem above the words Phoenix Rising, in front of a dark stone courtyard.",
+  "thumb": "Y0_VfdfNjtg",
+  "channel": {
+    "name": "Phoenix Rising",
+    "handle": "@PhoenixRisingGame",
+    "id": "UCgeLUXvUuWfIMgbvecNpV6w",
+    "url": "https://www.youtube.com/@PhoenixRisingGame"
+  },
+  "verifiedAt": "2026-10-12",
+  "verifiedAt_note": "https://www.youtube.com/@PhoenixRisingGame and https://www.youtube.com/feeds/videos.xml?channel_id=UCgeLUXvUuWfIMgbvecNpV6w. The channel description is the game's own story text and its header links the project's official Twitter @pkmnPR, Facebook pokemonphoenixrising and r/pokemonphoenixrising, the same handles the game's demo-release videos and RAWG page point to. All three videos report playableInEmbed=true.",
+  "videos": [
+    { "id": "h2Pww7S2Yj8", "title": "Introducing: Relic Pokémon!", "length": "0:30", "published": "2017-08-20" },
+    { "id": "Y0_VfdfNjtg", "title": "Phoenix Rising - Mesto Mountain", "length": "1:43", "published": "2017-12-08" },
+    { "id": "1Q-SlV8iFak", "title": "Phoenix Rising - Onde Town", "length": "1:58", "published": "2016-04-12" }
+  ]
+}
