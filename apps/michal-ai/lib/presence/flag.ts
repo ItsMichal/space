@@ -4,3 +4,9 @@
  * Separate from the Worker kill switch (LIVE_KILL=1), which turns every /api/live/* route off without a deploy of the pages.
  */
 export const LIVE_REACTIONS_ENABLED = false
+
+/**
+ * Decorative dots on the hero globe: live visitors and the Hawthorne mark. Off by default so the globe ships without the realtime
+ * backend (the globe itself renders from static data and needs no network beyond /globe/land.bin).
+ */
+export const PRESENCE_PINS = false

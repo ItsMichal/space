@@ -94,11 +94,11 @@ void main(){
     float rad = (.75 + .35*z) * uDpr;
     float dot_ = (1. - smoothstep(rad-.6, rad+.4, d)) * step(.5, land);
     vec3 c = mix(uPaper, vec3(1.), .5);
-    c = mix(c, uInk, dot_*.62);
+    c = mix(c, uInk, dot_*.5);
     rgb = c; a = 1.;
   }
-  rgb = uInk*.7*ring + rgb*(1.-ring*.7);
-  a = ring*.7 + a*(1.-ring*.7);
+  rgb = uInk*.4*ring + rgb*(1.-ring*.4);
+  a = ring*.4 + a*(1.-ring*.4);
   o = vec4(rgb*(a>0.?1.:0.), a);
 }`
 

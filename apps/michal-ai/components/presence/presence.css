@@ -1,237 +1,63 @@
-/* Presence card, globe, pins, emoji picker, reaction bar and highlight reactions. Tokens only; no raw colours except pen shades. */
+/* Hero globe, reaction bar and highlight reactions. Tokens only. */
 
-.presence-card {
-  position: relative;
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-lg);
-  background: var(--paper-raised);
-  padding: 20px 20px 18px;
-  display: grid;
-  gap: 12px;
-  color: var(--ink);
-}
-.presence-card__hello {
-  font-family: var(--font-serif);
-  font-size: 22px;
-  line-height: 1.2;
-  margin: 0;
-  letter-spacing: -0.005em;
-}
-.presence-card__count {
-  font-family: var(--font-serif);
-  font-size: 15px;
-  color: var(--ink-muted);
-  margin: 0;
-  min-height: 1.4em;
-}
-
-/* ---- globe ---- */
-.presence-globe {
+.hero-globe {
   position: relative;
   width: 100%;
   aspect-ratio: 1;
-  touch-action: pan-y;
+  pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
-  cursor: grab;
-  overflow: visible;
+  opacity: var(--hero-globe-opacity, 1);
 }
-.presence-globe:active {
-  cursor: grabbing;
-}
-.presence-globe__still,
-.presence-globe__canvas {
+.hero-globe__still,
+.hero-globe__canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   display: block;
-  -webkit-user-drag: none;
-}
-.presence-globe__canvas {
-  opacity: 0;
-  transition: opacity 700ms ease;
   pointer-events: none;
 }
-.presence-globe[data-mode='gl'] .presence-globe__canvas {
+.hero-globe__canvas {
+  opacity: 0;
+  transition: opacity 600ms ease;
+}
+.hero-globe[data-mode='gl'] .hero-globe__canvas {
   opacity: 1;
 }
-.presence-globe[data-mode='gl'] .presence-globe__still {
+.hero-globe[data-mode='gl'] .hero-globe__still {
   opacity: 0;
-  transition: opacity 700ms ease 150ms;
+  transition: opacity 600ms ease;
 }
-.presence-globe__pins {
+.hero-globe__pins {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
-
-/* ---- pins: pen marks anchored at their foot ---- */
-.pr {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 0;
-  height: 0;
-  opacity: 0;
-  will-change: transform, opacity;
-}
-.pr::after {
-  content: '';
-  position: absolute;
-  left: -12px;
-  top: -12px;
-  width: 24px;
-  height: 24px;
-}
-.pr > i {
+/* Plain small dots: live visitors and the owner. */
+.hg-dot {
   position: absolute;
   left: 0;
   top: 0;
   display: block;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  box-sizing: content-box;
-}
-.pr--past > i {
-  width: 4px;
-  height: 4px;
-  background: var(--ink);
-  opacity: 0.32;
-}
-.pr--live > i {
-  width: 6px;
-  height: 6px;
-  background: var(--accent);
-  border: 1.5px solid var(--paper-raised);
-}
-.pr--you > i {
-  width: 8px;
-  height: 8px;
-  background: var(--accent);
-  border: 1.5px solid var(--paper-raised);
-  box-shadow: 0 0 0 1px var(--accent);
-}
-.pr--home > i {
-  width: 8px;
-  height: 8px;
-  background: var(--ink);
-  border: 1.5px solid var(--paper-raised);
-  box-shadow: 0 0 0 1px var(--ink);
-}
-.pr__label {
-  position: absolute;
-  left: 11px;
-  bottom: 9px;
-  white-space: nowrap;
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-size: 13px;
-  line-height: 1;
-  color: var(--ink);
-  background: color-mix(in srgb, var(--paper-raised) 78%, transparent);
-  padding: 1px 3px;
-  border-radius: 3px;
-}
-.pr__you {
-  position: absolute;
-  left: 0;
-  bottom: 24px;
-  transform: translateX(-50%);
-  font-size: 15px;
-  line-height: 1;
-  font-family: var(--font-sans), system-ui, sans-serif;
-}
-.pr-tip {
-  position: absolute;
-  left: 0;
-  top: 0;
-  white-space: nowrap;
-  pointer-events: none;
-  font-family: var(--font-serif);
-  font-size: 14px;
-  line-height: 1;
-  padding: 5px 8px 6px;
-  margin: -42px 0 0;
-  translate: -50% 0;
-  background: var(--paper-raised);
-  border: 1px solid var(--hairline);
-  border-radius: 8px;
-  color: var(--ink);
-  transition: opacity 120ms ease;
-}
-
-/* ---- emoji picker ---- */
-.presence-picker {
-  display: flex;
-  flex-wrap: nowrap;
-  justify-content: space-between;
-  gap: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  min-width: 0;
-}
-.presence-picker__opt {
-  position: relative;
-  flex: 1 1 0;
-  min-width: 0;
-  max-width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  font-size: 21px;
-  line-height: 1;
-  border-radius: 8px;
-  -webkit-tap-highlight-color: transparent;
-}
-.presence-picker__opt input {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  margin: 0;
-  cursor: pointer;
-}
-.presence-picker__glyph {
-  display: block;
-  transform: scale(var(--s, 1));
-  transition: transform 160ms ease, filter 200ms ease;
-  filter: grayscale(0.55) opacity(0.75);
-}
-.presence-picker__opt:hover .presence-picker__glyph {
-  --s: 1.1;
-  filter: none;
-}
-.presence-picker__opt:has(input:checked) .presence-picker__glyph {
-  --s: 1.18;
-  filter: none;
-}
-.presence-picker__opt:active .presence-picker__glyph {
-  --s: 0.9;
-}
-.presence-picker__stroke {
-  position: absolute;
-  left: 20%;
-  right: 20%;
-  bottom: 3px;
+  width: 5px;
   height: 5px;
+  margin: -2.5px 0 0 -2.5px;
+  border-radius: 50%;
+  background: var(--accent);
   opacity: 0;
-  transition: opacity 180ms ease;
-  pointer-events: none;
 }
-.presence-picker__opt:has(input:checked) .presence-picker__stroke {
-  opacity: 1;
+.hg-dot--home {
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  background: var(--ink);
 }
-.presence-picker__stroke path {
-  stroke: var(--accent);
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  fill: none;
-}
-.presence-picker__opt:has(input:focus-visible) {
-  outline: 2px solid var(--focus);
-  outline-offset: 1px;
+@media (prefers-reduced-motion: reduce) {
+  .hero-globe__canvas,
+  .hero-globe[data-mode='gl'] .hero-globe__still {
+    transition: none;
+  }
 }
 
 /* ---- reaction bar ---- */
@@ -247,17 +73,17 @@
 .reactionbar__btn {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 4px;
   min-height: 44px;
   padding: 0 14px 0 12px;
-  border-radius: var(--radius-md);
+  border-radius: 999px;
   border: 1px solid var(--hairline);
   background: var(--paper-raised);
   color: var(--ink-muted);
   font-family: var(--font-serif);
   font-size: 16px;
   cursor: pointer;
-  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
+  transition: border-color 80ms cubic-bezier(0.65, 0, 0.35, 1), background-color 80ms cubic-bezier(0.65, 0, 0.35, 1), color 80ms cubic-bezier(0.65, 0, 0.35, 1);
   -webkit-tap-highlight-color: transparent;
 }
 .reactionbar__btn:hover {
@@ -394,18 +220,38 @@
   }
 }
 
-/* ---- demo layout ---- */
+/* ---- demo layout (dev route only) ---- */
 .presence-demo {
-  display: grid;
-  gap: 24px;
   max-width: 1120px;
   margin: 0 auto;
   padding: 120px 16px 80px;
 }
+.presence-demo__hero {
+  position: relative;
+  min-height: 520px;
+  overflow: hidden;
+  margin-bottom: 64px;
+}
+.presence-demo__hero > .hero-globe {
+  position: absolute;
+  right: -14%;
+  top: 50%;
+  width: 78%;
+  transform: translateY(-50%);
+  --hero-globe-opacity: 0.4;
+}
+.presence-demo__text {
+  position: relative;
+  max-width: 560px;
+  padding-top: 40px;
+}
 @media (min-width: 900px) {
   .presence-demo {
-    grid-template-columns: minmax(0, 1fr) 400px;
-    align-items: start;
     padding-inline: 32px;
+  }
+  .presence-demo__hero > .hero-globe {
+    right: -2%;
+    width: 520px;
+    --hero-globe-opacity: 0.95;
   }
 }

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { createMockReactionsApi } from '@/lib/presence/client'
 import { blockIds } from '@/lib/presence/blocks'
-import { GlobeCard } from './GlobeCard'
+import { HeroGlobe } from './HeroGlobe'
 import { HighlightReactions } from './HighlightReactions'
 import { ReactionBar } from './ReactionBar'
 import { setReactionsApi } from './useReactions'
@@ -18,15 +18,31 @@ const PARAS = [
   'Each paragraph id comes from a hash of its text, so inserting another paragraph above does not move these reactions.',
 ]
 
-export function PresenceLab({ mock }: { mock: boolean }) {
+/**
+ * Dev lab. Top: a stand-in hero showing how HeroGlobe is placed (right on desktop, behind the text on phones).
+ * Bottom: a sample article with reactions (no globe on articles). ?mock=1 uses in-memory data; ?pins=1 turns the dots on.
+ */
+export function PresenceLab({ mock, pins }: { mock: boolean; pins: boolean }) {
   const ids = blockIds(PARAS)
   useState(() => {
     if (mock) setReactionsApi(createMockReactionsApi({ post: { clap: 4, heart: 2 }, [ids[0]]: { heart: 3, sprout: 1 }, [ids[2]]: { fire: 2 } }))
   })
   return (
     <div className="presence-demo">
-      <article data-post className="min-w-0">
-        <h1 className="font-display text-[44px] leading-none">Sample article</h1>
+      <section className="presence-demo__hero">
+        <HeroGlobe pins={pins} mock={mock} />
+        <div className="presence-demo__text">
+          <h1 className="font-display text-[clamp(46px,13vw,60px)] leading-none">Hero text</h1>
+          <p className="lede mt-space-6 max-w-[40ch]">Stand-in copy to check contrast and placement against the globe.</p>
+          <p className="mt-space-6 font-serif text-[16px] text-ink-muted">
+            <a className="link" href="#sample">
+              A link over the globe
+            </a>
+          </p>
+        </div>
+      </section>
+      <article id="sample" data-post className="min-w-0">
+        <h2 className="font-display text-[34px] leading-none">Sample article</h2>
         <div className="prose mt-space-8 max-w-[640px] font-serif text-[19px] leading-[1.6]">
           {PARAS.map((t, i) => (
             <p key={i} data-block={ids[i]} className="mb-space-4">
@@ -35,13 +51,10 @@ export function PresenceLab({ mock }: { mock: boolean }) {
           ))}
         </div>
         <div className="mt-space-8">
-          <ReactionBar slug="hello-paper" />
+          <ReactionBar slug="isat-dashboard" />
         </div>
-        <HighlightReactions slug="hello-paper" />
+        <HighlightReactions slug="isat-dashboard" />
       </article>
-      <aside className="md:sticky md:top-24">
-        <GlobeCard mock={mock} />
-      </aside>
     </div>
   )
 }
