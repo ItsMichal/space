@@ -44,6 +44,7 @@ describe('showcase + hierarchy fields', () => {
     coverAlt: 'A thing',
     coverFocus: '50% 30%',
     featured: true,
+    originalUrl: 'https://example.medium.com/a-post-123',
     parent: 'big-project',
     series: 'Progress log',
     order: 3,

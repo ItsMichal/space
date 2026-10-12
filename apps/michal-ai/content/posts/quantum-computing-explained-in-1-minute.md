@@ -4,9 +4,8 @@ slug: quantum-computing-explained-in-1-minute
 kind: article
 description: "Warning- massive oversimplifications! But that should have been obvious…"
 date: 2021-10-18
-tags: ["Quantum Computing", "Infographics", "Design", "Motion Design", "Videos"]
-draft: true
-canonical: "https://halmic.medium.com/quantum-computing-explained-in-1-minute-a604e5c4117d"
+tags: ["Quantum Computing", "Infographics", "Motion Design", "Design"]
+originalUrl: "https://halmic.medium.com/quantum-computing-explained-in-1-minute-a604e5c4117d"
 ---
 
 Warning- massive oversimplifications! But that should have been obvious…

@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
-import { getAllPosts, getBlogPosts, getChildren, getTopLevel } from '@/lib/content'
+import { getAllPosts, getArticleSeries, getBlogPosts, getChildren, getProjectLogs, getSeriesOf, getTopLevel } from '@/lib/content'
+import { groupWriting } from '@/lib/content/writing'
 import { parsePost, serializePost } from '@/lib/content/serialize'
-import { postPath } from '@/lib/seo'
+import { originalSite, postMetadata, postPath } from '@/lib/seo'
 
 const posts = getAllPosts({ includeDrafts: true })
 
@@ -50,6 +51,53 @@ describe('content integrity', () => {
         expect(fs.existsSync(path.join(process.cwd(), 'public', src)), `${p.slug}: ${src}`).toBe(true)
       }
     }
+  })
+
+  it('published posts that first appeared elsewhere canonicalise to themselves and credit the original', () => {
+    const imported = getAllPosts().filter((p) => p.originalUrl)
+    expect(imported.length).toBeGreaterThanOrEqual(13)
+    for (const p of imported) {
+      expect(p.canonical, p.slug).toBeUndefined()
+      expect(p.draft, p.slug).toBeUndefined()
+      expect(() => new URL(p.originalUrl!), p.slug).not.toThrow()
+      const meta = postMetadata(p)
+      expect(meta.alternates?.canonical, p.slug).toBe(`https://michal.ai${postPath(p)}`)
+    }
+  })
+
+  it('published descriptions are 50-160 characters (poznan-low-roar-mv is a one-line post)', () => {
+    for (const p of getAllPosts().filter((p) => p.originalUrl && p.slug !== 'poznan-low-roar-mv')) {
+      expect(p.description.length, p.slug).toBeGreaterThanOrEqual(50)
+      expect(p.description.length, p.slug).toBeLessThanOrEqual(160)
+    }
+  })
+
+  it('only samples stay drafts', () => {
+    expect(posts.filter((p) => p.draft).map((p) => p.slug)).toEqual(['hello-paper'])
+  })
+
+  it('top-level series are ordered and have 2+ posts', () => {
+    const object = getArticleSeries().find((g) => g.name === 'Object')
+    expect(object?.posts.map((p) => p.order)).toEqual([1, 2, 3, 4, 5, 6, 7])
+    expect(getSeriesOf(object!.posts[2])?.id).toBe('series-object')
+    expect(getProjectLogs()[0]?.parent?.slug).toBe('project-mountaintop')
+  })
+
+  it('groups writing into featured, series and years without repeating a post', () => {
+    const g = groupWriting(getBlogPosts(), [...getArticleSeries(), ...getProjectLogs()])
+    expect(g.featured.length).toBeGreaterThan(0)
+    const years = g.years.flatMap((y) => y.posts)
+    for (const p of years) {
+      expect(p.series, p.slug).toBeUndefined()
+      expect(g.featured.includes(p), p.slug).toBe(false)
+    }
+    expect(g.years.map((y) => y.year)).toEqual([...g.years.map((y) => y.year)].sort().reverse())
+  })
+
+  it('names the original site from its URL', () => {
+    expect(originalSite('https://halmic.medium.com/x-123')).toBe('Medium')
+    expect(originalSite('https://www.example.org/a')).toBe('Example')
+    expect(originalSite('not a url')).toBeUndefined()
   })
 
   it('covers and gallery images have real alt text', () => {

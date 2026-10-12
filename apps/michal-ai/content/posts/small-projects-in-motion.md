@@ -2,11 +2,10 @@
 title: "Small Projects in Motion"
 slug: small-projects-in-motion
 kind: article
-description: "Please enjoy my walking animation!"
+description: "Please enjoy my walking animation! Not much to say about this one, just a very basic…ahem…walking? Animation."
 date: 2021-09-29
-tags: ["Motion Design", "Animation", "Portfolio"]
-draft: true
-canonical: "https://halmic.medium.com/small-projects-in-motion-f476a43631bb"
+tags: ["Motion Design", "Animation"]
+originalUrl: "https://halmic.medium.com/small-projects-in-motion-f476a43631bb"
 ---
 
 ## Walking Animation

@@ -3,3 +3,19 @@
 apps/michal-ai/content/posts/mountaintop-first-steps-week-1-2-recap.md
 apps/michal-ai/content/posts/mountaintop-stay-on-beat-week-2-3-recap.md
 apps/michal-ai/public/**/halmic*
+
+# Medium imports: originalUrl attribution links (and the itch.io page link) keep the original handle in URLs only.
+apps/michal-ai/content/posts/creating-my-first-pcb-object.md
+apps/michal-ai/content/posts/creating-my-own-animated-logo.md
+apps/michal-ai/content/posts/experiments-in-analog-and-a-failed-attempt-at-a-screaming-robot.md
+apps/michal-ai/content/posts/led-pong-and-more-adventures-with-the-arduino-nano-33-iot.md
+apps/michal-ai/content/posts/logic-probe-build-log.md
+apps/michal-ai/content/posts/making-a-kinetic-typography.md
+apps/michal-ai/content/posts/making-a-literal-threadboard-constellation.md
+apps/michal-ai/content/posts/making-a-punching-bag-game-in-p5-js.md
+apps/michal-ai/content/posts/medpuck-pcb-prototype.md
+apps/michal-ai/content/posts/poznan-low-roar-mv.md
+apps/michal-ai/content/posts/quantum-computing-explained-in-1-minute.md
+apps/michal-ai/content/posts/small-projects-in-motion.md
+apps/michal-ai/content/posts/taco-neko-development.md
+apps/michal-ai/lib/content/__tests__/content.test.ts

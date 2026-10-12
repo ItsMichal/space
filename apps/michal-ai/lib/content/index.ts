@@ -51,3 +51,41 @@ export function getChildren(parentSlug: string, opts: { includeDrafts?: boolean 
     .filter((p) => p.parent === parentSlug)
     .sort((a, b) => (a.order ?? 1e9) - (b.order ?? 1e9) || a.date.localeCompare(b.date))
 }
+
+export type SeriesGroup = {
+  /** The series' own name, e.g. "Object" or "Progress log". */
+  name: string
+  /** Anchor id on /writing, so a post can link back to its series. */
+  id: string
+  /** Set when the series is a project's progress log (the entries are that project's children). */
+  parent?: Post
+  posts: Post[]
+}
+
+export const seriesId = (name: string, parent?: string) =>
+  `series-${[parent, name].filter(Boolean).join('-').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`
+
+const byOrder = (a: Post, b: Post) => (a.order ?? 1e9) - (b.order ?? 1e9) || a.date.localeCompare(b.date)
+
+/** Series of top-level articles: posts without a `parent` that share a `series`, in reading order. Needs 2+ posts. */
+export function getArticleSeries(opts: { includeDrafts?: boolean } = {}): SeriesGroup[] {
+  const map = new Map<string, Post[]>()
+  for (const p of getTopLevel('article', opts)) if (p.series) map.set(p.series, [...(map.get(p.series) ?? []), p])
+  return [...map]
+    .filter(([, posts]) => posts.length > 1)
+    .map(([name, posts]) => ({ name, id: seriesId(name), posts: posts.sort(byOrder) }))
+}
+
+/** Progress logs: article children of a project, grouped by their parent project. */
+export function getProjectLogs(opts: { includeDrafts?: boolean } = {}): SeriesGroup[] {
+  return getTopLevel('project', opts).flatMap((parent) => {
+    const posts = getChildren(parent.slug, opts).filter((c) => c.kind === 'article')
+    if (!posts.length) return []
+    const name = posts.find((c) => c.series)?.series ?? 'Progress log'
+    return [{ name, id: seriesId(name, parent.slug), parent, posts }]
+  })
+}
+
+/** The series a top-level article belongs to, if any. */
+export const getSeriesOf = (post: Post): SeriesGroup | undefined =>
+  post.parent || !post.series ? undefined : getArticleSeries().find((g) => g.name === post.series)
