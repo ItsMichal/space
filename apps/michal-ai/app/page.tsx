@@ -11,6 +11,7 @@ import { ProjectList } from '@/components/site/ProjectList'
 import { Showcase } from '@/components/work/Showcase'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { profile } from '@/content/profile'
+import { doiUrl } from '@/lib/publications'
 import { Disclosure } from '@/components/ui/Disclosure'
 import { ExperienceList, type ExperienceItem } from '@/components/ui/ExperienceList'
 import { homeMetadata, profilePageJsonLd, websiteJsonLd } from '@/lib/seo'
@@ -84,6 +85,15 @@ export default function Home() {
         <div className="max-w-[60ch] font-serif text-[19px] leading-[1.5] md:text-[21px]">
           <p>{profile.about[0]}</p>
         </div>
+        {profile.publications.length ? (
+          <p className="mt-space-4 max-w-[60ch] font-serif text-[17px] leading-[26px] text-ink-muted">
+            Coauthor,{' '}
+            <a href={doiUrl(profile.publications[0])} className="link" target="_blank" rel="noopener noreferrer">
+              {profile.publications[0].title}
+            </a>
+            , {profile.publications[0].venueShort}.
+          </p>
+        ) : null}
         {/* Desktop: everything in view. Phones: the second paragraph and the experience rows sit behind the Disclosure. */}
         <div className="hidden md:block">
           <p className="mt-space-4 max-w-[60ch] font-serif text-[21px] leading-[1.5] text-ink-muted">{profile.about[1]}</p>

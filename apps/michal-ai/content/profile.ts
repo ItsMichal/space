@@ -12,6 +12,24 @@ export type Role = {
   short?: string
 }
 
+export type Publication = {
+  id: string
+  title: string
+  /** In the order printed on the paper. */
+  authors: readonly string[]
+  year: string
+  /** ISO date of publication (from the DOI record). */
+  published: string
+  venue: string
+  /** Short venue label for card meta lines. */
+  venueShort: string
+  pages?: string
+  publisher: string
+  doi: string
+  /** His own words about his part, from his LinkedIn. */
+  role: string
+}
+
 export const profile = {
   /** Displayed name (Polish ł). */
   name: 'Michał Bodzianowski',
@@ -57,4 +75,23 @@ export const profile = {
     { company: 'Windward Studios', role: 'Software development intern', since: '2019', years: '2019 to 2020' },
     { company: 'Panther Industries', role: 'Augmented reality and marketing intern', since: '2018', years: '2018' },
   ] satisfies Role[],
+  /**
+   * Publications, verified from the DOI registration record (Crossref, `api.crossref.org/works/<doi>`, the registry
+   * entry ACM deposits) and the dblp author listing for the same title. The ACM page itself blocks automated access.
+   */
+  publications: [
+    {
+      id: 'chi-2025-jigsaw',
+      title: 'Piecing Together Teamwork: A Responsible Approach to an LLM-based Educational Jigsaw Agent',
+      authors: ['Emily Doherty', 'E. Margaret Perkoff', 'Sean von Bayern', 'Rui Zhang', 'Indrani Dey', 'Michal Bodzianowski', 'Sadhana Puntambekar', 'Leanne Hirshfield'],
+      year: '2025',
+      published: '2025-04-25',
+      venue: 'Proceedings of the 2025 CHI Conference on Human Factors in Computing Systems',
+      venueShort: 'CHI 2025',
+      pages: '1\u201317',
+      publisher: 'ACM',
+      doi: '10.1145/3706598.3713349',
+      role: 'I was responsible for architecting and building out the web platform for teachers and students, allowing students to collaborate live with an LLM powered agent under educator supervision.',
+    },
+  ] satisfies Publication[],
 } as const
