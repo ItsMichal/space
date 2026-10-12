@@ -52,6 +52,8 @@ function entry(key: keyof PostFrontmatter, value: unknown): string | null {
   switch (key) {
     case 'tags':
       return (value as string[]).length ? `tags: [${(value as string[]).map((t) => scalar(t, true)).join(', ')}]` : 'tags: []'
+    case 'publications':
+      return (value as string[]).length ? `publications: [${(value as string[]).map((t) => scalar(t, true)).join(', ')}]` : null
     case 'date':
     case 'updated':
     case 'priority':
