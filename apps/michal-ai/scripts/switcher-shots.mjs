@@ -36,13 +36,16 @@ const ev = async (expr) => (await send('Runtime.evaluate', { expression: expr, r
 
 async function open(url, { w, h, dark = false, touch = false, wait = 1800 }) {
   await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: touch ? 2 : 1, mobile: touch })
+  await send('Emulation.setTouchEmulationEnabled', { enabled: touch, maxTouchPoints: 5 })
   await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: dark ? 'dark' : 'light' }, { name: 'hover', value: touch ? 'none' : 'hover' }, { name: 'pointer', value: touch ? 'coarse' : 'fine' }] })
   await send('Page.navigate', { url })
   await sleep(wait)
 }
 const rect = (sel) => ev(`(()=>{const e=document.querySelector(${JSON.stringify(sel)});if(!e)return null;const r=e.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height}})()`)
 async function shot(name, clip) {
-  const { data } = await send('Page.captureScreenshot', { format: 'png', ...(clip ? { clip: { ...clip, scale: 1 } } : {}) })
+  // clip is given in viewport coordinates; captureScreenshot wants page coordinates
+  const sy = clip ? await ev('window.scrollY') : 0
+  const { data } = await send('Page.captureScreenshot', { format: 'png', ...(clip ? { clip: { ...clip, y: clip.y + sy, scale: 1 } } : {}) })
   fs.writeFileSync(path.join(out, `${name}.png`), Buffer.from(data, 'base64'))
   console.log('shot', name)
 }
@@ -74,15 +77,17 @@ for (const [tag, url, dark] of [['light', `${M}/`, false], ['dark-reading', `${M
 }
 
 // phone menu
-await open(`${M}/`, { w: 375, h: 812, touch: true })
+await open(`${M}/`, { w: 375, h: 812, touch: true, wait: 3500 })
 await shot('michal-phone-closed', { x: 0, y: 0, width: 375, height: 120 })
 await ev(`document.querySelector('button[aria-controls="nav-sheet"]').click()`)
-await sleep(900)
+await sleep(1200)
+check('michal phone: menu button reports expanded', (await ev(`document.querySelector('button[aria-controls="nav-sheet"]').getAttribute('aria-expanded')`)) === 'true')
 await shot('michal-phone-menu-open', { x: 0, y: 0, width: 375, height: 812 })
 check('michal phone: sheet has the row', await ev(`!!document.querySelector('#nav-sheet a[href="https://halmic.com"][rel="me"]')`))
 
 // keyboard walk-through (desktop)
-await open(`${M}/`, { w: 1440, h: 900 })
+await open(`${M}/`, { w: 1440, h: 900, wait: 3000 })
+for (let i = 0; i < 40 && !(await ev(`(()=>{const e=document.querySelector('.xsw');return !!e&&Object.keys(e).some(k=>k.startsWith('__reactProps')&&e[k].onKeyDown)})()`)); i++) await sleep(250) // wait for hydration
 await move(5, 5)
 await tab() // skip link
 let a1 = await active()
@@ -139,7 +144,8 @@ await open(`${H}/`, { w: 375, h: 812, touch: true })
 await ev(`document.querySelector('.foot')?.scrollIntoView({block:'end'})`)
 await sleep(600)
 await shot('halmic-phone-footer', { x: 0, y: 0, width: 375, height: 812 })
-check('halmic touch: footer row visible, hover menu not', (await ev(`getComputedStyle(document.querySelector('.xs-foot')).display`)) !== 'none' && (await ev(`getComputedStyle(document.querySelector('.xs-menu')).display`)) === 'none')
+const td = [await ev(`getComputedStyle(document.querySelector('.xs-foot')).display`), await ev(`getComputedStyle(document.querySelector('.xs-menu')).display`)]
+check('halmic touch: footer row visible, hover menu not', td[0] !== 'none' && td[1] === 'none', td)
 
 await open(`${H}/work/project-mountaintop/`, { w: 1440, h: 900 })
 const xl = await rect('p.xl')
