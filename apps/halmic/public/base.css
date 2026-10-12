@@ -36,16 +36,22 @@ img { max-width: 100%; height: auto; display: block; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .wrap { width: 100%; max-width: 1280px; margin: 0 auto; padding-inline: var(--gut); }
 
+/* icons: Phosphor Fill + brand marks from /icons.svg, sized in em, coloured by the text around them */
+.ic { width: 1em; height: 1em; flex: none; fill: currentColor; display: inline-block; vertical-align: -.125em; }
+.ic-end { width: 1.05em; height: 1.05em; transition: transform .32s var(--ease); }
+
 /* header */
 .top { position: absolute; z-index: 5; inset: 0 0 auto 0; }
 .top .wrap { display: flex; align-items: center; justify-content: space-between; height: 72px; }
 .top .mark { height: 34px; width: auto; fill: var(--text); display: block; }
 .top nav { display: flex; gap: 0; min-width: 0; overflow-x: auto; scrollbar-width: none; margin-right: -8px; }
 .top nav::-webkit-scrollbar { display: none; }
-.top nav a { flex: none; min-height: 44px; min-width: 44px; justify-content: center; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 999px; color: var(--mute); font-size: 15px; font-weight: 600; transition: color .32s var(--ease), background .32s var(--ease); }
+.top nav a { flex: none; min-height: 44px; min-width: 44px; gap: 7px; justify-content: center; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 999px; color: var(--mute); font-size: 15px; font-weight: 600; transition: color .32s var(--ease), background .32s var(--ease); }
 .top nav a:hover, .top nav a[aria-current] { color: var(--text); background: #ffffff10; }
+.top nav a .ic { font-size: 17px; }
 .top nav a:focus-visible { outline-offset: -2px; }   /* the nav scrolls inside itself, so the ring stays inside its box */
 /* phones: all five items stay (WCAG 2.5.8 / Apple HIG 44pt targets); tighter padding and a slightly smaller size so they fit from 320px, and the nav scrolls inside itself if a font fallback runs wider */
+@media (max-width: 760px) { .top nav a .ic { display: none; } }
 @media (max-width: 640px) { .top .wrap { gap: 8px; } .top .mark { height: 30px; flex: none; } .top nav a { padding: 0 9px; font-size: 14px; } }
 @media (max-width: 360px) { .top .wrap { gap: 4px; } .top .mark { height: 26px; } .top nav a { padding: 0 6px; } }
 
@@ -66,11 +72,21 @@ img { max-width: 100%; height: auto; display: block; }
 @keyframes onair { 0%, 100% { scale: 1; opacity: 1; } 50% { scale: 1.14; opacity: .8; } }
 @media (prefers-reduced-motion: reduce) { .mdot, .wordmark .idot { animation: none !important; } }
 
-/* buttons */
-.btn { display: inline-flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 26px; border-radius: 999px; font-weight: 700; font-size: 17px; transition: transform .32s var(--ease), background .32s var(--ease), color .32s var(--ease); border: 1.5px solid transparent; }
+/* buttons: one family. .btn is the hero size; .btn-sm (42px) is for card control rows, inner pages and the footer of a page. Pills, icon + label, no layout shift on hover. */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 26px; border-radius: 999px; font: 700 17px/1 var(--sans); cursor: pointer; transition: transform .32s var(--ease), background .32s var(--ease), color .32s var(--ease), border-color .32s var(--ease); border: 1.5px solid transparent; background: none; color: inherit; white-space: nowrap; }
+.btn .ic { font-size: 1.2em; }
 .btn:active { transform: scale(.97); transition-duration: .1s; }
 .btn-blue { background: var(--blue); color: var(--ink); } .btn-blue:hover { background: var(--blue-live); }
-.btn-ghost { border-color: #ffffff38; color: var(--text); } .btn-ghost:hover { background: #ffffff12; }
+.btn-ghost { border-color: #ffffff38; color: var(--text); } .btn-ghost:hover { background: #ffffff14; border-color: #ffffff66; }
+.btn:hover .ic-end { transform: translate(2px, -2px); } .btn:hover .ic-arrow { transform: translateX(2px); }
+.btn-sm { min-height: 44px; padding: 0 20px; font-size: 15px; gap: 8px; }
+.btn-sm .ic { font-size: 1.15em; }
+.btn:focus-visible { outline: 2px solid var(--blue-live); outline-offset: 3px; border-radius: 999px; }
+.c-paper .btn-ghost { border-color: #0f0e1340; color: var(--paper-ink); } .c-paper .btn-ghost:hover { background: #0f0e1312; }
+/* icon-only round button (44px target; 40px disc inside the media corner) */
+.ibtn { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; color: var(--paper); background: #0f0e13b8; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); font-size: 20px; transition: background .25s var(--ease), color .25s var(--ease), transform .25s var(--ease), opacity .2s var(--ease); }
+.ibtn:hover { background: var(--blue); color: var(--ink); } .ibtn:active { transform: scale(.92); }
+.ibtn:focus-visible { outline: 2px solid var(--blue-live); outline-offset: 2px; border-radius: 50%; }
 
 /* videos: the featured player on a video's own page */
 .vid { display: block; position: relative; }
@@ -81,7 +97,8 @@ img { max-width: 100%; height: auto; display: block; }
 .vid .vm { display: block; color: var(--mute); font-size: 14px; margin-top: 2px; }
 
 /* gmeta: small muted line on the inner pages */
-.gmeta { margin: 0 0 10px; color: var(--mute); font-size: 14px; }
+.gmeta { margin: 0 0 var(--s2); padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--mute); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.gmeta li { display: inline-flex; align-items: center; gap: 7px; } .gmeta .ic { font-size: 16px; }
 
 /* cards: one system for the home page and the inner index pages. A 4/3/2/1 column grid of whole-card links (one link per card),
    image flush to the card's edge, text below or over a gradient, no borders or shadows. Hover scales the image inside the clipped card. */
@@ -90,9 +107,11 @@ img { max-width: 100%; height: auto; display: block; }
 @media (min-width: 900px) { .grid { gap: 20px; grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 1280px) { .grid { --r: 32px; grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (min-width: 900px) { .grid.g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.gh { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 20px; margin-top: 40px; padding-inline: 4px; scroll-margin-top: 24px; }
+.gh { position: relative; grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 20px; margin-top: 40px; padding-inline: 4px; scroll-margin-top: 24px; }
+.gh .anc { position: absolute; top: -24px; left: 0; width: 1px; height: 1px; }
 .grid > .gh:first-child { margin-top: 0; }
-.gh h2 { margin: 0; font: 750 clamp(24px, 2.4vw, 32px)/1.1 var(--display); letter-spacing: var(--dtrack); }
+.gh h2 { margin: 0; display: inline-flex; align-items: center; gap: 12px; font: 750 clamp(24px, 2.4vw, 32px)/1.1 var(--display); letter-spacing: var(--dtrack); }
+.gh h2 .ic { font-size: .8em; color: var(--blue-live); }
 .gh p { margin: 0; color: var(--mute); font-size: 16px; }
 .card { position: relative; display: flex; flex-direction: column; min-width: 0; border-radius: var(--r); overflow: hidden; isolation: isolate; background: var(--ink-2); color: var(--text); scroll-margin-top: 24px; }
 .card:focus-visible { outline: 3px solid var(--blue-live); outline-offset: 3px; }
@@ -101,31 +120,52 @@ img { max-width: 100%; height: auto; display: block; }
 .c-blue { background: var(--blue); color: var(--ink); }
 .c-paper:focus-visible { outline-color: var(--blue-paper); }
 .cm { position: relative; flex: 0 0 auto; aspect-ratio: 16 / 9; overflow: hidden; background: var(--ink-3); }
-.cm img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .4s cubic-bezier(.4, 0, .25, 1); }
-a.card:hover .cm img { transform: scale(1.03); }
+.cm img, .cm video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .4s cubic-bezier(.4, 0, .25, 1); }
+a.card:hover .cm img, a.card:hover .cm video { transform: scale(1.03); }
 .h2 .cm, .h4 .cm, .side .cm { flex: 1 0 auto; }   /* only the tall cards let their image take the spare height; elsewhere the images line up along a row */
-.px .cm { aspect-ratio: 16 / 9; } .px .cm img { image-rendering: pixelated; }
-/* featured game: the whole cover, never cropped, text below it */
-.gf .cm { aspect-ratio: 640 / 508; background: var(--ink); } .gf .cm img { object-fit: contain; }
-.cb { flex: 1 0 auto; display: flex; flex-direction: column; gap: 6px; padding: 18px 20px 22px; }
-.ey { margin: 0; font: 700 13px/1.3 var(--sans); letter-spacing: .02em; color: var(--mute); }
+/* game covers: the whole picture, never cropped, on the ink the covers were drawn for */
+.px .cm { aspect-ratio: 16 / 9; background: var(--ink); } .px .cm img { image-rendering: pixelated; object-fit: contain; }
+.gf .cm { aspect-ratio: 640 / 508; }
+/* every card: 20/22 padding, eyebrow, title, line. Big cards step up one size. */
+.cb { flex: 1 0 auto; display: flex; flex-direction: column; padding: 18px 22px 22px; }
+.bt { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ey { margin: 0; display: flex; align-items: center; gap: 6px; font: 700 12px/1.3 var(--sans); letter-spacing: .07em; text-transform: uppercase; font-variant-numeric: tabular-nums; color: var(--mute); }
+.ey .ic { font-size: 15px; }
 .c-paper .ey { color: var(--paper-mute); } .c-blue .ey { color: var(--ink); }
 .ct { margin: 0; font: 750 clamp(19px, 1.7vw, 24px)/1.12 var(--display); letter-spacing: var(--dtrack); text-wrap: balance; overflow-wrap: anywhere; }
 .cx { margin: 0; color: var(--mute); font-size: 15px; line-height: 1.4; }
 .cm ~ .cb .cx { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
 .c-paper .cx { color: var(--paper-mute); } .c-blue .cx { color: var(--ink); }
-.big .ct { font-size: clamp(24px, 2.6vw, 38px); } .big .cb { padding: 22px 24px 26px; }
-/* text-only cards: the title is the picture */
-.txt .cb { justify-content: flex-end; min-height: 190px; padding: 24px; }
+.big .ct { font-size: clamp(24px, 2.6vw, 38px); } .big .cb { padding: 22px 26px 26px; }
+/* text-only cards: an icon tile top left, the title is the picture */
+.txt .cb { justify-content: flex-end; gap: 18px; min-height: 200px; padding: 22px; }
 .txt .ct { font-size: clamp(24px, 2.2vw, 34px); }
 .txt.big .ct { font-size: clamp(28px, 3vw, 44px); }
+.txt .tico { margin-bottom: auto; padding-bottom: 0; }
+.tico { display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 18px; border-radius: 16px; background: #ffffff14; color: var(--paper); font-size: 26px; }
+.c-paper .tico { background: #0f0e1312; color: var(--paper-ink); } .c-blue .tico { background: var(--ink); color: var(--blue-live); }
+.txt.big .tico { width: 64px; height: 64px; font-size: 32px; border-radius: 20px; }
 .note .ct { font: 600 18px/1.35 var(--sans); } .note .cb { min-height: 0; justify-content: center; }
-.go { display: inline-block; transition: transform .4s cubic-bezier(.4, 0, .25, 1); } a.card:hover .go { transform: translateX(4px); }
-/* the logotype's leaning bars as the play mark; they stand up on hover or focus */
-.play { position: absolute; left: 16px; bottom: 16px; display: flex; gap: 5px; align-items: flex-end; height: 30px; z-index: 1; }
-.play i { width: 9px; border-radius: 9px; background: var(--paper); transform: skewX(-13deg); height: 9px; transition: height .6s var(--ease); }
-.play i:nth-child(2) { transition-delay: .06s; } .play i:nth-child(3) { transition-delay: .12s; }
-:is(.card, .vid):is(:hover, :focus-visible) .play i:nth-child(1) { height: 20px; } :is(.card, .vid):is(:hover, :focus-visible) .play i:nth-child(2) { height: 30px; } :is(.card, .vid):is(:hover, :focus-visible) .play i:nth-child(3) { height: 14px; }
+/* link-out cards: a circular arrow button in the corner (the whole card is the link, so this is the visible affordance, not a second target) */
+.goi { position: absolute; z-index: 2; top: 16px; right: 16px; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #ffffff1c; color: var(--paper); font-size: 19px; transition: background .3s var(--ease), color .3s var(--ease), transform .3s var(--ease); }
+.c-paper .goi { background: #0f0e1314; color: var(--paper-ink); } .c-blue .goi { background: var(--ink); color: var(--paper); }
+a.card:hover .goi, a.card:focus-visible .goi { background: var(--paper); color: var(--ink); transform: rotate(45deg); }
+.c-paper:hover .goi, .c-paper:focus-visible .goi { background: var(--ink); color: var(--paper); } .c-blue:hover .goi, .c-blue:focus-visible .goi { background: var(--paper); color: var(--ink); }
+.goi .ic { transition: transform .3s var(--ease); } a.card:hover .goi .ic { transform: rotate(-45deg); }
+/* compact brand cards (All clips on Twitch, Everything on itch.io): big brand tile beside the words instead of a colour block */
+.compact .cb { flex-direction: row; align-items: center; justify-content: flex-start; gap: 22px; min-height: 0; padding: 26px 84px 26px 26px; }
+.compact .tico { width: 72px; height: 72px; margin: 0; font-size: 38px; border-radius: 22px; flex: none; }
+@media (min-width: 1280px) { .compact.w34 .tico { width: 104px; height: 104px; font-size: 56px; border-radius: 30px; } .compact.w34 .cb { gap: 32px; padding-left: 40px; } .compact.w34 .ct { font-size: 38px; } }
+.compact .goi { top: 50%; margin-top: -20px; }
+.compact .ct { font-size: clamp(22px, 2vw, 30px); }
+/* chips over thumbnails: blurred dark pill, bottom right (duration, engine, kind) */
+.chip { position: absolute; z-index: 1; right: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px 0 8px; border-radius: 999px; background: #0f0e13c4; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); color: var(--paper); font: 700 12.5px/1 var(--sans); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+.chip .ic { font-size: 14px; opacity: .85; }
+/* play button: a blurred, tinted disc with the play glyph; the same on clips, videos and the featured player */
+.play { position: absolute; z-index: 1; left: 14px; bottom: 14px; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: #0f0e13a8; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: inset 0 0 0 1.5px #ffffff30; color: var(--paper); font-size: 22px; transition: background .3s var(--ease), color .3s var(--ease), transform .3s var(--ease), box-shadow .3s var(--ease); }
+.play .ic { margin-left: 2px; }
+:is(.card, .vid):is(:hover, :focus-visible) .play { background: var(--blue); color: var(--ink); transform: scale(1.08); box-shadow: none; }
+.vid .play { width: 68px; height: 68px; font-size: 28px; left: 18px; bottom: 18px; }
 /* image with the text over a gradient (hero cards) */
 .ov { aspect-ratio: 4 / 3; }
 .ov .cm { position: absolute; inset: 0; aspect-ratio: auto; }
@@ -147,11 +187,18 @@ a.card:hover .cm img { transform: scale(1.03); }
 @media (min-width: 900px) and (max-width: 1279px) { .t3, .f3 { grid-column: 1 / -1; } }
 @media (min-width: 600px) and (max-width: 899px) { .f2 { grid-column: span 2; } }
 @media (min-width: 1280px) { .w4 { grid-column: span 2; } .w34 { grid-column: span 3; } .h4 { grid-row: span 2; } .ov.h4 { aspect-ratio: auto; } }
-/* a playing card: the media block holds the player, the text stays, with a close button and a plain link */
+/* a playing card: the media block cross-fades to the player; control row below the text, close button on the corner of the picture */
 .vframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-.crow { margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 20px; align-items: center; }
-.cclose, .clink { min-height: 44px; display: inline-flex; align-items: center; font: 700 15px/1 var(--sans); color: var(--blue-live); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 4px; }
-.c-paper .cclose, .c-paper .clink { color: var(--blue-paper); }
-@media (prefers-reduced-motion: reduce) { a.card:hover .cm img, a.card:hover .go { transform: none; } }
+.playing .cm, .playing .thumb { animation: pin .18s var(--ease) both; background: #000; }
+.playing .cm .vframe, .playing .thumb .vframe { animation: pin .18s var(--ease) both; }
+@keyframes pin { from { opacity: 0; scale: .985; } to { opacity: 1; scale: 1; } }
+.crow { margin: 14px 0 0; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; max-width: none; }
+.cb .crow { margin-top: 18px; }
+.pclose { position: absolute; z-index: 3; top: 12px; right: 12px; opacity: 0; }
+.playing :is(.cm, .thumb):is(:hover, :focus-within) .pclose, .pclose:focus-visible { opacity: 1; }
+@media (hover: none) { .pclose { opacity: 1; } }
+.playing .vm { display: none; }
+@media (prefers-reduced-motion: reduce) { a.card:hover .cm img, a.card:hover .cm video, a.card:hover .goi, a.card:hover .goi .ic, .play, .btn:hover .ic-end { transform: none !important; }
+  .playing .cm, .playing .thumb, .playing .vframe { animation: none; } }
 
 @media (prefers-reduced-motion: reduce) { * { transition-duration: .01s !important; animation-duration: .01s !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; } }
