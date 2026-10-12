@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 import { Fragment, useEffect, useReducer, useRef, useState } from 'react'
+import { setHeroIndex } from '@/lib/hero/store'
 import { clickTarget, initialRotation, INTERVAL, ROLL_MS, rotationReducer, slotOf } from '@space/motion/rotation'
 
 export type HookItem = { text: string; href: string }
@@ -111,6 +112,8 @@ export function HeroHook({ stem, items, label = 'Recent work' }: Props) {
   }
 
   const current = clickTarget(s)
+  // The hero atmosphere follows the phrase on screen.
+  useEffect(() => setHeroIndex(current), [current])
 
   // Keyboard stepping moves the focus ring with the phrase: only the phrase on screen is ever focused.
   useEffect(() => {

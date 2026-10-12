@@ -310,46 +310,6 @@
 }
 
 
-/* ---------- Optional atmosphere (flags: ?petal=1, ?leaf=1; off by default; see components/site/Atmosphere) ---------- */
-.atm {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-.atm-leaf {
-  position: absolute;
-  top: -10%;
-  left: -40%;
-  width: 60%;
-  height: 120%;
-  opacity: 0;
-  mix-blend-mode: multiply;
-  animation: atm-shadow 40s var(--ease-in-out-soft) infinite;
-}
-@keyframes atm-shadow {
-  0% {
-    transform: translateX(0) rotate(-6deg);
-    opacity: 0;
-  }
-  18% {
-    opacity: 0.08;
-  }
-  70% {
-    opacity: 0.08;
-  }
-  100% {
-    transform: translateX(260%) rotate(4deg);
-    opacity: 0;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .atm {
-    display: none;
-  }
-}
-
 /* Hidden phrases share the grid cell: their lines must not draw. The resting line of the arriving phrase draws in after its
    words begin to land, and withdraws as the phrase leaves. */
 .hook__item:not([data-current]) .hook__link {

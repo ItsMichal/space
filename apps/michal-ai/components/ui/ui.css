@@ -43,33 +43,35 @@
   width: 0;
   will-change: transform;
 }
-.tl-svg {
+.tl-rule {
   position: absolute;
-  top: 0;
-  overflow: visible;
+  height: 1px;
+  background: var(--hairline);
   pointer-events: none;
 }
-.tl-rail {
-  fill: var(--ink-faint);
-  opacity: 0.32;
+.tl-ticks {
+  position: absolute;
+  left: 0;
+  height: 0;
+  pointer-events: none;
 }
-.tl-stem {
-  fill: var(--accent);
+.tl-tick {
+  position: absolute;
+  top: -4px;
+  width: 1px;
+  height: 9px;
+  background: var(--ink-faint);
 }
-.tl-tip,
-.tl-bud,
-.tl-blade {
-  transform-box: view-box;
-  transform-origin: 0 0;
-}
-.tl-tip {
-  fill: var(--accent);
-}
-.tl-bud {
-  fill: currentColor;
-}
-.tl-blade {
-  fill: var(--ink-faint);
+/* Where you are: a short ink bar across the rule. */
+.tl-cursor {
+  position: absolute;
+  left: -1px;
+  top: -9px;
+  width: 2px;
+  height: 19px;
+  border-radius: 1px;
+  background: var(--ink);
+  will-change: transform;
 }
 .tl-year {
   position: absolute;

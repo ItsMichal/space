@@ -1,0 +1,313 @@
+/* ---------- Project cards ----------
+   Paper surfaces, not photographs. A card is a tinted sheet (one of the palette tints from the tokens) with a hairline
+   edge and a soft, layered shadow, and it holds together with no image at all. An image, when there is one, is a small
+   inset plate with a fixed ratio and rounded corners, never full width. Hover lifts the card on a spring (compositor:
+   transform and the opacity of a pre-rendered deeper shadow), keyboard focus draws a ring. Cards are one real link. */
+
+.work {
+  --card-r: 24px;
+  --plate-r: 14px;
+}
+.work-bento,
+.work-grid,
+.work-row {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ---- layout */
+.work-bento {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+}
+.work-bento > li,
+.work-grid > li,
+.work-row > li {
+  display: flex;
+  min-width: 0;
+}
+.work-row {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  margin-inline: calc(var(--space-4) * -1);
+  padding: var(--space-2) var(--space-4) var(--space-6);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: var(--space-4);
+  scrollbar-width: none;
+}
+.work-row::-webkit-scrollbar {
+  display: none;
+}
+.work-row > li {
+  flex: 0 0 min(76vw, 288px);
+  scroll-snap-align: start;
+}
+.work-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+}
+.work-more {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+@media (min-width: 640px) {
+  .work-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 900px) {
+  .work-bento {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+  /* Large, Medium / Medium, Large: the big cards alternate sides. */
+  .work-bento > li:nth-child(1),
+  .work-bento > li:nth-child(4) {
+    grid-column: span 7;
+  }
+  .work-bento > li:nth-child(2),
+  .work-bento > li:nth-child(3) {
+    grid-column: span 5;
+  }
+  .work-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+    margin-inline: 0;
+    padding: 0;
+    margin-top: var(--space-4);
+    overflow: visible;
+    scroll-snap-type: none;
+  }
+  .work-row > li {
+    flex: none;
+  }
+  .work-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+}
+
+/* ---- the card */
+.pcard {
+  --lift: 0px;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  border-radius: var(--card-r);
+  padding: var(--space-6);
+  color: var(--ink);
+  text-decoration: none;
+  background: color-mix(in srgb, var(--card-tint, var(--tint-birch)) 70%, var(--paper-raised));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--ink) 9%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 0.75),
+    0 1px 2px rgb(24 33 27 / 0.05),
+    0 10px 24px -14px rgb(24 33 27 / 0.2);
+  transition: transform var(--lift-d, 700ms) var(--lift-e, ease);
+  -webkit-tap-highlight-color: transparent;
+}
+/* The deeper shadow is drawn once and cross-faded, so hover never repaints a shadow. */
+.pcard::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  box-shadow:
+    0 2px 4px rgb(24 33 27 / 0.06),
+    0 18px 36px -14px rgb(24 33 27 / 0.24),
+    0 34px 60px -30px rgb(24 33 27 / 0.28);
+  opacity: 0;
+  transition: opacity var(--lift-d, 700ms) var(--lift-e, ease);
+}
+.pcard:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+@media (hover: hover) {
+  .pcard:hover {
+    transform: translate3d(0, -4px, 0);
+  }
+  .pcard:hover::after {
+    opacity: 1;
+  }
+}
+.pcard:active {
+  transform: translate3d(0, -1px, 0) scale(0.995);
+}
+
+.pcard__body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.pcard__meta {
+  font: 400 15px/22px var(--font-serif);
+  letter-spacing: 0.005em;
+  color: var(--ink-muted);
+}
+.pcard__title {
+  font: 400 clamp(34px, 9vw, 44px) / 1 var(--font-display);
+  letter-spacing: -0.018em;
+  margin-top: var(--space-1);
+}
+.pcard__desc {
+  max-width: 40ch;
+  font: 400 17px/25px var(--font-serif);
+  color: var(--ink-muted);
+}
+.pcard__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-3);
+  min-height: 44px;
+  font: 500 15px/1 var(--font-sans);
+}
+.pcard__cta svg {
+  transition: transform var(--lift-d, 700ms) var(--lift-e, ease);
+}
+@media (hover: hover) {
+  .pcard:hover .pcard__cta svg {
+    transform: translate3d(2px, -2px, 0);
+  }
+}
+
+/* image plate: inset, rounded, fixed ratio, cropped with coverFocus */
+.pcard__plate {
+  position: relative;
+  z-index: 1;
+  margin-top: var(--space-4);
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: var(--plate-r);
+  background: var(--paper-sunk);
+}
+.pcard__plate::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgb(24 33 27 / 0.1);
+  pointer-events: none;
+}
+.pcard__plate picture {
+  display: contents;
+}
+.pcard__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* phones: medium cards are type only, which keeps the page short */
+@media (max-width: 899px) {
+  .pcard--m .pcard__plate {
+    display: none;
+  }
+}
+
+/* sizes */
+.pcard--s {
+  padding: var(--space-4) var(--space-4) var(--space-3);
+}
+.pcard--s .pcard__title {
+  font-size: 28px;
+}
+.pcard--s .pcard__desc {
+  font-size: 16px;
+  line-height: 23px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+@media (min-width: 900px) {
+  .pcard--l {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    column-gap: var(--space-6);
+    padding: var(--space-8);
+    min-height: 372px;
+  }
+  .pcard--l .pcard__title {
+    font-size: clamp(40px, 3.6vw, 52px);
+  }
+  .pcard--l .pcard__plate {
+    margin-top: 0;
+    aspect-ratio: auto;
+    height: 100%;
+    min-height: 220px;
+  }
+  .pcard--m {
+    padding: var(--space-6);
+    min-height: 372px;
+  }
+  .pcard--m .pcard__title {
+    font-size: clamp(38px, 3.4vw, 46px);
+  }
+  .pcard--m .pcard__plate {
+    aspect-ratio: 2 / 1;
+    margin-top: var(--space-4);
+  }
+  .pcard--m .pcard__cta {
+    margin-top: 0;
+  }
+}
+
+/* pointer-tracked highlight (decorative, transform and opacity only), clipped to the card's rounded shape */
+.pcard__clip {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.pcard__glow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+  width: 320px;
+  height: 320px;
+  pointer-events: none;
+  background: radial-gradient(closest-side, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0));
+  opacity: 0;
+  transition: opacity 600ms ease;
+}
+.pcard__glow[data-on] {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pcard,
+  .pcard::after,
+  .pcard__cta svg {
+    transition: none;
+  }
+  .pcard:hover,
+  .pcard:active {
+    transform: none;
+  }
+  .pcard:hover .pcard__cta svg {
+    transform: none;
+  }
+}

@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { GlassEffectContainer, GlassFold, GlassFoldItem, glass, useGlassNamespace } from '@/components/glass'
 import { StatusSlot } from '@/components/ui/StatusPill'
 import { SiteMark } from './SiteMark'
+import type { MenuPreview } from '@/lib/menu'
 
 const links = [
   { label: 'Work', href: '/projects', match: '/projects' },
@@ -28,11 +29,13 @@ function MenuIcon({ open }: { open: boolean }) {
  * indicator, can be added later and will merge with it). Below 640px the pill folds open into a menu
  * sheet that unfolds from, and folds back into, the pill (44px targets, safe-area aware).
  */
-export function NavBar() {
+export function NavBar({ previews }: { previews?: { work: MenuPreview[]; writing: MenuPreview[] } }) {
   const pathname = usePathname()
   const ns = useGlassNamespace('nav')
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLElement | null>(null)
+  const buttonRef = useRef<HTMLButtonElement | null>(null)
+  const wasOpen = useRef(false)
 
   useEffect(() => setOpen(false), [pathname])
 
@@ -50,6 +53,21 @@ export function NavBar() {
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('pointerdown', onDown)
     }
+  }, [open])
+
+  // Scroll is locked only while the sheet is open (phone widths; CSS scopes it). Focus moves into the sheet on open and
+  // returns to the button on close, if it was inside.
+  useEffect(() => {
+    const root = document.documentElement
+    if (open) {
+      root.setAttribute('data-nav-open', '')
+      document.getElementById('nav-sheet')?.querySelector<HTMLElement>('a')?.focus({ preventScroll: true })
+    } else {
+      root.removeAttribute('data-nav-open')
+      if (wasOpen.current && document.getElementById('nav-sheet')?.contains(document.activeElement)) buttonRef.current?.focus({ preventScroll: true })
+    }
+    wasOpen.current = open
+    return () => root.removeAttribute('data-nav-open')
   }, [open])
 
   const close = useCallback(() => setOpen(false), [])
@@ -85,11 +103,14 @@ export function NavBar() {
           panelId="nav-sheet"
           className="pointer-events-auto min-w-0 flex-1 sm:flex-none"
           headerClassName="relative flex min-h-[48px] items-center justify-between gap-space-3 pl-space-4 pr-[4px] sm:gap-space-6 sm:pr-space-4"
-          panelClassName="flex flex-col px-space-4 pb-space-3 pt-space-1 sm:hidden"
+          panelClassName="sheet-scroll flex flex-col px-space-4 pb-space-3 pt-space-1 sm:hidden"
           header={
             <>
-              <Link href="/" aria-label="Home" className="flex min-h-[44px] items-center rounded-sm text-ink" onClick={close}>
+              <Link href="/" aria-label="michal.ai, home" className="flex min-h-[44px] items-center gap-space-2 rounded-sm text-ink" onClick={close}>
                 <SiteMark height={18} />
+                <span className="font-display text-[21px] leading-none tracking-[-0.005em]" aria-hidden>
+                  michal.ai
+                </span>
               </Link>
               <ul className="m-0 hidden list-none items-center gap-space-6 p-0 sm:flex">
                 {links.map((l) => (
@@ -102,6 +123,7 @@ export function NavBar() {
               </ul>
               <StatusSlot routeKey={pathname} />
               <button
+                ref={buttonRef}
                 type="button"
                 aria-label={open ? 'Close menu' : 'Open menu'}
                 aria-expanded={open}
@@ -114,18 +136,43 @@ export function NavBar() {
             </>
           }
         >
-          {links.map((l, i) => (
-            <GlassFoldItem key={l.href} index={i} as="div">
-              <Link
-                href={l.href}
-                onClick={close}
-                aria-current={l.match && pathname.startsWith(l.match) ? 'page' : undefined}
-                className={`${linkClass(!!l.match && pathname.startsWith(l.match))} sheet-row min-h-[52px] w-full !text-ink font-display text-[28px] leading-none tracking-[-0.01em]`}
-              >
-                {l.label}
-              </Link>
-            </GlassFoldItem>
-          ))}
+          {links.map((l, i) => {
+            const rows = l.href === '/projects' ? previews?.work : l.href === '/writing' ? previews?.writing : undefined
+            return (
+              <div key={l.href} className="sheet-sec">
+                <GlassFoldItem index={i} as="div">
+                  <Link
+                    href={l.href}
+                    onClick={close}
+                    aria-current={l.match && pathname.startsWith(l.match) ? 'page' : undefined}
+                    className={`${linkClass(!!l.match && pathname.startsWith(l.match))} sheet-row min-h-[52px] w-full !text-ink font-display text-[28px] leading-none tracking-[-0.01em]`}
+                  >
+                    {l.label}
+                  </Link>
+                </GlassFoldItem>
+                {rows && rows.length > 0 ? (
+                  <ul className="sheet-prev">
+                    {rows.map((r, k) => (
+                      <GlassFoldItem key={r.href} as="li" index={i + k + 1}>
+                        <Link href={r.href} onClick={close} className="sheet-prow">
+                          <span className="sheet-prow__tile" style={{ backgroundColor: r.tint, backgroundImage: r.thumb ? `url(${r.thumb.lqip})` : undefined }} aria-hidden>
+                            {r.thumb ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={r.thumb.src} alt="" width={44} height={44} loading="lazy" decoding="async" />
+                            ) : null}
+                          </span>
+                          <span className="sheet-prow__text">
+                            <span className="sheet-prow__title">{r.title}</span>
+                            <span className="sheet-prow__sub">{r.sub}</span>
+                          </span>
+                        </Link>
+                      </GlassFoldItem>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            )
+          })}
         </GlassFold>
       </div>
     </GlassEffectContainer>

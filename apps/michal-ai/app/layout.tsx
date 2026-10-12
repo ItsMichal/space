@@ -5,13 +5,13 @@ import type { Metadata, Viewport } from 'next'
 import { IBM_Plex_Mono, Newsreader, Schibsted_Grotesk } from 'next/font/google'
 import React, { StrictMode } from 'react'
 import { NavBar } from '@/components/site/NavBar'
-import { ScrollReveal } from '@/components/site/ScrollReveal'
 import { Footer } from '@/components/site/Footer'
-import { Atmosphere } from '@/components/site/Atmosphere'
+import { PageEnd } from '@/components/site/PageEnd'
 import { ShaderCanvasProvider } from '@/components/shader-image'
 import { Backdrop } from '@/components/backdrop/Backdrop'
 import { display } from './fonts/display'
 import { DEFAULT_SHARE_IMAGE, siteMetadata } from '@/lib/seo'
+import { getMenuPreviews } from '@/lib/menu'
 import { profile } from '@/content/profile'
 
 const sans = Schibsted_Grotesk({
@@ -85,13 +85,12 @@ export default function RootLayout({
           <a href="#main" className="skip-link">
             Skip to content
           </a>
-          <NavBar />
-          <ScrollReveal />
-          <Atmosphere />
+          <NavBar previews={getMenuPreviews()} />
           <main id="main" className="relative flex-1">
-            <Backdrop paths={['/', '/shaders']} />
+            <Backdrop paths={['/shaders']} />
             <ShaderCanvasProvider>{children}</ShaderCanvasProvider>
           </main>
+          <PageEnd />
           <Footer />
         </body>
       </html>
