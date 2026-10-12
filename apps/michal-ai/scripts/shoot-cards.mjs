@@ -41,7 +41,7 @@ const pages = [
   ['post', '/writing/creating-my-first-pcb-object'],
   ['404', '/does-not-exist'],
 ]
-const sizes = [['1440', 1440, 900, 1], ['375', 375, 812, 2]]
+const sizes = [['1440', 1440, 900, 1], ['768', 768, 1024, 1], ['375', 375, 812, 2]]
 const schemes = ['light', 'dark']
 // every row of cards: group titles by their offsetTop-of-card row and report spread of title tops
 const ASSERT = `(() => {
@@ -92,13 +92,13 @@ for (const scheme of schemes) {
         clip = { ...r, scale: 1 }
       } else {
         const hgt = await ev('document.documentElement.scrollHeight')
-        clip = { x: 0, y: 0, width: w, height: Math.min(hgt, 5000), scale: 1 }
+        clip = process.env.END ? { x: 0, y: Math.max(0, hgt - 2000), width: w, height: Math.min(hgt, 2000), scale: 1 } : { x: 0, y: 0, width: w, height: Math.min(hgt, 5000), scale: 1 }
       }
       await ev('scrollTo(0,0)')
       const shot = await send('Page.captureScreenshot', { format: 'png', clip, captureBeyondViewport: true })
       if (!shot.result) { console.log('SHOT ERR', JSON.stringify(shot)); continue }
-      fs.writeFileSync(path.join(out, `${name}-${sname}-${scheme}.png`), Buffer.from(shot.result.data, 'base64'))
-      console.log('wrote', `${name}-${sname}-${scheme}.png`)
+      fs.writeFileSync(path.join(out, `${name}${process.env.END ? '-end' : ''}-${sname}-${scheme}.png`), Buffer.from(shot.result.data, 'base64'))
+      console.log('wrote', `${name}${process.env.END ? '-end' : ''}-${sname}-${scheme}.png`)
     }
   }
 }

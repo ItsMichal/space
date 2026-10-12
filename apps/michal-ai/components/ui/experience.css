@@ -1,7 +1,12 @@
 .xp {
   display: grid;
-  grid-auto-rows: 1fr;
   flex: 1;
+}
+/* beside the intro and publications (three columns) the rows share the card's height; stacked, they take their own */
+@media (min-width: 1100px) {
+  .xp {
+    grid-auto-rows: 1fr;
+  }
 }
 .xp > li {
   display: flex;
