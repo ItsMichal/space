@@ -58,27 +58,48 @@ async function frame({ scheme, t, scroll, glyphs = 0, w = 640, h = 640 }) {
   return Buffer.from(url.split(',')[1], 'base64')
 }
 
-const lum = (r, g, b) => {
-  const f = (v) => ((v / 255) ** 2.2)
-  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b)
-}
+const lin = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4 }
+const lum = (r, g, b) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
+const luma = (r, g, b) => 0.2126 * r + 0.7152 * g + 0.0722 * b // encoded (gamma) luma
+const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16))
+const contrast = (a, b) => { const [x, y] = [lum(...a), lum(...b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05) }
 if (report) {
-  const paper = { light: [0xf4, 0xf1, 0xe8], dark: [0x12, 0x16, 0x12] }
+  const T = {
+    light: { paper: hex('#f4f1e8'), ink: hex('#18211b'), muted: hex('#525c4f'), glyph: [0.13 * 255, 0.13 * 255, 0.11 * 255] },
+    dark: { paper: hex('#121612'), ink: hex('#ebe7da'), muted: hex('#a4ab99'), glyph: [0.92 * 255, 0.91 * 255, 0.85 * 255] },
+  }
+  const GLYPH_ALPHA = 0.22
+  const GRAIN = 0.012 * 255 / 2 // grain adds up to +-0.006 of full scale
   for (const scheme of ['light', 'dark']) {
-    let min = Infinity, max = -Infinity, minPx, maxPx
-    const Yp = lum(...paper[scheme])
+    const t = T[scheme]
+    let min = Infinity, max = -Infinity, minPx, maxPx, minLuma = Infinity, maxLuma = -Infinity
     for (const scroll of [0, 700, 1500, 2600, 4000, 6500]) {
-      for (const t of [37, 120, 260, 400]) {
-        const png = await frame({ scheme, t, scroll, w: 960, h: 600 })
+      for (const time of [37, 120, 260, 400]) {
+        const png = await frame({ scheme, t: time, scroll, w: 960, h: 600 })
         const { data, info } = await sharp(png).raw().toBuffer({ resolveWithObject: true })
         for (let i = 0; i < data.length; i += info.channels) {
           const Y = lum(data[i], data[i + 1], data[i + 2])
+          const L = luma(data[i], data[i + 1], data[i + 2])
           if (Y < min) { min = Y; minPx = [data[i], data[i + 1], data[i + 2]] }
           if (Y > max) { max = Y; maxPx = [data[i], data[i + 1], data[i + 2]] }
+          minLuma = Math.min(minLuma, L); maxLuma = Math.max(maxLuma, L)
         }
       }
     }
-    console.log(JSON.stringify({ scheme, paperY: Yp, minY: min, minRatio: min / Yp, minPx, maxY: max, maxRatio: max / Yp, maxPx }))
+    const Yp = lum(...t.paper), Lp = luma(...t.paper)
+    // Worst case for text: the extreme backdrop pixel, a glyph at the alpha cap on top of it, and grain pushing the wrong way.
+    const worst = (px) => px.map((c, k) => c * (1 - GLYPH_ALPHA) + t.glyph[k] * GLYPH_ALPHA + (scheme === 'light' ? -GRAIN : GRAIN))
+    const bad = scheme === 'light' ? minPx : maxPx
+    const bg = worst(bad)
+    console.log(JSON.stringify({
+      scheme, paperY: +Yp.toFixed(4), backdropMinY: +min.toFixed(4), minYRatioToPaper: +(min / Yp).toFixed(4), lumaFloorRatio: +(minLuma / Lp).toFixed(4), lumaMaxRatio: +(maxLuma / Lp).toFixed(4),
+      backdropMaxY: +max.toFixed(4), minPx, maxPx,
+      contrast: {
+        ink_on_extreme_backdrop: +contrast(t.ink, bad).toFixed(2), muted_on_extreme_backdrop: +contrast(t.muted, bad).toFixed(2),
+        ink_on_extreme_plus_glyph: +contrast(t.ink, bg).toFixed(2), muted_on_extreme_plus_glyph: +contrast(t.muted, bg).toFixed(2),
+        ink_on_paper: +contrast(t.ink, t.paper).toFixed(2), muted_on_paper: +contrast(t.muted, t.paper).toFixed(2),
+      },
+    }))
   }
 } else if (process.env.PNG) {
   for (const sc of (process.env.SCROLLS ?? '0').split(',')) {

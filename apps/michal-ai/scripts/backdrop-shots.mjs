@@ -31,6 +31,12 @@ for (const dark of [false, true]) {
   }
 }
 
+// Zoomed crops (device scale 2): the glyph field on a quiet margin, and a glass card corner (lens and rim).
+for (const dark of [false, true]) {
+  const k = dark ? 'dark' : 'light'
+  shots.push({ name: `zoom-glyphs-${k}`, path: '/', ...D, dark, scroll: 1500, scale: 2, clip: { x: 0, y: 300, width: 220, height: 160 }, forceReading: dark })
+  shots.push({ name: `zoom-lens-${k}`, path: '/', ...D, dark, scroll: 1000, scale: 2, clip: { x: 150, y: 80, width: 300, height: 200 }, forceReading: dark })
+}
 const port = 9700 + Math.floor(Math.random() * 200)
 const dir = path.join(process.env.TMPDIR ?? '/tmp', `chrome-bd-${port}`)
 const chrome = spawn(
@@ -75,6 +81,7 @@ for (const s of shots) {
   await send('Page.navigate', { url: base + p })
   for (let i = 0; i < 240; i++) { await sleep(500); if (await evalJs(`!!document.querySelector('.paper-grid__gl[data-ready]') || document.querySelector('.paper-grid')?.hasAttribute('data-fallback')`)) break }
   await sleep(1800)
+  if (s.forceReading) await evalJs(`document.documentElement.setAttribute('data-reading','')`)
   if (s.scroll === 'about') {
     await evalJs(`(()=>{const e=[...document.querySelectorAll('h2,h3')].find(x=>/about/i.test(x.textContent)); if(e) window.scrollTo(0, e.getBoundingClientRect().top + scrollY - 120)})()`)
   } else if (s.scroll) await evalJs(`window.scrollTo(0, ${s.scroll})`)
