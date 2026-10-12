@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Post } from '@/lib/content/types'
 import type { SeriesGroup } from '@/lib/content'
-import { Picture } from '@/components/media/Picture'
+import { ProjectCard } from '@/components/work/Showcase'
 import { Disclosure } from '@/components/ui/Disclosure'
 import { postPath } from '@/lib/seo'
 import './writing.css'
@@ -9,13 +9,10 @@ import './writing.css'
 const month = (iso: string) =>
   new Date(iso + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
 
-/** One compact row: optional small thumbnail, title, one-line description, date. */
-function Row({ post, thumb = false }: { post: Post; thumb?: boolean }) {
+/** One compact row inside a list card: title, one-line description, date. The date is already the tertiary line, so it stays on the right. */
+function Row({ post }: { post: Post }) {
   return (
-    <Link href={postPath(post)} className="wrt" data-thumb={thumb && post.cover ? '' : undefined}>
-      {thumb && post.cover ? (
-        <Picture src={post.cover} alt="" sizes="72px" aspect="1 / 1" focus={post.coverFocus} className="wrt__img" />
-      ) : null}
+    <Link href={postPath(post)} className="wrt card__row">
       <span className="wrt__text">
         <span className="wrt__title">{post.title}</span>
         <span className="wrt__desc">{post.description}</span>
@@ -27,12 +24,12 @@ function Row({ post, thumb = false }: { post: Post; thumb?: boolean }) {
   )
 }
 
-function Rows({ posts, thumb }: { posts: Post[]; thumb?: boolean }) {
+function Rows({ posts }: { posts: Post[] }) {
   return (
-    <ul className="wlist">
+    <ul className="wlist card__rows">
       {posts.map((p) => (
         <li key={p.slug}>
-          <Row post={p} thumb={thumb} />
+          <Row post={p} />
         </li>
       ))}
     </ul>
@@ -45,7 +42,7 @@ function SeriesBlock({ group }: { group: SeriesGroup }) {
   const span = first.date.slice(0, 4) === last.date.slice(0, 4) ? first.date.slice(0, 4) : `${first.date.slice(0, 4)} – ${last.date.slice(0, 4)}`
   const title = group.parent ? group.parent.title : group.name
   return (
-    <div id={group.id} className="wseries">
+    <div id={group.id} className="wseries card surface card--list">
       <Disclosure
         summary={
           <span className="wseries__sum">
@@ -78,8 +75,14 @@ export function WritingIndex({ featured, series, years }: { featured: Post[]; se
   return (
     <div className="writing">
       {featured.length ? (
-        <section aria-label="Featured">
-          <Rows posts={featured} thumb />
+        <section aria-label="Featured" className="work">
+          <ul className="tiles tiles--grid">
+            {featured.map((p) => (
+              <li key={p.slug}>
+                <ProjectCard post={p} href={postPath(p)} article />
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
       {series.length ? (
@@ -87,9 +90,11 @@ export function WritingIndex({ featured, series, years }: { featured: Post[]; se
           <h2 id="w-series" className="writing__h">
             Series
           </h2>
-          {series.map((g) => (
-            <SeriesBlock key={g.id} group={g} />
-          ))}
+          <div className="writing__stack">
+            {series.map((g) => (
+              <SeriesBlock key={g.id} group={g} />
+            ))}
+          </div>
         </section>
       ) : null}
       {years.map(({ year, posts }) => (
@@ -97,7 +102,9 @@ export function WritingIndex({ featured, series, years }: { featured: Post[]; se
           <h2 id={`w-${year}`} className="writing__h">
             {year}
           </h2>
-          <Rows posts={posts} />
+          <div className="card surface card--list">
+            <Rows posts={posts} />
+          </div>
         </section>
       ))}
     </div>

@@ -7,7 +7,7 @@ date: 2023-12-11
 tags: ["TypeScript", "Web", "AI/ML"]
 cover: /media/frogchamp-ai-chat-stream/cover.webp
 coverAlt: "Frogchamp dashboard in dark mode: a live stream beside an AI chat summary, an activity meter and a scrolling chat feed"
-priority: 8
+priority: 4.5
 role: "Design and development"
 hook: "a live dashboard for streamers' chat"
 links:

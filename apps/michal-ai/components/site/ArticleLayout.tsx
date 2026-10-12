@@ -88,14 +88,14 @@ export function ArticleLayout({
         </p>
       </header>
       {cover ? (
-        <figure className="hero max-w-[900px]">
+        <figure className="hero">
           <Zoomable
             src={cover}
             alt={coverAlt ?? ''}
             priority
             focus={coverFocus}
             className="hero__img"
-            sizes="(min-width: 948px) 900px, calc(100vw - 32px)"
+            sizes="(min-width: 1184px) 1120px, calc(100vw - 32px)"
           />
         </figure>
       ) : (

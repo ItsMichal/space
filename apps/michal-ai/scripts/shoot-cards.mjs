@@ -93,6 +93,7 @@ for (const scheme of schemes) {
       }
       await ev('scrollTo(0,0)')
       const shot = await send('Page.captureScreenshot', { format: 'png', clip, captureBeyondViewport: true })
+      if (!shot.result) { console.log('SHOT ERR', JSON.stringify(shot)); continue }
       fs.writeFileSync(path.join(out, `${name}-${sname}-${scheme}.png`), Buffer.from(shot.result.data, 'base64'))
       console.log('wrote', `${name}-${sname}-${scheme}.png`)
     }

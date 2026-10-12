@@ -32,7 +32,7 @@
 }
 .about__intro p {
   margin: 0;
-  max-width: 62ch;
+  color: var(--ink);
 }
 .about__intro p + p {
   margin-top: var(--space-4);

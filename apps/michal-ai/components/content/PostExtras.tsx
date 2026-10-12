@@ -9,7 +9,7 @@ export function PostExtras({ slug }: { slug: string }) {
 
 function StarlinkLaunches() {
   return (
-    <section aria-labelledby="launches-h" className="postnav postextra">
+    <section aria-labelledby="launches-h" className="postnav postextra card surface">
       <h2 id="launches-h" className="postnav__h">
         Launches since I joined
       </h2>

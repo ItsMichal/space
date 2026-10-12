@@ -9,8 +9,8 @@ export function Publications({ ids }: { ids?: string[] }) {
   const pubs = (ids ?? []).map(getPublication).filter((p): p is NonNullable<typeof p> => Boolean(p))
   if (!pubs.length) return null
   return (
-    <section className="pubs" aria-labelledby="pubs-h">
-      <h2 id="pubs-h" className="pubs__h">
+    <section className="pubs card surface" aria-labelledby="pubs-h">
+      <h2 id="pubs-h" className="pubs__h card__h t-title">
         Publication
       </h2>
       {pubs.map((p) => (

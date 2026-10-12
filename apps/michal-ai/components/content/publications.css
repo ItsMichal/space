@@ -1,19 +1,23 @@
+/* Publication block on a project page: a card; citation beside the author's own sentence from 900px up. */
 .pubs {
   margin: var(--space-12) 0 0;
-  max-width: 62ch;
-  border-top: 1px solid var(--hairline);
-  padding-top: var(--space-6);
 }
-.pubs__h {
-  font: 400 30px/1.15 var(--font-display);
-  letter-spacing: -0.01em;
-  margin: 0 0 var(--space-4);
+.pubs__item {
+  display: grid;
+  gap: var(--space-4) var(--space-8);
 }
 .pubs__item + .pubs__item {
   margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--hairline);
+}
+@media (min-width: 900px) {
+  .pubs__item:has(.pubs__role) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
 }
 .pubs__cite {
-  font: 400 17px/26px var(--font-serif);
+  font: 400 17px/25px var(--font-serif);
   margin: 0;
 }
 .pubs__me {
@@ -25,9 +29,9 @@
   vertical-align: -1px;
 }
 .pubs__role {
-  margin: var(--space-4) 0 0;
+  margin: 0;
   padding: 0 0 0 var(--space-4);
   border-left: 2px solid var(--hairline);
-  font: 400 17px/26px var(--font-serif);
+  font: 400 17px/25px var(--font-serif);
   color: var(--ink-muted);
 }
