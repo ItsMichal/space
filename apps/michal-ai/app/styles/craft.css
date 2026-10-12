@@ -36,27 +36,31 @@
   outline-offset: 4px;
   border-radius: 4px;
 }
-/* The words are inline-blocks, which a text-decoration does not reach, so the rotating phrase carries a 1px rule as a
-   background on the link itself: exactly the width of the text, one segment per wrapped line. */
+/* One rule per line of text, the width of that line's text, at the same offset under every line: a 1px text-decoration on
+   each word (the words are inline-blocks, which a decoration on the link would not reach). No borders, no backgrounds,
+   no pseudo-elements. */
 .hook__link {
   text-decoration: none;
-  background: linear-gradient(color-mix(in srgb, currentColor 34%, transparent), color-mix(in srgb, currentColor 34%, transparent)) 0 100% / 100% 1px no-repeat;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-  padding-bottom: 0.06em;
 }
-.hook__link:hover,
-.hook__link:focus-visible {
-  background-image: linear-gradient(currentColor, currentColor);
+.hook__w {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: color-mix(in srgb, currentColor 34%, transparent);
+  transition:
+    transform 320ms var(--ease-out-soft),
+    opacity 260ms var(--ease-out-soft),
+    text-decoration-color 150ms var(--ease-out-soft);
+}
+.hook__link:hover .hook__w,
+.hook__link:focus-visible .hook__w {
+  text-decoration-color: currentColor;
 }
 /* The last word and the arrow stay together. */
 .hook__end {
   white-space: nowrap;
 }
-/* Phrases that are not on screen share the grid cell: they draw no rule and no arrow. */
-.hook__item:not([data-current]) .hook__link {
-  background-image: none;
-}
+/* Phrases that are not on screen share the grid cell: they draw no arrow. */
 .hook__item:not([data-current]) .hook__arrow {
   display: none;
 }

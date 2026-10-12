@@ -37,15 +37,20 @@ export function ProjectCard({ post, href, feature = false, priority = false }: {
           />
         </div>
       ) : (
-        <div className="tile__media tile__media--word" style={{ '--tile-tint': `var(--tint-${tintFor(post.slug).name})` } as CSSProperties} aria-hidden>
-          <span className="tile__word">{post.title}</span>
+        <div className="tile__media tile__media--word" style={{ '--tile-tint': `var(--tint-${tintFor(post.slug).name})` } as CSSProperties}>
+          {/* The large name is the card's heading; the text block below does not repeat it. */}
+          <h3 id={`${id}-t`} className="tile__word">
+            {post.title}
+          </h3>
         </div>
       )}
       <div className="tile__body">
         <p className="tile__meta t-meta">{meta}</p>
-        <h3 id={`${id}-t`} className="tile__title t-title">
-          {post.title}
-        </h3>
+        {src ? (
+          <h3 id={`${id}-t`} className="tile__title t-title">
+            {post.title}
+          </h3>
+        ) : null}
         <p id={`${id}-d`} className="tile__desc t-text">
           {post.description}
         </p>
