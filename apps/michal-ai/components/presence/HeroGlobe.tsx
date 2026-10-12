@@ -20,7 +20,7 @@ interface Props {
   /** Demo only: fixed made-up visitors instead of the Worker. */
   mock?: boolean
   /** 'bleed' (default): positioned by the component's CSS to run off the right/top edge of a `position:relative; overflow:hidden` hero. 'full': fills its parent as a square; the parent positions it. */
-  variant?: 'bleed' | 'full'
+  variant?: 'slot' | 'bleed' | 'full'
   className?: string
 }
 
@@ -29,7 +29,7 @@ interface Props {
  * Not interactive (pointer-events none, aria-hidden, nothing focusable). Fills its parent's width as a square; the parent
  * decides position, size and opacity (see docs/presence.md). Static image under reduced motion or without WebGL2.
  */
-export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'bleed', className = '' }: Props) {
+export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot', className = '' }: Props) {
   const wrap = useRef<HTMLDivElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
   const layer = useRef<HTMLDivElement>(null)
@@ -49,7 +49,6 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'bleed
     if (!pins) return []
     const out = presence.live.filter((p) => Number.isFinite(p.lat)).map((p) => ({ k: p.id, lat: p.lat, lon: p.lon, cls: 'hg-dot' }))
     if (presence.you && Number.isFinite(presence.you.lat)) out.push({ k: 'you', lat: presence.you.lat, lon: presence.you.lon, cls: 'hg-dot' })
-    out.push({ k: 'home', lat: HAWTHORNE.lat, lon: HAWTHORNE.lon, cls: 'hg-dot hg-dot--home' })
     return out
   }, [pins, presence])
 
@@ -63,7 +62,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'bleed
     if (!s.reduced && s.active) s.lon += DEG_PER_S * dt
     const lat = gl ? START.lat : GLOBE_FALLBACK_VIEW.lat
     const lon = gl ? s.lon : GLOBE_FALLBACK_VIEW.lon
-    s.r?.draw(lat, lon)
+    s.r?.draw(lat, lon, HAWTHORNE)
     const L = layer.current
     if (L && s.size) {
       const rot = rotation(lat, lon)
@@ -111,7 +110,10 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'bleed
     loadLand()
       .then((rings) => {
         if (cancelled || !canvas.current) return
-        const r = createRenderer(canvas.current, rings)
+        // The hero's own ink colour, so the dots take the surface they sit on (opacity does the rest).
+        const m = /rgba?\(([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)/.exec(getComputedStyle(wrap.current!).color)
+        const ink: [number, number, number] = m ? [+m[1] / 255, +m[2] / 255, +m[3] / 255] : [0.13, 0.13, 0.11]
+        const r = createRenderer(canvas.current, rings, { ink, accent: [0.24, 0.42, 0.21] })
         if (!r) return setMode('fallback')
         st.current.r = r
         r.resize(st.current.size || 300, st.current.dpr)
@@ -169,7 +171,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'bleed
     <div ref={wrap} className={`hero-globe hero-globe--${variant} ${className}`} data-mode={mode} aria-hidden="true">
       {/* Static drawing of the same globe: server-rendered, shown under reduced motion / without WebGL2. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="hero-globe__still" src="/globe/fallback.svg" alt="" width={400} height={400} decoding="async" />
+      <img className="hero-globe__still" src="/globe/fallback.png" alt="" width={400} height={400} decoding="async" />
       <canvas ref={canvas} className="hero-globe__canvas" />
       <div ref={layer} className="hero-globe__pins">
         {dots.map((d) => (

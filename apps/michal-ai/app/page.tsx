@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { getAllPosts, getBlogPosts, getTopLevel } from '@/lib/content'
+import { HeroGlobe } from '@/components/presence/HeroGlobe'
 import { HeroHook } from '@/components/site/HeroHook'
 import { HeroAtmosphere } from '@/components/site/HeroAtmosphere'
 import { postPath } from '@/lib/seo'
@@ -45,7 +46,9 @@ export default function Home() {
       {hooks.length ? <HeroAtmosphere tints={tints} /> : null}
       {/* Hero background slot: a positioned layer behind the text and above the tint cross-fade, empty by default. A decorative
           component (aria-hidden, pointer-events none) can be dropped in here; the hero text keeps its own contrast. */}
-      <div className="hero-slot" data-hero-slot="background" aria-hidden />
+      <div className="hero-slot" data-hero-slot="background" aria-hidden>
+        <HeroGlobe />
+      </div>
       <NameHeader
         first={profile.firstName}
         last={profile.lastName}

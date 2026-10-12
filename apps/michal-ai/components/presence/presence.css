@@ -10,7 +10,27 @@
   /* Single ink at low contrast; override per hero. Text over it stays AA without a scrim. */
   opacity: var(--hero-globe-opacity, 0.42);
 }
-/* Bleed: a partially cropped globe running off the right and top edge. The hero must be position:relative; overflow:hidden. */
+/* Slot (default): wholly inside the homepage hero slot, right of the text, above the first card row; hidden below 768px where the
+   hero text fills the width and the cards start right under it. Dots fade to nothing toward the limb, so there is no edge and
+   nothing touches the slot's clip box. */
+.hero-globe {
+  color: var(--ink);
+}
+.hero-globe--slot {
+  display: none;
+  position: absolute;
+  z-index: 0;
+  --hero-globe-opacity: var(--hero-globe-opacity-slot, 0.28);
+}
+@media (min-width: 768px) {
+  .hero-globe--slot {
+    display: block;
+    width: min(34vw, 420px);
+    right: 3vw;
+    top: 96px;
+  }
+}
+/* Bleed: runs off the right and top edge (the parent must clip). Not used on the homepage. */
 .hero-globe--bleed {
   position: absolute;
   z-index: 0;
