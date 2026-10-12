@@ -1,5 +1,6 @@
 import { getBlogPosts, getTopLevel } from '@/lib/content'
 import { AUTHOR_NAME, SITE_NAME, SITE_URL, absoluteUrl, postPath } from '@/lib/seo'
+import { feedIdPath } from '@/lib/slug-history'
 import { siteConfig } from '@/site.config'
 
 export const dynamic = 'force-static'
@@ -16,7 +17,7 @@ export function GET() {
     language: 'en-US',
     authors: [{ name: AUTHOR_NAME, url: SITE_URL }],
     items: posts.map((p) => ({
-      id: absoluteUrl(postPath(p)),
+      id: absoluteUrl(feedIdPath(postPath(p))),
       url: absoluteUrl(postPath(p)),
       title: p.title,
       summary: p.description,
