@@ -11,7 +11,7 @@ export const FS_LOW = `#version 300 es
 precision highp float;
 uniform vec2 uLow; uniform vec2 uView; uniform float uUnit; uniform float uT;
 uniform float uScrollB; uniform float uScrollR; uniform float uRepeat; uniform float uWarp;
-uniform float uFloorL; uniform float uCeilD; uniform float uGlowD; uniform float uDark;
+uniform float uCut; uniform float uWarm; uniform float uFloorL; uniform float uCeilD; uniform float uGlowD; uniform float uDark;
 uniform vec4 uBlob[${NB}]; uniform vec3 uPig[${NB}];
 uniform vec3 uPaperL; uniform vec3 uPaperHi; uniform vec3 uPaperD;
 uniform vec4 uRay; uniform float uRayD; uniform float uDens;
@@ -36,7 +36,7 @@ void main(){
     vec2 d = q - uBlob[i].xy;
     d.y = mod(d.y + uRepeat * .5, uRepeat) - uRepeat * .5;
     float r = uBlob[i].z;
-    float k = exp(-2.2 * dot(d, d) / (r * r));
+    float k = clamp((exp(-2.2 * dot(d, d) / (r * r)) - uCut) / (1. - uCut), 0., 1.); k *= k;
     float c = clamp(uBlob[i].w * k, 0., 1.);
     tint *= 1. - c * (1. - uPig[i]);
     add += uPig[i] * c;
@@ -49,8 +49,13 @@ void main(){
   float n0 = rayAt(ang, uT);
   float ray = smoothstep(.42, .78, n0) * (.8 + .2 * sin(uT * .12 + ang * 2.)) * exp(-dist * 1.1) * smoothstep(0., .15, dist);
   float fr = (smoothstep(.42, .78, rayAt(ang + .03, uT)) - smoothstep(.42, .78, rayAt(ang - .03, uT))) * exp(-dist * 1.1);
-  tint *= 1. - clamp(fr, 0., 1.) * uRay.w * (1. - vec3(.3, .74, .88));
-  tint *= 1. - clamp(-fr, 0., 1.) * uRay.w * (1. - vec3(.9, .42, .66));
+  tint *= 1. - clamp(fr, 0., 1.) * uRay.w * (1. - vec3(.95, .62, .74));
+  tint *= 1. - clamp(-fr, 0., 1.) * uRay.w * (1. - vec3(1., .9, .45));
+  // light: warmth constraint (R >= B + margin, G <= R: no grey-green, no mint), then the hard luminance floor.
+  // Both are convex constraints the paper satisfies, so pulling the ink amount back toward the paper keeps them true.
+  vec3 pc = uPaperL * tint;
+  pc.b = min(pc.b, pc.r - uWarm); pc.g = min(pc.g, pc.r);
+  tint = pc / uPaperL;
   // light: hard luminance floor, then lift the paper in the shafts
   float rr = dot(uPaperL * tint, vec3(.2126, .7152, .0722)) / dot(uPaperL, vec3(.2126, .7152, .0722));
   if (rr < uFloorL) { float kk = (1. - uFloorL) / (1. - rr); tint = 1. - (1. - tint) * kk; }

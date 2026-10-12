@@ -8,7 +8,7 @@ export type EngineHooks = {
 
 type Prog = { p: WebGLProgram; u: Record<string, WebGLUniformLocation | null> }
 
-const UNIFORMS_LOW = ['uLow', 'uView', 'uUnit', 'uT', 'uScrollB', 'uScrollR', 'uRepeat', 'uWarp', 'uFloorL', 'uCeilD', 'uGlowD', 'uDark', 'uBlob[0]', 'uPig[0]', 'uPaperL', 'uPaperHi', 'uPaperD', 'uRay', 'uRayD', 'uDens']
+const UNIFORMS_LOW = ['uLow', 'uView', 'uUnit', 'uT', 'uScrollB', 'uScrollR', 'uRepeat', 'uWarp', 'uCut', 'uWarm', 'uFloorL', 'uCeilD', 'uGlowD', 'uDark', 'uBlob[0]', 'uPig[0]', 'uPaperL', 'uPaperHi', 'uPaperD', 'uRay', 'uRayD', 'uDens']
 const UNIFORMS_COMP = ['uLowTex', 'uRes', 'uDpr', 'uCell', 'uOff', 'uT', 'uDark', 'uGlyphOn', 'uShootOn', 'uInkL', 'uInkD', 'uMax', 'uDensity', 'uTwinkle', 'uConst', 'uGrain', 'uThin', 'uShoot', 'uLens[0]', 'uLensR[0]', 'uLensN', 'uLensP', 'uRim']
 
 /**
@@ -199,6 +199,8 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
     gl.uniform1f(a.uScrollR, sy * C.parallax.rays)
     gl.uniform1f(a.uRepeat, C.repeat)
     gl.uniform1f(a.uWarp, C.warp)
+    gl.uniform1f(a.uCut, C.blobCut)
+    gl.uniform1f(a.uWarm, C.warmMin)
     gl.uniform1f(a.uFloorL, C.lumFloorLight)
     gl.uniform1f(a.uCeilD, C.lumCeilDark)
     gl.uniform1f(a.uGlowD, C.darkGlow)

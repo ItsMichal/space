@@ -6,9 +6,10 @@ export type Pigment = readonly [number, number, number]
 
 /** Process-colour pigments, desaturated toward pastel. Multiplied into the paper like ink on stock. */
 export const PIGMENT = {
-  cyan: [0.3, 0.74, 0.88],
-  magenta: [0.9, 0.42, 0.66],
-  yellow: [1.0, 0.9, 0.34],
+  cyan: [0.5, 0.8, 0.92], // accent only: cyan is what turns beige grey-green
+  magenta: [0.95, 0.62, 0.74],
+  peach: [1.0, 0.78, 0.62],
+  yellow: [1.0, 0.92, 0.5],
 } as const satisfies Record<string, Pigment>
 
 export type BlobSpec = {
@@ -29,14 +30,18 @@ export type BlobSpec = {
 
 export const BACKDROP = {
   blobs: [
-    { pigment: 'cyan', x: 0.1, y: 0.2, r: 1.05, amp: 0.42, ax: 0.3, ay: 0.22, px: 280, py: 340 },
-    { pigment: 'magenta', x: 1.05, y: 0.9, r: 0.9, amp: 0.75, ax: 0.26, ay: 0.3, px: 330, py: 250 },
-    { pigment: 'yellow', x: 0.45, y: 1.45, r: 1.15, amp: 1.0, ax: 0.32, ay: 0.2, px: 300, py: 380 },
-    { pigment: 'cyan', x: 0.95, y: 2.0, r: 0.95, amp: 0.4, ax: 0.22, ay: 0.26, px: 360, py: 290 },
-    { pigment: 'magenta', x: 0.05, y: 2.35, r: 0.85, amp: 0.65, ax: 0.28, ay: 0.24, px: 310, py: 400 },
+    { pigment: 'yellow', x: 0.35, y: 0.15, r: 1.04, amp: 0.55, ax: 0.3, ay: 0.22, px: 280, py: 340 },
+    { pigment: 'magenta', x: 1.0, y: 0.75, r: 0.98, amp: 0.45, ax: 0.26, ay: 0.3, px: 330, py: 250 },
+    { pigment: 'peach', x: 0.15, y: 1.3, r: 1.09, amp: 0.6, ax: 0.32, ay: 0.2, px: 300, py: 380 },
+    { pigment: 'cyan', x: 0.9, y: 1.9, r: 0.64, amp: 0.3, ax: 0.22, ay: 0.26, px: 360, py: 290 },
+    { pigment: 'yellow', x: 0.5, y: 2.3, r: 1.04, amp: 0.5, ax: 0.28, ay: 0.24, px: 310, py: 400 },
   ] satisfies BlobSpec[],
   /** Vertical repeat of the blob field, in U. The field tiles, so a long page never runs out of colour. */
   repeat: 2.6,
+  /** Blobs are cut off below this fraction of their peak weight (smoothstep), so the paper shows between them. */
+  blobCut: 0.6,
+  /** Warmth constraint (light mode, sRGB 0..1): backdrop R is at least B + this, and G never exceeds R. The paper has R-B = 0.047. */
+  warmMin: 0.03,
   /** Domain warp strength (U). Bends the round blobs into abstract shapes. */
   warp: 0.32,
   /** Hard floor on backdrop luma relative to the paper's luma (Rec.709 weights on the encoded sRGB values, which tracks perceived

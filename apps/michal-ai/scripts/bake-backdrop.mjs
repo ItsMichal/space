@@ -82,17 +82,25 @@ if (bench) {
   for (const scheme of ['light', 'dark']) {
     const t = T[scheme]
     let min = Infinity, max = -Infinity, minPx, maxPx, minLuma = Infinity, maxLuma = -Infinity
+    let near = 0, total = 0, minRB = Infinity, maxGR = -Infinity, worstShare = 1, worstMaxDelta = 0
     for (const scroll of [0, 700, 1500, 2600, 4000, 6500]) {
       for (const time of [37, 120, 260, 400]) {
         const png = await frame({ scheme, t: time, scroll, w: 960, h: 600 })
         const { data, info } = await sharp(png).raw().toBuffer({ resolveWithObject: true })
+        let frameNear = 0
         for (let i = 0; i < data.length; i += info.channels) {
           const Y = lum(data[i], data[i + 1], data[i + 2])
           const L = luma(data[i], data[i + 1], data[i + 2])
           if (Y < min) { min = Y; minPx = [data[i], data[i + 1], data[i + 2]] }
           if (Y > max) { max = Y; maxPx = [data[i], data[i + 1], data[i + 2]] }
           minLuma = Math.min(minLuma, L); maxLuma = Math.max(maxLuma, L)
+          const dlt = Math.max(Math.abs(data[i] - t.paper[0]), Math.abs(data[i + 1] - t.paper[1]), Math.abs(data[i + 2] - t.paper[2]))
+          worstMaxDelta = Math.max(worstMaxDelta, dlt)
+          if (dlt <= 8) { near++; frameNear++ }
+          total++
+          minRB = Math.min(minRB, data[i] - data[i + 2]); maxGR = Math.max(maxGR, data[i + 1] - data[i])
         }
+        worstShare = Math.min(worstShare, frameNear / (data.length / info.channels))
       }
     }
     const Yp = lum(...t.paper), Lp = luma(...t.paper)
@@ -102,6 +110,7 @@ if (bench) {
     const bgCol = worst(bad, GLYPH_ALPHA * THIN) // inside the thinned reading column
     const bgMargin = worst(bad, GLYPH_ALPHA) // outside it, where there is no body text
     console.log(JSON.stringify({
+      paperShare_within8levels_mean: +(near / total).toFixed(3), paperShare_worstFrame: +worstShare.toFixed(3), worstChannelDeltaFromPaper: worstMaxDelta, minRminusB: minRB, maxGminusR: maxGR,
       scheme, paperY: +Yp.toFixed(4), backdropMinY: +min.toFixed(4), minYRatioToPaper: +(min / Yp).toFixed(4), lumaFloorRatio: +(minLuma / Lp).toFixed(4), lumaMaxRatio: +(maxLuma / Lp).toFixed(4),
       backdropMaxY: +max.toFixed(4), minPx, maxPx,
       contrast: {

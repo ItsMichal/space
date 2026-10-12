@@ -25,9 +25,10 @@ bleeding into cream stock.
 Layers, back to front, in one canvas and one WebGL2 context:
 
 1. Paper base, the exact token colour (so there is no seam against CSS-coloured areas).
-2. Five very large blobs (radius 0.85 to 1.15 of U, U = max(viewport width, 700px), so each is 1.7 to 2.3 viewport widths across).
-   Domain-warped, gaussian falloff, blended subtractively (multiply), so overlaps mix like inks (cyan plus yellow gives a pale
-   green). They drift on orbits with 250 to 400 second periods and move at 0.15 of page scroll. The field repeats vertically
+2. Five large soft blobs, warm inks only (yellow x2, peach, soft magenta) and one small cyan accent, because cyan is what
+   turns beige grey-green. Gaussian falloff cut off at 0.6 of peak and squared, so the paper shows between them: the paper stays
+   the dominant colour (about 60 percent of the viewport within 8 levels per channel of `--paper`, never below 44 percent). Domain-warped,
+   blended subtractively (multiply). A warmth constraint in the shader keeps R >= B + 0.03 and G <= R, so no grey or mint. They drift on orbits with 250 to 400 second periods and move at 0.15 of page scroll. The field repeats vertically
    (2.6 U), so long pages never run out of colour.
 3. God rays from an off-screen point at the top right: a few wide shafts from angular value noise, slowly breathing, lifting the
    paper toward a warm white and leaving a faint cyan/magenta fringe on their edges. 0.06 of scroll.
@@ -84,6 +85,7 @@ See the file for the current values; the important ones:
 
 | Key | Meaning |
 | --- | --- |
+| `blobCut`, `warmMin` | blob cut-off (0.6) and the R-B warmth margin (0.03) |
 | `blobs[]` | five blobs: pigment, centre (x, y in U), radius `r`, peak coverage `amp`, drift amplitude and period per axis |
 | `PIGMENT` | pastel process colours multiplied into the paper |
 | `repeat`, `warp` | vertical repeat of the field (U), domain warp strength (U) |
@@ -110,13 +112,15 @@ Contrast is WCAG 2.x on the token colours: `--ink` and `--ink-muted` (light `#18
 | | Light | Dark |
 | --- | --- | --- |
 | Paper | `#f4f1e8`, Y 0.880 | `#121612`, Y 0.0075 |
-| Darkest (light) / brightest (dark) backdrop pixel | `#e0e0db`, Y 0.743 = 0.844 of paper's Y | `#272f2f`, Y 0.0267 (a 3.6x lift of a near-black, still near-black) |
-| Luma floor / ratio (encoded sRGB luma vs paper) | enforced 0.93; measured min 0.928 (8-bit rounding), max 0.945 | n/a (ceiling on Y instead) |
-| `--ink` on that pixel | 12.46 | 11.07 |
-| `--ink-muted` on that pixel | **5.28** | **5.78** |
-| `--ink` on that pixel plus a glyph at the in-column cap (0.22 x 0.3 thinning) and grain pushing the wrong way | 10.87 | 9.03 |
-| `--ink-muted`, same worst case | **4.60** | **4.71** |
-| Margins only (no body text there): glyph at the full 0.22 cap | ink 7.97, muted 3.38 | ink 5.77, muted 3.01 |
+| Darkest (light) / brightest (dark) backdrop pixel | `#f1dcd3` (peach), Y 0.746 = 0.848 of paper's Y | `#2d2e25`, Y 0.0265 |
+| Luma floor / ratio (encoded sRGB luma vs paper) | enforced 0.93; measured min 0.929 (8-bit rounding), max 1.014 | n/a (ceiling on Y instead) |
+| Share of viewport within 8 levels per channel of paper | mean 60 percent, worst frame 44 percent | mean 72 percent, worst 57 percent |
+| Warmth: min(R - B), max(G - R) over all pixels (8-bit) | +7, 0 (never grey or green) | n/a |
+| `--ink` on that pixel | 12.51 | 11.10 |
+| `--ink-muted` on that pixel | **5.30** | **5.80** |
+| `--ink` on that pixel plus a glyph at the in-column cap (0.22 x 0.3 thinning) and grain pushing the wrong way | 10.91 | 9.05 |
+| `--ink-muted`, same worst case | **4.62** | **4.73** |
+| Margins only (no body text there): glyph at the full 0.22 cap | ink 8.00, muted 3.39 | ink 5.78, muted 3.02 |
 | For reference: ink / muted on plain paper | 14.62 / 6.19 | 14.77 / 7.71 |
 
 So 4.5:1 holds for both inks everywhere inside the reading column (`|x - centre| < min(540px, half the viewport)`, which is the whole
