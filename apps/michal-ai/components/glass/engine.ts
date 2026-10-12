@@ -1005,7 +1005,7 @@ export class Field {
     return false
   }
 
-  private probeTone(m: ShapeState, hr: DOMRect) {
+  private probeTone(m: Member, hr: DOMRect) {
     const eff = m.cfg.effect
     let tone: Tone
     if (eff.variant === 'clear') tone = 'light'
