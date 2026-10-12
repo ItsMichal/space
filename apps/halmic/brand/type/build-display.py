@@ -267,6 +267,11 @@ def main():
     delta = asc_logo - asc_base
     print(f"base x-height {xh_base:.1f}, ascender {asc_base:.1f}; scale {s:.4f}; logotype ascender {asc_logo:.1f}; lift {delta:.1f}")
 
+    # The ASCII apostrophe in a title ("L'evasion") is typed far more often than U+2019 and Nunito draws it as a thin
+    # tapered tick that looks like a different face next to the heavy letters: it takes the shape of the curly one.
+    for t in font["cmap"].tables:
+        if t.isUnicode() and 0x2019 in t.cmap:
+            t.cmap[0x27] = t.cmap[0x2019]
     cmap = font.getBestCmap()
     gname = lambda ch: cmap[ord(ch)]
     hmtx = font["hmtx"]

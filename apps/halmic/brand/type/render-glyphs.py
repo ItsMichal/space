@@ -21,7 +21,7 @@ def panel(fam, bg, fg, rows, size):
     return f'<div style="background:{bg};color:{fg};padding:14px 24px">{body}</div>'
 
 
-def build(before, after, extra):
+def build(before, after, extra, width=2400):
     css = "".join(f'@font-face{{font-family:{n};src:url("file://{os.path.abspath(p)}");font-weight:900}}' for n, p in (("Before", before), ("After", after)))
     cols = []
     for fam, label in (("Before", "before"), ("After", "after")):
@@ -29,7 +29,7 @@ def build(before, after, extra):
         if extra:
             parts.append(panel(fam + ",Arial", PAPER, INK, GRID, 72))
         cols.append(f'<div class="col"><div class="lab">{label}</div>' + "".join(parts) + "</div>")
-    return (f'<!doctype html><meta charset="utf-8"><style>{css}body{{margin:0;background:#777;width:2400px;font:600 18px system-ui;color:#fff}}'
+    return (f'<!doctype html><meta charset="utf-8"><style>{css}body{{margin:0;background:#777;width:{width}px;font:600 18px system-ui;color:#fff}}'
             f'.cols{{display:flex;gap:16px;padding:16px}}.col{{flex:1}}.lab{{padding:0 0 8px}}</style><div class="cols">{"".join(cols)}</div>')
 
 
@@ -44,7 +44,7 @@ def main():
     ap.add_argument("--chrome", default="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
     a = ap.parse_args()
     page = os.path.join(tempfile.mkdtemp(prefix="halmic-glyphs-"), "glyphs.html")
-    open(page, "w").write(build(a.before, a.after, a.extra))
+    open(page, "w").write(build(a.before, a.after, a.extra, a.width))
     cmd = [a.chrome, "--headless=new", "--user-data-dir=" + tempfile.mkdtemp(prefix="halmic-chrome-"), "--disable-gpu", "--hide-scrollbars",
            "--force-device-scale-factor=1", f"--window-size={a.width},{a.height}", f"--screenshot={a.out}", "file://" + page]
     try:   # headless Chrome sometimes lingers after writing the screenshot
