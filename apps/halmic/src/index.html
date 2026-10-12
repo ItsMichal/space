@@ -12,6 +12,7 @@
 
 <main id="main">
 <section class="hero">
+  <div class="reel" data-reel aria-hidden="true"><canvas class="reel-cv"></canvas><video class="reel-vid" muted loop playsinline preload="none" tabindex="-1" data-poster="/hero/reel-poster.jpg"></video></div>
   <div class="field" data-meter data-count="fill" data-t="60" data-pitch="88" data-h="520" data-dot="off" aria-hidden="true"></div>
   <div class="wrap hero-in">
     <p class="status" role="status">
@@ -36,5 +37,6 @@
 </main>
 {{foot}}
 <script src="{{appjs}}" defer></script>
+<script src="{{herojs}}" defer></script>
 </body>
 </html>
