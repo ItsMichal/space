@@ -4,14 +4,22 @@
  * draws tint, rim, shadow and lens instead.
  */
 :root {
-  --glass-tint-light: rgba(246, 250, 248, 0.42); /* faint sky in the water */
-  --glass-tint-dark: rgba(27, 32, 27, 0.34);
+  /* The engine picks a tint by the tone of what is behind the glass, but the text on it does not flip (it is the page ink), so
+     both tints are the page's own surface: ink must stay readable on the bar over any image, in light and in dark mode. */
+  --glass-tint-light: rgba(251, 249, 243, 0.64);
+  --glass-tint-dark: rgba(251, 249, 243, 0.64);
   --glass-fg-on-light: #18211b;
   --glass-fg-on-dark: #ebe7da;
 }
 
 .glass-container {
   isolation: isolate;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-reading] {
+    --glass-tint-light: rgba(18, 22, 18, 0.8);
+    --glass-tint-dark: rgba(18, 22, 18, 0.8);
+  }
 }
 .glass[data-glass-live] {
   isolation: isolate;
