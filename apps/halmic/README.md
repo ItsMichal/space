@@ -38,4 +38,4 @@ Without them `/api/live` answers `{ "live": false, "unknown": true }` and the pa
 6. Redirect `www` to the apex with a Cloudflare redirect rule (not in code).
 
 ## Identity rule
-No real name and no portfolio domain anywhere in `src/`, `public/`, `brand/` or `worker/`. Check with `npm run check:identity` (patterns in `content/identity-denylist.txt`).
+No real name and no portfolio domain anywhere in `src/`, `public/`, `brand/` or `worker/`. Check with `npm run check:identity` (patterns in `content/identity-denylist.txt`). The rule is about printing: the name is not shown on the site, but outbound links to external pages that show it (Medium, LinkedIn) are fine, as long as the URL itself does not contain the name or the portfolio domain.

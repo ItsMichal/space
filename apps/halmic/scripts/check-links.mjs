@@ -48,7 +48,7 @@ if (!/data-vid="Gv-xMeMM8m4"/.test(mtHome) || !mtHome.includes('youtube-nocookie
 const mtLogLinks = [...mtHome.matchAll(/<a class="card[^"]*" href="(\/work\/project-mountaintop\/[^"]+)"/g)].map((m) => m[1]);
 if (mtLogLinks.length < 6) bad.push(`work/project-mountaintop: expected 6 dev-log cards, found ${mtLogLinks.length}`);
 for (const l of mtLogLinks) { const h = fs.readFileSync(path.join(pub, l, 'index.html'), 'utf8'); if (!/<article class="log">/.test(h) || !/"@type":"BlogPosting"/.test(h)) bad.push(`${l}: not a dev-log article with BlogPosting JSON-LD`); }
-for (const f of walk(mtDir).filter((x) => x.endsWith('.html'))) { const h = fs.readFileSync(f, 'utf8'); if (/linkedin\.com|medium\.com|<iframe/.test(h)) bad.push(`${path.relative(pub, f)}: linkedin/medium link or a pre-loaded iframe (embeds must be click-to-load)`); }
+for (const f of walk(mtDir).filter((x) => x.endsWith('.html'))) { const h = fs.readFileSync(f, 'utf8'); if (/<iframe/.test(h)) bad.push(`${path.relative(pub, f)}: pre-loaded iframe (embeds must be click-to-load)`); }
 if (!/<a class="card[^"]*" href="\/work\/project-mountaintop\/"/.test(home)) bad.push('index.html: Project Mountaintop card missing from Work');
 const games = fs.readFileSync(path.join(pub, 'games/index.html'), 'utf8');
 const gOrder = [...games.matchAll(/<a class="card[^"]*" href="\/games\/([^/"]+)\//g)].map((m) => m[1]);

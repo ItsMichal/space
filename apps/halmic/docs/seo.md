@@ -16,7 +16,7 @@ Goal: when someone types "halmic", "halmictv", "halmic twitch", "halmic games", 
 | halmic logo design, southeast denver dental logo | `/design/southeast-denver-dental/` | CreativeWork, screenshots with descriptive alt, link to the client's site |
 
 ## Decisions (owner, final)
-- **No Medium anywhere in shipped output.** The Medium profile shows the real name, so the home "Writing" block, the footer/profile link, the `sameAs` entry, `rel="me"` links, `llms.txt` and every inner-page mention are gone, and there is no `/writing/` plan. Do not re-add it unless the profile is renamed.
+- **Medium is linked, not mirrored.** The owner's rule is that his real name is not printed on the site; linking out to pages that show it is fine. So `https://halmic.medium.com/` appears as the home "Writing" card, in the footer (`rel="me"`), in `sameAs` and in `llms.txt`. There is no `/writing/` plan.
 - `sameAs` is exactly Twitch, YouTube, itch.io, X. Identity is handle-only (`Person` "halmic", no name fields, no legal suffix); `npm run check:identity` guards it.
 - Favicon: `favicon.svg` is the simplified small-size variant of mark 3 (thicker strokes, opened joint, bigger glyph; `brand/build-favicon.mjs`), with `favicon-16.png`, `favicon-32.png` and `apple-touch-icon.png` (180, the full mark) rendered by `brand/render-favicons.mjs`.
 
@@ -24,7 +24,7 @@ Goal: when someone types "halmic", "halmictv", "halmic twitch", "halmic games", 
 - Semantic static HTML for all content; the only JavaScript is the meter, the live flag and click-to-load players. No content depends on JS.
 - Unique `<title>` (under 60 chars where possible) and meta description (under 160) per page; `<link rel="canonical">` on `https://halmic.com/...`.
 - Open Graph and Twitter `summary_large_image` on every page; generated 1200x630 share images with the logotype (`site/public/og/`, `node scripts/build-og.mjs`): home, one per game, one per video, one for the design entry.
-- JSON-LD: `Person` "halmic" (alternateName halmicTV, Halmic; no real-name fields) with `sameAs` for Twitch, YouTube, itch.io, X only (Medium was removed on purpose, see Decisions); `WebSite`; `VideoGame` per game; `VideoObject` per video; `CreativeWork` for the logo entry. (BroadcastEvent while live is a Worker step; see technical-plan.md.)
+- JSON-LD: `Person` "halmic" (alternateName halmicTV, Halmic; no real-name fields) with `sameAs` for Twitch, YouTube, itch.io, Medium, X; `WebSite`; `VideoGame` per game; `VideoObject` per video; `CreativeWork` for the logo entry. (BroadcastEvent while live is a Worker step; see technical-plan.md.)
 - `sitemap.xml` (17 URLs), `robots.txt`, `rss.xml` (videos), `llms.txt`.
 - Performance: text is the LCP element (the wordmark is inline SVG, the font is one 28 KB variable woff2 with a size-adjusted fallback, preloaded); thumbnails and covers have width/height set (no layout shift) and `loading="lazy"`; no third-party request happens before a click: YouTube loads from youtube-nocookie.com only after press.
 - Internal links: nav to every section, game and video pages link back to their section and to each other, home links to every inner page.
