@@ -56,6 +56,9 @@
 }
 
 @media (min-width: 640px) {
+  .tile--feature .tile__media {
+    aspect-ratio: 16 / 6;
+  }
   .tiles--row,
   .tiles--grid {
     display: grid;
@@ -127,10 +130,11 @@
   transform: scale(1.015);
 }
 
-/* no usable image: the project name, large, on a barely-there tint, in the same slot */
+/* no usable image: the project name, large, on a barely-there tint, in the same slot. The slot never grows taller than an
+   image tile's media (16:10 of the tile's own width); a full-width stacked feature gets a shorter 16:6 band. */
 .tile__media--word {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   padding: var(--space-4) var(--space-6);
   background: color-mix(in srgb, var(--tile-tint, var(--tint-birch)) 70%, var(--paper-raised));
 }
@@ -171,7 +175,7 @@
   }
   .tile--feature .tile__body {
     flex: 1;
-    justify-content: flex-end;
+    justify-content: center;
     padding: var(--space-8);
   }
   .tile--feature .tile__title {

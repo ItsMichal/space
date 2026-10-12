@@ -10,7 +10,7 @@
   /* Single ink at low contrast; override per hero. Text over it stays AA without a scrim. */
   opacity: var(--hero-globe-opacity, 0.42);
 }
-/* Slot (default): wholly inside the homepage hero slot, right of the text, above the first card row; hidden below 768px where the
+/* Slot (default): wholly inside the homepage hero slot, right of the text, above the first card row; hidden below 1024px where the
    hero text fills the width and the cards start right under it. Dots fade to nothing toward the limb, so there is no edge and
    nothing touches the slot's clip box. */
 .hero-globe {
@@ -22,11 +22,13 @@
   z-index: 0;
   --hero-globe-opacity: var(--hero-globe-opacity-slot, 0.28);
 }
-@media (min-width: 768px) {
+/* The name is about 760px wide from 907px up, so the free space to its right is 100vw - 824px (at most 296px). The globe is
+   shown from 1024px, right-aligned to the content column and never wider than that space, so it cannot touch the name. */
+@media (min-width: 1024px) {
   .hero-globe--slot {
     display: block;
-    width: min(34vw, 420px);
-    right: 3vw;
+    width: min(300px, calc(100vw - 840px));
+    right: max(32px, calc((100vw - 1120px) / 2 + 32px));
     top: 96px;
   }
 }
