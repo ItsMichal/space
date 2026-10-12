@@ -60,7 +60,7 @@ The first steps in developing the project were to figure out the most technical 
 
 ### Creating the Barcode Generator/Printer
 
-So I got started on a few ideas of how Barcode generation could work. I initially thought I could do everything within unity and leverage some C# features like [PrintDocuments](https://learn.microsoft.com/en-us/dotnet/api/system.drawing.printing.printdocument.print?view=dotnet-plat-ext-7.0). Unfortunately, this ended up being a dead end. On macOS, which I was developing on, this API didn’t work. Noramally, [Mono](https://www.mono-project.com/) implements these .NET libraries and frameworks, and it actually did have a System.Drawing.Print implementation— however, a bug in Unity’s distribution of Mono prevented the right library from being loaded. A workaround that didn’t work for me is described below. I was already tired of wrangling with Unity and realized that my project wouldn’t work on other machines with this workaround. So I pivoted.
+So I got started on a few ideas of how Barcode generation could work. I initially thought I could do everything within unity and leverage some C# features like [PrintDocuments](https://learn.microsoft.com/en-us/dotnet/api/system.drawing.printing.printdocument.print?view=dotnet-plat-ext-7.0). Unfortunately, this ended up being a dead end. On macOS, which I was developing on, this API didn’t work. Noramally, [Mono](https://www.mono-project.com/) implements these .NET libraries and frameworks, and it actually did have a System.Drawing.Print implementation. However, a bug in Unity’s distribution of Mono prevented the right library from being loaded. A workaround that didn’t work for me is described below. I was already tired of wrangling with Unity and realized that my project wouldn’t work on other machines with this workaround. So I pivoted.
 
 [Working with libgdiplus.dylib error on Mac and Unity](https://medium.com/xrpractices/working-with-libgdiplus-dylib-error-on-mac-and-unity-cd46181608b3)
 
@@ -109,7 +109,7 @@ Max Epperson’s Writeup
 
 Scroll down to the “Wait That’s A Controller?” section of the following link
 
-[Alt Arcade — Max Epperson](https://www.maxepperson.com/alt-arcade)
+[Alt Arcade, Max Epperson](https://www.maxepperson.com/alt-arcade)
 :::
 
 Here’s a few WIP images from Max’s side of the project in case you’re interested. Max was mostly responsible for the physical “real” aspects of the project and converting a musical Korg pedal into an Arduino-based controller for the game.

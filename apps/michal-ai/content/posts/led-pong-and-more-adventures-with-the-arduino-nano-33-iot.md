@@ -28,7 +28,7 @@ As you can see by where the arrows landed in the chart, I could have not used a 
 
 ![Breadboard with a blue LED lit and a fingertip pressing a button](/media/led-pong-and-more-adventures-with-the-arduino-nano-33-iot/05-fed2a0.webp "Gathering of the parts and first test with one button")
 
-We had a choice of switches to use, either momentary or SPDT, but I decided to use two momentary pushbuttons as honestly they looked quite cool. I got both sets of resistors, and plugged in my microcontroller. I assembled a single button and activated a LED without the microcontroller as a ground test for my circuit. Not really much else to say here — it worked. You can see the circuit and the very bright LED working in the third picture.
+We had a choice of switches to use, either momentary or SPDT, but I decided to use two momentary pushbuttons as honestly they looked quite cool. I got both sets of resistors, and plugged in my microcontroller. I assembled a single button and activated a LED without the microcontroller as a ground test for my circuit. Not really much else to say here, it worked. You can see the circuit and the very bright LED working in the third picture.
 
 ![Breadboard circuit with a white and a red pushbutton and a blue LED, with a finger reaching for the buttons](/media/led-pong-and-more-adventures-with-the-arduino-nano-33-iot/06-a5762c.webp)
 
@@ -38,11 +38,11 @@ We had a choice of switches to use, either momentary or SPDT, but I decided to u
 
 ![Breadboard with the Arduino, two pushbuttons and two LEDs wired with orange, blue, black and white jumpers](/media/led-pong-and-more-adventures-with-the-arduino-nano-33-iot/09-57ca4f.webp "Welcome to the jungle… of jumper wires. But hey! It works")
 
-Afterwards I got to work on attaching the second button, LED, and set of resistors. It was pretty tough to fit it all on a half-sized breadboard. The jumper wires also got pretty messy- that’s my bad. Sometimes you can get carried away! My inspiration for the interaction portion came from police lights. I had basic interactions for pressing either button (either turning one or both LEDs on), but if you pressed both… well I guess I’ll just show you —
+Afterwards I got to work on attaching the second button, LED, and set of resistors. It was pretty tough to fit it all on a half-sized breadboard. The jumper wires also got pretty messy- that’s my bad. Sometimes you can get carried away! My inspiration for the interaction portion came from police lights. I had basic interactions for pressing either button (either turning one or both LEDs on), but if you pressed both… well I guess I’ll just show you:
 
 ::youtube{id="rvVoF5p_hXM" title="Police LED Interaction"}
 
-Coding this was rather trivial as well. I simply used the Arduino IDE (although I later switched to VS Code’s Arduino dev environment) and came up with a simple if/else chain to check for the different button states. For the Police effect, I simply switched one LED on, the other off, and then put a small delay before alternating the on/off states. Once I completed the code and breadboard circuit, I created a schematic in EasyEDA Designer- just before the class and I switched to using Fritzing for the rest of the project. You can check out the full code and schematic in my linked gist below —
+Coding this was rather trivial as well. I simply used the Arduino IDE (although I later switched to VS Code’s Arduino dev environment) and came up with a simple if/else chain to check for the different button states. For the Police effect, I simply switched one LED on, the other off, and then put a small delay before alternating the on/off states. Once I completed the code and breadboard circuit, I created a schematic in EasyEDA Designer- just before the class and I switched to using Fritzing for the rest of the project. You can check out the full code and schematic in my linked gist below:
 
 [Police LEDs Arduino Nano 33 IoT](https://gist.github.com/ItsMichal/83bbf5e1ecba49d85802d44381818a4b)
 
@@ -74,7 +74,7 @@ And finally the final section, and probably what you all have been waiting for- 
 
 ![Two NeoPixel strips wired to an Arduino Nano 33 IoT on a breadboard with a red button, on an orange background](/media/led-pong-and-more-adventures-with-the-arduino-nano-33-iot/16-8f7f55.webp "Soldering LED strips and the final circuit")
 
-There were some hiccups with my initial code which made the interaction a little less smooth than I would have liked. Here is a video of the first stage of the coding —
+There were some hiccups with my initial code which made the interaction a little less smooth than I would have liked. Here is a video of the first stage of the coding:
 
 ::youtube{id="yHjq8IRvXc4" title="First Stage LED Pong"}
 

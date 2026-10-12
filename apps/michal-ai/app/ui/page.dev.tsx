@@ -87,7 +87,7 @@ export default function Page() {
         <h2 id="f1" className={h2}>Fact rows</h2>
         <FactRows
           facts={[
-            { label: 'Year', value: '2023 – 2024' },
+            { label: 'Year', value: '2023 to 2024' },
             { label: 'Role', value: 'Game developer, UI/UX and music' },
             { label: 'Stack', value: 'Unity · Arduino · C#' },
             { label: 'Links', value: <a href="https://www.youtube.com/watch?v=Gv-xMeMM8m4">Gameplay video</a> },

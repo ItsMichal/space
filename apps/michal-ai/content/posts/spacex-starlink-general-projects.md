@@ -11,7 +11,7 @@ coverFocus: "70% 52%"
 priority: 10
 featured: true
 role: "Software engineer"
-years: "2024 – present"
+years: "2024 to now"
 links:
   - label: "Starlink.com"
     href: "https://starlink.com"

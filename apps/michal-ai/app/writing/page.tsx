@@ -5,13 +5,13 @@ import { WritingIndex } from '@/components/writing/WritingIndex'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { listJsonLd, listMetadata } from '@/lib/seo'
 
-const TITLE = 'Writing — Michał Bodzianowski'
+const TITLE = 'Writing · Michał Bodzianowski'
 const DESCRIPTION = 'Essays and notes on building with AI, the web and systems, by Michał Bodzianowski.'
 
 const base = listMetadata('article', TITLE, DESCRIPTION)
 export const metadata: Metadata = {
   ...base,
-  alternates: { ...base.alternates, types: { 'application/rss+xml': [{ url: '/feed.xml', title: 'Michał Bodzianowski — RSS' }] } },
+  alternates: { ...base.alternates, types: { 'application/rss+xml': [{ url: '/feed.xml', title: 'Michał Bodzianowski · RSS' }] } },
 }
 
 export default function Page() {

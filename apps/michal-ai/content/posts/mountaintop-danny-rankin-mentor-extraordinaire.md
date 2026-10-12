@@ -22,7 +22,7 @@ Throughout this semester I’ve been having Danny provide feedback and guidance 
 
 Bottom Line- Move away from Mushrooms!
 
-Our original pitch was very grounded in the “hiking” aesthetic. Nature, grass— even our controllers were two bongo mushrooms! We thought this was a fine approach, and we would add complexity through original storytelling and perhaps a few twists on the environment. I also gave Danny one of the early prototypes to play.
+Our original pitch was very grounded in the “hiking” aesthetic. Nature, grass, even our controllers were two bongo mushrooms! We thought this was a fine approach, and we would add complexity through original storytelling and perhaps a few twists on the environment. I also gave Danny one of the early prototypes to play.
 
 Danny, after playing and hearing the pitch, encouraged me to come up with a more “universal” control. In his opinion, limiting ourselves to using mushrooms and a basic “hit” interaction was also limiting our creative potential. Danny pushed us to go in a direction that was less tied to the rules of nature but rather a more “agnostic” approach that allowed us to theme our game in a more unique way.
 
@@ -38,7 +38,7 @@ After making the changes in the game to reflect the above, and adding music fina
 
 I think the best feedback here was the validation of the game as being solid and fun. There wasn’t too much specific feedback, other than some nitpicks about the UI. These included complaints that it was hard to tell when exactly to hit the ghosts, the lack of theming, it being a bit too dark, etc.
 
-What we took from it was to continue working to polish the game and to avoid from changing or adding too many mechanics in order to preserve the core game that we got positive feedback on— not just from Danny but also from other playtesters.
+What we took from it was to continue working to polish the game and to avoid from changing or adding too many mechanics in order to preserve the core game that we got positive feedback on, not just from Danny but also from other playtesters.
 
 ---
 
@@ -50,7 +50,7 @@ Our last major feedback from Danny came from testing the post-T9 hacks build of 
 
 Danny’s largest piece of specific feedback was on the camera angle. The new camera angle could make it hard to “read” which ghosts were coming when, as they could block and overlap each other. A proposed solution was to create a “mini” version of the rhythm game that would display in a corner, while the main game display would switch to a more “freecam” approach, similar to Guitar Hero having the band play in the background, but in my head it would still be a totally playable game from the main view- just less consistent. This solution will need to be tested, but it could be a great way to bridge the gap between casual and more competitive players, as well as just providing more options in how to play.
 
-We also asked Danny for feedback on how to implement our 6-button control scheme. Originally, we thought of having the two main sticks, and then buttons which you could hit with your fists around the stick. We ended up pivoting to using capacitive surfaces that would be activated using the stick’s tip instead of the button. And finally, with Danny’s great feedback and advice on capacitive control (mostly- watch out for static buildup! ground everything), we unintentionally stumbled upon the great idea of using feet as 2 of the 6 surfaces— similar to Dance Dance Revolution but with only Left and Right. This helped us give our tentative final control scheme of 6 inputs (a big jump from 2, but necessary for diversity in play and challenge)— Left SideStab, Right SideStab, Left DownStab, Right DownStab, Left Stomp, Right Stomp.
+We also asked Danny for feedback on how to implement our 6-button control scheme. Originally, we thought of having the two main sticks, and then buttons which you could hit with your fists around the stick. We ended up pivoting to using capacitive surfaces that would be activated using the stick’s tip instead of the button. And finally, with Danny’s great feedback and advice on capacitive control (mostly- watch out for static buildup! ground everything), we unintentionally stumbled upon the great idea of using feet as 2 of the 6 surfaces, similar to Dance Dance Revolution but with only Left and Right. This helped us give our tentative final control scheme of 6 inputs (a big jump from 2, but necessary for diversity in play and challenge): Left SideStab, Right SideStab, Left DownStab, Right DownStab, Left Stomp, Right Stomp.
 
 ### Recap
 

@@ -39,7 +39,7 @@ function Rows({ posts }: { posts: Post[] }) {
 function SeriesBlock({ group }: { group: SeriesGroup }) {
   const first = group.posts[0]
   const last = group.posts[group.posts.length - 1]
-  const span = first.date.slice(0, 4) === last.date.slice(0, 4) ? first.date.slice(0, 4) : `${first.date.slice(0, 4)} – ${last.date.slice(0, 4)}`
+  const span = first.date.slice(0, 4) === last.date.slice(0, 4) ? first.date.slice(0, 4) : `${first.date.slice(0, 4)} to ${last.date.slice(0, 4)}`
   const title = group.parent ? group.parent.title : group.name
   return (
     <div id={group.id} className="wseries card surface card--list">

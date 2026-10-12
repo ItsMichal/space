@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react'
 
 // Replaces Next's built-in 404, which ships its own dark-mode styles and was unreadable on the site's paper background.
 export const metadata: Metadata = {
-  title: { absolute: 'Page not found — Michał Bodzianowski' },
+  title: { absolute: 'Page not found · Michał Bodzianowski' },
   robots: { index: false, follow: false },
 }
 

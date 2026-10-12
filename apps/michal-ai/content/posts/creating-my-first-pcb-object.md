@@ -1,5 +1,5 @@
 ---
-title: "Creating my first PCB — Object"
+title: "Creating my first PCB: Object"
 slug: creating-my-first-pcb-object
 kind: article
 description: "But before we get to that… let’s talk processing. I’ve been using the Arduino as the brains for my projects for a while now."
@@ -52,13 +52,13 @@ We added a trim pot to the prototype- this would be integrated with a gear-based
 
 In this video you see three different stages of the prototype and code. The first stage is just a simple test that lights the LEDs on the button input. The second stage uses a timer to light up the LEDs in sequence after the bottle is placed down. We use a bottle of ModPodge as the button requires a relatively high activation force. This will be reduced by adding weights to the platform in the final enclosure, thereby increasing the sensitivity of the button and allowing for lightweight pill bottles to be used. Finally, the third stage shows the settings option by spinning the trim pot. The lights change to a blueish white color and reflect the time (1 LED- 4 hours/seconds, 2 LED 6 hours/seconds, etc.). After no more input is detected, the lights flash to allow the user a grace period to make any final changes. Once the confirmation period is over, the timer starts with the new values.
 
-One note is that this new timer value should be stored in the EEPROM — however, I was unable to get this implementation to work. For some reason either the EEPROM was not being written too or it wasn’t being read from properly. I didn’t have time to diagnose and debug this (for now) — which would have been a massive PITA on a chip without a serial output.
+One note is that this new timer value should be stored in the EEPROM. However, I was unable to get this implementation to work. For some reason either the EEPROM was not being written too or it wasn’t being read from properly. I didn’t have time to diagnose and debug this (for now), which would have been a massive PITA on a chip without a serial output.
 
 I did mention an enclosure right? The video shows some sneak peeks at my enclosure design. This is actually for a separate project for my Form class- as it wasn’t a requirement for this Object lab. I created the enclosure in Fusion 360 and you can see the initial version and a (near) final version animated in this video.
 
 ::youtube{id="cVro2o0g-ls" title="Enclosure Animation v1 and v2"}
 
-The design was made to be as simple and sleek as possible. It was also split up with ease of assembly in mind — specifically, these parts are to be 3D printed and assembled by fitting them together. Theoretically, no glue or screws are required, and gravity and friction will hold everything together. This allows for easy replacement of the coin cell battery, which brings us to the design of the printed circuit board.
+The design was made to be as simple and sleek as possible. It was also split up with ease of assembly in mind: specifically, these parts are to be 3D printed and assembled by fitting them together. Theoretically, no glue or screws are required, and gravity and friction will hold everything together. This allows for easy replacement of the coin cell battery, which brings us to the design of the printed circuit board.
 
 ![Two PCB layout screenshots side by side: an initial routing on both layers and a cleaner single-layer routing inside a circular board outline](/media/creating-my-first-pcb-object/11-bdf1ac.webp "The initial (left) and near final (right) versions of the PCB")
 

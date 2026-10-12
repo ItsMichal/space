@@ -1,0 +1,3 @@
+# Exceptions to scripts/check-dashes.mjs: <file relative to repo root> :: <text that must appear on the line>
+# Page ranges in a citation are printed by the publisher with an en dash (ACM, 1 to 17); kept as published.
+apps/michal-ai/content/profile.ts :: pages: '1\u201317'
