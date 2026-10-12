@@ -6,7 +6,7 @@
     "predev": "node scripts/build-images.mjs",
     "dev": "next dev",
     "images": "node scripts/build-images.mjs",
-    "prebuild": "node scripts/build-images.mjs && node scripts/build-live-slugs.mjs",
+    "prebuild": "node scripts/build-images.mjs && node scripts/build-live-slugs.mjs && node scripts/build-starlink.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

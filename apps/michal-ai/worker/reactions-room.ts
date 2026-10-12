@@ -27,10 +27,13 @@ export class ReactionsRoom extends DurableObject {
       ctx.storage.sql.exec(
         'CREATE TABLE IF NOT EXISTS c (target TEXT NOT NULL, emoji TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (target, emoji)) WITHOUT ROWID',
       )
+      // One-row blob store used by the Starlink snapshot (worker/starlink.ts keeps it under the fixed object name "~starlink").
+      ctx.storage.sql.exec('CREATE TABLE IF NOT EXISTS blob (k TEXT PRIMARY KEY, v BLOB NOT NULL, at INTEGER NOT NULL) WITHOUT ROWID')
     })
   }
 
   async fetch(request: Request): Promise<Response> {
+    if (new URL(request.url).pathname === '/blob') return this.blob(request)
     const ipk = request.headers.get('x-live-ipk') ?? 'none'
     if (request.method === 'GET') {
       const lim = this.reads.hit(ipk)
@@ -56,6 +59,23 @@ export class ReactionsRoom extends DurableObject {
     const changed = this.set(b.target, b.sid, b.emoji, b.on)
     if (changed === 'full') return json({ error: 'full' }, 409)
     return json(this.result(b.target, b.sid), 200)
+  }
+
+  /** GET /blob?k=name -> bytes (404 when empty, `x-updated` = unix seconds); PUT /blob?k=name with the bytes (max 1 MB). Internal: only the Worker calls it. */
+  private async blob(request: Request): Promise<Response> {
+    const sql = this.ctx.storage.sql
+    const k = new URL(request.url).searchParams.get('k') ?? ''
+    if (!/^[a-z0-9-]{1,32}$/.test(k)) return json({ error: 'bad_request' }, 400)
+    if (request.method === 'PUT') {
+      const body = await request.arrayBuffer()
+      if (body.byteLength === 0 || body.byteLength > 1_000_000) return json({ error: 'bad_request' }, 400)
+      sql.exec('INSERT INTO blob (k, v, at) VALUES (?, ?, ?) ON CONFLICT (k) DO UPDATE SET v = excluded.v, at = excluded.at', k, body, Math.floor(Date.now() / 1000))
+      return json({ ok: true }, 200)
+    }
+    if (request.method !== 'GET') return json({ error: 'method' }, 405)
+    const row = sql.exec('SELECT v, at FROM blob WHERE k = ?', k).toArray()[0]
+    if (!row) return json({ error: 'empty' }, 404)
+    return new Response(row.v as ArrayBuffer, { headers: { 'Content-Type': 'application/octet-stream', 'x-updated': String(row.at) } })
   }
 
   private set(target: string, sid: string, emoji: string, on: boolean): boolean | 'full' {
