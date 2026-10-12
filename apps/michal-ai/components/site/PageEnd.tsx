@@ -1,6 +1,8 @@
 import { getChildren, getTopLevel } from '@/lib/content'
 import { postPath } from '@/lib/seo'
 import { siteConfig } from '@/site.config'
+import { profile } from '@/content/profile'
+import { doiUrl } from '@/lib/publications'
 import { NextLinks, type NextLink } from './NextLinks'
 
 /**
@@ -14,6 +16,7 @@ export function PageEnd() {
     { label: 'Work', href: '/projects' },
     { label: 'Writing', href: '/writing' },
     ...(log ? [{ label: log.title, href: postPath(log) }] : []),
+    ...profile.publications.map((p) => ({ label: `${p.venueShort} paper`, href: doiUrl(p), external: true })),
     { label: 'Resume', href: '/BodzianowskiResume.pdf', external: true },
     { label: 'LinkedIn', href: siteConfig.linkedin, external: true },
     { label: 'GitHub', href: siteConfig.github, external: true },

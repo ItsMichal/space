@@ -40,6 +40,8 @@ export type PostFrontmatter = {
   /* Where the post first appeared elsewhere (e.g. a Medium article). Shown as a quiet "Originally published on ..."
      link at the end of the post and emitted as `sameAs` in the JSON-LD. The page still canonicalises to itself. */
   originalUrl?: string
+  /* Ids of entries in profile.publications that this project is the home of; shown as a Publication block with the citation. */
+  publications?: string[]
 }
 export type Post = PostFrontmatter & {
   body: string /* markdown source */

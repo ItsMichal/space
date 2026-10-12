@@ -9,7 +9,8 @@ tags: ["TypeScript", "AWS", "AI/ML"]
 cover: /media/jia-webapp/cover.webp
 coverFocus: "72% 40%"
 coverAlt: "JIA student worksheet beside an AI chat panel, with a confirm dialog and a new-message notice"
-priority: 6
+priority: 9.5
+publications: ["chi-2025-jigsaw"]
 role: "Lead developer, SHINE Lab"
 hook: "an LLM helper for students' worksheets"
 links:

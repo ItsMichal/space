@@ -7,6 +7,7 @@ import React, { StrictMode } from 'react'
 import { NavBar } from '@/components/site/NavBar'
 import { Footer } from '@/components/site/Footer'
 import { PageEnd } from '@/components/site/PageEnd'
+import { PaperGrid } from '@/components/site/PaperGrid'
 import { ShaderCanvasProvider } from '@/components/shader-image'
 import { Backdrop } from '@/components/backdrop/Backdrop'
 import { display } from './fonts/display'
@@ -73,6 +74,7 @@ export default function RootLayout({
           </a>
           <NavBar previews={getMenuPreviews()} />
           <main id="main" className="relative flex-1">
+            <PaperGrid />
             <Backdrop paths={['/shaders']} />
             <ShaderCanvasProvider>{children}</ShaderCanvasProvider>
           </main>

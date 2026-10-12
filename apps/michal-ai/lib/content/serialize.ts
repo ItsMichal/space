@@ -29,6 +29,7 @@ const KEY_ORDER: (keyof PostFrontmatter)[] = [
   'draft',
   'canonical',
   'originalUrl',
+  'publications',
 ]
 
 function toIsoDate(v: unknown): string {
@@ -51,6 +52,8 @@ function entry(key: keyof PostFrontmatter, value: unknown): string | null {
   switch (key) {
     case 'tags':
       return (value as string[]).length ? `tags: [${(value as string[]).map((t) => scalar(t, true)).join(', ')}]` : 'tags: []'
+    case 'publications':
+      return (value as string[]).length ? `publications: [${(value as string[]).map((t) => scalar(t, true)).join(', ')}]` : null
     case 'date':
     case 'updated':
     case 'priority':
@@ -126,6 +129,7 @@ export function frontmatterFromData(data: Record<string, unknown>, fileSlug: str
     ...(data.draft ? { draft: true } : {}),
     ...(data.canonical ? { canonical: String(data.canonical) } : {}),
     ...(data.originalUrl ? { originalUrl: String(data.originalUrl) } : {}),
+    ...(Array.isArray(data.publications) && data.publications.length ? { publications: data.publications.map(String) } : {}),
   }
 }
 

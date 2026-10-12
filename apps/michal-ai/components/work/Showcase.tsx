@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import type { Post } from '@/lib/content/types'
 import { tintFor } from '@/lib/tints'
+import { getPublication } from '@/lib/publications'
 import { Picture } from '@/components/media/Picture'
 import { matchesFilter, PROJECT_FILTERS } from '@/components/ui/segments'
 import './cards.css'
@@ -38,6 +39,7 @@ export function ProjectCard({
   const alt = post.cardImage ? (post.cardImageAlt ?? '') : (post.coverAlt ?? '')
   const meta = [year(post), post.role].filter(Boolean).join(' · ')
   const id = `pc-${post.slug}`
+  const pub = post.publications?.map(getPublication).find(Boolean)
   return (
     <Link href={href} className={`tile${feature ? ' tile--feature' : ''}${variant !== 'newsroom' ? ` tile--${variant}` : ''}`} aria-labelledby={`${id}-t`} aria-describedby={`${id}-d`}>
       {src ? (
@@ -61,6 +63,7 @@ export function ProjectCard({
       )}
       <div className="tile__body">
         <p className="tile__meta t-meta">{meta}</p>
+        {pub ? <p className="tile__pub t-meta">Published at {pub.venueShort}</p> : null}
         {src ? (
           <h3 id={`${id}-t`} className="tile__title t-title">
             {post.title}

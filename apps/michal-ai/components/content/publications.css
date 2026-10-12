@@ -1,0 +1,33 @@
+.pubs {
+  margin: var(--space-12) 0 0;
+  max-width: 62ch;
+  border-top: 1px solid var(--hairline);
+  padding-top: var(--space-6);
+}
+.pubs__h {
+  font: 400 30px/1.15 var(--font-display);
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--space-4);
+}
+.pubs__item + .pubs__item {
+  margin-top: var(--space-6);
+}
+.pubs__cite {
+  font: 400 17px/26px var(--font-serif);
+  margin: 0;
+}
+.pubs__me {
+  font-weight: 500;
+}
+.pubs__arrow {
+  display: inline-block;
+  margin-left: 2px;
+  vertical-align: -1px;
+}
+.pubs__role {
+  margin: var(--space-4) 0 0;
+  padding: 0 0 0 var(--space-4);
+  border-left: 2px solid var(--hairline);
+  font: 400 17px/26px var(--font-serif);
+  color: var(--ink-muted);
+}

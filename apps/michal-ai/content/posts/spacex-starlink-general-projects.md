@@ -2,7 +2,7 @@
 title: "Starlink.com"
 slug: spacex-starlink-general-projects
 kind: project
-description: "Smaller full-stack projects from my time on the Consumer Platform team at Starlink, from security fixes to database migrations."
+description: "Growing the Starlink.com platform for millions and then billions worldwide, through technical excellence and collaboration with business stakeholders."
 date: 2025-06-04
 tags: ["Web", "TypeScript", "Next.js"]
 cover: /media/spacex-starlink-general-projects/starlink-night-sky.webp
@@ -17,4 +17,15 @@ links:
     href: "https://starlink.com"
 ---
 
-I’m compiling a list of smaller, yet impactful projects I was on during my tenure on the Consumer Platform team at Starlink / SpaceX! Stay tuned.
+Growing the Starlink.com platform for millions and then billions worldwide, through technical excellence and collaboration with business stakeholders.
+
+- Responsible for unlocking the Starlink Mini retail launch
+- Rebuilt our Order Flow from the ground up in React, improving conversion rate, aesthetic, and UX
+- Unblocked launch of service in international markets
+- Leading localization efforts from the technical perspective
+- Mentoring interns and teammates
+- Optimizing e-commerce growth and online presence
+- Building the robust platform needed to support millions of customers and billions in sales
+- Working from first principles to deliver excellent and robust internal tooling that lets our business stakeholders run experiments and efforts efficiently
+- Improving analytics and reporting for better insight
+- Next.js/React focus, with work also in Angular and a C# .NET microservice architecture, all running in K8s and Argo hosted by GCP
