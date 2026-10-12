@@ -1,0 +1,45 @@
+/* Hero atmosphere: stacked flat tints behind the first screen, cross-faded by opacity only. It is an ordinary layer in the
+   page flow (no fixed positioning, no scroll handler), sized in svh so the iOS URL bar never changes it, and its bottom
+   edge dissolves into the paper through a static mask. */
+.hero-atm {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: -1;
+  height: min(100svh, 760px);
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+  -webkit-mask-image: linear-gradient(180deg, #000 0, #000 55%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0, #000 55%, transparent 100%);
+}
+.hero-atm__layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 2600ms var(--ease-in-out-soft);
+}
+.hero-atm__layer[data-active] {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-atm__layer {
+    transition: none;
+  }
+  .hero-atm__layer:not(:first-child) {
+    opacity: 0 !important;
+  }
+  .hero-atm__layer:first-child {
+    opacity: 1 !important;
+  }
+}
+
+/* Slot for a decorative hero element (for example the globe). Same box as the tint layer, painted above it and below the
+   text, never interactive. Empty by default. */
+.hero-slot {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: -1;
+  height: min(100svh, 760px);
+  overflow: hidden;
+  pointer-events: none;
+}

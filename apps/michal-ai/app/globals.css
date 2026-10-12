@@ -36,14 +36,9 @@
   }
 }
 
-/* Texture: paper grain. Reason: so flat color reads as paper, not screen. A 160px static noise tile (about 4% in
-   Birch, multiply; soft-light in Basalt) painted on <html> beneath everything, so it never sits over images, text
-   or the glass. No animation, no filter, no repaint cost. */
+/* Paper: flat colour. The 4 percent noise tile was removed: none of the reference sites (linear.app, stripe.com, apple.com, family.co) lays a grain over the page, and it was one more full-page layer. */
 html {
   background-color: var(--paper);
-  background-image: var(--grain);
-  background-size: 160px 160px;
-  background-blend-mode: var(--grain-blend);
   scroll-behavior: smooth;
   scroll-padding-top: 96px;
   -webkit-text-size-adjust: 100%;
@@ -98,26 +93,17 @@ body {
   }
 }
 
-/* Scroll reveals, the Apple way and without scroll-jacking: progress is tied to scroll position through CSS
-   scroll-driven animations (native scrolling is never touched). Elements ease in over the first ~25% of their entry:
-   opacity 0 to 1, 12px of travel. Where view() timelines are missing, <ScrollReveal> adds [data-in] once via
-   IntersectionObserver and the same movement plays as a one-shot transition. */
+/* One scroll reveal, and it is scrubbed rather than played: while an element's box enters the viewport it rises 12px and
+   fades in, tied to the scroll position through a CSS scroll-driven animation (compositor, no JS, native scrolling is
+   never touched). Where view() timelines are missing, content is simply present. */
 @keyframes reveal-in {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translate3d(0, 12px, 0);
   }
   to {
     opacity: 1;
     transform: none;
-  }
-}
-@keyframes settle {
-  from {
-    scale: 1.02;
-  }
-  to {
-    scale: 1;
   }
 }
 @keyframes intro-away {
@@ -129,13 +115,7 @@ body {
   .reveal {
     animation: reveal-in linear both;
     animation-timeline: view();
-    animation-range: entry 0% entry 25%;
-  }
-  /* A very slight scale settle on featured imagery, clipped inside its frame (.work-feat__media is overflow:hidden). */
-  .work-feat__img {
-    animation: settle linear both;
-    animation-timeline: view();
-    animation-range: entry 0% cover 45%;
+    animation-range: entry 0% entry 30%;
   }
   .name-intro {
     animation: intro-away linear both;
@@ -143,27 +123,10 @@ body {
     animation-range: 0 40vh;
   }
 }
-@supports not (animation-timeline: view()) {
-  html.js-reveal .reveal {
-    transition:
-      opacity var(--motion-slow) var(--ease-out-soft),
-      transform var(--motion-slow) var(--ease-out-soft);
-    transition-delay: calc(min(var(--i, 0), 4) * 50ms);
-  }
-  html.js-reveal .reveal:not([data-in]) {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .reveal,
-  .work-feat__img,
   .name-intro {
     animation: none !important;
-  }
-  html.js-reveal .reveal {
-    transition: opacity 1ms !important;
-    transform: none !important;
   }
 }
 
@@ -340,234 +303,6 @@ body {
     border-bottom: 1px solid var(--hairline);
   }
 
-  /* ---------- Showcase (Selected work) ----------
-     Mobile-first. Featured projects are wide images with an offset caption; the rest is an index of rows with
-     an always-visible thumbnail. No cards, no shadows: type, space and hairlines only. Every row/feature is a
-     single link with a tap target well above 44px. */
-  .work {
-    --work-gap: var(--space-16);
-  }
-  .work-feat-wrap {
-    margin: var(--work-gap) 0;
-  }
-  .work-feat-wrap:first-child {
-    margin-top: 0;
-  }
-  .work-index + .work-index {
-    margin-top: var(--space-8);
-  }
-  .work-feat {
-    display: block;
-    color: inherit;
-    text-decoration: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-  /* full-bleed, cinematic */
-  .work-feat__media {
-    overflow: hidden;
-    margin-inline: calc(50% - 50vw);
-    background: var(--paper-sunk);
-  }
-  .work-feat__img {
-    display: block;
-    width: 100%;
-    height: auto;
-    aspect-ratio: 1 / 1;
-    object-fit: cover;
-    transition: transform var(--spring-settle-ms, 1400ms) var(--spring-settle, var(--ease-out-soft));
-  }
-  .work-feat__cap {
-    display: grid;
-    gap: var(--space-3);
-    margin-top: var(--space-6);
-  }
-  .work-feat__meta {
-    font: 400 15px/22px var(--font-serif);
-    letter-spacing: 0.01em;
-    color: var(--ink-muted);
-  }
-  .work-feat__title {
-    font: 400 clamp(46px, 13vw, 84px) / 0.98 var(--font-display);
-    letter-spacing: -0.02em;
-    transition: color var(--motion-fast) var(--ease-out-soft);
-  }
-  .work-feat__desc {
-    color: var(--ink-muted);
-    max-width: 44ch;
-    font-size: 17px;
-    line-height: 26px;
-  }
-  .work-feat__cta {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-height: 44px;
-    font: 500 15px/1 var(--font-sans);
-  }
-  .work-feat__cta svg {
-    transition: transform var(--motion-fast) var(--ease-out-soft);
-  }
-  .work-feat:hover .work-feat__title,
-  .work-feat:focus-visible .work-feat__title {
-    color: var(--accent);
-  }
-  .work-feat:hover .work-feat__img {
-    transform: scale(1.01);
-  }
-  .work-feat:hover .work-feat__cta svg {
-    transform: translate(2px, -2px);
-  }
-
-  .work-index {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    border-bottom: 1px solid var(--hairline);
-  }
-  .wrow {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 104px;
-    grid-template-areas:
-      'meta thumb'
-      'body thumb';
-    align-content: center;
-    column-gap: var(--space-4);
-    row-gap: 2px;
-    min-height: 104px;
-    padding: var(--space-4) 0;
-    border-top: 1px solid var(--hairline);
-    color: inherit;
-    text-decoration: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .wrow--bare {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: 'meta' 'body';
-  }
-  .wrow__meta {
-    grid-area: meta;
-    font: 400 14px/22px var(--font-serif);
-    letter-spacing: 0.01em;
-    color: var(--ink-muted);
-  }
-  .wrow__body {
-    grid-area: body;
-  }
-  .wrow__title {
-    font: 400 27px/1.12 var(--font-display);
-    letter-spacing: -0.005em;
-    transition: color var(--motion-fast) var(--ease-out-soft), translate 754ms var(--spring-row);
-  }
-  .wrow__desc {
-    margin-top: 2px;
-    color: var(--ink-muted);
-    font-size: 15px;
-    line-height: 22px;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .wrow__thumb {
-    grid-area: thumb;
-    align-self: center;
-    overflow: hidden;
-    border-radius: var(--radius-md);
-    background: var(--paper-sunk);
-  }
-  .wrow__img {
-    display: block;
-    width: 100%;
-    height: auto;
-    aspect-ratio: 4 / 3;
-    object-fit: cover;
-    transition: transform 754ms var(--spring-row);
-  }
-  .wrow:hover .wrow__title,
-  .wrow:focus-visible .wrow__title {
-    color: var(--accent);
-    translate: 4px 0;
-  }
-  .wrow:hover .wrow__img {
-    transform: scale(1.02);
-  }
-  .work-more {
-    display: flex;
-    align-items: center;
-    min-height: 44px;
-    margin-top: var(--space-4);
-  }
-  @media (min-width: 768px) {
-    .work-feat__img {
-      aspect-ratio: 21 / 9;
-    }
-    /* Meta above the title, description under it, and the call to action at the far end of the description row, so
-       the big title never leaves an empty column beside or beneath it. */
-    .work-feat__cap {
-      grid-template-columns: minmax(0, 1fr) auto;
-      column-gap: var(--space-8);
-      row-gap: var(--space-3);
-      margin-top: var(--space-8);
-      align-items: end;
-      align-content: start;
-    }
-    .work-feat__meta {
-      grid-column: 1 / -1;
-      grid-row: 1;
-    }
-    .work-feat__title {
-      grid-column: 1 / -1;
-      grid-row: 2;
-      font-size: clamp(72px, 7.4vw, 108px);
-    }
-    .work-feat__desc {
-      grid-column: 1;
-      grid-row: 3;
-      max-width: 52ch;
-    }
-    .work-feat__cta {
-      grid-column: 2;
-      grid-row: 3;
-      align-self: end;
-    }
-
-    .wrow {
-      grid-template-columns: 72px minmax(0, 1fr) minmax(140px, 220px) 176px;
-      grid-template-areas: 'meta body tags thumb';
-      align-items: center;
-      column-gap: var(--space-6);
-      row-gap: var(--space-1);
-      padding: var(--space-6) 0;
-      min-height: 144px;
-    }
-    .wrow--bare {
-      grid-template-columns: 72px minmax(0, 1fr) minmax(140px, 220px);
-      grid-template-areas: 'meta body tags';
-    }
-    .wrow__meta {
-    }
-    .wrow__mtags {
-      display: none;
-    }
-    .wrow__title {
-      font-size: 32px;
-    }
-    .wrow__desc {
-      font-size: 16px;
-    }
-    .wrow__tags {
-      grid-area: tags;
-      font: 400 15px/24px var(--font-serif);
-      color: var(--ink-muted);
-      text-align: right;
-    }
-  }
-  @media (max-width: 767px) {
-    .wrow__tags {
-      display: none;
-    }
-  }
-
   /* ---------- Project detail: hero, facts, gallery ---------- */
   .hero {
     margin: var(--space-8) 0 var(--space-6);
@@ -580,13 +315,6 @@ body {
     object-fit: cover;
     border-radius: var(--radius-md);
     background: var(--paper-sunk);
-  }
-  .hero--bleed {
-    margin-inline: calc(50% - 50vw);
-  }
-  .hero--bleed .hero__img {
-    border-radius: 0;
-    aspect-ratio: 4 / 5;
   }
   .hero__cap {
     margin-top: var(--space-2);
@@ -634,6 +362,7 @@ body {
   }
   .gallery {
     margin: 0 0 var(--space-12);
+    overflow-x: clip;
   }
   .gallery__list {
     display: flex;
@@ -673,9 +402,6 @@ body {
   @media (min-width: 768px) {
     .hero__img {
       aspect-ratio: 16 / 9;
-    }
-    .hero--bleed .hero__img {
-      aspect-ratio: 21 / 9;
     }
     .facts {
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1202,12 +928,6 @@ body {
   opacity: 0;
   transition: opacity 180ms linear;
 }
-/* The frame's own rounded, tinted box would show through the feathered edge; the organic mask replaces it. */
-.work-feat__media:has(.shader-frame),
-.wrow__thumb:has(.shader-frame) {
-  background: transparent;
-  border-radius: 0;
-}
 .shader-canvas {
   position: fixed;
   inset: 0;
@@ -1370,17 +1090,23 @@ html[data-backdrop-gl] .backdrop-css {
 }
 .hook__next {
   flex: none;
-  margin-left: 0.6em;
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  margin: var(--space-2) 0 0;
+  padding: 0 var(--space-3);
   min-height: 44px;
-  font: italic 400 0.6em/1 var(--font-display);
-  color: var(--ink-muted);
-  text-decoration: underline;
-  text-decoration-color: var(--hairline);
-  text-underline-offset: 0.2em;
-  background: none;
-  border: 0;
+  font: 500 15px/1 var(--font-sans);
+  color: var(--ink);
+  background: color-mix(in srgb, var(--paper-raised) 70%, transparent);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
   cursor: pointer;
 }
 .hook__next:hover {
   color: var(--accent);
+}
+.hook__next:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }

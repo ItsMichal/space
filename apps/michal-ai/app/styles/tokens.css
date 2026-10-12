@@ -54,8 +54,10 @@
   --space-12: 48px;
   --space-16: 64px;
   --space-24: 96px;
+  --radius-xs: 8px;
   --radius-sm: 6px;
   --radius-md: 14px;
+  --radius-card: 16px;
   --radius-lg: 28px;
   --radius-pill: 999px;
   --glass-blur: 10px;
@@ -80,6 +82,12 @@
   --presence-4: #c9592a;
   --presence-5: #9a7a00;
   --presence-6: #b04462;
+  --tint-moss: #dde8cf;
+  --tint-lichen: #e6ead0;
+  --tint-glacier: #d8e7e4;
+  --tint-sand: #eee3c8;
+  --tint-fjord: #d6e3ea;
+  --tint-birch: #e5e1d3;
   --shadow-glass: 0 1px 1px rgba(24,33,27,0.04), 0 8px 24px -6px rgba(24,33,27,0.14), 0 24px 48px -24px rgba(24,33,27,0.18);
   --shadow-none: none;
 }
@@ -108,6 +116,12 @@
     --presence-4: #f0956a;
     --presence-5: #e2c45a;
     --presence-6: #ec8ea6;
+    --tint-moss: #1d261c;
+    --tint-lichen: #232719;
+    --tint-glacier: #1a2524;
+    --tint-sand: #292419;
+    --tint-fjord: #1a2328;
+    --tint-birch: #222420;
     --shadow-glass: 0 1px 1px rgba(0,0,0,0.4), 0 8px 24px -6px rgba(0,0,0,0.6), 0 24px 48px -24px rgba(0,0,0,0.7);
     --shadow-none: none;
   }

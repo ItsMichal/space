@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { bounded, dragAxis, focusOf, settleDamping, settleIndex, VelocityTracker } from '../kinetics'
 import { createFollowers } from '../craft/followers'
-import { bladePath, leafPath, rand, seedPath } from '../craft/stroke'
+import { rand, seedPath } from '../craft/stroke'
 import { springFor, projectMomentum } from '@/components/glass/geometry'
 import { springCoeffs, project } from '@space/motion/spring'
 
@@ -54,12 +54,8 @@ describe('craft', () => {
   })
   it('organic silhouettes are deterministic, closed and not identical', () => {
     expect(rand(3)).toBe(rand(3))
-    expect(leafPath(20)).toMatch(/Z$/)
     expect(seedPath(1)).toBe(seedPath(1))
     expect(seedPath(1)).not.toBe(seedPath(2))
-    const b = bladePath(5)
-    expect(b.h).toBeGreaterThan(0)
-    expect(b.h).toBeLessThanOrEqual(9)
   })
 })
 

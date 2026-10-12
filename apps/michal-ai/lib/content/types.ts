@@ -13,6 +13,9 @@ export type PostFrontmatter = {
   coverAlt?: string
   /* CSS object-position for cropped covers, e.g. "50% 30%" */
   coverFocus?: string
+  /* Image for the project card on the home page and /projects: a path under /media/..., or "none" for the type-only card. Defaults to `cover`. */
+  cardImage?: string
+  cardImageAlt?: string
   priority?: number
   /* Projects: shown large at the top of Selected work. Articles: listed first on /writing. */
   featured?: boolean

@@ -180,6 +180,9 @@ export class ShaderRenderer {
         this.release(item)
         frame.removeAttribute('data-gl')
         this.items.delete(item)
+        // One more frame, so the shared canvas is cleared: without it the last drawn image stays on the fixed canvas
+        // after a client-side navigation, floating over the next page.
+        this.kick()
       },
     }
   }

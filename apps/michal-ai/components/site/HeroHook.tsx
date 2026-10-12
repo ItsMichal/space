@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 import { Fragment, useEffect, useReducer, useRef, useState } from 'react'
+import { setHeroIndex } from '@/lib/hero/store'
 import { clickTarget, initialRotation, INTERVAL, ROLL_MS, rotationReducer, slotOf } from '@space/motion/rotation'
 
 export type HookItem = { text: string; href: string }
@@ -111,6 +112,8 @@ export function HeroHook({ stem, items, label = 'Recent work' }: Props) {
   }
 
   const current = clickTarget(s)
+  // The hero atmosphere follows the phrase on screen.
+  useEffect(() => setHeroIndex(current), [current])
 
   // Keyboard stepping moves the focus ring with the phrase: only the phrase on screen is ever focused.
   useEffect(() => {
@@ -143,15 +146,27 @@ export function HeroHook({ stem, items, label = 'Recent work' }: Props) {
           {items.map((it, i) => (
             <li key={it.href} className="hook__item" data-slot={slotOf(s, i)} data-current={i === current ? '' : undefined}>
               <Link href={it.href} className="hook__link" tabIndex={i === current ? 0 : -1} data-hook-link>
-                {it.text.split(' ').map((w, k) => (
-                  <Fragment key={k}>
-                    {k ? ' ' : null}
+                {it.text.split(' ').map((w, k, all) => {
+                  const word = (
                     <span className="hook__w" style={{ ['--w' as string]: k } as React.CSSProperties}>
                       {w}
                     </span>
-                  </Fragment>
-                ))}
-                <ArrowUpRight aria-hidden className="hook__arrow" size={'0.62em'} strokeWidth={1.4} />
+                  )
+                  return (
+                    <Fragment key={k}>
+                      {k ? ' ' : null}
+                      {k === all.length - 1 ? (
+                        // The last word and the arrow never separate: the arrow cannot land alone on a new line.
+                        <span className="hook__end">
+                          {word}
+                          <ArrowUpRight aria-hidden className="hook__arrow" size={'0.62em'} strokeWidth={1.4} />
+                        </span>
+                      ) : (
+                        word
+                      )}
+                    </Fragment>
+                  )
+                })}
               </Link>
             </li>
           ))}

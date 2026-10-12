@@ -1,0 +1,60 @@
+/* End-of-page links: two columns on phones, three from tablet up. Hairline rows, display serif, a quiet arrow. */
+.nx {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--space-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--hairline);
+}
+@media (min-width: 768px) {
+  .nx {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: var(--space-8);
+  }
+}
+.nx > li {
+  border-bottom: 1px solid var(--hairline);
+}
+.nx__a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 56px;
+  font: 400 clamp(22px, 6vw, 28px) / 1.1 var(--font-display);
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--motion-fast) var(--ease-out-soft);
+}
+.nx__a svg {
+  flex: none;
+  color: var(--ink-faint);
+  transition:
+    transform var(--motion-fast) var(--ease-out-soft),
+    color var(--motion-fast) var(--ease-out-soft);
+}
+.nx__a:hover,
+.nx__a:focus-visible {
+  color: var(--accent);
+}
+.nx__a:hover svg,
+.nx__a:focus-visible svg {
+  color: currentColor;
+  transform: translate3d(2px, -2px, 0);
+}
+.nx__a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Home Writing section: two rows on phones, three from tablet up (the rest is one tap away). */
+@media (max-width: 639px) {
+  .home-writing .plist > li:nth-child(n + 3) {
+    display: none;
+  }
+}

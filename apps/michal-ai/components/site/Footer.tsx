@@ -7,8 +7,8 @@ const linkCls = 'text-ink-muted transition-colors duration-150 hover:text-accent
 
 export function Footer() {
   return (
-    <footer className="relative mt-space-24 px-space-4 pb-space-12 md:px-space-8">
-      <div className="mx-auto flex max-w-content flex-col gap-space-4 border-t border-hairline pt-space-6 sm:flex-row sm:items-center sm:justify-between">
+    <footer className="relative mx-auto mt-space-12 w-full max-w-content px-space-4 pb-space-12 md:px-space-8">
+      <div className="flex flex-col gap-space-4 border-t border-hairline pt-space-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-space-3 text-ink">
           <Link href="/" aria-label="Home" className="rounded-sm">
             <SiteMark height={24} />
@@ -29,13 +29,6 @@ export function Footer() {
           </a>
         </nav>
       </div>
-      <p className="mx-auto mt-space-4 max-w-content font-serif text-[14px] leading-[20px] text-ink-faint">
-        Photo credits: the home page cherry blossom is{' '}
-        <a className="underline decoration-hairline underline-offset-2 hover:text-accent" href="https://commons.wikimedia.org/wiki/File:Three_pink_cherry_blossoms_in_Tuntorp.jpg" target="_blank" rel="noreferrer">
-          Three pink cherry blossoms in Tuntorp
-        </a>{' '}
-        by W.carter, CC BY 4.0, cropped and softened. Hydrangea and daylily are my own photographs.
-      </p>
     </footer>
   )
 }

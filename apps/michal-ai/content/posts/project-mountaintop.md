@@ -8,6 +8,8 @@ tags: ["Unity", "Arduino", "Game Dev", "C#"]
 cover: /media/project-mountaintop/cover.webp
 coverAlt: "Project Mountaintop title screen on a monitor, with a laptop running the game in front of it"
 coverFocus: "50% 30%"
+cardImage: /media/mountaintop-week-4-5-deluxe-combos/screenshot-2023-02-15-at-2-50-18-pm-7b966d.png
+cardImageAlt: "Project Mountaintop gameplay with combo and score UI"
 priority: 7
 featured: true
 role: "Game developer, UI/UX and music"

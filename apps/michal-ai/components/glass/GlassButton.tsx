@@ -4,7 +4,6 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { Glass } from './react'
 import { glass } from './glass'
-import { InkLayer } from '@/components/motion/InkLayer'
 
 type Props = {
   children: ReactNode
@@ -25,7 +24,6 @@ export function GlassButton({ children, href, onClick, solid, className = '', ic
   const cls = `lg--pill lg-btn${solid ? ' lg-btn--solid' : ''}${className ? ` ${className}` : ''}`
   const inner = (
     <>
-      <InkLayer />
       {icon}
       <span>{children}</span>
     </>
