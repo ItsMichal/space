@@ -164,9 +164,9 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
   let lastScrollY = -1
   let revealed = false
   const t0 = performance.now()
-  const bakeT = parseFloat(qs.get('t') ?? '') || C.staticTime
-  const bakeScroll = parseFloat(qs.get('scroll') ?? '') || 0
-  const glyphsOn = qs.get('glyphs') !== '0'
+  let bakeT = parseFloat(qs.get('t') ?? '') || C.staticTime
+  let bakeScroll = parseFloat(qs.get('scroll') ?? '') || 0
+  let glyphsOn = qs.get('glyphs') !== '0'
 
   const draw = (now: number) => {
     if (!gl || lost) return
@@ -253,6 +253,19 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
       canvas.dataset.ready = ''
     }
     if (bake) canvas.dataset.baked = ''
+  }
+
+  // Bake mode (scripts/bake-backdrop.mjs): redraw on demand with a chosen time, scroll and scheme, and return the pixels.
+  if (bake) {
+    ;(window as unknown as Record<string, unknown>).__bake = (t: number, scroll: number, dark: number, glyphs: boolean) => {
+      bakeT = t
+      bakeScroll = scroll
+      darkNow = darkTarget = dark
+      glyphsOn = glyphs
+      sizeTargets()
+      draw(performance.now())
+      return canvas.toDataURL('image/png')
+    }
   }
 
   // ---- loop

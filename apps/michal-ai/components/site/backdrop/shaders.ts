@@ -52,7 +52,7 @@ void main(){
   tint *= 1. - clamp(fr, 0., 1.) * uRay.w * (1. - vec3(.3, .74, .88));
   tint *= 1. - clamp(-fr, 0., 1.) * uRay.w * (1. - vec3(.9, .42, .66));
   // light: hard luminance floor, then lift the paper in the shafts
-  float rr = Y(uPaperL * tint) / Y(uPaperL);
+  float rr = dot(uPaperL * tint, vec3(.2126, .7152, .0722)) / dot(uPaperL, vec3(.2126, .7152, .0722));
   if (rr < uFloorL) { float kk = (1. - uFloorL) / (1. - rr); tint = 1. - (1. - tint) * kk; }
   vec3 colL = mix(uPaperL, uPaperHi, ray * uRay.z) * tint;
   // dark: dim additive glow, ceiling on luminance

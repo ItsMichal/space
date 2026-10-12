@@ -29,18 +29,19 @@ export type BlobSpec = {
 
 export const BACKDROP = {
   blobs: [
-    { pigment: 'cyan', x: 0.1, y: 0.2, r: 1.05, amp: 0.34, ax: 0.3, ay: 0.22, px: 280, py: 340 },
-    { pigment: 'magenta', x: 1.05, y: 0.9, r: 0.9, amp: 0.28, ax: 0.26, ay: 0.3, px: 330, py: 250 },
-    { pigment: 'yellow', x: 0.45, y: 1.45, r: 1.15, amp: 0.4, ax: 0.32, ay: 0.2, px: 300, py: 380 },
-    { pigment: 'cyan', x: 0.95, y: 2.0, r: 0.95, amp: 0.3, ax: 0.22, ay: 0.26, px: 360, py: 290 },
-    { pigment: 'magenta', x: 0.05, y: 2.35, r: 0.85, amp: 0.26, ax: 0.28, ay: 0.24, px: 310, py: 400 },
+    { pigment: 'cyan', x: 0.1, y: 0.2, r: 1.05, amp: 0.42, ax: 0.3, ay: 0.22, px: 280, py: 340 },
+    { pigment: 'magenta', x: 1.05, y: 0.9, r: 0.9, amp: 0.75, ax: 0.26, ay: 0.3, px: 330, py: 250 },
+    { pigment: 'yellow', x: 0.45, y: 1.45, r: 1.15, amp: 1.0, ax: 0.32, ay: 0.2, px: 300, py: 380 },
+    { pigment: 'cyan', x: 0.95, y: 2.0, r: 0.95, amp: 0.4, ax: 0.22, ay: 0.26, px: 360, py: 290 },
+    { pigment: 'magenta', x: 0.05, y: 2.35, r: 0.85, amp: 0.65, ax: 0.28, ay: 0.24, px: 310, py: 400 },
   ] satisfies BlobSpec[],
   /** Vertical repeat of the blob field, in U. The field tiles, so a long page never runs out of colour. */
   repeat: 2.6,
   /** Domain warp strength (U). Bends the round blobs into abstract shapes. */
   warp: 0.32,
-  /** Hard floor on backdrop luminance relative to the paper (linear light, gamma 2.2), light mode. */
-  lumFloorLight: 0.935,
+  /** Hard floor on backdrop luma relative to the paper's luma (Rec.709 weights on the encoded sRGB values, which tracks perceived
+   *  lightness), light mode. The same pixels in WCAG linear luminance are at least about 0.85 of the paper's. */
+  lumFloorLight: 0.93,
   /** Dark mode: the brightest backdrop pixel may be at most this relative luminance (WCAG Y). Paper is about 0.008. */
   lumCeilDark: 0.022,
   /** Dark mode blob glow (added, dim). */
