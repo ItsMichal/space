@@ -76,6 +76,38 @@ if (/\beval\(|new Function\(|\.innerHTML\s*=|\.style\.cssText|setAttribute\(\s*[
 for (const m of heroJs.matchAll(/'(\/hero\/[^']+)'/g)) if (!resolve(m[1])) bad.push(`hero.js: ${m[1]} does not exist`);
 for (const [f, max] of [['reel-720.webm', 2.5], ['reel-720.mp4', 3], ['reel-540.webm', 1.2]]) { const fp = path.join(pub, 'hero', f); if (!fs.existsSync(fp)) bad.push(`hero/${f} missing`); else if (fs.statSync(fp).size > max * 1024 * 1024) bad.push(`hero/${f} is over ${max} MB`); }
 if (fs.existsSync(path.join(pub, 'hero/reel-poster.jpg')) && fs.statSync(path.join(pub, 'hero/reel-poster.jpg')).size > 60 * 1024) bad.push('hero/reel-poster.jpg is over 60 KB');
+// Special Force leads Watch (home) and /videos/; the clean names show, the real titles stay in data-title
+{
+  const watch = home.slice(home.indexOf('<div class="bento b-watch">'));
+  const vids = [...watch.matchAll(/<a class="tile tm ([^"]*)" href="[^"]*" data-vid="([^"]+)" data-title="([^"]*)"/g)];
+  if (vids[0]?.[2] !== 'qVEDjNc5Gmg' || vids[1]?.[2] !== 'IIJVKHEtawU') bad.push(`index.html: Special Force 1 and 2 should be the first two Watch tiles (got ${vids.slice(0, 2).map((m) => m[2])})`);
+  for (const m of vids.slice(0, 2)) if (!/\blead w2\b/.test(m[1])) bad.push(`index.html: Special Force tile ${m[2]} should be a 2x2 lead`);
+  if (!/<h3 class="tt">Special Force: Origins<\/h3>/.test(home) || !/<h3 class="tt">Special Force 2: The Array<\/h3>/.test(home)) bad.push('index.html: clean Special Force titles missing');
+  if (!/data-title="SPECIAL FORCE 1 - ORIGINS"/.test(home)) bad.push('index.html: real Special Force title should stay in data-title');
+  if (!/<span class="chip kchip">[\s\S]*?<span>Short film<\/span>/.test(watch)) bad.push('index.html: Short film kind chip missing');
+  const vi = fs.readFileSync(path.join(pub, 'videos/index.html'), 'utf8');
+  const vo = [...vi.matchAll(/<a class="tile tm [^"]*" href="[^"]*" data-vid="([^"]+)"/g)].map((m) => m[1]);
+  if (vo[0] !== 'qVEDjNc5Gmg' || vo[1] !== 'IIJVKHEtawU') bad.push(`videos/index.html: Special Force films should come first (got ${vo.slice(0, 2)})`);
+  for (const id of ['qVEDjNc5Gmg', 'IIJVKHEtawU']) { const f = `videos/${id}-hd.jpg`; if (!resolve(`/${f}`)) bad.push(`${f} missing`); }
+}
+// hover previews: every id in previews/index.json has both files inside the size budget; every video/clip tile id on the home page that is listed has them; total stays under 6 MB; the lead films are 640x360 loops
+{
+  const dir = path.join(pub, 'previews');
+  const idx = JSON.parse(fs.readFileSync(path.join(dir, 'index.json'), 'utf8')).ids;
+  let total = 0;
+  const lim = (id) => (['qVEDjNc5Gmg', 'IIJVKHEtawU'].includes(id) ? [450, 450] : [220, 300]);
+  for (const id of idx) {
+    if (!/^[A-Za-z0-9_-]+$/.test(id)) { bad.push(`previews/index.json: odd id ${id}`); continue; }
+    const [mw, mm] = lim(id);
+    for (const [e, max] of [['webm', mw], ['mp4', mm]]) { const f = path.join(dir, `${id}.${e}`); if (!fs.existsSync(f)) bad.push(`previews/${id}.${e} missing`); else { const kb = fs.statSync(f).size / 1024; total += kb; if (kb > max) bad.push(`previews/${id}.${e} is ${kb.toFixed(0)} KB (max ${max})`); } }
+  }
+  for (const f of fs.readdirSync(dir)) if (/\.(webm|mp4)$/.test(f) && !idx.includes(f.replace(/\.(webm|mp4)$/, ''))) bad.push(`previews/${f} is not listed in index.json`);
+  if (total > 6 * 1024) bad.push(`previews total ${(total / 1024).toFixed(1)} MB is over 6 MB`);
+  for (const m of home.matchAll(/data-vid="([^"]+)"/g)) if (['qVEDjNc5Gmg', 'IIJVKHEtawU', 'N7HKj1dYZjU', '2jM2QSTSte4', 'mRIj1BeCJ_o', 'Nhs4iQcN7-w', 'Et47QCJ3-3g', 'pl6lJAYPLgc'].includes(m[1]) && !idx.includes(m[1])) bad.push(`previews: no loop for home tile ${m[1]}`);
+  const hd = fs.readFileSync(path.join(pub, '_headers'), 'utf8');
+  if (!/\/previews\/\*\n\s+Cache-Control: public, max-age=604800/.test(hd) || !/\/hero\/\*\n\s+Cache-Control: public, max-age=\d+/.test(hd)) bad.push('_headers: /previews/* and /hero/* cache rules missing');
+  if (/previews/.test(home.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g, ''))) bad.push('index.html: nothing preview-related may be referenced from the markup (loaded on hover only)');
+}
 const px = fs.readFileSync(path.join(pub, 'work/pokemon-phoenix-rising/index.html'), 'utf8');
 if (!/Videos by <a href="https:\/\/www\.youtube\.com\/@PhoenixRisingGame"/.test(px) || (px.match(/data-vid="/g) ?? []).length < 2) bad.push('work/pokemon-phoenix-rising: channel credit or videos missing');
 const mtDir = path.join(pub, 'work/project-mountaintop');

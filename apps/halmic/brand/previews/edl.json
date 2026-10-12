@@ -33,8 +33,9 @@
     "white-hoodie scuffle",
     "crouched with the blaster"
    ],
-   "excluded": "the opening credit/name cards (about 0:55 to 1:45) are never used; all moments are after 3:30",
-   "crf": 34
+   "excluded": "the opening credit/name cards (about 0:55 to 1:45) are never used; all moments are after 3:30; the film's letterbox bars are cropped (640x288) so previews fill the tile",
+   "crf": 34,
+   "crop": "640:288:0:36"
   },
   {
    "id": "N7HKj1dYZjU",
