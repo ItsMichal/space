@@ -168,3 +168,9 @@
     -webkit-backdrop-filter: none;
   }
 }
+
+/* Wrapped phrases balance their lines, so a rule under the last line is never a stub. */
+.hook__roll,
+.hook__link {
+  text-wrap: balance;
+}
