@@ -41,7 +41,7 @@ void main(){
   gl_FragColor=vec4(t,t,t,1.);
 }`;
   // pass 2: the leaning capsule screen
-  const FS2 = `precision mediump float;varying vec2 v;uniform sampler2D lumTex;uniform vec2 res;uniform float cell,live,lean,time;
+  const FS2 = `precision mediump float;varying vec2 v;uniform sampler2D lumTex;uniform vec2 res;uniform float cell,live,lean,time,sc;uniform vec2 quiet;
 const vec3 INK=vec3(.0588,.0549,.0745);
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 void main(){
@@ -52,29 +52,29 @@ void main(){
   vec2 cuv=vec2(cp.x/res.x,1.-cp.y/res.y);
   float L=texture2D(lumTex,cuv).r;
   L+=(hash(id+floor(time*6.))-.5)*.02;      // a whisper of grain
-  // tone: footage is pre-graded flat; stretch the middle, keep highlights in check
-  float t=smoothstep(.10,.72,L);
-  // quiet zones: soft vignette, header band, bottom fade; the lower third (topline + CTAs) stays near pure ink
-  vec2 s=cuv; float vig=smoothstep(.0,.30,min(min(s.x,1.-s.x),min(s.y,1.-s.y)*1.6));
-  float top=smoothstep(.0,.20,s.y);
-  float bot=1.-smoothstep(.34,.86,s.y);
-  float a=vig*top*bot;
-  float cx=abs(cuv.x-.5)*2.; a*=1.-.35*smoothstep(.55,.0,cx)*smoothstep(.30,.62,s.y);   // a little calmer behind the wordmark and topline
-  t*=a;
-  float r=mix(.07,.30,t), hh=mix(.0,.30,t*t);
+  // tone: the footage is pre-graded flat (blacks at ink, highlights near .6); open the middle up, keep the top end modest
+  float t=smoothstep(.09,.50,L);
+  // quiet zones (s.y runs top to bottom): a header band for the nav, a soft vignette, and a long fade to ink from the middle down,
+  // so the topline and CTAs sit on near-pure ink
+  vec2 s=vec2(cp.x/res.x,cp.y/res.y);
+  float vig=smoothstep(.0,.16,min(s.x,1.-s.x))*smoothstep(.0,.08,1.-s.y);
+  float hdr=smoothstep(34.,120.,cp.y/sc);
+  float fade=1.-smoothstep(quiet.x,quiet.y,s.y);
+  t*=smoothstep(.0,.55,vig*hdr*fade);
+  float r=mix(.10,.29,t), hh=mix(.0,.16,t*t);
   vec2 d2=vec2(f.x,max(abs(f.y)-hh,0.));
   float d=length(d2)-r;
   float aa=.6/cell+.015;
-  float cov=smoothstep(aa,-aa,d)*step(.025,t);
-  vec3 mid=vec3(.092,.098,.215), hi=vec3(.150,.235,.470);
-  vec3 liveHi=vec3(.250,.360,.640);
+  float cov=smoothstep(aa,-aa,d)*step(.03,t);
+  vec3 mid=vec3(.104,.114,.250), hi=vec3(.135,.215,.455);
+  vec3 liveHi=vec3(.270,.380,.680);
   hi=mix(hi,liveHi,live*.22); hi*=1.+.12*live;
-  vec3 c=mix(mid,hi,smoothstep(.45,1.,t));
-  c*=mix(.55,1.,t);
+  vec3 c=mix(mid,hi,smoothstep(.40,.95,t));
+  c*=mix(.62,1.,t);
   gl_FragColor=vec4(mix(INK,c,cov),1.);
 }`;
 
-  let gl, prog1, prog2, vidTex, fbo = [], ftex = [], cur = 0, buf, W = 0, H = 0, running = false, raf = 0, last = 0, ready = false, started = false, fresh = true, liveV = 0, hasFrame = false, uploaded = -1;
+  let gl, prog1, prog2, vidTex, fbo = [], ftex = [], cur = 0, buf, W = 0, H = 0, running = false, raf = 0, last = 0, ready = false, started = false, fresh = true, liveV = 0, hasFrame = false, uploaded = -1, quietX = .4, quietY = .8;
   const loc = {};
 
   function compile(type, src) {
@@ -108,14 +108,14 @@ void main(){
       // the smoothed-luminance buffer ping-pongs between two textures; half-float where renderable (no stalling at 8 bits)
       let type = gl.UNSIGNED_BYTE;
       const hf = gl.getExtension('OES_texture_half_float');
-      if (hf && gl.getExtension('EXT_color_buffer_half_float')) type = hf.HALF_FLOAT_OES;
+      if (hf && gl.getExtension('EXT_color_buffer_half_float') && gl.getExtension('OES_texture_half_float_linear')) type = hf.HALF_FLOAT_OES;
       for (let i = 0; i < 2; i++) { ftex[i] = tex(320, 180, type); fbo[i] = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fbo[i]); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, ftex[i], 0); }
       if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE && type !== gl.UNSIGNED_BYTE) {
         type = gl.UNSIGNED_BYTE;
         for (let i = 0; i < 2; i++) { gl.bindTexture(gl.TEXTURE_2D, ftex[i]); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 320, 180, 0, gl.RGBA, type, null); }
       }
       vidTex = tex(0);
-      for (const [p, names] of [[prog1, ['vid', 'prev', 'asp', 'drift', 'k', 'first']], [prog2, ['lumTex', 'res', 'cell', 'live', 'lean', 'time']]]) for (const n of names) loc[n] = gl.getUniformLocation(p, n);
+      for (const [p, names] of [[prog1, ['vid', 'prev', 'asp', 'drift', 'k', 'first']], [prog2, ['lumTex', 'res', 'cell', 'live', 'lean', 'time', 'sc', 'quiet']]]) for (const n of names) loc[n] = gl.getUniformLocation(p, n);
     } catch { return false; }
     canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); stop(); fallback(); });
     return true;
@@ -128,6 +128,10 @@ void main(){
     const sc = Math.min(dpr, MAX_W / cssW);
     const w = Math.round(cssW * sc), h = Math.round(cssH * sc);
     if (w !== W || h !== H) { W = w; H = h; canvas.width = w; canvas.height = h; fresh = true; }
+    // the topline and CTAs must sit on near-pure ink: the fade to ink ends where .hero-foot starts (as a fraction of the hero)
+    const ft = hero.querySelector('.hero-foot');
+    const end = ft ? Math.min(0.92, Math.max(0.4, (ft.getBoundingClientRect().top - r.top) / cssH)) : 0.8;
+    quietY = end; quietX = Math.max(0.2, end - 0.38);
     return sc;
   }
 
@@ -167,7 +171,7 @@ void main(){
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, ftex[next]); gl.uniform1i(loc.lumTex, 0);
     gl.uniform2f(loc.res, W, H);
     gl.uniform1f(loc.cell, (innerWidth < 700 ? 9 : 12) * sc);
-    gl.uniform1f(loc.live, liveV); gl.uniform1f(loc.lean, LEAN); gl.uniform1f(loc.time, t);
+    gl.uniform2f(loc.quiet, quietX, quietY); gl.uniform1f(loc.sc, sc); gl.uniform1f(loc.live, liveV); gl.uniform1f(loc.lean, LEAN); gl.uniform1f(loc.time, t);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     cur = next;
     if (!ready) { ready = true; box.classList.add('is-on'); }

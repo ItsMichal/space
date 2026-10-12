@@ -19,9 +19,20 @@ const ff = (args) => { const r = spawnSync('ffmpeg', ['-v', 'error', '-y', ...ar
 
 // 1. each moment: crop, scale to 720p, slow to `speed` with motion interpolation, grade flat toward the ink colour, soften
 const GRADE = "eq=saturation=0.25,curves=all='0/0.055 0.3/0.2 0.6/0.42 1/0.64',colorchannelmixer=rr=0.92:gg=0.95:bb=1.08,gblur=sigma=2.2";
+// exposure: each moment's 10th and 90th luminance percentiles (ffmpeg signalstats) are stretched to black and white before the grade,
+// so a dark arena and a bright game screen land at the same level and the shader sees a steady range (gain is limited so dark scenes do not blow up noise)
+function levels(m) {
+  const r = spawnSync('ffmpeg', ['-v', 'error', '-ss', String(m.in), '-t', String(srcSeconds), '-i', path.join(src, `${m.src}.mp4`), '-an', '-vf', `crop=${m.crop},scale=320:-2,signalstats,metadata=mode=print:file=-`, '-f', 'null', '-'], { encoding: 'utf8' });
+  const v = (k) => { const a = [...r.stdout.matchAll(new RegExp(`lavfi.signalstats.${k}=([0-9.]+)`, 'g'))].map((x) => +x[1]); return a.reduce((x, y) => x + y, 0) / a.length; };
+  const lo = v('YLOW'), hi = Math.max(v('YHIGH'), lo + 70);
+  return { lo: Math.round(lo), hi: Math.round(hi) };
+}
+const only = process.env.REEL_ONLY?.split(',').map(Number);   // optional: re-cut just these moment indices, reuse the other segments already in REEL_TMP
 edl.moments.forEach((m, i) => {
+  if (only && !only.includes(i)) return;
+  const lv = levels(m); console.log(`moment ${i}: levels ${lv.lo}..${lv.hi}`);
   ff(['-ss', String(m.in), '-t', String(srcSeconds + 0.2), '-i', path.join(src, `${m.src}.mp4`), '-an',
-    '-vf', `crop=${m.crop},scale=1280:720:flags=lanczos,setpts=PTS/${speed},minterpolate=fps=${fps}:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,${GRADE},format=yuv444p`,
+    '-vf', `crop=${m.crop},scale=1280:720:flags=lanczos,lutyuv=y='clip((val-${lv.lo})*219/(${lv.hi}-${lv.lo})+16,16,235)',setpts=PTS/${speed},minterpolate=fps=${fps}:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,${GRADE},format=yuv444p`,
     '-frames:v', String(N), '-c:v', 'ffv1', path.join(tmp, `seg${i}.mkv`)]);
 });
 
@@ -38,9 +49,9 @@ console.log(`loop: ${(cycle / fps).toFixed(2)} s, ${cycle} frames`);
 // 3. encodes (no audio track anywhere)
 fs.mkdirSync(out, { recursive: true });
 const vp9 = (file, w, crf) => ff(['-i', loop, '-an', '-vf', `scale=${w}:-2:flags=lanczos,format=yuv420p`, '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', String(crf), '-row-mt', '1', '-deadline', 'good', '-cpu-used', '1', '-g', '120', '-pix_fmt', 'yuv420p', path.join(out, file)]);
-vp9('reel-720.webm', 1280, +(process.env.CRF720 ?? 40));
-vp9('reel-540.webm', 960, +(process.env.CRF540 ?? 44));
-ff(['-i', loop, '-an', '-vf', 'format=yuv420p', '-c:v', 'libx264', '-preset', 'slow', '-profile:v', 'high', '-crf', String(process.env.CRFMP4 ?? 30), '-movflags', '+faststart', '-pix_fmt', 'yuv420p', path.join(out, 'reel-720.mp4')]);
+vp9('reel-720.webm', 1280, +(process.env.CRF720 ?? 37));
+vp9('reel-540.webm', 960, +(process.env.CRF540 ?? 43));
+ff(['-i', loop, '-an', '-vf', 'format=yuv420p', '-c:v', 'libx264', '-preset', 'slow', '-profile:v', 'high', '-crf', String(process.env.CRFMP4 ?? 29), '-movflags', '+faststart', '-pix_fmt', 'yuv420p', path.join(out, 'reel-720.mp4')]);
 // poster: a calm frame (the racing stretch), same grade as the video
-ff(['-i', loop, '-vf', `select=eq(n\\,${process.env.POSTER_FRAME ?? 110}),format=yuvj420p`, '-frames:v', '1', '-q:v', String(process.env.POSTER_Q ?? 6), path.join(out, 'reel-poster.jpg')]);
+ff(['-i', loop, '-vf', `select=eq(n\\,${process.env.POSTER_FRAME ?? 88}),format=yuvj420p`, '-frames:v', '1', '-q:v', String(process.env.POSTER_Q ?? 2), path.join(out, 'reel-poster.jpg')]);
 for (const f of fs.readdirSync(out).filter((x) => x.startsWith('reel-'))) console.log(f, fs.statSync(path.join(out, f)).size);

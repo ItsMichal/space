@@ -46,7 +46,7 @@ try {
   await send('Page.navigate', { url });
   await sleep(waitMs);
   const ev = flags.find((f) => f.startsWith('eval='))?.slice(5);
-  if (ev) { await send('Runtime.evaluate', { expression: ev, awaitPromise: true }); await sleep(900); }
+  if (ev) { const er = await send('Runtime.evaluate', { expression: ev, awaitPromise: true, returnByValue: true }); console.log('eval:', JSON.stringify(er.result.result.value ?? er.result.exceptionDetails ?? null)); await sleep(900); }
   const sel = flags.find((f) => f.startsWith('sel='))?.slice(4);
   if (sel) { await send('Runtime.evaluate', { expression: `document.querySelector(${JSON.stringify(sel)}).scrollIntoView()` }); await sleep(1200); }
   const click = flags.find((f) => f.startsWith('click='))?.slice(6);
