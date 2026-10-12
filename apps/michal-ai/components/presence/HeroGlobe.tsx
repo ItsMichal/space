@@ -190,7 +190,6 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
       cellW = 3.2
       edge = 70 * sc // the part below the card's right edge fades out in dots
     } else {
-      const h1 = document.querySelector<HTMLElement>('h1[data-hero-text]')?.getBoundingClientRect()
       const box = document.querySelector<HTMLElement>('h1[data-hero-text]')?.parentElement?.getBoundingClientRect()
       const D = Math.max(72, Math.min(104, Math.round(vw * 0.26)))
       width = height = D

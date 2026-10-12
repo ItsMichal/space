@@ -36,7 +36,6 @@ describe('orbit model vs SGP4', () => {
       omms.forEach((o, i) => errs.push(angularErrorDeg(subPoint(packed.data, i, packed.refEpoch, t), sgp4Sub(o, t))))
       const max = Math.max(...errs)
       results[h] = { max, mean: errs.reduce((a, b) => a + b, 0) / errs.length }
-      // eslint-disable-next-line no-console
       console.log(`+${h}h max ${max.toFixed(3)} deg, mean ${results[h].mean.toFixed(3)} deg`)
       const bound = { 0: 0.3, 1: 0.3, 24: 0.5, 72: 1.5 }[h as 0 | 1 | 24 | 72]
       expect(max).toBeLessThan(bound)
