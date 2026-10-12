@@ -1,18 +1,26 @@
-/* The page backdrop on the home page: graph paper. A fixed layer, so the pattern stays put while the page scrolls and slides
-   under the glass cards (the blur reads as live). 24px dots, with a 1px line every fourth cell (96px): the pitch family of the
-   globe's 6px dot matrix (24 = 4 x 6), so the hero's matrix dissolves into the paper grid as the hero tint fades out
-   behind the work section. Painted once with CSS gradients, no JS, no per-frame work. Sits below the hero tint (z -2). */
+/* The page backdrop on the home page: paper tooth, barely there. A fixed layer, so the texture stays put while the page scrolls
+   and slides under the glass cards. Three things, all static and painted once (no JS, no per-frame work):
+     1. dots at 24px, ~1px, 5% ink: you only notice them when you look for them (the 6px globe matrix is the same family);
+     2. a second set of dots at 37px, 4% ink: two pitches that do not divide each other, so the pattern never lines up into a grid;
+     3. a fine noise tile (SVG turbulence as a background image, rasterised once), about 2-3% typical alpha.
+   No grid lines. Sits below the hero tint (z -2), which covers it behind the globe, so the two never clash. */
 .paper-grid {
   position: fixed;
   inset: 0;
   z-index: -2;
   pointer-events: none;
   background-image:
-    linear-gradient(rgb(24 33 27 / 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(24 33 27 / 0.1) 1px, transparent 1px),
-    radial-gradient(circle at 12px 12px, rgb(24 33 27 / 0.36) 1.8px, transparent 2.4px);
-  background-size: 96px 96px, 96px 96px, 24px 24px;
-  background-position: 0 0, 0 0, 0 0;
+    radial-gradient(circle at 7px 7px, rgb(24 33 27 / 0.05) 1px, transparent 1.4px),
+    radial-gradient(circle at 17px 25px, rgb(24 33 27 / 0.04) 0.9px, transparent 1.3px);
+  background-size: 24px 24px, 37px 37px;
+}
+.paper-grid::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.4;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .09 0 0 0 0 .13 0 0 0 0 .11 0 0 0 .5 -.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
 }
 @media print {
   .paper-grid {

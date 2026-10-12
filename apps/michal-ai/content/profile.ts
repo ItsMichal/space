@@ -15,8 +15,12 @@ export type Role = {
 export type Publication = {
   id: string
   title: string
-  /** In the order printed on the paper. */
+  /** The authors to name: for a large collaboration, the first authors plus him (in paper order). */
   authors: readonly string[]
+  /** Total number of authors on the paper, when it is a large collaboration. */
+  authorCount?: number
+  /** Short author form for a citation line ("Mason, J. P., Werth, A., West, C. G., et al."), when `authors` is a subset. */
+  shortAuthors?: string
   year: string
   /** ISO date of publication (from the DOI record). */
   published: string
@@ -24,10 +28,14 @@ export type Publication = {
   /** Short venue label for card meta lines. */
   venueShort: string
   pages?: string
-  publisher: string
+  /** Journal references: volume, issue and article number (an article number replaces pages). */
+  volume?: string
+  issue?: string
+  article?: string
+  publisher?: string
   doi: string
-  /** His own words about his part, from his LinkedIn. */
-  role: string
+  /** His own words about his part, from his LinkedIn. Only set where he has said something. */
+  role?: string
 }
 
 export const profile = {
@@ -92,6 +100,21 @@ export const profile = {
       publisher: 'ACM',
       doi: '10.1145/3706598.3713349',
       role: 'I was responsible for architecting and building out the web platform for teachers and students, allowing students to collaborate live with an LLM powered agent under educator supervision.',
+    },
+    {
+      id: 'apj-2023-coronal-heating',
+      title: 'Coronal Heating as Determined by the Solar Flare Frequency Distribution Obtained by Aggregating Case Studies',
+      authors: ['James Paul Mason', 'Alexandra Werth', 'Colin G. West', 'Allison Youngblood', 'Michal Bodzianowski'],
+      authorCount: 1002,
+      shortAuthors: 'Mason, J. P., Werth, A., West, C. G., et al.',
+      year: '2023',
+      published: '2023-05-01',
+      venue: 'The Astrophysical Journal',
+      venueShort: 'ApJ 2023',
+      volume: '948',
+      issue: '2',
+      article: '71',
+      doi: '10.3847/1538-4357/accc89',
     },
   ] satisfies Publication[],
 } as const

@@ -11,7 +11,7 @@ import { ProjectList } from '@/components/site/ProjectList'
 import { Showcase } from '@/components/work/Showcase'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { profile } from '@/content/profile'
-import { doiUrl } from '@/lib/publications'
+import { doiUrl, venueLine } from '@/lib/publications'
 import { Disclosure } from '@/components/ui/Disclosure'
 import { ExperienceList, type ExperienceItem } from '@/components/ui/ExperienceList'
 import { homeMetadata, profilePageJsonLd, websiteJsonLd } from '@/lib/seo'
@@ -86,13 +86,22 @@ export default function Home() {
           <p>{profile.about[0]}</p>
         </div>
         {profile.publications.length ? (
-          <p className="mt-space-4 max-w-[60ch] font-serif text-[17px] leading-[26px] text-ink-muted">
-            Coauthor,{' '}
-            <a href={doiUrl(profile.publications[0])} className="link" target="_blank" rel="noopener noreferrer">
-              {profile.publications[0].title}
-            </a>
-            , {profile.publications[0].venueShort}.
-          </p>
+          <div id="publications" className="mt-space-6 max-w-[60ch] scroll-mt-24">
+            <h3 className="mb-space-2 font-display text-[24px] font-normal leading-[1.15] tracking-[-0.01em]">Publications</h3>
+            <ul className="m-0 list-none space-y-space-2 p-0 font-serif text-[17px] leading-[26px] text-ink-muted">
+              {profile.publications.map((p) => (
+                <li key={p.id}>
+                  {p.shortAuthors ? `${p.shortAuthors} (${p.year}). ` : ''}
+                  <a href={doiUrl(p)} className="link" target="_blank" rel="noopener noreferrer">
+                    {p.title}
+                  </a>
+                  . {venueLine(p)}
+                  {p.shortAuthors ? '.' : `, ${p.year}.`}
+                  {p.authorCount ? ` ${p.authorCount.toLocaleString('en-US')} authors.` : ''}
+                </li>
+              ))}
+            </ul>
+          </div>
         ) : null}
         {/* Desktop: everything in view. Phones: the second paragraph and the experience rows sit behind the Disclosure. */}
         <div className="hidden md:block">
