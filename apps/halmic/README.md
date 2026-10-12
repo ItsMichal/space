@@ -1,10 +1,10 @@
 # halmic
 
-The site for halmic.com: streams, videos, tiny games and design. A static build (zero runtime dependencies) plus one small Worker for the live status. Deploys as the Cloudflare Worker `halmic`.
+The site for halmic.com: streams, videos, tiny games and design. A static build (zero runtime dependencies) plus one small Worker (`/api/live`, `/api/clips`, `/api/clip-thumb/<id>`). Deploys as the Cloudflare Worker `halmic`.
 
 - `src/index.html` + `build.mjs`: the home template and the generator for every other page (games, videos, design, 404), `sitemap.xml`, `robots.txt`, `rss.xml`, `llms.txt` and `_headers`. `content/` holds the data, `brand/` the logotype generator and SVGs.
 - `public/`: hand-kept files (`*.css`, `app.js`, fonts, images) and build output (html, sitemap, rss, robots, llms.txt, `_headers`); all tracked. CSS/JS are linked as `?v=<content hash>` by the build, which is why `_headers` can cache them for a year.
-- `worker/index.js`: `GET /api/live` (Twitch Helix, cached 45s, no KV). Only `/api/*` runs the Worker (`assets.run_worker_first`); everything else is served from `public/`.
+- `worker/index.js`: `GET /api/live` (Twitch Helix, cached 45s, no KV) and `GET /api/clips`. Only `/api/*` runs the Worker (`assets.run_worker_first`); everything else is served from `public/`.
 - `scripts/`: `check-links.mjs` (runs in `npm test`), `sync-youtube.mjs`, `sync-itch.mjs`, `build-og.mjs`, `shot.mjs` (headless Chrome screenshots, needs `ws`; Chrome from `CHROME_PATH`, else macOS Chrome, else `/opt/pw-browsers/chromium`).
 - `docs/`: discovery (contains an INTERNAL section), design system, technical plan, SEO notes.
 
@@ -12,6 +12,8 @@ The site for halmic.com: streams, videos, tiny games and design. A static build 
 From the repo root: `npm run dev:halmic` builds and serves http://localhost:4310/ (`serve.mjs`, no-store; answers `/api/live` with an "unknown" payload and unknown paths with `404.html`). After editing, `npm run build:halmic` and reload.
 
 `?live=1` (optionally `&game=Minecraft`) forces the on-air look and skips the fetch; `?live=0` forces offline. Not linked from the UI; for testing only.
+
+`GET /api/clips` returns the six most-viewed clips of the channel (`{ clips: [{ id, title, game, duration, url, createdAt }], checkedAt }`; no view counts, creators or thumbnails), cached an hour; the broadcaster id is cached for a day. The home page replaces its hand-typed clip list with these and plays a clip inline (Twitch embed iframe, `frame-src https://clips.twitch.tv`) when a row is clicked. Without secrets or on any Twitch error it answers `{ clips: [], unknown: true }` and the built list stays. `?clips=demo` swaps in two fake clips and skips the fetch, to check the layout locally.
 
 ## Test
 `npm test -w @space/halmic`: unit tests for the Worker (`node --test`, mocked `fetch`) and `scripts/check-links.mjs` (every internal link/asset/og:image in `public/` resolves, no placeholders, one h1, images have alt and size). Also run `npm run check:identity` from the root.
@@ -36,4 +38,4 @@ Without them `/api/live` answers `{ "live": false, "unknown": true }` and the pa
 6. Redirect `www` to the apex with a Cloudflare redirect rule (not in code).
 
 ## Identity rule
-No real name and no portfolio domain anywhere in `src/`, `public/`, `brand/` or `worker/`. Check with `npm run check:identity` (patterns in `content/identity-denylist.txt`).
+No real name and no portfolio domain anywhere in `src/`, `public/`, `brand/` or `worker/`. Check with `npm run check:identity` (patterns in `content/identity-denylist.txt`). The rule is about printing: the name is not shown on the site, but outbound links to external pages that show it (Medium, LinkedIn) are fine, as long as the URL itself does not contain the name or the portfolio domain.
