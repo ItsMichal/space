@@ -9,6 +9,9 @@
     "sync:youtube": "node ./scripts/sync-youtube.mjs",
     "test": "node --test worker/live.test.mjs worker/clips.test.mjs && node scripts/check-links.mjs"
   },
+  "dependencies": {
+    "@space/crosslinks": "*"
+  },
   "devDependencies": {
     "wrangler": "^4.149.0"
   }

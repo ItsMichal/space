@@ -4,7 +4,7 @@ import { buildRedirects } from './lib/redirects.mjs'
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // @space/* workspace packages ship TypeScript source; Next compiles them with the app.
-  transpilePackages: ['@space/motion'],
+  transpilePackages: ['@space/motion', '@space/crosslinks'],
   // The writing tool lives in files named page.dev.tsx / route.dev.ts / layout.dev.tsx. Those extensions are only
   // registered under `next dev`, so `next build` (and therefore the Cloudflare worker) never sees /write or /api/write.
   pageExtensions:

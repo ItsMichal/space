@@ -1,0 +1,115 @@
+/* Logo switcher (components/site/SiteSwitcher.tsx): the logo with one dropdown row under it.
+   Material is the nav sheet's own tint (--nav-sheet-tint, paired with --ink by the glass theme tokens: light paper on
+   light pages, basalt on the dark reading theme), so text and tint always agree. Motion is opacity and a 4px rise, 140ms,
+   transform/opacity only, none under reduced motion. The closed menu is only transparent (never display:none or
+   visibility:hidden), so its link stays focusable and in the accessibility tree. */
+.xsw {
+  position: relative;
+  display: flex;
+  align-self: stretch;
+  align-items: center;
+}
+.xsw__logo {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  border-radius: 4px;
+  color: var(--ink);
+}
+.xsw__menu {
+  position: absolute;
+  z-index: 60;
+  left: -10px;
+  top: 100%;
+  margin: 0;
+  /* the transparent top padding is the hover bridge between the bar and the card */
+  padding: 8px 0 0;
+  list-style: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition:
+    opacity 140ms ease 150ms,
+    transform 140ms ease 150ms;
+}
+.xsw__menu li {
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  background: var(--nav-sheet-tint);
+  box-shadow: var(--shadow-glass);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  backdrop-filter: blur(20px) saturate(1.6);
+}
+.xsw__row,
+.xsw__sheet {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  border-radius: 14px;
+  padding: 0 16px 0 14px;
+  color: var(--ink-muted);
+  font: 500 15px/1 var(--font-sans);
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+.xsw__row:hover,
+.xsw__row:focus-visible,
+.xsw__sheet:hover {
+  color: var(--ink);
+}
+.xsw__row:focus-visible,
+.xsw__sheet:focus-visible,
+.xsw__logo:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.xsw__row svg:last-child,
+.xsw__sheet svg:last-child {
+  opacity: 0.6;
+}
+
+/* open: hover on fine pointers (after 120ms), or keyboard focus anywhere inside; Escape (data-dismissed) wins */
+@media (hover: hover) and (pointer: fine) {
+  .xsw:hover:not([data-dismissed]) .xsw__menu {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    transition-delay: 120ms;
+  }
+}
+.xsw:has(:focus-visible):not([data-dismissed]) .xsw__menu {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  transition-delay: 0ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .xsw__menu {
+    transform: none;
+    transition: none;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .xsw__menu li {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* the touch row: last, quiet row of the phone menu sheet */
+.xsw__sheet {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 4px;
+  padding: 0;
+  border-top: 1px solid var(--hairline);
+  border-radius: 0;
+}
+@media (max-width: 639.98px) {
+  /* phone widths have the sheet row instead (one link, not two, for screen readers) */
+  .xsw__menu {
+    display: none;
+  }
+}
