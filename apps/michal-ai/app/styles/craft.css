@@ -49,6 +49,13 @@
 .hook__link:focus-visible {
   background-image: linear-gradient(currentColor, currentColor);
 }
+/* Phrases that are not on screen share the grid cell: they draw no rule and no arrow. */
+.hook__item:not([data-current]) .hook__link {
+  background-image: none;
+}
+.hook__item:not([data-current]) .hook__arrow {
+  display: none;
+}
 @media (prefers-reduced-motion: reduce) {
   .link,
   .prose a,

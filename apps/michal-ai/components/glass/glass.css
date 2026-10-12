@@ -181,6 +181,9 @@
   min-width: 0;
 }
 .sheet-prow__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font: 500 16px/22px var(--font-sans);
 }
 .sheet-prow__sub {
