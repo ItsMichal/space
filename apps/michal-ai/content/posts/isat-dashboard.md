@@ -2,6 +2,7 @@
 title: "iSAT Dashboard"
 slug: isat-dashboard
 kind: project
+id: isat-dashboard
 description: "A teacher-facing web dashboard that turns AI/ML output into insights on group activity, and won Best Interactive Event at AIED 2022."
 date: 2023-12-09
 updated: 2023-12-11

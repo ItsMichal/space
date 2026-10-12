@@ -2,6 +2,7 @@
 title: "AI Crofty"
 slug: ai-crofty
 kind: project
+id: realtime-ai-f1-comentator
 description: "A realtime F1 23 commentator and race engineer that turns game telemetry into speech with OpenAI and TikTok TTS, with a Discord bot interface."
 date: 2023-12-11
 tags: ["TypeScript", "AI/ML", "Game Dev"]

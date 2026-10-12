@@ -2,6 +2,7 @@
 title: "Creating my first PCB: Object"
 slug: creating-my-first-pcb-object
 kind: article
+id: creating-my-first-pcb-object
 description: "But before we get to that… let’s talk processing. I’ve been using the Arduino as the brains for my projects for a while now."
 date: 2021-10-15
 tags: ["Arduino", "ATtiny85", "Electronics", "Design"]

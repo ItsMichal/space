@@ -7,6 +7,7 @@ import { Lightbox } from '@/components/media/Lightbox'
 import { Gallery } from '@/components/ui/Gallery'
 import { FactRows } from '@/components/ui/FactRows'
 import { ReadingToc } from '@/components/ui/ReadingToc'
+import './reading.css'
 
 type Props = {
   title: string
@@ -58,8 +59,8 @@ export function ArticleLayout({
   // "Web" is a category, not a stack item: it never leads a spec line.
   const stack = tags.filter((t) => t !== 'Web')
   return (
-    <article data-post className="mx-auto max-w-content px-space-4 pb-space-16 pt-[120px] md:px-space-8 md:pt-[160px]">
-      <header className="max-w-[900px]">
+    <article data-post className="reading">
+      <header className="reading__head">
         {back ? (
           <p className="mb-space-4 font-serif text-[16px] text-ink-muted">
             <Link href={back.href} className="link inline-flex min-h-[44px] items-center">
@@ -88,7 +89,7 @@ export function ArticleLayout({
         </p>
       </header>
       {cover ? (
-        <figure className="hero">
+        <figure className="hero reading__wide">
           <Zoomable
             src={cover}
             alt={coverAlt ?? ''}
@@ -124,7 +125,7 @@ export function ArticleLayout({
         />
       ) : null}
       {gallery?.length ? (
-        <section className="gallery" aria-label="Gallery">
+        <section className="gallery reading__wide" aria-label="Gallery">
           <Gallery
             label="Project images"
             autoplayMs={0}

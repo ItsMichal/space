@@ -15,16 +15,16 @@ function safe<T>(fn: () => T, fallback: T): T {
   }
 }
 
-/** Anonymous random id for this browser tab session. sessionStorage only; falls back to memory. */
+/** Anonymous random id for this browser (not a cookie, not a fingerprint): localStorage, falling back to sessionStorage then memory. */
 let memSid = ''
 export function sessionId(): string {
-  const have = safe(() => sessionStorage.getItem(SID_KEY), null) ?? memSid
+  const have = safe(() => localStorage.getItem(SID_KEY), null) ?? safe(() => sessionStorage.getItem(SID_KEY), null) ?? memSid
   if (have && /^[A-Za-z0-9_-]{16,32}$/.test(have)) return have
   const b = new Uint8Array(15)
   crypto.getRandomValues(b)
   const id = btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
   memSid = id
-  safe(() => sessionStorage.setItem(SID_KEY, id), undefined)
+  if (!safe(() => (localStorage.setItem(SID_KEY, id), true), false)) safe(() => sessionStorage.setItem(SID_KEY, id), undefined)
   return id
 }
 
@@ -194,37 +194,37 @@ export function createPresenceClient(): PresenceClient {
 
 // ---- reactions -------------------------------------------------------------
 
-const MINE_KEY = (slug: string) => `live.mine.${slug}`
+const MINE_KEY = (id: string) => `live.mine.${id}`
 
-export function readMine(slug: string): Record<string, string[]> {
-  return safe(() => JSON.parse(sessionStorage.getItem(MINE_KEY(slug)) ?? '{}') as Record<string, string[]>, {})
+export function readMine(id: string): Record<string, string[]> {
+  return safe(() => JSON.parse(localStorage.getItem(MINE_KEY(id)) ?? '{}') as Record<string, string[]>, {})
 }
-export function writeMine(slug: string, mine: Record<string, string[]>) {
-  safe(() => sessionStorage.setItem(MINE_KEY(slug), JSON.stringify(mine)), undefined)
+export function writeMine(id: string, mine: Record<string, string[]>) {
+  safe(() => localStorage.setItem(MINE_KEY(id), JSON.stringify(mine)), undefined)
 }
 
 export type ReactionsApi = {
-  totals(slug: string): Promise<ReactionTotals | null>
-  react(slug: string, target: string, emoji: string, on: boolean): Promise<ReactionResult | null>
+  totals(id: string): Promise<ReactionTotals | null>
+  react(id: string, target: string, emoji: string, on: boolean): Promise<ReactionResult | null>
 }
 
 /** The real API. Returns null on any failure so callers roll back / hide. */
 export const reactionsApi: ReactionsApi = {
-  async totals(slug) {
+  async totals(id) {
     try {
-      const r = await fetch(`/api/live/reactions?slug=${encodeURIComponent(slug)}`)
+      const r = await fetch(`/api/live/reactions?id=${encodeURIComponent(id)}`)
       if (r.status !== 200) return null
       return (await r.json()) as ReactionTotals
     } catch {
       return null
     }
   },
-  async react(slug, target, emoji, on) {
+  async react(id, target, emoji, on) {
     try {
       const r = await fetch('/api/live/reactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug, target, emoji, sid: sessionId(), on }),
+        body: JSON.stringify({ id, target, emoji, sid: sessionId(), on }),
       })
       if (r.status !== 200) return null
       return (await r.json()) as ReactionResult
@@ -244,13 +244,13 @@ export function createMockReactionsApi(seed: Record<string, Record<string, numbe
     return out
   }
   return {
-    async totals(slug) {
+    async totals(id) {
       const post = counts('post')
       const blocks: Record<string, Record<string, number>> = {}
       const targets = new Set([...Object.keys(base), ...Object.keys(store.counts())])
       targets.delete('post')
       for (const t of targets) blocks[t] = counts(t)
-      return { v: 1, slug, post, blocks }
+      return { v: 1, id, post, blocks }
     },
     async react(_slug, target, emoji, on) {
       if (!REACTION_IDS.includes(emoji)) return null

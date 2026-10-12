@@ -67,6 +67,8 @@ export default function RootLayout({
     <StrictMode>
       <html
         lang="en"
+        // ReadingTheme's inline script sets data-reading on <html> before hydration, on purpose.
+        suppressHydrationWarning
         className={`${display.variable} ${serif.variable} ${mono.variable}`}
       >
         <body className="flex min-h-screen flex-col font-sans text-ink">

@@ -2,6 +2,7 @@
 title: "Making a punching bag game in P5.js"
 slug: p5-js-punching-bag-game
 kind: article
+id: making-a-punching-bag-game-in-p5-js
 description: "I’m a pretty decent programmer…kinda. What I am not good at is hardware, which I’ve been focusing on improving the past couple months."
 date: 2021-11-20
 tags: ["Game Dev", "Arduino", "Electronics"]

@@ -2,6 +2,7 @@
 title: "Creating my own animated logo"
 slug: creating-my-own-animated-logo
 kind: article
+id: creating-my-own-animated-logo
 description: "So, I’m in a few design classes this semester. In addition to my Object exploits, I’m also in a Motion (read animation) class."
 date: 2021-09-01
 tags: ["Motion Design", "After Effects", "Design"]
