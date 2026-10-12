@@ -214,6 +214,7 @@ a.card:hover .goi, a.card:focus-visible .goi { background: var(--paper); color: 
 .pgw .bsec + .bsec { margin-top: var(--s6); }
 .duo { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(40px, 6vw, 72px) 16px; margin-top: clamp(40px, 6vw, 72px); }
 .cards .bsec:first-child { margin-top: 0; }
+.cards .duo .bsec + .bsec { margin-top: 0; }
 @media (min-width: 1100px) { .duo { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; } }
 .sh { display: flex; align-items: baseline; justify-content: space-between; gap: 6px 20px; flex-wrap: wrap; margin: 0 4px 14px; }
 .sh h2 { margin: 0; font: 800 14px/1.2 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
@@ -258,19 +259,19 @@ a.tile:hover .tbg img, a.tile:hover .tbg video { transform: scale(calc(var(--z, 
 a.tile:hover .chip { background: var(--blue); color: var(--ink); }
 a.tile:is(:hover, :focus-visible) .play { background: var(--blue); color: var(--ink); transform: scale(1.08); box-shadow: none; }
 /* stat tiles: a big word or number in the display face, one caption */
-.t-stat { display: flex; flex-direction: column; justify-content: flex-start; padding: max(12px, 6.5cqi); background: var(--ink-3); }
-.t-stat .tcap { padding: max(12px, 6.5cqi); }
-.num { display: block; font: 900 min(64cqh, 80cqw)/.8 var(--display); letter-spacing: -.01em; margin-top: .06em; }
+/* cq units on a container's own properties resolve against the container above it, so the padding lives on the children, not on the tile */
+.t-stat { display: flex; flex-direction: column; justify-content: flex-start; background: var(--ink-3); }
+.num { display: block; font: 900 min(66cqh, 80cqw)/.8 var(--display); letter-spacing: -.01em; margin: max(14px, 7cqi) 0 0 max(12px, 6.5cqi); }
 .num.word { font-size: min(58cqh, 44cqw); }
 .t-stat.w2 .num { font-size: min(70cqh, 40cqw); }
 .t-stat.tpaper { background: var(--paper); color: var(--paper-ink); } .tpaper .tt { color: var(--paper-ink); }
 .t-stat.tblue { background: var(--blue); color: var(--ink); } .tblue .tt { color: var(--ink); }
 .tdim .tbg { z-index: -1; } .tdim .tbg img { opacity: .5; } .tdim::after { content: ""; position: absolute; inset: 0; z-index: 0; background: linear-gradient(to top, #0f0e13f2 0, #0f0e1366 55%, #0f0e1333); pointer-events: none; }
 .t-stat .num, .t-stat .lg { position: relative; z-index: 1; }
-.t-stat .lg-s { position: absolute; top: max(12px, 6.5cqi); left: max(12px, 6.5cqi); font-size: 28px; }
+.t-stat .lg-s { position: absolute; top: max(12px, 6.5cqi); left: max(12px, 6.5cqi); margin: 0; font-size: 28px; }
 /* link-out tiles: the brand mark large on the brand colour; the whole tile is the link */
-.t-link { display: flex; flex-direction: column; justify-content: flex-start; padding: max(12px, 6.5cqi); color: #fff; }
-.lg { display: block; font-size: min(30cqh, 84px); line-height: 1; }
+.t-link { display: flex; flex-direction: column; justify-content: flex-start; color: #fff; }
+.lg { display: block; font-size: min(30cqh, 84px); line-height: 1; margin: max(12px, 6.5cqi) 0 0 max(12px, 6.5cqi); }
 .lg .ic { width: 1em; height: 1em; vertical-align: top; }
 .t-link .tt { color: inherit; font-size: clamp(19px, 8.2cqi, 30px); } .t-link .ts { color: inherit; opacity: .92; }
 .tl-tw { background: #9146ff; } .tl-yt { background: #f00; } .tl-dc { background: #5865f2; }
@@ -286,8 +287,8 @@ a.tile:hover .goi .ic { transform: rotate(-45deg); }
 /* the Twitch tile follows the live state the hero already sets on <html data-live> */
 .ldot { display: inline-block; width: .42em; height: .42em; margin-right: .35em; border-radius: 50%; background: #fff; vertical-align: .12em; animation: onair 2.8s var(--ease) infinite; }
 .ton { display: none; } [data-live="1"] .toff { display: none; } [data-live="1"] .ton { display: inline; }
-.t-note { display: grid; place-items: end start; padding: max(14px, 6cqi); background: transparent; box-shadow: inset 0 0 0 1.5px var(--line); }
-.t-note p { margin: 0; color: var(--mute); font: 500 clamp(13px, 4cqi, 16px)/1.4 var(--sans); }
+.t-note { display: grid; place-items: end start; background: transparent; box-shadow: inset 0 0 0 1.5px var(--line); }
+.t-note p { margin: max(14px, 6cqi); color: var(--mute); font: 500 clamp(13px, 4cqi, 16px)/1.4 var(--sans); }
 /* a playing tile grows to 2x2: the player on top, the title and the Close / Open buttons beneath */
 .tile.playing { grid-column: span 2; grid-row: span 2; display: flex; flex-direction: column; background: var(--ink-2); container-type: normal; }
 .playing .tp { position: relative; flex: none; aspect-ratio: 16 / 9; background: #000; animation: pin .18s var(--ease) both; }
