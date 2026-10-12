@@ -9,7 +9,8 @@ import { GLOBE_FALLBACK_VIEW } from '@/lib/presence/globe-fallback'
 import { gmst } from '@/lib/starlink/orbit.mjs'
 import { loadLand } from './globe/data'
 import { loadStarlink, type Packed } from './globe/starlink'
-import { createRenderer, projectPoint, rotation, SPHERE_FRACTION, type GlobeRenderer } from './globe/renderer'
+import { buildAtlas, loadPortrait } from './globe/portrait'
+import { createRenderer, projectPoint, rotation, SPHERE_FRACTION, type GlobeRenderer, type PortraitSpec } from './globe/renderer'
 import './presence.css'
 
 const DEG_PER_S = 2.4
@@ -25,6 +26,10 @@ const CUT_MS = 480
 const PUSH_RADIUS = 100 // CSS px
 const PUSH_MAX = 12 // CSS px
 const PTR_IDLE_MS = 1500
+
+const PORTRAIT_FADE_MS = 1400
+/** Hero layout switch: below this the portrait is a small circle beside the name, from here it stands over the globe. */
+const FIGURE_MIN_WIDTH = 768
 
 type Cut = { box: [number, number, number, number]; dim: number }
 
@@ -89,6 +94,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
   const st = useRef({
     lon: START.lon, size: 0, dpr: 1, raf: 0, last: 0, r: null as GlobeRenderer | null, reduced: false, active: false, mode: 'pending' as string,
     sat: null as Packed | null, satFrom: 0,
+    portrait: null as null | { aspect: number; from: number }, pspec: null as PortraitSpec | null, pstr: 0, globeA: 0.4,
     cut: [] as Cut[], cutFeather: 24, anim: null as null | { from: Cut[]; to: Cut[]; t0: number },
     fine: false, pin: null as null | [number, number],
     px: { x: 0, v: 0 }, py: { x: 0, v: 0 }, pk: { x: 0, v: 0 }, tx: 0, ty: 0, over: false, lastMove: 0,
@@ -151,6 +157,56 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     }
   }
 
+  /** Where the portrait goes, in canvas px: a figure over the globe from 768px, a small circle beside the name below. */
+  const layoutPortrait = () => {
+    const s = st.current
+    const el = wrap.current
+    if (!s.portrait || !el || !s.size) return
+    const w = el.getBoundingClientRect()
+    const px = Math.round(s.size * s.dpr)
+    const sc = px / (w.width || 1)
+    const vw = window.innerWidth
+    let left: number, bottom: number, width: number, height: number
+    let cellW: number
+    let circle = false
+    let crop: PortraitSpec['crop'] = [0, 0, 1, 1]
+    let strength = 0.9
+    let edge = 0
+    if (vw >= FIGURE_MIN_WIDTH) {
+      const hb = document.getElementById('work-h')?.getBoundingClientRect()
+      bottom = hb ? hb.bottom + 10 : w.top + w.height * 0.7
+      height = Math.max(240, Math.min(600, bottom - 64))
+      width = height * 0.75
+      left = w.left + w.width * 0.54 - 0.44 * width
+      cellW = 3.2
+      edge = 20 * sc
+    } else {
+      const h1 = document.querySelector<HTMLElement>('h1[data-hero-text]')?.getBoundingClientRect()
+      const box = document.querySelector<HTMLElement>('h1[data-hero-text]')?.parentElement?.getBoundingClientRect()
+      const D = Math.max(64, Math.min(100, Math.round(vw * 0.22)))
+      width = height = D
+      left = (box?.right ?? vw - 16) - D
+      bottom = (h1?.top ?? 84) - 4 + D
+      cellW = 1.7
+      circle = true
+      crop = [0.148, 0.1, 0.688, 0.505]
+      strength = Math.min(1, s.globeA + 0.35)
+    }
+    // Glyphs where they resolve (desktop); density dots on a square grid in the small circle, where a glyph would be a smudge.
+    const cellH = cellW / s.portrait.aspect
+    const dots = circle || new URLSearchParams(window.location.search).get('portrait') === 'dots' || cellH * sc < 4.5
+    s.pspec = {
+      rect: [(left - w.left) * sc, px - (bottom - w.top) * sc, width * sc, height * sc],
+      crop,
+      cell: dots ? [cellW * sc, cellW * sc] : [cellW * sc, cellH * sc],
+      circle,
+      dots,
+      strength,
+      edge,
+      push: { radius: 90 * s.dpr, max: 5 * s.dpr },
+    }
+  }
+
   const draw = () => {
     const s = st.current
     s.raf = 0
@@ -189,6 +245,8 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
       gmst: sat ? gmst(nowS) : 0,
       satAlpha,
       satThin: thinFor(s.size),
+      globeA: s.globeA,
+      portrait: s.pspec && s.portrait ? { ...s.pspec, strength: s.pspec.strength * (s.reduced ? 1 : Math.min(1, (now - s.portrait.from) / PORTRAIT_FADE_MS)) } : undefined,
       ptr,
       push: { radius: PUSH_RADIUS * s.dpr, max: PUSH_MAX * s.dpr },
     })
@@ -249,6 +307,15 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
         setMode('gl')
         void document.fonts?.ready.then(() => measureText())
         // The constellation arrives after the globe is up and fades in; without it (offline, stale elements) nothing is drawn.
+        // The portrait: picture + a glyph atlas from the system monospace, after the globe is up and fonts are ready.
+        void Promise.all([loadPortrait(), document.fonts?.ready]).then(([pic]) => {
+          const atlas = buildAtlas(st.current.dpr)
+          if (!pic || !atlas || st.current.r !== r) return
+          r.setPortrait(pic, atlas.canvas, atlas.n)
+          st.current.portrait = { aspect: atlas.aspect, from: performance.now() }
+          layoutPortrait()
+          kick()
+        })
         void loadStarlink().then((p) => {
           if (!p || st.current.r !== r) return
           r.setSatellites(p.data)
@@ -272,7 +339,10 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
       s.size = el.clientWidth
       s.dpr = Math.min(1.5, window.devicePixelRatio || 1)
       s.r?.resize(s.size, s.dpr)
+      const ga = parseFloat(getComputedStyle(el).getPropertyValue('--hero-globe-opacity'))
+      if (Number.isFinite(ga)) s.globeA = ga
       measureText()
+      layoutPortrait()
       kick()
     }
     apply()
