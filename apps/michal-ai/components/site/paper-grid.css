@@ -10,7 +10,7 @@
   background-image:
     linear-gradient(rgb(24 33 27 / 0.1) 1px, transparent 1px),
     linear-gradient(90deg, rgb(24 33 27 / 0.1) 1px, transparent 1px),
-    radial-gradient(circle at 12px 12px, rgb(24 33 27 / 0.42) 2.2px, transparent 2.8px);
+    radial-gradient(circle at 12px 12px, rgb(24 33 27 / 0.36) 1.8px, transparent 2.4px);
   background-size: 96px 96px, 96px 96px, 24px 24px;
   background-position: 0 0, 0 0, 0 0;
 }
