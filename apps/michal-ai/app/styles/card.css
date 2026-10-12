@@ -174,7 +174,8 @@ a.card__row:focus-visible {
   padding: 0;
 }
 
-/* the reactions row is a card only while the bar renders (it renders nothing when the live feature is off) */
-.live-reactions:not(:has(.reactionbar)) {
+/* the reactions row is a card only while the bar renders (it renders nothing when the live feature is off, and no buttons while the counts are not ready) */
+.live-reactions:not(:has(.reactionbar)),
+.live-reactions:has(.reactionbar__group:empty) {
   display: none;
 }
