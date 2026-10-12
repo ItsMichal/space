@@ -187,7 +187,7 @@ export default function AboutPage() {
                   <time dateTime={p.published}>{p.year}</time>
                 </p>
                 <p className="pub__ref t-meta">
-                  {authorLine(p)}. {venueLine(p)}.{p.authorCount ? ` ${p.authorCount.toLocaleString('en-US')} authors.` : ''}
+                  {authorLine(p).replace(/\.$/, "")}. {venueLine(p)}.{p.authorCount ? ` ${p.authorCount.toLocaleString('en-US')} authors.` : ''}
                 </p>
                 {'role' in p && p.role ? <p className="pub__ref t-meta">{p.role}</p> : null}
               </li>

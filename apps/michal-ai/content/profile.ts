@@ -232,7 +232,7 @@ export const profile = {
     },
   ] satisfies VolunteerEntry[],
   awards: [
-    { id: 'aied-2022', title: 'Best Interactive Event', context: 'AI in Education Conference (AIED) 2022, for the iSAT dashboard display', year: '2022', postId: 'isat-dashboard' },
+    { id: 'aied-2022', title: 'Best Interactive Event', context: 'AI in Education Conference (AIED), for the iSAT dashboard display', year: '2022', postId: 'isat-dashboard' },
     { id: 'hackcu-8', title: 'HackCU 8: 2nd place overall, and Best Games, Music, and Entertainment Hack', context: 'for Creatle, a solo project', year: '2022', hackathonId: 'hackcu-8-creatle' },
   ] satisfies Award[],
   /** Skills grouped as his LinkedIn, resume and project pages list them. No ratings. */
