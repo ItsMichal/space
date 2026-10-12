@@ -1,5 +1,6 @@
 // Custom Worker entry: OpenNext handler + Durable Objects.
 import { canonicalRedirect, isPreviewHost } from './host'
+import { handleLive, isLivePath, type LiveEnv } from './live'
 // @ts-expect-error `.open-next/worker.js` is generated at build time by `opennextjs-cloudflare build`
 import { default as handler } from '../.open-next/worker.js'
 
@@ -8,8 +9,7 @@ import { default as handler } from '../.open-next/worker.js'
 // @ts-expect-error generated at build time
 export { DOQueueHandler, DOShardedTagCache, BucketCachePurge } from '../.open-next/worker.js'
 
-export interface Env {
-  PRESENCE: DurableObjectNamespace
+export interface Env extends LiveEnv {
   ASSETS: Fetcher
   [key: string]: unknown
 }
@@ -20,13 +20,13 @@ export default {
     // michal.ai is canonical: the old domain and www hosts permanently redirect, keeping path and query.
     const to = canonicalRedirect(request.url)
     if (to) return Response.redirect(to, 308)
-    if (url.pathname === '/api/presence') {
-      // WebSocket only; origin allowlist + admission are enforced inside the DO.
-      if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') {
-        return new Response('Expected WebSocket upgrade', { status: 426, headers: { Upgrade: 'websocket' } })
+    // Live features (presence socket, reactions). Handled here, before OpenNext; the site itself never depends on them.
+    if (isLivePath(url.pathname)) {
+      try {
+        return await handleLive(request, env, ctx)
+      } catch {
+        return new Response(null, { status: 503, headers: { 'Cache-Control': 'no-store' } })
       }
-      const stub = env.PRESENCE.get(env.PRESENCE.idFromName('global'))
-      return stub.fetch(request)
     }
     const res: Response = await handler.fetch(request, env, ctx)
     if (!isPreviewHost(url.hostname)) return res
@@ -38,3 +38,4 @@ export default {
 } satisfies ExportedHandler<Env>
 
 export { PresenceRoom } from './presence-room'
+export { ReactionsRoom } from './reactions-room'
