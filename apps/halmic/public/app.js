@@ -2,7 +2,7 @@
 // click-to-load video (youtube-nocookie only after interaction) and Twitch clips, played in place inside their card. No dependencies.
 // Testing override: ?live=1 (or ?live=0) forces the state and skips the fetch; with ?live=1 you can add &game=Name.
 // ?clips=demo swaps in six fake clips (local video thumbnails, stand-in game art) and skips the fetch (layout testing; the embed will not load a real clip);
-// &n=3 shows only three, ?clips=none none (the Watch bento then holds videos only).
+// the first four demo clips use real clip ids, so their hover previews (public/previews/clip-<id>) play; &n=3 shows only three, ?clips=none none (the Watch bento then holds videos only).
 (() => {
   const root = document.documentElement;
   const params = new URLSearchParams(location.search);
@@ -150,6 +150,7 @@
     const a = e.target.closest('a[data-vid], a[data-clip]');
     if (!a || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
+    pvStop(true);
     if (a.classList.contains('tile')) {
       if (a.dataset.clip) playTile(a, `https://clips.twitch.tv/embed?clip=${encodeURIComponent(a.dataset.clip)}&parent=${encodeURIComponent(location.hostname)}&autoplay=true`, `Twitch clip: ${a.dataset.title}`, 'autoplay; fullscreen', 'Twitch', 'b-twitch');
       else playTile(a, `https://www.youtube-nocookie.com/embed/${a.dataset.vid}?autoplay=1&rel=0`, a.dataset.title, 'autoplay; encrypted-media; picture-in-picture', 'YouTube', 'b-youtube');
@@ -171,6 +172,51 @@
       c.first.focus({ preventScroll: true });
     }
   });
+
+  // ---- hover previews: a silent highlight loop fades in over a video or clip tile's thumbnail on hover / keyboard focus ----
+  // Nothing is requested until a tile is hovered or focused (previews/index.json first, then the one loop). Hover-capable pointers only: touch devices skip
+  // previews entirely (autoplaying on scroll would spend data nobody asked for). Not with reduced motion, Save-Data, or while a real player is open.
+  const PV_SEL = 'a.tile[data-vid], a.tile[data-clip]';
+  let pvIds = null, pvIdsP = null, pv = null, pvTimer = 0;
+  const pvIndex = () => (pvIdsP ??= fetch('/previews/index.json', { cache: 'no-cache', headers: { accept: 'application/json' } }).then((r) => (r.ok ? r.json() : { ids: [] })).catch(() => ({ ids: [] })).then((d) => { pvIds = new Set(Array.isArray(d.ids) ? d.ids.filter((x) => typeof x === 'string') : []); return pvIds; }));
+  const pvAllowed = () => !open && !matchMedia('(prefers-reduced-motion: reduce)').matches && !navigator.connection?.saveData;
+  function pvStop(now) {
+    clearTimeout(pvTimer);
+    if (!pv) return;
+    const { tile, video, bar, raf } = pv; pv = null;
+    cancelAnimationFrame(raf);
+    video.classList.remove('on'); bar.remove();
+    const drop = () => { video.pause(); video.removeAttribute('src'); video.replaceChildren(); video.load(); video.remove(); };   // free the decoder and the buffered data
+    if (now) drop(); else setTimeout(drop, 170);
+    tile.removeAttribute('data-pv');
+  }
+  async function pvStart(tile) {
+    if (!pvAllowed() || !tile.isConnected) return;
+    const key = tile.dataset.clip ? `clip-${tile.dataset.clip}` : tile.dataset.vid;
+    const ids = pvIds ?? await pvIndex();
+    if (!ids.has(key) || !tile.isConnected || !pvAllowed() || pv?.tile === tile) return;
+    if (!(tile.matches(':hover') || tile.matches(':focus-visible'))) return;   // the pointer left while the list loaded
+    pvStop(true);
+    const bg = tile.querySelector('.tbg'); if (!bg) return;
+    const video = el('video', 'pv'); video.muted = true; video.loop = true; video.playsInline = true; video.preload = 'auto'; video.disablePictureInPicture = true;
+    video.setAttribute('muted', ''); video.setAttribute('aria-hidden', 'true'); video.tabIndex = -1;
+    for (const [ext, type] of [['webm', 'video/webm'], ['mp4', 'video/mp4']]) { const s = el('source'); s.src = `/previews/${key}.${ext}`; s.type = type; video.appendChild(s); }
+    const bar = el('i', 'pvbar'); bar.setAttribute('aria-hidden', 'true');
+    const state = { tile, video, bar, raf: 0 }; pv = state;
+    const tickBar = () => { if (pv !== state) return; if (video.duration) bar.style.transform = `scaleX(${(video.currentTime / video.duration).toFixed(3)})`; state.raf = requestAnimationFrame(tickBar); };
+    video.addEventListener('playing', () => { if (pv !== state) return; video.classList.add('on'); cancelAnimationFrame(state.raf); state.raf = requestAnimationFrame(tickBar); }, { once: true });
+    video.addEventListener('error', () => { if (pv === state) pvStop(true); }, true);
+    bg.appendChild(video); tile.appendChild(bar); tile.dataset.pv = key;
+    video.play().catch(() => { if (pv === state) pvStop(true); });
+  }
+  const pvArm = (tile) => { if (pv?.tile === tile) return; clearTimeout(pvTimer); if (pvAllowed()) pvTimer = setTimeout(() => pvStart(tile), 120); };
+  if (matchMedia('(hover: hover)').matches) {
+    document.addEventListener('pointerover', (e) => { if (e.pointerType === 'touch') return; const t = e.target.closest?.(PV_SEL); if (t) pvArm(t); });
+    document.addEventListener('pointerout', (e) => { const t = e.target.closest?.(PV_SEL); if (t && !t.contains(e.relatedTarget)) { clearTimeout(pvTimer); if (pv?.tile === t) pvStop(); } });
+  }
+  document.addEventListener('focusin', (e) => { const t = e.target.closest?.(PV_SEL); if (t && t === e.target && t.matches(':focus-visible')) pvArm(t); });
+  document.addEventListener('focusout', (e) => { const t = e.target.closest?.(PV_SEL); if (t && pv?.tile === t && !t.matches(':hover')) pvStop(); else clearTimeout(pvTimer); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) pvStop(true); });
 
   // ---- the dental logo loop: plays only while on screen and only when motion is allowed; the detail page has a pause button ----
   const loops = [...document.querySelectorAll('video[data-loop]')];
@@ -252,7 +298,7 @@
       const art = (a, b, ch) => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 188 250"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="188" height="250" fill="url(#g)"/><text x="94" y="150" font-family="Arial,sans-serif" font-size="96" font-weight="900" fill="#fff" text-anchor="middle">${ch}</text></svg>`)}`;
       const demo = [['Demo clip with a rather long title to check how tiles wrap on narrow screens', 'Minecraft', 40, art('#5b8c2a', '#2b4a12', 'M')], ['4k clutch on Bind', 'VALORANT', 39, art('#ff4655', '#7a1d28', 'V')], ['Hbox would be proud', '', 19, ''], ['5 kills no win :<', '', 59, art('#e63946', '#1d3557', 'S')], ['cross map tomahawk on miami', 'VALORANT', 24, art('#ff4655', '#7a1d28', 'V')], ['run 6 dies after blaze rods...', 'Minecraft', 51, art('#5b8c2a', '#2b4a12', 'M')]];
       const n = mode === 'none' ? 0 : Math.min(6, +params.get('n') || 6);
-      renderClips(demo.slice(0, n).map(([title, game, duration, gameArt], i) => ({ id: `DemoClip${i}`, title, game, duration, gameArt, url: 'https://www.twitch.tv/halmictv/clips', thumb: `/videos/${['2DPVz25OXSM', '3-fIoRP40_A', '8oJoEXIenfU', 'Bo3wJLjhHhk', 'EngAOffWsa4', 'GdsFqsdzX9M'][i]}.jpg` })));
+      renderClips(demo.slice(0, n).map(([title, game, duration, gameArt], i) => ({ id: ['GlamorousFrozenStorkBloodTrail', 'TsundereOutstandingChipmunkOSkomodo', 'LachrymoseLazyTubersTTours-0pFkdn50gXLMyqh1', 'MistySleepyNuggetsWOOP', 'DemoClip4', 'DemoClip5'][i], title, game, duration, gameArt, url: 'https://www.twitch.tv/halmictv/clips', thumb: `/videos/${['2DPVz25OXSM', '3-fIoRP40_A', '8oJoEXIenfU', 'Bo3wJLjhHhk', 'EngAOffWsa4', 'GdsFqsdzX9M'][i]}.jpg` })));
     } else (async () => {
       try {
         const r = await fetch('/api/clips', { cache: 'no-store', headers: { accept: 'application/json' } });

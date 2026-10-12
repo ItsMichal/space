@@ -50,7 +50,8 @@ const episodes = vc.series.episodes.map((id, i) => ({ ...byId[id], ep: i + 1 }))
 const latestEp = episodes.at(-1), earlierEps = episodes.slice(0, -1);
 const others = vc.other.map((o) => ({ ...byId[o.id], ...o }));
 const smash = vc.smash;
-const pageVideos = [...episodes.slice().reverse(), ...others];   // everything that gets its own page, feed, sitemap entry and VideoObject
+const films = others.filter((o) => o.kind === 'short film');   // the headline of Watch: first on the home page, in /videos/, in the sitemap
+const pageVideos = [...films, ...episodes.slice().reverse(), ...others.filter((o) => !films.includes(o))];   // everything that gets its own page, feed, sitemap entry and VideoObject
 const when = (v) => (v.published ? fmtDate(v.published) : v.ago ?? '');
 const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
 const vslug = (v) => `${slugify(v.title)}-${v.id}`;
@@ -100,7 +101,15 @@ const timg = (src, cls = '') => `<img${cls ? ` class="${cls}"` : ''} src="${src}
 const tile = ({ href, cls = '', attrs = '', rel = '', inner }) => `<a class="tile ${cls}" href="${href}"${/^https?:/.test(href) ? ` rel="${rel || 'noopener'}"` : ''}${attrs}>${inner}</a>`;
 const WIDE = 'w2';
 // a YouTube video on this site: plays in place, opens its own page without JS
-const vtile = (v, cls = '', o = {}) => tile({ href: `/videos/${vslug(v)}/`, cls: `tm ${cls}`, attrs: ` data-vid="${v.id}" data-title="${esc(v.title)}"${o.attrs ?? ''}`, inner: `<span class="tbg">${timg(v.thumb, 'yt-img')}</span>${badge('yt')}${tchip(v.length, cls.includes('w2') ? 'clock' : 'play')}${cls.includes('w2') ? disc : ''}${tcap({ title: o.title ?? vtitle(v), cap: o.cap })}` });
+const kchip = (text, ic) => `<span class="chip kchip">${icon(ic)}<span>${esc(text)}</span></span>`;
+const hasHd = (v) => fs.existsSync(path.join(here, 'public', 'videos', `${v.id}-hd.jpg`));
+const vtile = (v, cls = '', o = {}) => {
+  const hd = o.hd && hasHd(v), big = cls.includes('w2');
+  return tile({ href: `/videos/${vslug(v)}/`, cls: `tm ${cls}`, attrs: ` data-vid="${v.id}" data-title="${esc(v.title)}"${o.attrs ?? ''}`, inner: `<span class="tbg${hd && v.thumbFit ? ` fit-${v.thumbFit}` : ''}">${hd ? `<img src="/videos/${v.id}-hd.jpg" width="960" height="540" loading="lazy" decoding="async" alt="">` : timg(v.thumb, 'yt-img')}</span>${badge('yt')}${o.kind ? kchip(o.kind, kindIcon(o.kind)) : ''}${tchip(v.length, big ? 'clock' : 'play')}${big ? disc : ''}${tcap({ title: o.title ?? v.name ?? vtitle(v), cap: o.cap })}` });
+};
+// FIFA episode tiles carry the series name; the short films carry their clean name and a kind chip
+const epTile = (v, cls = '', attrs = '') => vtile(v, cls, { title: vc.series.title, cap: `Episode ${v.ep}`, attrs });
+const filmTile = (v, cls = 'lead w2', attrs = '') => vtile(v, cls, { hd: true, kind: v.kind[0].toUpperCase() + v.kind.slice(1), attrs });
 // a Twitch clip before /api/clips has answered: no picture, the scissors stand in. The browser swaps these for the real clips.
 const CLIPS_URL = 'https://www.twitch.tv/halmictv/clips?range=all';
 const clipFallback = (t, g, i) => tile({ href: CLIPS_URL, cls: `tm tm-nopic${i === 0 ? ' w2' : ''}`, attrs: ' data-clipcard', inner: `<span class="tbg">${icon('scissors', 'ghost')}</span>${badge('tw')}${tcap({ title: t, sr: g ? `Game: ${g}` : '' })}` });
@@ -122,17 +131,16 @@ const mediumTile = () => ltile({ href: 'https://halmic.medium.com/', kind: 'md',
 const bento = ({ id = '', alias = [], title = '', more = '', cls = '', tiles }) => `<div class="bsec"${id ? ` id="${id}"` : ''}>${alias.map((a) => `<span class="anc" id="${a}"></span>`).join('')}${title ? `<div class="sh"><h2>${esc(title)}</h2>${more}</div>` : ''}<div class="bq"><div class="bento ${cls}">${tiles.join('')}</div></div></div>`;
 const more = (href, text) => `<a class="sl" href="${href}">${esc(text)}${icon('arrow-right', 'ic-end')}</a>`;
 
-const homeOthers = [others.find((o) => o.kind === 'short film'), others.find((o) => o.kind === 'highlight reel')].filter(Boolean);
 const clips = [['CREEPER, AW MAN', 'Minecraft'], ['4k clutch on Bind', 'VALORANT'], ['Hbox would be proud', ''], ['5 kills no win :<', ''], ['cross map tomahawk on miami', 'VALORANT'], ['run 6 dies after blaze rods...', 'Minecraft']];
 // a clip is inserted before the video tile that lists its index in data-cs (app.js); this is the order they take with all six
 const watchTiles = () => {
-  const [e3, e2, e1] = earlierEps.slice().reverse();
-  const cs = (v, n) => vtile(v, '', { attrs: ` data-cs="${n}"` });
+  const [sf1, sf2] = films, [e4, e3, e2, e1] = episodes.slice().reverse(), [robo, lap] = others.filter((o) => !films.includes(o));
+  const cs = (v, n) => epTile(v, '', ` data-cs="${n}"`);
   const fb = (i) => clipFallback(clips[i][0], clips[i][1], i);
   return [
-    vtile(latestEp, 'lead w2', { title: vc.series.title, cap: `Episode ${latestEp.ep}` }),
-    fb(0), cs(e3, '0'), fb(1), fb(2), cs(e2, '1 2'), fb(3), cs(e1, '3'), fb(4),
-    vtile(homeOthers[0], '', { attrs: ' data-cs="4"' }), fb(5), vtile(homeOthers[1], '', { attrs: ' data-cs="5"' }),
+    filmTile(sf1), filmTile(sf2),
+    fb(0), cs(e4, '0'), fb(1), fb(2), cs(e3, '1 2'), fb(3), cs(e2, '3'), fb(4), cs(e1, '4'), fb(5),
+    vtile(robo, '', { attrs: ' data-cs="5"' }), vtile(lap),
     stat({ href: `https://www.youtube.com/playlist?list=${vc.series.playlist}`, num: String(episodes.length), title: `episodes of ${vc.series.title}`, tone: 'tpaper' }),
     ytTile(), twitchTile('w2'),
   ];
@@ -192,6 +200,11 @@ for (const f of fs.readdirSync(path.join(here, 'src')).filter((n) => n.endsWith(
   write(f, read(`src/${f}`).replace(/\{\{(\w+)\}\}/g, (_, k) => subs[k] ?? `MISSING:${k}`));
 }
 
+// ---- hover previews: the ids that have both files, so the browser never asks for one that is missing (clips are keyed clip-<id>) ----
+const pvDir = path.join(here, 'public', 'previews');
+const pvIds = fs.existsSync(pvDir) ? fs.readdirSync(pvDir).filter((f) => f.endsWith('.webm') && fs.existsSync(path.join(pvDir, f.replace(/\.webm$/, '.mp4')))).map((f) => f.slice(0, -5)).sort() : [];
+write('previews/index.json', `${JSON.stringify({ ids: pvIds })}\n`);
+
 // ---- inner pages ----
 const urls = [{ loc: '/', pri: 1.0 }, { loc: '/games/', pri: 0.8 }, { loc: '/videos/', pri: 0.8 }, { loc: '/design/', pri: 0.7 }, { loc: '/design/southeast-denver-dental/', pri: 0.7 }];
 const vplayer = (v, lazy = false) => `<a class="vid vid-featured" href="${v.url}" data-vid="${v.id}" data-title="${esc(v.title)}" aria-label="Play video: ${esc(v.title)}"><span class="thumb"><img src="${v.thumb}" width="640" height="360" ${lazy ? 'loading="lazy" decoding="async"' : 'fetchpriority="high"'} alt="Thumbnail for the video ${esc(v.title)}">${PLAY}</span>${lazy ? `<span class="vt">${esc(v.title)}</span>` : ''}<span class="vm">Plays here when you press it. Nothing loads from YouTube before that.</span></a>`;
@@ -206,14 +219,14 @@ for (const g of gl) {
 }
 write('games/index.html', inner({ title: 'Games by halmic: tiny jam games and experiments', desc: 'Tiny games made by halmic in PICO-8, PuzzleScript, Bitsy and GB Studio. Play them in the browser on itch.io.', path: '/games/', og: '/og/home.png', section: 'games', wide: true, ld: [PERSON, ...gl.map(gameLd)], body: `<h1>Little games</h1><p class="lede2">Jam entries and experiments, mostly in tiny engines.</p>${bento({ cls: 'b-play', tiles: playTiles() })}` }));
 for (const v of pageVideos) {
-  urls.push({ loc: `/videos/${vslug(v)}/`, pri: 0.6 });
+  urls.push({ loc: `/videos/${vslug(v)}/`, pri: films.includes(v) ? 0.7 : 0.6 });
   write(`videos/${vslug(v)}/index.html`, inner({
     title: `${v.title} | halmic productions`, desc: ((v.desc || (v.excerpt && v.excerpt.length > 40 ? v.excerpt : '')) || `${v.title}. A video from halmic's YouTube channel.`).slice(0, 160), path: `/videos/${vslug(v)}/`, og: `/og/video-${v.id}.png`, type: 'video.other', section: 'videos', ld: [PERSON, videoLd(v)],
     body: `${crumb('/#videos', 'videos')}<h1>${esc(v.title)}</h1><div class="vfeat">${vplayer(v)}</div>${meta([kindIcon(v.kind), v.ep ? `${vc.series.title}, episode ${v.ep}` : v.kind], ['clock', v.length], ['calendar-blank', when(v)])}<div class="mrow">${btn({ href: v.url, label: 'Watch on YouTube', ic: 'b-youtube', kind: 'blue', ext: true })}${btn({ href: 'https://www.youtube.com/@halmic?sub_confirmation=1', label: 'Subscribe', ic: 'b-youtube', ext: true })}</div>${v.desc ? `<p>${esc(v.desc)}</p>` : v.excerpt ? `<p>${esc(v.excerpt)}</p>` : ''}${mrow({ href: '/#videos', label: 'More videos', ic: 'video-camera' }, { href: '/#games', label: 'Little games', ic: 'game-controller' })}`,
   }));
 }
 const smashTile = (st) => tile({ href: `https://www.youtube.com/watch?v=${st.id}`, cls: 'tm', attrs: ` data-vid="${st.id}" data-title="${esc(`${st.event}: ${st.round}, halmic vs ${st.opp}`)}"`, inner: `<span class="tbg">${timg(`/videos/${st.id}.jpg`, 'yt-img')}</span>${badge('yt')}${tcap({ title: `vs ${st.opp}`, cap: `${st.event}, ${st.round}`, sr: '' })}` });
-const vindex = `<h1>Videos</h1>${bento({ title: vc.series.title, cls: 'b-series', tiles: [vtile(latestEp, 'lead w2', { title: vc.series.title, cap: `Episode ${latestEp.ep}` }), ...earlierEps.slice().reverse().map((v) => vtile(v)), ytTile('w2', 'All episodes on YouTube', `https://www.youtube.com/playlist?list=${vc.series.playlist}`, ' data-flex')] })}${bento({ title: 'Other edits', cls: 'b-other', tiles: [...others.map((v) => vtile(v)), ytTile('', 'halmic on YouTube', 'https://www.youtube.com/@halmic?sub_confirmation=1', ' data-flex')] })}${bento({ id: 'smash', title: 'Smash', more: `<span class="sl sl-note">${esc(smash.line)}</span>`, cls: 'b-smash', tiles: [...smash.sets.map(smashTile), `<div class="tile t-note" data-flex><p>${esc(smash.credit)}</p></div>`] })}`;
+const vindex = `<h1>Videos</h1>${bento({ title: 'Short films, FIFA and edits', cls: 'b-watch', tiles: [filmTile(films[0]), filmTile(films[1]), ...episodes.slice().reverse().map((v) => epTile(v)), ...others.filter((o) => !films.includes(o)).map((v) => vtile(v)), stat({ href: `https://www.youtube.com/playlist?list=${vc.series.playlist}`, num: String(episodes.length), title: `episodes of ${vc.series.title}`, tone: 'tpaper' }), ytTile('', 'halmic on YouTube', 'https://www.youtube.com/@halmic?sub_confirmation=1', ' data-flex')] })}${bento({ id: 'smash', title: 'Smash', more: `<span class="sl sl-note">${esc(smash.line)}</span>`, cls: 'b-smash', tiles: [...smash.sets.map(smashTile), `<div class="tile t-note" data-flex><p>${esc(smash.credit)}</p></div>`] })}`;
 write('videos/index.html', inner({ title: 'Videos by halmic: edits, highlights and friends', desc: 'Videos from halmic on YouTube: edits, highlight reels and friends playing games.', path: '/videos/', og: '/og/home.png', section: 'videos', wide: true, ld: [PERSON, ...pageVideos.map(videoLd)], body: vindex }));
 write('design/index.html', inner({ title: 'Design by halmic: logos and things I made', desc: 'Things halmic has designed: a logo for Southeast Denver Dental.', path: '/design/', og: '/og/home.png', section: 'work', wide: true, ld: [PERSON, designLd], body: `<h1>Things I’ve designed</h1>${bento({ cls: 'b-design', tiles: [seddTile('lead w2'), hiTile(''), xTile(), mediumTile()] })}` }));
 write('design/southeast-denver-dental/index.html', inner({
@@ -258,6 +271,9 @@ write('_headers', [
   rule('/*', { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'X-Frame-Options': 'DENY', 'Permissions-Policy': 'camera=(), microphone=(), geolocation=()', 'Content-Security-Policy': CSP }),
   // fonts are not fingerprinted by name, so a month rather than immutable; HTML gets the assets layer's default (revalidate on every load, etag)
   rule('/fonts/*', { 'Cache-Control': 'public, max-age=2592000' }),
+  // hover previews and the hero reel keep their names when re-rendered, so a week; app.js asks for previews/index.json with cache: 'no-cache' (revalidates), so a new preview shows up at once
+  rule('/previews/*', { 'Cache-Control': 'public, max-age=604800' }),
+  rule('/hero/*', { 'Cache-Control': 'public, max-age=604800' }),
   // css/js are linked with ?v=<hash> (see V() above), so they can be immutable
   rule('/*.css', { 'Cache-Control': 'public, max-age=31536000, immutable' }),
   rule('/*.js', { 'Cache-Control': 'public, max-age=31536000, immutable' }),

@@ -1,5 +1,6 @@
 // Headless Chrome screenshot via CDP (uses the `ws` package from the portfolio repo, or any ws on the path).
 // usage: node halmic/scripts/shot.mjs <url> <out.png> <width> <height> [full] [mobile] [wait-ms] [scrollY] [sel=css] [click=css] [clip=x,y,w,h]
+//   hover=<css>: scroll that element into view and move the mouse onto it (real mouse events) before the screenshot, after eval
 //   extra flags: gl (software WebGL via SwiftShader), rm (emulate prefers-reduced-motion), eval=<js> (run after the wait, then 900 ms), netlog (print requests, sizes and the load time), jpg (write JPEG), nogl (getContext('webgl') returns null)
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
@@ -47,6 +48,16 @@ try {
   await sleep(waitMs);
   const ev = flags.find((f) => f.startsWith('eval='))?.slice(5);
   if (ev) { const er = await send('Runtime.evaluate', { expression: ev, awaitPromise: true, returnByValue: true }); console.log('eval:', JSON.stringify(er.result.result.value ?? er.result.exceptionDetails ?? null)); await sleep(900); }
+  const hov = flags.find((f) => f.startsWith('hover='))?.slice(6);
+  const hev = flags.find((f) => f.startsWith('hoverEval='))?.slice(10);
+  if (hov) {
+    const r = (await send('Runtime.evaluate', { expression: `(() => { const e = document.querySelector(${JSON.stringify(hov)}); e.scrollIntoView({ block: 'center' }); const b = e.getBoundingClientRect(); return [b.left + b.width / 2, b.top + b.height / 2]; })()`, returnByValue: true })).result.result.value;
+    await sleep(700);
+    await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: r[0] - 3, y: r[1] - 3 }); await sleep(50);
+    await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: r[0], y: r[1] });
+    await sleep(+(flags.find((f) => f.startsWith('hoverMs='))?.slice(8) ?? 1500));
+    if (hev) { const er = await send('Runtime.evaluate', { expression: hev, awaitPromise: true, returnByValue: true }); console.log('hover eval:', JSON.stringify(er.result.result.value ?? er.result.exceptionDetails ?? null)); }
+  }
   const sel = flags.find((f) => f.startsWith('sel='))?.slice(4);
   if (sel) { await send('Runtime.evaluate', { expression: `document.querySelector(${JSON.stringify(sel)}).scrollIntoView()` }); await sleep(1200); }
   const click = flags.find((f) => f.startsWith('click='))?.slice(6);
