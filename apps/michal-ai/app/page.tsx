@@ -14,7 +14,7 @@ import { profile } from '@/content/profile'
 import { doiUrl, venueLine } from '@/lib/publications'
 import { ExperienceList, type ExperienceItem } from '@/components/ui/ExperienceList'
 import '@/components/site/about.css'
-import { homeMetadata, profilePageJsonLd, websiteJsonLd } from '@/lib/seo'
+import { homeMetadata, personJsonLd, websiteJsonLd } from '@/lib/seo'
 
 export const metadata = homeMetadata()
 
@@ -43,7 +43,7 @@ export default function Home() {
 
   return (
     <div className="mx-auto max-w-content px-space-4 md:px-space-8">
-      <JsonLd data={[profilePageJsonLd, websiteJsonLd]} />
+      <JsonLd data={[personJsonLd, websiteJsonLd]} />
       {hooks.length ? <HeroAtmosphere tints={tints} /> : null}
       {/* Hero background slot: a positioned layer behind the text and above the tint cross-fade, empty by default. A decorative
           component (aria-hidden, pointer-events none) can be dropped in here; the hero text keeps its own contrast. */}
@@ -116,6 +116,17 @@ export default function Home() {
               </ul>
             </div>
           ) : null}
+          <Link href="/about" className="about__more card surface surface--link" aria-labelledby="about-more-h">
+            <span>
+              <span id="about-more-h" className="card__h t-title block">
+                More about me
+              </span>
+              <span className="t-text block">Full experience, education, hackathons and press, and how to get in touch.</span>
+            </span>
+            <span className="about__more-go t-ui">
+              About <ArrowRight size={16} strokeWidth={1.5} aria-hidden />
+            </span>
+          </Link>
         </div>
       </section>
 

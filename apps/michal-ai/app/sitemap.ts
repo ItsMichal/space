@@ -13,6 +13,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: SITE_URL, lastModified: dateOf(latest()), changeFrequency: 'monthly', priority: 1 },
     { url: `${SITE_URL}/projects`, lastModified: dateOf(latest([...getTopLevel('project'), ...posts.filter((p) => p.kind === 'project' && p.parent)])), changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${SITE_URL}/about`, lastModified: new Date('2026-10-12'), changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${SITE_URL}/resume`, lastModified: new Date('2026-10-12'), changeFrequency: 'monthly', priority: 0.6 },
     { url: `${SITE_URL}/writing`, lastModified: dateOf(latest(getBlogPosts())), changeFrequency: 'monthly', priority: 0.8 },
     ...posts.map((p) => ({
       url: `${SITE_URL}${postPath(p)}`,

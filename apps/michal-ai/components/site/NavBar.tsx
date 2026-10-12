@@ -11,7 +11,7 @@ import type { MenuPreview } from '@/lib/menu'
 const links = [
   { label: 'Work', href: '/projects', match: '/projects' },
   { label: 'Writing', href: '/writing', match: '/writing' },
-  { label: 'About', href: '/#about', match: null },
+  { label: 'About', href: '/about', match: '/about' },
 ]
 
 function MenuIcon({ open }: { open: boolean }) {

@@ -24,9 +24,9 @@ export function Footer() {
           <a className={linkCls} href={siteConfig.linkedin} target="_blank" rel="noreferrer">
             LinkedIn
           </a>
-          <a className={linkCls} href="/BodzianowskiResume.pdf" target="_blank" rel="noreferrer">
+          <Link className={linkCls} href="/resume">
             Resume
-          </a>
+          </Link>
         </nav>
       </div>
       <p className="t-meta mt-space-4 px-space-2">Starlink image: Starlink / SpaceX.</p>

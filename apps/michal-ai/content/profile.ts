@@ -38,6 +38,31 @@ export type Publication = {
   role?: string
 }
 
+export type CareerEntry = {
+  id: string
+  company: string
+  /** Short employer name for tight places (resume, card heads). */
+  org: string
+  role: string
+  orgUrl?: string
+  /** Display dates and ISO months (for <time>). `end` omitted means current. */
+  dates: string
+  start: string
+  end?: string
+  /** One or two sentences in his own words (LinkedIn), when he has them. */
+  summary?: string
+  bullets: readonly string[]
+  /** Stable ids (frontmatter `id`) of the posts that cover this role; resolved to paths at build time. */
+  postIds?: readonly string[]
+  /** Short line of tools, only from what his LinkedIn, resume or project pages list. */
+  stack?: string
+}
+
+export type Skill = { group: string; items: readonly string[] }
+
+export type VolunteerEntry = { org: string; role: string; dates: string; start: string; end: string; note?: string }
+export type Award = { id: string; title: string; context: string; year: string; postId?: string; hackathonId?: string }
+
 export const profile = {
   /** Displayed name (Polish ł). */
   name: 'Michał Bodzianowski',
@@ -83,6 +108,154 @@ export const profile = {
     { company: 'Windward Studios', role: 'Software development intern', since: '2019', years: '2019 to 2020' },
     { company: 'Panther Industries', role: 'Augmented reality and marketing intern', since: '2018', years: '2018' },
   ] satisfies Role[],
+  /** Status, in his words (dictated by the owner). Rendered at the top of /about; edit here only. */
+  status: {
+    location: 'California',
+    sentences: [
+      "I'm currently based in California and open to exciting opportunities.",
+      'Reach out on LinkedIn or by email with specifics.',
+    ],
+  },
+  /** Public contact. The email is the one printed on his published resume (public/BodzianowskiResume.pdf). */
+  contact: {
+    email: 'its@michal.us',
+    x: 'https://x.com/ItsMichal',
+  },
+  /**
+   * Full career, newest first. Source: the owner's own LinkedIn text (docs/content-review/linkedin-source.md), with the resume
+   * for stack lines. Dates follow LinkedIn. Locations are left out on purpose.
+   */
+  career: [
+    {
+      id: 'spacex',
+      company: 'SpaceX',
+      org: 'SpaceX',
+      role: 'Software Engineer',
+      orgUrl: 'https://www.spacex.com',
+      dates: 'Apr 2024 to now',
+      start: '2024-04',
+      summary: 'Growing the Starlink.com platform for millions and then billions worldwide, through technical excellence and collaboration with business stakeholders.',
+      bullets: [
+        'Responsible for unlocking the Starlink Mini retail launch',
+        'Rebuilt our Order Flow from the ground up in React, improving conversion rate, aesthetic and UX',
+        'Unblocked launch of service in international markets and lead localization efforts from the technical perspective',
+        'Optimizing e-commerce growth and online presence; improving analytics and reporting for better insight',
+        'Building the robust platform needed to support millions of customers and billions in sales',
+        'Working from first principles on internal tooling that lets business stakeholders run experiments efficiently',
+        'Mentoring interns and teammates',
+      ],
+      postIds: ['spacex-starlink-general-projects', 'spacex-starlink-order-flow', 'spacex-starlink-product-launch'],
+      stack: 'Next.js and React, Angular, C# .NET microservices on Kubernetes and Argo, hosted on GCP',
+    },
+    {
+      id: 'cu-boulder',
+      company: 'Institute of Cognitive Science, University of Colorado Boulder (SHINE Lab, iSAT)',
+      org: 'CU Boulder, Institute of Cognitive Science',
+      role: 'Software Engineer',
+      orgUrl: 'https://www.colorado.edu/research/ai-institute/',
+      dates: 'Aug 2020 to Apr 2024',
+      start: '2020-08',
+      end: '2024-04',
+      summary: "Improved the SHINE Laboratory's web-based experiments in HCI and cognitive science. Also a member of iSAT, the NSF AI Institute at CU Boulder, building AI/ML data visualizations for teachers.",
+      bullets: [
+        "Built out testbeds and websites in React, TypeScript and Next.js, including the lab's website, powered by Contentful",
+        'Implemented real-time systems with WebSockets and Python/Flask backends, architecting MVC systems with maintainable code',
+        'Created the dashboard display for AI/ML data output and won Best Interactive Event at the AI in Education Conference 2022',
+        'Architected AWS deployments and pipelines and handled DevOps for the AI Institute (iSAT), working toward an efficient MLOps flow',
+        'Architected and built the web platform for teachers and students behind the CHI 2025 jigsaw agent paper',
+      ],
+      postIds: ['jia-webapp', 'isat-dashboard'],
+      stack: 'React, TypeScript, Next.js, Python/Flask, WebSockets, AWS, Contentful',
+    },
+    {
+      id: 'amedicarx',
+      company: 'AmedicaRx',
+      org: 'AmedicaRx',
+      role: 'Full Stack Developer (contract)',
+      dates: 'Aug 2022 to Feb 2023',
+      start: '2022-08',
+      end: '2023-02',
+      bullets: [
+        'Worked directly with the CEO and founders to build a React and AWS web application',
+        'Implemented GitLab CI/CD pipelines and a Jest test suite',
+        'Built medication search and admin dashboard functionality to specification',
+      ],
+      stack: 'React, AWS (DynamoDB, S3, Route 53, Lambda), GitLab CI/CD, Jest',
+    },
+    {
+      id: 'windward',
+      company: 'Windward Studios',
+      org: 'Windward Studios',
+      role: 'Software Development Intern',
+      dates: 'Sep 2019 to Feb 2020',
+      start: '2019-09',
+      end: '2020-02',
+      bullets: ['Worked with web APIs and helped the company expand its offering by implementing new technologies and evolving existing systems'],
+      stack: 'OpenAPI, Python, C++, .NET, Azure DevOps',
+    },
+    {
+      id: 'panther',
+      company: 'Panther Industries, Inc.',
+      org: 'Panther Industries',
+      role: 'Marketing and Augmented Reality Intern',
+      dates: 'Jun to Aug 2018',
+      start: '2018-06',
+      end: '2018-08',
+      bullets: ['Helped develop a Help and Support application that uses AR technologies'],
+    },
+  ] satisfies CareerEntry[],
+  education: {
+    school: 'University of Colorado Boulder',
+    url: 'https://www.colorado.edu',
+    degrees: ['B.S. Computer Science', 'B.S. Creative Technology and Design (ATLAS program)'],
+    extras: ['Business minor', 'Certificate in Entrepreneurial Studies'],
+    dates: '2019 to 2023',
+    start: '2019',
+    end: '2023',
+    activities: ['Blueprint Boulder', 'CU Boulder Racing Team', 'CU Boulder Esports'],
+  },
+  volunteer: [
+    {
+      org: 'Blueprint Boulder',
+      role: 'Vice President',
+      dates: 'Apr 2022 to May 2023',
+      start: '2022-04',
+      end: '2023-05',
+    },
+    {
+      org: 'Blueprint Boulder',
+      role: 'Vice President of Technology',
+      dates: 'Nov 2020 to Apr 2022',
+      start: '2020-11',
+      end: '2022-04',
+      note: "Built the organization's website and technical foundation, consulted with non-profits, and mentored and led over 50 students across 10+ shipped projects for social good.",
+    },
+  ] satisfies VolunteerEntry[],
+  awards: [
+    { id: 'aied-2022', title: 'Best Interactive Event', context: 'AI in Education Conference (AIED) 2022, for the iSAT dashboard display', year: '2022', postId: 'isat-dashboard' },
+    { id: 'hackcu-8', title: 'HackCU 8: 2nd place overall, and Best Games, Music, and Entertainment Hack', context: 'for Creatle, a solo project', year: '2022', hackathonId: 'hackcu-8-creatle' },
+  ] satisfies Award[],
+  /** Skills grouped as his LinkedIn, resume and project pages list them. No ratings. */
+  skills: [
+    { group: 'Web', items: ['React', 'TypeScript', 'Next.js', 'Angular', 'Tailwind CSS', 'Gatsby', 'UI/UX design'] },
+    { group: 'Services and cloud', items: ['Python/Flask', 'C# .NET microservices', 'WebSockets', 'AWS (DynamoDB, S3, Route 53, Lambda)', 'Kubernetes and Argo', 'GCP', 'GitLab CI/CD', 'Jest', 'Azure DevOps'] },
+    { group: 'AI and ML', items: ['LLM agent integration', 'AI/ML data visualization', 'MLOps', 'OpenAI APIs'] },
+    { group: 'Games and embedded', items: ['Unity and C#', 'Arduino', 'C++'] },
+  ] satisfies Skill[],
+  /** Post ids shown in the About page's linked-projects grid and on the resume. */
+  featuredProjectIds: [
+    'spacex-starlink-general-projects',
+    'jia-webapp',
+    'isat-dashboard',
+    'realtime-ai-f1-comentator',
+    'project-mountaintop',
+    'office-wizards-barcode-game',
+  ],
+  /** Projects on his published resume that have no post on this site. Source: public/BodzianowskiResume.pdf, and content/hackathons.ts for Creatle. */
+  resumeExtraProjects: [
+    { name: 'Creatle', role: 'Solo developer', dates: 'Mar 2022', line: 'A web-based game engine concept, a build-your-own Wordle spinoff, in TypeScript, Prisma, Next.js and Tailwind CSS. 2nd place overall and Best Games, Music, and Entertainment Hack at HackCU 8.' },
+    { name: 'GroceryBot', role: 'Lead developer', dates: 'Fall 2021', line: 'An autonomous grocery-shopping robot in the Webots simulator, using inverse kinematics, path planning and computer vision, with an online shopping interface. Later used as a template for final projects in the course.' },
+  ],
   /**
    * Publications, verified from the DOI registration record (Crossref, `api.crossref.org/works/<doi>`, the registry
    * entry ACM deposits) and the dblp author listing for the same title. The ACM page itself blocks automated access.
