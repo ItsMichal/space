@@ -148,21 +148,29 @@ export function HeroHook({ stem, items, label = 'Recent work' }: Props) {
               <Link href={it.href} className="hook__link" tabIndex={i === current ? 0 : -1} data-hook-link>
                 {(() => {
                   const words = it.text.split(' ')
-                  // Each word carries its own trailing space, so the underline is continuous along a line and, on a wrapped
-                  // line, is exactly as wide as that line's text. The words are inline-blocks (they animate), which a
-                  // text-decoration on the link cannot reach, so the decoration lives on the words themselves.
+                  // The words are inline-blocks (they animate), so each carries its own 1px underline; the spaces between them
+                  // are ordinary text under the link's own decoration. A collapsible space at the end of a wrapped line is not
+                  // painted, so every rule ends exactly at the last glyph of its line.
                   const word = (w: string, k: number) => (
                     <span key={k} className="hook__w" style={{ ['--w' as string]: k } as React.CSSProperties}>
-                      {k < words.length - 1 ? `${w} ` : w}
+                      {w}
                     </span>
                   )
+                  const join = (list: string[], from: number) =>
+                    list.map((w, k) => (
+                      <Fragment key={k}>
+                        {k ? ' ' : null}
+                        {word(w, from + k)}
+                      </Fragment>
+                    ))
                   // The last two words and the arrow never separate: no orphaned word, no arrow alone on a line.
                   const split = Math.max(0, words.length - 2)
                   return (
                     <>
-                      {words.slice(0, split).map((w, k) => word(w, k))}
+                      {join(words.slice(0, split), 0)}
+                      {split ? ' ' : null}
                       <span className="hook__end">
-                        {words.slice(split).map((w, k) => word(w, split + k))}
+                        {join(words.slice(split), split)}
                         <ArrowUpRight aria-hidden className="hook__arrow" size={'0.62em'} strokeWidth={1.4} />
                       </span>
                     </>

@@ -12,18 +12,28 @@ export interface Palette {
 }
 export const LIGHT: Palette = { ink: [0.13, 0.13, 0.11], accent: [0.24, 0.42, 0.21] }
 
-/** Column-major 3x3: world -> view. Centres (lat0, lon0): rotate about Y by -lon0, then about X by +lat0. */
-export function rotation(lat0: number, lon0: number): Float32Array {
+/** Axial tilt: the spin axis leans 23 degrees towards the upper right, so the planet reads as tilted, not as an upright map. */
+export const AXIAL_TILT = (-23 * Math.PI) / 180
+
+/** Column-major 3x3: world -> view. Centres (lat0, lon0): rotate about Y by -lon0, then about X by +lat0, then lean the axis by `tilt` about the view axis. */
+export function rotation(lat0: number, lon0: number, tilt = AXIAL_TILT): Float32Array {
   const a = (-lon0 * Math.PI) / 180
   const b = (lat0 * Math.PI) / 180
   const ca = Math.cos(a)
   const sa = Math.sin(a)
   const cb = Math.cos(b)
   const sb = Math.sin(b)
-  const m = [
+  const m0 = [
     [ca, 0, sa],
     [sb * sa, cb, -sb * ca],
     [-cb * sa, sb, cb * ca],
+  ]
+  const ct = Math.cos(tilt)
+  const st = Math.sin(tilt)
+  const m = [
+    [ct * m0[0][0] - st * m0[1][0], ct * m0[0][1] - st * m0[1][1], ct * m0[0][2] - st * m0[1][2]],
+    [st * m0[0][0] + ct * m0[1][0], st * m0[0][1] + ct * m0[1][1], st * m0[0][2] + ct * m0[1][2]],
+    m0[2],
   ]
   return new Float32Array([m[0][0], m[1][0], m[2][0], m[0][1], m[1][1], m[2][1], m[0][2], m[1][2], m[2][2]])
 }
@@ -48,6 +58,7 @@ const FS = `#version 300 es
 precision highp float;
 uniform vec2 uRes; uniform float uR; uniform float uPitch; uniform mat3 uRot; uniform sampler2D uLand;
 uniform vec3 uInk; uniform vec3 uAccent; uniform vec2 uHomeCell; uniform float uHomeVis;
+uniform vec4 uBox[3]; uniform float uDim[3]; uniform float uFeather;
 out vec4 o;
 float h2(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 void main(){
@@ -73,6 +84,13 @@ void main(){
     float d = length(local);
     float a = (1. - smoothstep(rad - .55, rad + .55, d)) * limb;
     a *= .86 + .14 * h2(cell);                 // the faintest per-cell variation
+    // dots thin out behind the text blocks (boxes in canvas px, measured on resize only), softly, so text keeps its contrast
+    float dimf = 1.;
+    for (int i = 0; i < 3; i++) {
+      vec2 dd = max(uBox[i].xy - centre, centre - uBox[i].zw);
+      dimf *= mix(uDim[i], 1., smoothstep(0., uFeather, length(max(dd, 0.))));
+    }
+    a *= dimf;
     vec3 c = uInk;
     if (uHomeVis > .5 && cell == uHomeCell) {
       float ra = uPitch * .42;
@@ -118,6 +136,8 @@ function landCanvas(rings: Ring[]): HTMLCanvasElement {
 export interface GlobeRenderer {
   resize(cssSize: number, dpr: number): void
   draw(lat0: number, lon0: number, home?: { lat: number; lon: number } | null): void
+  /** Boxes (canvas px, origin bottom-left: x0, y0, x1, y1) behind which the dots thin out, with the factor that remains (0..1). */
+  setBoxes(boxes: { box: [number, number, number, number]; dim: number }[], feather: number): void
   destroy(): void
 }
 
@@ -148,7 +168,10 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
     const vao = g.createVertexArray()!
 
     const U = (n: string) => g.getUniformLocation(prog, n)
-    const u = { res: U('uRes'), r: U('uR'), pitch: U('uPitch'), rot: U('uRot'), land: U('uLand'), ink: U('uInk'), accent: U('uAccent'), homeCell: U('uHomeCell'), homeVis: U('uHomeVis') }
+    const u = { res: U('uRes'), r: U('uR'), pitch: U('uPitch'), rot: U('uRot'), land: U('uLand'), ink: U('uInk'), accent: U('uAccent'), homeCell: U('uHomeCell'), homeVis: U('uHomeVis'), box: U('uBox[0]'), dim: U('uDim[0]'), feather: U('uFeather') }
+    const boxes = new Float32Array(12)
+    const dims = new Float32Array([1, 1, 1])
+    let feather = 24
     let px = 1
     let pitch = 5
     g.enable(g.BLEND)
@@ -158,10 +181,19 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
       resize(size, dpr) {
         px = Math.max(1, Math.round(size * dpr))
         // A whole number of device pixels per cell: the grid never lands between pixels, so nothing shimmers.
-        pitch = Math.max(3, Math.round((size < 420 ? 5 : 6) * dpr))
+        pitch = Math.max(3, Math.round(6 * dpr))
         canvas.width = px
         canvas.height = px
         g.viewport(0, 0, px, px)
+      },
+      setBoxes(list, f) {
+        boxes.fill(0)
+        dims.fill(1)
+        list.slice(0, 3).forEach((b, i) => {
+          boxes.set(b.box, i * 4)
+          dims[i] = b.dim
+        })
+        feather = f
       },
       draw(lat0, lon0, home) {
         const rot = rotation(lat0, lon0)
@@ -173,6 +205,9 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
         g.uniform1f(u.r, R)
         g.uniform1f(u.pitch, pitch)
         g.uniformMatrix3fv(u.rot, false, rot)
+        g.uniform4fv(u.box, boxes)
+        g.uniform1fv(u.dim, dims)
+        g.uniform1f(u.feather, feather)
         g.uniform3fv(u.ink, palette.ink)
         g.uniform3fv(u.accent, palette.accent)
         let vis = 0

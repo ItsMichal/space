@@ -56,6 +56,9 @@
 }
 
 @media (min-width: 640px) {
+  .tile--feature .tile__media {
+    aspect-ratio: 16 / 6;
+  }
   .tiles--row,
   .tiles--grid {
     display: grid;
@@ -80,7 +83,11 @@
   }
 }
 
-/* ---- the tile */
+/* ---- the tile: calm paper
+   Glass needs imagery or colour behind it to read as glass. Behind the lower rows of the page there is only flat paper, so
+   a blurred translucent card there is just a frosted white card (checked: gl-card-1440). So the ordinary tiles are calm
+   raised paper with a hairline and a barely-there shadow, and the glass is kept where there IS something behind it: the
+   feature tile's caption over the photograph (below), the nav bar and the phone menu. Same glass tokens throughout. */
 .tile {
   position: relative;
   display: flex;
@@ -90,7 +97,10 @@
   overflow: hidden;
   border-radius: var(--tile-r);
   background: var(--paper-raised);
-  box-shadow: 0 0 0 1px rgb(24 33 27 / 0.07);
+  box-shadow:
+    0 0 0 1px rgb(24 33 27 / 0.07),
+    0 1px 2px rgb(24 33 27 / 0.04),
+    0 14px 30px -20px rgb(24 33 27 / 0.2);
   color: var(--ink);
   text-decoration: none;
   isolation: isolate;
@@ -111,6 +121,14 @@
 .tile__media picture {
   display: contents;
 }
+.tile__media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  box-shadow: inset 0 0 0 1px rgb(127 127 127 / 0.22);
+  pointer-events: none;
+}
 .tile__img {
   display: block;
   width: 100%;
@@ -127,12 +145,13 @@
   transform: scale(1.015);
 }
 
-/* no usable image: the project name, large, on a barely-there tint, in the same slot */
+/* no usable image: the project name, large, on a barely-there tint, in the same slot. The slot never grows taller than an
+   image tile's media (16:10 of the tile's own width); a full-width stacked feature gets a shorter 16:6 band. */
 .tile__media--word {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   padding: var(--space-4) var(--space-6);
-  background: color-mix(in srgb, var(--tile-tint, var(--tint-birch)) 70%, var(--paper-raised));
+  background: color-mix(in srgb, var(--tile-tint, var(--tint-birch)) 30%, transparent);
 }
 .tile__word {
   font: 400 clamp(40px, 11vw, 56px) / 1 var(--font-display);
@@ -151,8 +170,15 @@
 .tile__title {
   font-size: 28px;
   margin-top: 2px;
+  min-height: 1.15em;
+  text-wrap: balance;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .tile__desc {
+  text-wrap: pretty;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -171,7 +197,7 @@
   }
   .tile--feature .tile__body {
     flex: 1;
-    justify-content: flex-end;
+    justify-content: center;
     padding: var(--space-8);
   }
   .tile--feature .tile__title {
@@ -190,4 +216,96 @@
   .tile:active .tile__img {
     transform: none;
   }
+}
+
+/* ---- direction: cap (feature tile). A full-bleed image with a glass caption floating over its foot, like an iOS 26 media card.
+   On the home and projects pages only the feature tile uses it, from 640px up; below that it is a normal tile. */
+@media (min-width: 640px) {
+  .tile--feature {
+    flex-direction: column;
+    min-height: clamp(380px, 40vw, 500px);
+    justify-content: flex-end;
+    background: var(--paper-sunk);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .tile--feature .tile__media {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    aspect-ratio: auto;
+    min-height: 0;
+    flex: none;
+  }
+  .tile--feature .tile__body {
+    position: relative;
+    z-index: 2;
+    flex: none;
+    margin: 0 0 var(--space-4) var(--space-4);
+    padding: var(--space-6);
+    width: min(460px, calc(100% - var(--space-8)));
+    border-radius: calc(var(--tile-r) - var(--space-3));
+    /* 0.82 so the muted text on it keeps 4.5:1 over the darkest part of the photograph */
+    background: rgb(251 249 243 / 0.82);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    backdrop-filter: blur(24px) saturate(1.4);
+    box-shadow:
+      inset 1px 1px 0 rgb(255 255 255 / 0.65),
+      inset -1px -1px 0 rgb(255 255 255 / 0.12),
+      0 0 0 1px rgb(24 33 27 / 0.1),
+      0 2px 4px rgb(0 0 0 / 0.08),
+      0 18px 36px -14px rgb(0 0 0 / 0.45);
+    justify-content: flex-start;
+  }
+  .tile--feature .tile__title {
+    font-size: 36px;
+  }
+  .tile--feature .tile__meta,
+  .tile--feature .tile__desc {
+    color: color-mix(in srgb, var(--ink) 78%, var(--paper));
+  }
+}
+@media (min-width: 640px) and (prefers-reduced-transparency: reduce) {
+  .tile--feature .tile__body {
+    background: var(--paper-raised);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* ---- dev directions (the /cards route): cap and fill at card size */
+.tile--cap,
+.tile--fill {
+  aspect-ratio: 4 / 5;
+}
+.tile--cap {
+  justify-content: flex-end;
+  background: var(--paper-sunk);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.tile--cap .tile__media {
+  position: absolute;
+  inset: 0;
+  aspect-ratio: auto;
+}
+.tile--cap .tile__body {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  margin: 0 var(--space-3) var(--space-3);
+  padding: var(--space-4);
+  border-radius: calc(var(--tile-r) - var(--space-3));
+  background: rgb(251 249 243 / 0.74);
+  -webkit-backdrop-filter: blur(24px) saturate(var(--glass-saturate));
+  backdrop-filter: blur(24px) saturate(var(--glass-saturate));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 0 0 1px rgb(255 255 255 / 0.35), 0 12px 32px -12px rgb(0 0 0 / 0.4);
+}
+.tile--fill .tile__body {
+  order: -1;
+  flex: none;
+}
+.tile--fill .tile__media {
+  flex: 1;
+  aspect-ratio: auto;
 }

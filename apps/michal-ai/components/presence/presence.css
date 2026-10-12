@@ -10,7 +10,7 @@
   /* Single ink at low contrast; override per hero. Text over it stays AA without a scrim. */
   opacity: var(--hero-globe-opacity, 0.42);
 }
-/* Slot (default): wholly inside the homepage hero slot, right of the text, above the first card row; hidden below 768px where the
+/* Slot (default): wholly inside the homepage hero slot, right of the text, above the first card row; hidden below 1024px where the
    hero text fills the width and the cards start right under it. Dots fade to nothing toward the limb, so there is no edge and
    nothing touches the slot's clip box. */
 .hero-globe {
@@ -22,12 +22,32 @@
   z-index: 0;
   --hero-globe-opacity: var(--hero-globe-opacity-slot, 0.28);
 }
+/* The globe sits BEHIND the name and tagline (z-order: tint < globe < text); the shader thins its dots behind each text block, so
+   contrast comes from the shader, not from a scrim. Phones: large and low-alpha, bleeding off the right edge. Tablet: about
+   80% of the width. From 1024px: two thirds of the viewport, capped at 880px, bleeding a little off the right and top. */
+.hero-globe--slot {
+  display: block;
+  position: absolute;
+  z-index: 0;
+  width: 118vw;
+  right: -36vw;
+  top: 24px;
+  --hero-globe-opacity: var(--hero-globe-opacity-slot, 0.3);
+}
 @media (min-width: 768px) {
   .hero-globe--slot {
-    display: block;
-    width: min(34vw, 420px);
-    right: 3vw;
-    top: 96px;
+    width: 84vw;
+    right: -16vw;
+    top: -10px;
+    --hero-globe-opacity: var(--hero-globe-opacity-slot, 0.34);
+  }
+}
+@media (min-width: 1024px) {
+  .hero-globe--slot {
+    width: min(66vw, 880px);
+    right: -4vw;
+    top: -50px;
+    --hero-globe-opacity: var(--hero-globe-opacity-slot, 0.4);
   }
 }
 /* Bleed: runs off the right and top edge (the parent must clip). Not used on the homepage. */

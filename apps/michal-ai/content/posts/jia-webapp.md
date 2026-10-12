@@ -7,6 +7,7 @@ date: 2023-12-09
 updated: 2023-12-11
 tags: ["TypeScript", "AWS", "AI/ML"]
 cover: /media/jia-webapp/cover.webp
+coverFocus: "72% 40%"
 coverAlt: "JIA student worksheet beside an AI chat panel, with a confirm dialog and a new-message notice"
 priority: 6
 role: "Lead developer, SHINE Lab"

@@ -54,3 +54,27 @@ Measured 2026-10-11 (home pages of each site).
 | Type hierarchy | apple.com | One family carries nearly everything; few sizes; weights 400 and 600/700 | One text face (Newsreader) for text, meta and UI, one display face for titles; two weights (400, 500); roles in `app/styles/type.css` |
 
 Not measured: the App Store "Today" cards (not reachable from a headless browser without the app).
+
+## Liquid Glass cards and the hero globe (measured 2026-10-11)
+
+| Element | Reference | Measured | Ours |
+| --- | --- | --- | --- |
+| Glass surface | apple.com/newsroom and apple.com/ios/ios-26 nav and sheets | `backdrop-filter: saturate(1.8) blur(20px)` over `rgba(255,255,255,0.7 to 0.8)` (light) and `rgba(0,0,0,0.4 to 0.8)` (dark); `blur(20px)` over `rgba(232,232,237,0.4)` on the iOS 26 page. Radius 0 on those bars (the rounded glass shapes are native in iOS 26, so there is no web measurement of the rim). developer.apple.com materials page: `saturate(1.8) blur(20px)` over `rgba(29,29,31,0.7)` | Cards: `blur(20px) saturate(1.6)` (tokens `--glass-blur` x2, `--glass-saturate`) over a 58% paper tint, 1px rim brighter on the top-left (masked gradient border), faint outer ring and shadow. Feature caption: 74% tint, `blur(24px)`. Same tokens as the nav bar and menu |
+| Specular rim, highlight width | iOS 26 Liquid Glass (native) | Not measurable on the web; matched by eye from Apple's marketing stills: about 1px, strongest top-left | 1px, gradient 0.95 to 0.1 to 0.5 alpha |
+| Caption floating over artwork | iOS 26 media cards (native) | Not measurable | Feature tile only: full-bleed image with a glass caption panel inset 16px at the foot |
+
+Honest status: with the page background this pale, the cards read as warm frosted white, not as Liquid Glass. Glass needs colour or detail behind it; the hero tint and the lower dots of the globe fade out before the second card row. The feature caption over the photograph does read as glass. The SVG displacement path is not used on any card.
+
+Glass pointer light: the only global listeners were in `components/glass/lighting.ts` (`window` pointermove, pointerdown, scroll, deviceorientation). They are gone. A glass field now listens on its own host (pointerenter, pointermove, pointerleave, focusin, focusout), eases the highlight in and out over about 250ms, and does no work at rest. Not yet verified with a performance trace.
+
+Cards lab: `/cards` (dev only) shows three directions with real content: 1 newsroom tile on glass, 2 fill tile, 3 glass caption over the image. Round-1 critique: (1) clean and calm but the glass is invisible on pale paper; (2) the image fills the card, which crops our UI screenshots too hard and makes them look blown up; (3) works for photographs (Starlink), muddy over dark UI screenshots. Chosen: 3 for the feature tile (photograph), 1 for the rest. Round 2 (spacing rhythm, baseline grid across a row, per-project crop focus) was not done.
+
+Globe: tilted 23 degrees, two thirds of the viewport (cap 880px), behind the name and tagline. The shader thins the dots behind each text box (boxes measured on resize). Worst-case contrast on rendered pixels, text hidden, darkest background pixel: name 7.3 to 8.7 (needs 3), tagline 5.2 to 5.4 (needs 4.5), rotating line 11.9 to 12.4. Checked at 375, 768, 1024, 1440, 1920.
+
+### Glass decision (option b)
+
+Behind the lower card rows there is flat paper, so a blurred translucent card there is only frosted white (flat backdrop, nothing to blur). I did not fake a backdrop. Glass is kept where imagery sits behind it: the feature caption over the Starlink photograph (82% paper tint, `blur(24px) saturate(1.4)`, 1px inner top-left highlight, outer hairline, two-layer shadow), the nav bar and the phone menu. The other tiles are calm raised paper with a hairline. Caption text contrast: tint raised to 0.82 and muted text mixed toward ink so it holds 4.5:1 over the darkest part of the photo (not re-measured on pixels).
+
+Numbers (headless Chrome with software GL, so only relative values mean anything): idle with the pointer elsewhere, the only rAF source is the globe's draw loop; the glass engine's loop runs only while the pointer is over the nav (about 10 callbacks a second) and is at zero 3 seconds after leaving. Globe frame interval on a 4x CPU throttle, 1440 wide: p50 66ms, p95 133ms idle; 375 wide: p50 33ms, p95 67ms.
+
+Starlink image: the build makes 480/960/1600/2400 AVIF and WebP variants. Served at 1440 (1x): 1600w AVIF, 111 KB. At 375 (2x): 960w AVIF, 41 KB. The 1.8 MB original is not served.

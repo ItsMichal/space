@@ -29,6 +29,7 @@ export function Footer() {
           </a>
         </nav>
       </div>
+      <p className="mt-space-4 font-serif text-[14px] leading-[20px] text-ink-muted">Starlink image: Starlink / SpaceX.</p>
     </footer>
   )
 }

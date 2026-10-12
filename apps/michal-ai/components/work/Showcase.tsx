@@ -18,19 +18,34 @@ const year = (p: Post) => p.years ?? p.date.slice(0, 4)
  * title and described by its description. Projects without a usable image get a designed media area in the same slot: the
  * project's name set large on a barely-there palette tint, the way Apple uses a solid tile with a product name.
  */
-export function ProjectCard({ post, href, feature = false, priority = false }: { post: Post; href: string; feature?: boolean; priority?: boolean }) {
+export type CardVariant = 'newsroom' | 'fill' | 'cap'
+
+export function ProjectCard({
+  post,
+  href,
+  feature = false,
+  priority = false,
+  variant = 'newsroom',
+}: {
+  post: Post
+  href: string
+  feature?: boolean
+  priority?: boolean
+  /** newsroom: image on top, text below. fill: text above, image fills the rest. cap: full-bleed image with a glass caption over its foot. */
+  variant?: CardVariant
+}) {
   const src = post.cardImage === 'none' ? undefined : (post.cardImage ?? post.cover)
   const alt = post.cardImage ? (post.cardImageAlt ?? '') : (post.coverAlt ?? '')
   const meta = [year(post), post.role].filter(Boolean).join(' · ')
   const id = `pc-${post.slug}`
   return (
-    <Link href={href} className={`tile${feature ? ' tile--feature' : ''}`} aria-labelledby={`${id}-t`} aria-describedby={`${id}-d`}>
+    <Link href={href} className={`tile${feature ? ' tile--feature' : ''}${variant !== 'newsroom' ? ` tile--${variant}` : ''}`} aria-labelledby={`${id}-t`} aria-describedby={`${id}-d`}>
       {src ? (
         <div className="tile__media">
           <Picture
             src={src}
             alt={alt}
-            sizes={feature ? '(min-width: 1100px) 640px, (min-width: 640px) 90vw, 78vw' : '(min-width: 1100px) 380px, (min-width: 640px) 45vw, 78vw'}
+            sizes={feature ? '(min-width: 1160px) 1120px, (min-width: 640px) 94vw, 78vw' : '(min-width: 1100px) 380px, (min-width: 640px) 45vw, 78vw'}
             priority={priority}
             className="tile__img"
             focus={post.cardImage ? undefined : post.coverFocus}

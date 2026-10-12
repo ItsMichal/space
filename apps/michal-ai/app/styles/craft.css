@@ -39,19 +39,15 @@
 /* One rule per line of text, the width of that line's text, at the same offset under every line: a 1px text-decoration on
    each word (the words are inline-blocks, which a decoration on the link would not reach). No borders, no backgrounds,
    no pseudo-elements. */
-.hook__link {
-  text-decoration: none;
-}
+.hook__link,
 .hook__w {
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
   text-decoration-color: color-mix(in srgb, currentColor 34%, transparent);
-  transition:
-    transform 320ms var(--ease-out-soft),
-    opacity 260ms var(--ease-out-soft),
-    text-decoration-color 150ms var(--ease-out-soft);
 }
+.hook__link:hover,
+.hook__link:focus-visible,
 .hook__link:hover .hook__w,
 .hook__link:focus-visible .hook__w {
   text-decoration-color: currentColor;
@@ -74,19 +70,25 @@
 }
 
 /* ---------- 2. The rotating line (hero hook) ----------
-   One phrase at a time: the outgoing phrase fades and lifts 8px, the incoming one rises 8px into place, 320ms ease-out.
-   Opacity and transform only, no blur, no tilt, no overshoot. Positions come from data-slot, so every change is a CSS
-   transition that retargets from wherever it is (interruptible). Reference: the rotating headline on linear.app and
-   the text swap on apple.com's iPhone page. */
+   One phrase at a time, and never two at once: the outgoing phrase fades and lifts 8px in 140ms, then (after 160ms) the
+   incoming one rises 8px into place over 320ms. Opacity and transform only, no blur, no tilt, no overshoot. Phrases that
+   are not current are fully transparent and draw no underline or arrow (their links stay in the accessibility tree, so a
+   screen reader still finds every project), so nothing of a stacked neighbour can show under the current phrase. Positions come from data-slot, so every change is a CSS
+   transition that retargets from wherever it is (interruptible). Reference: the rotating headline on linear.app and the
+   text swap on apple.com's iPhone page. */
 .hook__item {
   transition: none;
+}
+.hook__item:not([data-current]) .hook__link,
+.hook__item:not([data-current]) .hook__w {
+  text-decoration: none;
 }
 .hook__w {
   display: inline-block;
   white-space: pre;
   transition:
-    transform 320ms var(--ease-out-soft),
-    opacity 260ms var(--ease-out-soft);
+    transform 140ms var(--ease-out-soft),
+    opacity 140ms linear;
 }
 .hook__item[data-slot='-1'] .hook__w {
   opacity: 0;
@@ -99,7 +101,9 @@
 .hook__item[data-current] .hook__w {
   opacity: 1;
   transform: none;
-  transition-delay: 120ms;
+  transition:
+    transform 320ms var(--ease-out-soft) 160ms,
+    opacity 280ms var(--ease-out-soft) 160ms;
 }
 .hook__roll[data-dragging] .hook__item[data-current] .hook__w {
   transition: none;
@@ -111,6 +115,9 @@
   transition-delay: 0ms;
 }
 @media (prefers-reduced-motion: reduce) {
+  .hook__item {
+    transition: none;
+  }
   .hook__w,
   .hook__item[data-current] .hook__w {
     transform: none !important;
