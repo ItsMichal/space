@@ -58,3 +58,6 @@ apps/michal-ai/assets-src/botanical-photo/search*/
 apps/michal-ai/assets-src/botanical-photo/*.json
 !apps/michal-ai/assets-src/botanical-photo/_meta.json
 apps/*/scripts/_*.mjs
+
+# build-images state (share-card stamps); cached in CI
+apps/michal-ai/.cache/
