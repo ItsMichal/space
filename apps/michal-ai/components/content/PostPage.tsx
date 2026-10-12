@@ -10,6 +10,8 @@ import type { PostKind } from '@/lib/content/types'
 import { ReadingTheme } from '@/components/site/ReadingTheme'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { PostExtras } from '@/components/content/PostExtras'
+import { LIVE_REACTIONS_ENABLED } from '@/lib/presence/flag'
+import { LiveReactions } from '@/components/presence/LiveReactions'
 import { postJsonLd, postMetadata as buildPostMetadata } from '@/lib/seo'
 
 /** Reading pages follow the OS light/dark setting (everything else is Birch only). */
@@ -74,6 +76,8 @@ export async function PostPage({ kind, slug, parent }: { kind: PostKind; slug: s
         back={parentPost ? { href: `/projects/${parentPost.slug}`, label: parentPost.title, series: post.series } : undefined}
         after={
           <>
+            {/* presence: reactions (dark behind LIVE_REACTIONS_ENABLED in lib/presence/flag.ts) */}
+            {LIVE_REACTIONS_ENABLED ? <LiveReactions slug={post.slug} /> : null}
             <OriginalLink url={post.originalUrl} />
             <PostExtras slug={post.slug} />
             {series ? <SeriesNav name={series.name} id={series.id} posts={series.posts} current={post.slug} /> : null}

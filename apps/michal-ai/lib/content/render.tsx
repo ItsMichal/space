@@ -18,6 +18,8 @@ import { Callout } from '@/components/mdx/Callout'
 import { Picture } from '@/components/media/Picture'
 import { Zoomable } from '@/components/media/Zoomable'
 import { PostPreviewLink } from '@/components/ui/PostPreviewLink'
+import { LIVE_REACTIONS_ENABLED } from '@/lib/presence/flag'
+import { blockIds } from '@/lib/presence/blocks'
 
 // Turn directive nodes into hast elements with custom tag names that we map to components.
 // Only leaf (`::name`) and container (`:::name`) directives are components; inline `:name` text
@@ -60,6 +62,28 @@ function rehypeUnwrapImages() {
   }
 }
 
+// Stable ids on paragraphs and h2-h4 so highlight reactions can attach to them (see lib/presence/blocks.ts for the trade-off).
+// Plain data attributes: invisible to readers and crawlers. Paragraphs shorter than 24 characters and captions are skipped.
+function rehypeBlockIds() {
+  const textOf = (n: { type: string; value?: string; children?: unknown[] }): string =>
+    n.type === 'text' ? (n.value ?? '') : ((n.children ?? []) as (typeof n)[]).map(textOf).join('')
+  return (tree: Root) => {
+    const blocks: { props: Record<string, unknown>; text: string }[] = []
+    visit(tree, 'element', (node, _i, parent) => {
+      if (!['p', 'h2', 'h3', 'h4'].includes(node.tagName)) return
+      if (parent && 'tagName' in parent && ['figure', 'figcaption'].includes(parent.tagName as string)) return
+      const text = textOf(node as never).trim()
+      if (text.length < 24 && node.tagName === 'p') return
+      if (!text) return
+      blocks.push({ props: (node.properties ??= {}), text })
+    })
+    const ids = blockIds(blocks.map((b) => b.text))
+    blocks.forEach((b, i) => {
+      b.props['data-block'] = ids[i]
+    })
+  }
+}
+
 type Props = Record<string, unknown>
 
 const components = {
@@ -93,6 +117,7 @@ export async function renderMarkdown(source: string): Promise<ReactNode> {
     .use(remarkRehype)
     .use(rehypeUnwrapImages)
     .use(rehypeSlug)
+    .use(LIVE_REACTIONS_ENABLED ? rehypeBlockIds : () => () => {})
     .use(rehypeAutolinkHeadings, { behavior: 'wrap' })
     .use(rehypePrettyCode, {
       theme: { light: 'github-light', dark: 'github-dark' },

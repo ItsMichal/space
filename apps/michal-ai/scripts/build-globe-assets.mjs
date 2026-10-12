@@ -79,8 +79,8 @@ function pathFor(pts, dx) {
       pen = false
       continue
     }
-    const jx = (rnd() - 0.5) * 0.9 + dx
-    const jy = (rnd() - 0.5) * 0.9 + dx * 0.6
+    const jx = dx
+    const jy = dx
     d += `${pen ? 'L' : 'M'}${(p.x + jx).toFixed(1)} ${(p.y + jy).toFixed(1)}`
     pen = true
   }
@@ -92,7 +92,6 @@ let coast2 = ''
 for (const r of deg) {
   if (r.every(([, lat]) => lat < -62)) continue
   coast1 += pathFor(r, 0)
-  coast2 += pathFor(r, 0.7)
 }
 let grat = ''
 for (let lat = -60; lat <= 60; lat += 30) {
@@ -105,16 +104,12 @@ for (let lon = -180; lon < 180; lon += 30) {
   for (let lat = -88; lat <= 88; lat += 4) pts.push([lon, lat])
   grat += pathFor(pts, 0)
 }
-const hp = project(-118.3526, 33.9164)
 const svg =
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${W}" fill="none" stroke-linecap="round" stroke-linejoin="round">` +
   `<circle cx="${C}" cy="${C}" r="${R}" fill="#f4f1e8"/>` +
   `<path d="${grat}" stroke="#6b6558" stroke-opacity=".22" stroke-width=".6"/>` +
-  `<path d="${coast2}" stroke="#2a2a22" stroke-opacity=".55" stroke-width=".8"/>` +
-  `<path d="${coast1}" stroke="#23231c" stroke-opacity=".9" stroke-width="1.15"/>` +
-  `<circle cx="${C}" cy="${C}" r="${R}" stroke="#23231c" stroke-width="1.3"/>` +
-  `<circle cx="${C}" cy="${C}" r="${R + 2.2}" stroke="#23231c" stroke-opacity=".35" stroke-width=".7"/>` +
-  `<g transform="translate(${hp.x.toFixed(1)} ${hp.y.toFixed(1)})" stroke="#2f5d3a" stroke-width="1.6"><path d="M0 0V-9M0 -5Q-5 -6 -6 -10M0 -6Q4 -7 5 -11"/><circle r="2" fill="#2f5d3a"/></g>` +
+  `<path d="${coast1}" stroke="#23231c" stroke-opacity=".55" stroke-width=".9"/>` +
+  `<circle cx="${C}" cy="${C}" r="${R}" stroke="#23231c" stroke-opacity=".7" stroke-width=".9"/>` +
   `</svg>`
 fs.writeFileSync(path.join(root, 'public', 'globe', 'fallback.svg'), svg)
 fs.writeFileSync(
