@@ -15,7 +15,8 @@
 .lede { margin: 0; font: 500 clamp(18px, 1.9vw, 24px)/1.35 var(--sans); max-width: 34ch; text-wrap: balance; }
 .cta { margin: 0; display: flex; flex-wrap: wrap; gap: 12px; }
 @media (min-width: 900px) { .hero-foot { grid-template-columns: 1.3fr 1fr; } .cta { justify-content: flex-end; } }
-@media (max-width: 899px) { .hero { justify-content: flex-start; padding-top: 104px; } .hero .field { height: 52%; } .hero-in { gap: var(--s3); } .hero .cta { margin-top: 4px; } .hero .btn { min-height: 48px; padding: 0 22px; font-size: 16px; } }
+/* below 900px the hero sizes to its content (no 100svh): the bar field sits under the buttons and the next heading starts inside the first 812px viewport */
+@media (max-width: 899px) { .hero { min-height: 0; justify-content: flex-start; padding: 104px 0 var(--s8); } .hero .field { height: 52%; } .hero-in { gap: var(--s3); } .hero .cta { margin-top: 4px; } .hero .btn { min-height: 48px; padding: 0 22px; font-size: 16px; } }
 
 .sec { padding-block: var(--s12) 0; }
 .two { display: grid; gap: var(--s3); padding-block: 0 var(--s12); }
