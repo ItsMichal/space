@@ -100,11 +100,12 @@ img { max-width: 100%; height: auto; display: block; }
 .c-paper { background: var(--paper); color: var(--paper-ink); }
 .c-blue { background: var(--blue); color: var(--ink); }
 .c-paper:focus-visible { outline-color: var(--blue-paper); }
-.cm { position: relative; flex: 1 0 auto; aspect-ratio: 16 / 9; overflow: hidden; background: var(--ink-3); }
+.cm { position: relative; flex: 0 0 auto; aspect-ratio: 16 / 9; overflow: hidden; background: var(--ink-3); }
 .cm img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .4s cubic-bezier(.4, 0, .25, 1); }
 a.card:hover .cm img { transform: scale(1.03); }
-.px .cm { aspect-ratio: 4 / 3; } .px .cm img { image-rendering: pixelated; }
-.cb { display: flex; flex-direction: column; gap: 6px; padding: 18px 20px 22px; }
+.h2 .cm, .h4 .cm, .side .cm { flex: 1 0 auto; }   /* only the tall cards let their image take the spare height; elsewhere the images line up along a row */
+.px .cm { aspect-ratio: 16 / 9; } .px .cm img { image-rendering: pixelated; }
+.cb { flex: 1 0 auto; display: flex; flex-direction: column; gap: 6px; padding: 18px 20px 22px; }
 .ey { margin: 0; font: 700 13px/1.3 var(--sans); letter-spacing: .02em; color: var(--mute); }
 .c-paper .ey { color: var(--paper-mute); } .c-blue .ey { color: var(--ink); }
 .ct { margin: 0; font: 750 clamp(19px, 1.7vw, 24px)/1.12 var(--display); letter-spacing: var(--dtrack); text-wrap: balance; overflow-wrap: anywhere; }
@@ -113,9 +114,10 @@ a.card:hover .cm img { transform: scale(1.03); }
 .c-paper .cx { color: var(--paper-mute); } .c-blue .cx { color: var(--ink); }
 .big .ct { font-size: clamp(24px, 2.6vw, 38px); } .big .cb { padding: 22px 24px 26px; }
 /* text-only cards: the title is the picture */
-.txt .cb { flex: 1; justify-content: flex-end; min-height: 190px; padding: 24px; }
+.txt .cb { justify-content: flex-end; min-height: 190px; padding: 24px; }
 .txt .ct { font-size: clamp(24px, 2.2vw, 34px); }
 .txt.big .ct { font-size: clamp(28px, 3vw, 44px); }
+.note .ct { font: 600 18px/1.35 var(--sans); } .note .cb { min-height: 0; justify-content: center; }
 .go { display: inline-block; transition: transform .4s cubic-bezier(.4, 0, .25, 1); } a.card:hover .go { transform: translateX(4px); }
 /* the logotype's leaning bars as the play mark; they stand up on hover or focus */
 .play { position: absolute; left: 16px; bottom: 16px; display: flex; gap: 5px; align-items: flex-end; height: 30px; z-index: 1; }
@@ -125,12 +127,12 @@ a.card:hover .cm img { transform: scale(1.03); }
 /* image with the text over a gradient (hero cards) */
 .ov { aspect-ratio: 4 / 3; }
 .ov .cm { position: absolute; inset: 0; aspect-ratio: auto; }
-.ov .cb { position: relative; z-index: 1; margin-top: auto; padding: 96px 24px 24px; background: linear-gradient(to top, #0f0e13f5 0, #0f0e13c4 50%, #0f0e1300); }
+.ov .cb { flex: 0 0 auto; position: relative; z-index: 1; margin-top: auto; padding: 96px 24px 24px; background: linear-gradient(to top, #0f0e13f5 0, #0f0e13c4 50%, #0f0e1300); }
 .ov .ct, .ov .cx { color: var(--paper); }
 /* work cards: media beside the text from 600px, when the card is two columns wide */
 .shots.cm { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; background: #fff; }
 .shots.cm img { position: static; width: auto; max-width: 100%; height: auto; max-height: 84px; border-radius: 10px; }
-/* spans: w2 two columns; w4 two columns only while the grid has four; f3 / f2 a full row while the grid has three / two columns; h2 two rows; t3 full width while the grid has three */
+/* spans: w2 two columns; w4 two columns / w34 three columns only while the grid has four (h4 two rows then too); f3 / f2 a full row while the grid has three / two columns; h2 two rows; t3 full width while the grid has three */
 @media (min-width: 600px) {
   .w2 { grid-column: span 2; }
   .ov.w2 { aspect-ratio: 16 / 10; }
@@ -142,7 +144,7 @@ a.card:hover .cm img { transform: scale(1.03); }
 }
 @media (min-width: 900px) and (max-width: 1279px) { .t3, .f3 { grid-column: 1 / -1; } }
 @media (min-width: 600px) and (max-width: 899px) { .f2 { grid-column: span 2; } }
-@media (min-width: 1280px) { .w4 { grid-column: span 2; } .h4 { grid-row: span 2; } .ov.h4 { aspect-ratio: auto; } }
+@media (min-width: 1280px) { .w4 { grid-column: span 2; } .w34 { grid-column: span 3; } .h4 { grid-row: span 2; } .ov.h4 { aspect-ratio: auto; } }
 /* a playing card: the media block holds the player, the text stays, with a close button and a plain link */
 .vframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .crow { margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 20px; align-items: center; }

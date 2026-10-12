@@ -10,3 +10,4 @@
 .gcover { width: 100%; border-radius: 18px; image-rendering: pixelated; }
 .pg .shots { display: flex; flex-wrap: wrap; gap: 16px; margin: var(--s4) 0; } .pg .shot { margin: 0; background: #fff; border-radius: 14px; overflow: hidden; } .pg .shot img { height: 120px; width: auto; max-width: none; }
 .lede2 { font: 600 clamp(20px, 2.4vw, 28px)/1.25 var(--display); letter-spacing: var(--dtrack); margin: 0 0 var(--s3); max-width: 36ch; }
+.pgw .grid + .gmeta { margin-top: var(--s3); }

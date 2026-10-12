@@ -142,7 +142,7 @@
   const mmss = (n) => `${Math.floor(n / 60)}:${String(n % 60).padStart(2, '0')}`;
   const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
   function clipCard(c, i) {
-    const a = el('a', `card${i === 0 ? ' w4 big' : ''}`);
+    const a = el('a', `card${i === 0 ? ' w4 h4 big' : ''}`);
     a.href = c.url; a.rel = 'noopener'; a.dataset.clip = c.id; a.dataset.title = c.title; a.dataset.clipcard = '';
     const m = el('div', 'cm'), img = el('img');
     img.src = c.thumb; img.width = 640; img.height = 360; img.loading = 'lazy'; img.decoding = 'async'; img.alt = `Thumbnail of the clip ${c.title}`;
