@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createMockReactionsApi } from '@/lib/presence/client'
 import { blockIds } from '@/lib/presence/blocks'
+import { profile } from '@/content/profile'
 import { HeroGlobe } from './HeroGlobe'
 import { HighlightReactions } from './HighlightReactions'
 import { ReactionBar } from './ReactionBar'
@@ -22,7 +23,7 @@ const PARAS = [
  * Dev lab. Top: a stand-in hero showing how HeroGlobe is placed (right on desktop, behind the text on phones).
  * Bottom: a sample article with reactions (no globe on articles). ?mock=1 uses in-memory data; ?pins=1 turns the dots on.
  */
-export function PresenceLab({ mock, pins }: { mock: boolean; pins: boolean }) {
+export function PresenceLab({ mock, pins, full }: { mock: boolean; pins: boolean; full: boolean }) {
   const ids = blockIds(PARAS)
   useState(() => {
     if (mock) setReactionsApi(createMockReactionsApi({ post: { clap: 4, heart: 2 }, [ids[0]]: { heart: 3, sprout: 1 }, [ids[2]]: { fire: 2 } }))
@@ -30,13 +31,18 @@ export function PresenceLab({ mock, pins }: { mock: boolean; pins: boolean }) {
   return (
     <div className="presence-demo">
       <section className="presence-demo__hero">
-        <HeroGlobe pins={pins} mock={mock} />
+        <HeroGlobe pins={pins} mock={mock} variant={full ? 'full' : 'bleed'} />
         <div className="presence-demo__text">
-          <h1 className="font-display text-[clamp(46px,13vw,60px)] leading-none">Hero text</h1>
-          <p className="lede mt-space-6 max-w-[40ch]">Stand-in copy to check contrast and placement against the globe.</p>
-          <p className="mt-space-6 font-serif text-[16px] text-ink-muted">
+          <h1 className="font-display text-[clamp(46px,13vw,60px)] leading-none">
+            {profile.firstName}
+            <br />
+            {profile.lastName}
+          </h1>
+          <p className="lede mt-space-6 max-w-[40ch]">{profile.role}</p>
+          <p className="mt-space-6 max-w-[44ch] font-serif text-[18px] leading-[1.55] text-ink-muted">{profile.description}</p>
+          <p className="mt-space-6 font-serif text-[16px]">
             <a className="link" href="#sample">
-              A link over the globe
+              GitHub
             </a>
           </p>
         </div>

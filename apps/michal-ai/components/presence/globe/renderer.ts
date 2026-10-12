@@ -1,27 +1,14 @@
-// WebGL2 renderer for the calm point globe (dot-grid land, hairline coast and graticule, one outline).
-// Earlier ink/hatch experiment replaced by a precedent-backed style; see docs/presence.md.
-// WebGL2 renderer. One canvas, two programs:
-//  - disc: a full-canvas triangle; the fragment shader draws the sphere (paper, land wash and hatching, limb shading drawn as
-//    pen hatching, wobbly double outline) from the pixel's position on the sphere.
-//  - strokes: instanced ribbons for the coastlines and the graticule. Each segment is a screen-space quad whose width varies
-//    and whose edges are displaced by noise along the arc, drawn twice with different seeds so the line reads as pen, not vector.
-// Orthographic projection, no depth buffer; back-facing strokes are drawn fainter (as if seen through the paper).
+// WebGL2 renderer for the background dot globe. One canvas, one program, transparent: the page shows through.
+// Land is an equal-area (Fibonacci sphere) point set filtered against the Natural Earth land mask, so there are no polar
+// convergence streaks. Each dot is an instanced quad; size and alpha fall off toward the limb, back-facing dots are not drawn.
+// No coastline, graticule, rim or fill. Single ink colour.
 import { toVec } from '@/lib/presence/geo'
 import type { Ring } from './data'
 
 export interface Palette {
-  paper: [number, number, number]
   ink: [number, number, number]
-  moss: [number, number, number]
-  graphite: [number, number, number]
 }
-
-export const LIGHT: Palette = {
-  paper: [0.973, 0.965, 0.935],
-  ink: [0.13, 0.13, 0.11],
-  moss: [0.28, 0.43, 0.3],
-  graphite: [0.24, 0.24, 0.22],
-}
+export const LIGHT: Palette = { ink: [0.13, 0.13, 0.11] }
 
 /** Column-major 3x3: world -> view. Centres (lat0, lon0): rotate about Y by -lon0, then about X by +lat0. */
 export function rotation(lat0: number, lon0: number): Float32Array {
@@ -31,17 +18,15 @@ export function rotation(lat0: number, lon0: number): Float32Array {
   const sa = Math.sin(a)
   const cb = Math.cos(b)
   const sb = Math.sin(b)
-  // M = Rx(b) * Ry(a); Ry: x' = x ca + z sa, z' = -x sa + z ca. Rx: y' = y cb - z sb, z' = y sb + z cb.
   const m = [
     [ca, 0, sa],
     [sb * sa, cb, -sb * ca],
     [-cb * sa, sb, cb * ca],
   ]
-  // column-major
   return new Float32Array([m[0][0], m[1][0], m[2][0], m[0][1], m[1][1], m[2][1], m[0][2], m[1][2], m[2][2]])
 }
 
-/** Project lat/lon to view space (x right, y up, in units of the globe radius; z > 0 faces the viewer). */
+/** Project lat/lon to view space (x right, y up, units of the globe radius; z > 0 faces the viewer). */
 export function projectPoint(lat: number, lon: number, rot: Float32Array): { x: number; y: number; z: number } {
   const [x, y, z] = toVec(lat, lon)
   return {
@@ -51,101 +36,32 @@ export function projectPoint(lat: number, lon: number, rot: Float32Array): { x: 
   }
 }
 
-const NOISE = /* glsl */ `
-float h1(float n){ return fract(sin(n*127.1)*43758.5453); }
-float vn(float x){ float i=floor(x); float f=fract(x); f=f*f*(3.-2.*f); return mix(h1(i),h1(i+1.),f); }
-float h2(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
-float vn2(vec2 p){ vec2 i=floor(p); vec2 f=fract(p); f=f*f*(3.-2.*f);
-  return mix(mix(h2(i),h2(i+vec2(1,0)),f.x), mix(h2(i+vec2(0,1)),h2(i+vec2(1,1)),f.x), f.y); }
-`
-
-const DISC_VS = `#version 300 es
-void main(){ vec2 p = vec2((gl_VertexID<<1)&2, gl_VertexID&2); gl_Position = vec4(p*2.-1., 0., 1.); }`
-
-const DISC_FS = `#version 300 es
+const VS = `#version 300 es
 precision highp float;
-${NOISE}
-uniform vec2 uRes; uniform float uR; uniform float uDpr; uniform mat3 uRot; uniform sampler2D uLand;
-uniform vec3 uPaper; uniform vec3 uInk; uniform vec3 uMoss; uniform vec3 uGraphite;
-out vec4 o;
-// Calm point globe (same family as GitHub's and Stripe's): land is a regular lat/lon dot grid, one hairline outline.
+layout(location=0) in vec2 aCorner;   // -1..1
+layout(location=1) in vec3 aPos;      // unit vector, world space
+uniform mat3 uRot; uniform vec2 uRes; uniform float uR; uniform float uDpr; uniform float uDot;
+out vec2 vC; out float vA;
 void main(){
-  vec2 px = gl_FragCoord.xy - .5*uRes;
-  vec2 p = px/uR;
-  float r = length(p);
-  float aa = 1.0/uR;
-  float lw = .8*uDpr/uR;
-  float ring = 1. - smoothstep(lw, lw+aa, abs(r-1.));
-  vec3 rgb = vec3(0.); float a = 0.;
-  if (r < 1.0) {
-    float z = sqrt(max(1.-r*r, 0.));
-    vec3 v = vec3(p, z);
-    vec3 w = transpose(uRot)*v;
-    float lat = asin(clamp(w.y,-1.,1.));
-    float lon = atan(w.x, w.z);
-    // dot grid, ~2.4 degrees; longitude spacing widens with latitude so dots stay evenly spread
-    float dl = .042;
-    float latC = (floor(lat/dl)+.5)*dl;
-    float lonStep = dl/max(cos(latC), .12);
-    float lonC = (floor(lon/lonStep)+.5)*lonStep;
-    float land = texture(uLand, vec2(lonC/6.2831853+.5, .5-latC/3.1415927)).r;
-    vec2 dpos = vec2((lon-lonC)*cos(latC), lat-latC) * uR;
-    float d = length(dpos);
-    float rad = (.75 + .35*z) * uDpr;
-    float dot_ = (1. - smoothstep(rad-.6, rad+.4, d)) * step(.5, land);
-    vec3 c = mix(uPaper, vec3(1.), .5);
-    c = mix(c, uInk, dot_*.5);
-    rgb = c; a = 1.;
-  }
-  rgb = uInk*.4*ring + rgb*(1.-ring*.4);
-  a = ring*.4 + a*(1.-ring*.4);
-  o = vec4(rgb*(a>0.?1.:0.), a);
+  vec3 p = uRot*aPos;
+  float z = p.z;
+  float vis = smoothstep(0.02, 0.5, z);           // fades out toward the limb, nothing on the far side
+  float size = uDot*uDpr*(0.45 + 0.55*smoothstep(0.0, 0.9, z));
+  vec2 px = p.xy*uR + aCorner*(size*0.5 + 1.0);
+  gl_Position = vec4(px/(.5*uRes), 0., 1.);
+  vC = aCorner*(size*0.5 + 1.0); vA = vis; vSize = size;
 }`
+// (vSize declared below via replace to keep the template readable)
+const VS_FIXED = VS.replace('out vec2 vC; out float vA;', 'out vec2 vC; out float vA; out float vSize;')
 
-const LINE_VS = `#version 300 es
+const FS = `#version 300 es
 precision highp float;
-${NOISE}
-layout(location=0) in vec2 aCorner;
-layout(location=1) in vec3 aP0;
-layout(location=2) in vec3 aP1;
-layout(location=3) in vec2 aMeta; // arc position, kind (0 coast, 1 graticule)
-uniform mat3 uRot; uniform vec2 uRes; uniform float uR; uniform float uDpr; uniform float uPass;
-out float vSide; out float vAlpha; out float vS;
-void main(){
-  vec3 a = uRot*aP0; vec3 b = uRot*aP1;
-  vec3 pv = mix(a,b,aCorner.x);
-  vec2 d = b.xy - a.xy;
-  float dl = length(d);
-  vec2 dir = dl > 1e-6 ? d/dl : vec2(1.,0.);
-  vec2 nrm = vec2(-dir.y, dir.x);
-  float segLen = length(b-a);
-  float s = aMeta.x + aCorner.x*segLen;
-  float seed = uPass*41. + aMeta.y*17.;
-  float kind = aMeta.y;
-  // pen tremor (high frequency, small) plus slow drift (low frequency, larger)
-  float tremor = 0.;
-  float drift = 0.;
-  float w = (kind > .5 ? .6 : .9) * uDpr;
-  if (uPass > .5) w *= .62;
-  vec2 pxc = pv.xy*uR + nrm*(tremor+drift)*uDpr*(kind>.5 ? .35 : 1.) + vec2(uPass*.9, -uPass*.7)*uDpr;
-  vec2 cap = dir*(aCorner.x*2.-1.)*w*.5;
-  pxc += nrm*aCorner.y*w*.5 + cap;
-  gl_Position = vec4(pxc/(.5*uRes), 0., 1.);
-  float front = smoothstep(-.07, .06, pv.z);
-  vAlpha = mix(.06, 1., front) * (kind > .5 ? .14 : .32);
-  vSide = aCorner.y; vS = s;
-}`
-
-const LINE_FS = `#version 300 es
-precision highp float;
-${NOISE}
 uniform vec3 uInk;
-in float vSide; in float vAlpha; in float vS;
+in vec2 vC; in float vA; in float vSize;
 out vec4 o;
 void main(){
-  float edge = 1. - smoothstep(.5, 1., abs(vSide));
-  float grain = 1.;
-  float a = edge*grain*vAlpha;
+  float d = length(vC);
+  float a = (1. - smoothstep(vSize*.5 - .5, vSize*.5 + .5, d)) * vA;
   o = vec4(uInk*a, a);
 }`
 
@@ -156,59 +72,13 @@ function compile(gl: WebGL2RenderingContext, type: number, src: string): WebGLSh
   if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s) ?? 'shader')
   return s
 }
-function program(gl: WebGL2RenderingContext, vs: string, fs: string): WebGLProgram {
-  const p = gl.createProgram()!
-  gl.attachShader(p, compile(gl, gl.VERTEX_SHADER, vs))
-  gl.attachShader(p, compile(gl, gl.FRAGMENT_SHADER, fs))
-  gl.linkProgram(p)
-  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p) ?? 'link')
-  return p
-}
 
-/** Build the stroke instances: coastlines (kind 0) and a 30 degree graticule (kind 1). */
-function buildSegments(rings: Ring[]): { data: Float32Array; count: number } {
-  const out: number[] = []
-  let ringIdx = 0
-  const push = (a: [number, number, number], b: [number, number, number], s: number, kind: number) => {
-    out.push(a[0], a[1], a[2], b[0], b[1], b[2], s, kind)
-  }
-  const chain = (pts: [number, number][], kind: number, skip?: (a: [number, number], b: [number, number]) => boolean) => {
-    let s = ringIdx * 37.3
-    ringIdx++
-    for (let i = 0; i + 1 < pts.length; i++) {
-      const a = pts[i]
-      const b = pts[i + 1]
-      const va = toVec(a[1], a[0])
-      const vb = toVec(b[1], b[0])
-      const len = Math.hypot(va[0] - vb[0], va[1] - vb[1], va[2] - vb[2])
-      if (!skip?.(a, b)) push(va, vb, s, kind)
-      s += len
-    }
-  }
-  for (const r of rings) {
-    const pts: [number, number][] = []
-    for (let i = 0; i < r.length; i += 2) pts.push([r[i], r[i + 1]])
-    // Skip the artificial cuts along the antimeridian and the south pole edge.
-    chain(pts, 0, (a, b) => (Math.abs(a[0]) > 179.9 && Math.abs(b[0]) > 179.9 && a[0] === b[0]) || (a[1] < -84 && b[1] < -84))
-  }
-  for (let lat = -60; lat <= 60; lat += 30) {
-    const pts: [number, number][] = []
-    for (let lon = -180; lon <= 180; lon += 6) pts.push([lon, lat])
-    chain(pts, 1)
-  }
-  for (let lon = -180; lon < 180; lon += 30) {
-    const pts: [number, number][] = []
-    for (let lat = -84; lat <= 84; lat += 6) pts.push([lon, lat])
-    chain(pts, 1)
-  }
-  return { data: new Float32Array(out), count: out.length / 8 }
-}
-
-function landTexture(rings: Ring[]): HTMLCanvasElement {
+/** Land mask as pixel data (1024x512, red channel), from the polygon rings. */
+function landMask(rings: Ring[]): Uint8ClampedArray {
   const c = document.createElement('canvas')
   c.width = 1024
   c.height = 512
-  const g = c.getContext('2d')!
+  const g = c.getContext('2d', { willReadFrequently: true })!
   g.fillStyle = '#000'
   g.fillRect(0, 0, 1024, 512)
   g.fillStyle = '#fff'
@@ -223,7 +93,25 @@ function landTexture(rings: Ring[]): HTMLCanvasElement {
     g.closePath()
     g.fill()
   }
-  return c
+  return g.getImageData(0, 0, 1024, 512).data
+}
+
+/** Equal-area land points (unit vectors). N total points on the sphere, about 30% land. */
+export function landPoints(rings: Ring[], n = 22000): Float32Array {
+  const mask = landMask(rings)
+  const out: number[] = []
+  const golden = 137.50776405
+  for (let i = 0; i < n; i++) {
+    const lat = (Math.asin(1 - (2 * (i + 0.5)) / n) * 180) / Math.PI
+    const lon = ((i * golden) % 360) - 180
+    const x = Math.min(1023, Math.floor(((lon + 180) / 360) * 1024))
+    const y = Math.min(511, Math.floor(((90 - lat) / 180) * 512))
+    if (mask[(y * 1024 + x) * 4] < 128) continue
+    if (lat < -60) continue // Antarctica reads as noise at this size
+    const v = toVec(lat, lon)
+    out.push(v[0], v[1], v[2])
+  }
+  return new Float32Array(out)
 }
 
 export interface GlobeRenderer {
@@ -231,6 +119,9 @@ export interface GlobeRenderer {
   draw(lat0: number, lon0: number): void
   destroy(): void
 }
+
+/** Fraction of the canvas half-size used by the sphere. */
+export const SPHERE_FRACTION = 0.96
 
 /** Returns null when WebGL2 is unavailable or setup fails (the caller shows the static drawing instead). */
 export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette: Palette = LIGHT): GlobeRenderer | null {
@@ -243,90 +134,59 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
   if (!gl) return null
   try {
     const g = gl
-    const disc = program(g, DISC_VS, DISC_FS)
-    const lines = program(g, LINE_VS, LINE_FS)
-    const { data, count } = buildSegments(rings)
+    const prog = g.createProgram()!
+    g.attachShader(prog, compile(g, g.VERTEX_SHADER, VS_FIXED))
+    g.attachShader(prog, compile(g, g.FRAGMENT_SHADER, FS))
+    g.linkProgram(prog)
+    if (!g.getProgramParameter(prog, g.LINK_STATUS)) throw new Error(g.getProgramInfoLog(prog) ?? 'link')
 
-    const tex = g.createTexture()!
-    g.bindTexture(g.TEXTURE_2D, tex)
-    g.texImage2D(g.TEXTURE_2D, 0, g.RGBA, g.RGBA, g.UNSIGNED_BYTE, landTexture(rings))
-    g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MIN_FILTER, g.LINEAR)
-    g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MAG_FILTER, g.LINEAR)
-    g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_S, g.REPEAT)
-    g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_T, g.CLAMP_TO_EDGE)
-
+    const pts = landPoints(rings)
+    const count = pts.length / 3
     const vao = g.createVertexArray()!
     g.bindVertexArray(vao)
     const corners = g.createBuffer()!
     g.bindBuffer(g.ARRAY_BUFFER, corners)
-    g.bufferData(g.ARRAY_BUFFER, new Float32Array([0, -1, 0, 1, 1, -1, 1, 1]), g.STATIC_DRAW)
+    g.bufferData(g.ARRAY_BUFFER, new Float32Array([-1, -1, -1, 1, 1, -1, 1, 1]), g.STATIC_DRAW)
     g.enableVertexAttribArray(0)
     g.vertexAttribPointer(0, 2, g.FLOAT, false, 0, 0)
     const inst = g.createBuffer()!
     g.bindBuffer(g.ARRAY_BUFFER, inst)
-    g.bufferData(g.ARRAY_BUFFER, data, g.STATIC_DRAW)
-    const stride = 32
-    for (const [loc, size, off] of [
-      [1, 3, 0],
-      [2, 3, 12],
-      [3, 2, 24],
-    ] as const) {
-      g.enableVertexAttribArray(loc)
-      g.vertexAttribPointer(loc, size, g.FLOAT, false, stride, off)
-      g.vertexAttribDivisor(loc, 1)
-    }
+    g.bufferData(g.ARRAY_BUFFER, pts, g.STATIC_DRAW)
+    g.enableVertexAttribArray(1)
+    g.vertexAttribPointer(1, 3, g.FLOAT, false, 0, 0)
+    g.vertexAttribDivisor(1, 1)
     g.bindVertexArray(null)
-    const emptyVao = g.createVertexArray()!
 
-    const U = (p: WebGLProgram, n: string) => g.getUniformLocation(p, n)
-    const u = {
-      d: { res: U(disc, 'uRes'), r: U(disc, 'uR'), dpr: U(disc, 'uDpr'), rot: U(disc, 'uRot'), land: U(disc, 'uLand'), paper: U(disc, 'uPaper'), ink: U(disc, 'uInk'), moss: U(disc, 'uMoss'), gr: U(disc, 'uGraphite') },
-      l: { rot: U(lines, 'uRot'), res: U(lines, 'uRes'), r: U(lines, 'uR'), dpr: U(lines, 'uDpr'), pass: U(lines, 'uPass'), ink: U(lines, 'uInk') },
-    }
+    const U = (n: string) => g.getUniformLocation(prog, n)
+    const u = { rot: U('uRot'), res: U('uRes'), r: U('uR'), dpr: U('uDpr'), dot: U('uDot'), ink: U('uInk') }
     let px = 1
     let dprNow = 1
+    let cssSize = 1
     g.enable(g.BLEND)
     g.blendFunc(g.ONE, g.ONE_MINUS_SRC_ALPHA)
 
     return {
-      resize(cssSize, dpr) {
+      resize(size, dpr) {
         dprNow = dpr
-        px = Math.max(1, Math.round(cssSize * dpr))
+        cssSize = size
+        px = Math.max(1, Math.round(size * dpr))
         canvas.width = px
         canvas.height = px
         g.viewport(0, 0, px, px)
       },
       draw(lat0, lon0) {
-        const rot = rotation(lat0, lon0)
-        const R = px * 0.5 * 0.94
         g.clearColor(0, 0, 0, 0)
         g.clear(g.COLOR_BUFFER_BIT)
-        g.useProgram(disc)
-        g.uniform2f(u.d.res, px, px)
-        g.uniform1f(u.d.r, R)
-        g.uniform1f(u.d.dpr, dprNow)
-        g.uniformMatrix3fv(u.d.rot, false, rot)
-        g.uniform3fv(u.d.paper, palette.paper)
-        g.uniform3fv(u.d.ink, palette.ink)
-        g.uniform3fv(u.d.moss, palette.moss)
-        g.uniform3fv(u.d.gr, palette.graphite)
-        g.activeTexture(g.TEXTURE0)
-        g.bindTexture(g.TEXTURE_2D, tex)
-        g.uniform1i(u.d.land, 0)
-        g.bindVertexArray(emptyVao)
-        g.drawArrays(g.TRIANGLES, 0, 3)
-
-        g.useProgram(lines)
-        g.uniformMatrix3fv(u.l.rot, false, rot)
-        g.uniform2f(u.l.res, px, px)
-        g.uniform1f(u.l.r, R)
-        g.uniform1f(u.l.dpr, dprNow)
-        g.uniform3fv(u.l.ink, palette.ink)
+        g.useProgram(prog)
+        g.uniformMatrix3fv(u.rot, false, rotation(lat0, lon0))
+        g.uniform2f(u.res, px, px)
+        g.uniform1f(u.r, px * 0.5 * SPHERE_FRACTION)
+        g.uniform1f(u.dpr, dprNow)
+        // dot diameter in CSS px grows gently with the globe so it keeps the same look from 300 to 900 px
+        g.uniform1f(u.dot, Math.max(1.1, Math.min(2.3, cssSize / 260)))
+        g.uniform3fv(u.ink, palette.ink)
         g.bindVertexArray(vao)
-        for (const pass of [0]) {
-          g.uniform1f(u.l.pass, pass)
-          g.drawArraysInstanced(g.TRIANGLE_STRIP, 0, 4, count)
-        }
+        g.drawArraysInstanced(g.TRIANGLE_STRIP, 0, 4, count)
         g.bindVertexArray(null)
       },
       destroy() {
@@ -337,6 +197,3 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
     return null
   }
 }
-
-/** Radius of the sphere inside the canvas, as a fraction of the canvas half-size (matches `R` in draw). */
-export const SPHERE_FRACTION = 0.94

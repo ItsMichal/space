@@ -11,7 +11,7 @@ import { createRenderer, projectPoint, rotation, SPHERE_FRACTION, type GlobeRend
 import './presence.css'
 
 const DEG_PER_S = 2.4
-const START = { lat: 18, lon: -100 }
+const START = { lat: 18, lon: -100 } // must match GLOBE_FALLBACK_VIEW
 const FALLBACK_FRACTION = GLOBE_FALLBACK_VIEW.radius / (GLOBE_FALLBACK_VIEW.size / 2)
 
 interface Props {
@@ -19,6 +19,8 @@ interface Props {
   pins?: boolean
   /** Demo only: fixed made-up visitors instead of the Worker. */
   mock?: boolean
+  /** 'bleed' (default): positioned by the component's CSS to run off the right/top edge of a `position:relative; overflow:hidden` hero. 'full': fills its parent as a square; the parent positions it. */
+  variant?: 'bleed' | 'full'
   className?: string
 }
 
@@ -27,7 +29,7 @@ interface Props {
  * Not interactive (pointer-events none, aria-hidden, nothing focusable). Fills its parent's width as a square; the parent
  * decides position, size and opacity (see docs/presence.md). Static image under reduced motion or without WebGL2.
  */
-export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, className = '' }: Props) {
+export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'bleed', className = '' }: Props) {
   const wrap = useRef<HTMLDivElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
   const layer = useRef<HTMLDivElement>(null)
@@ -164,7 +166,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, className = '' }
   )
 
   return (
-    <div ref={wrap} className={`hero-globe ${className}`} data-mode={mode} aria-hidden="true">
+    <div ref={wrap} className={`hero-globe hero-globe--${variant} ${className}`} data-mode={mode} aria-hidden="true">
       {/* Static drawing of the same globe: server-rendered, shown under reduced motion / without WebGL2. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="hero-globe__still" src="/globe/fallback.svg" alt="" width={400} height={400} decoding="async" />
