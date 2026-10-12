@@ -1,6 +1,6 @@
 ---
 title: "Week 3→4 - Integration"
-slug: mountaintop-week-3-4-integration
+slug: week-3-4-integration
 kind: article
 description: "A short week with one big milestone: hiking-pole controls finally talk to Unity from custom Arduino hardware over a serial connection."
 date: 2023-02-02

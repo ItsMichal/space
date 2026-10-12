@@ -1,6 +1,6 @@
 ---
 title: "Experiments in Analog- and a failed attempt at a screaming robot."
-slug: experiments-in-analog-and-a-failed-attempt-at-a-screaming-robot
+slug: analog-experiments-screaming-robot
 kind: article
 description: "Analog! We technically already delved into using analog with the MedPuck — but it turns out we’re actually going to dive deeper into it."
 date: 2021-11-06

@@ -1,6 +1,6 @@
 ---
 title: "Week 5→6 - SPAAAAACE!"
-slug: mountaintop-week-5-6-spaaaaace
+slug: week-5-6-space
 kind: article
 description: "T9Hacks week: a space theme, a new UI, a Hans Zimmer beatmap made in 15 minutes, and a humbling attempt at 3D character modelling."
 date: 2023-02-16

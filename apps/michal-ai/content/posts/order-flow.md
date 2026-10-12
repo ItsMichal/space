@@ -1,6 +1,6 @@
 ---
 title: "Starlink Order Flow"
-slug: spacex-starlink-order-flow
+slug: order-flow
 kind: project
 description: "How my team and I rewrote the Starlink.com order flow from scratch in React."
 date: 2025-06-04
@@ -8,7 +8,7 @@ tags: ["Web", "TypeScript", "Next.js"]
 cover: /media/spacex-starlink-order-flow/cover.webp
 coverAlt: "Starlink order page in dark mode with plan options, a total due today and an FAQ"
 coverFocus: "50% 30%"
-parent: spacex-starlink-general-projects
+parent: starlink
 series: "Selected pieces"
 order: 1
 role: "Engineer, order flow rewrite in React"
