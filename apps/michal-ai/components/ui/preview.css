@@ -59,7 +59,7 @@
   min-width: 0;
 }
 .pv-t {
-  font: 600 15px/1.25 var(--font-sans);
+  font: 500 15px/1.25 var(--font-sans);
   letter-spacing: -0.01em;
 }
 .pv-d {

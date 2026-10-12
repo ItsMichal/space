@@ -146,27 +146,28 @@ export function HeroHook({ stem, items, label = 'Recent work' }: Props) {
           {items.map((it, i) => (
             <li key={it.href} className="hook__item" data-slot={slotOf(s, i)} data-current={i === current ? '' : undefined}>
               <Link href={it.href} className="hook__link" tabIndex={i === current ? 0 : -1} data-hook-link>
-                {it.text.split(' ').map((w, k, all) => {
-                  const word = (
-                    <span className="hook__w" style={{ ['--w' as string]: k } as React.CSSProperties}>
-                      {w}
+                {(() => {
+                  const words = it.text.split(' ')
+                  // Each word carries its own trailing space, so the underline is continuous along a line and, on a wrapped
+                  // line, is exactly as wide as that line's text. The words are inline-blocks (they animate), which a
+                  // text-decoration on the link cannot reach, so the decoration lives on the words themselves.
+                  const word = (w: string, k: number) => (
+                    <span key={k} className="hook__w" style={{ ['--w' as string]: k } as React.CSSProperties}>
+                      {k < words.length - 1 ? `${w} ` : w}
                     </span>
                   )
+                  // The last two words and the arrow never separate: no orphaned word, no arrow alone on a line.
+                  const split = Math.max(0, words.length - 2)
                   return (
-                    <Fragment key={k}>
-                      {k ? ' ' : null}
-                      {k === all.length - 1 ? (
-                        // The last word and the arrow never separate: the arrow cannot land alone on a new line.
-                        <span className="hook__end">
-                          {word}
-                          <ArrowUpRight aria-hidden className="hook__arrow" size={'0.62em'} strokeWidth={1.4} />
-                        </span>
-                      ) : (
-                        word
-                      )}
-                    </Fragment>
+                    <>
+                      {words.slice(0, split).map((w, k) => word(w, k))}
+                      <span className="hook__end">
+                        {words.slice(split).map((w, k) => word(w, split + k))}
+                        <ArrowUpRight aria-hidden className="hook__arrow" size={'0.62em'} strokeWidth={1.4} />
+                      </span>
+                    </>
                   )
-                })}
+                })()}
               </Link>
             </li>
           ))}
