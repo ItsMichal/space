@@ -36,14 +36,9 @@
   }
 }
 
-/* Texture: paper grain. Reason: so flat color reads as paper, not screen. A 160px static noise tile (about 4% in
-   Birch, multiply; soft-light in Basalt) painted on <html> beneath everything, so it never sits over images, text
-   or the glass. No animation, no filter, no repaint cost. */
+/* Paper: flat colour. The 4 percent noise tile was removed: none of the reference sites (linear.app, stripe.com, apple.com, family.co) lays a grain over the page, and it was one more full-page layer. */
 html {
   background-color: var(--paper);
-  background-image: var(--grain);
-  background-size: 160px 160px;
-  background-blend-mode: var(--grain-blend);
   scroll-behavior: smooth;
   scroll-padding-top: 96px;
   -webkit-text-size-adjust: 100%;
@@ -367,6 +362,7 @@ body {
   }
   .gallery {
     margin: 0 0 var(--space-12);
+    overflow-x: clip;
   }
   .gallery__list {
     display: flex;
@@ -1094,17 +1090,23 @@ html[data-backdrop-gl] .backdrop-css {
 }
 .hook__next {
   flex: none;
-  margin-left: 0.6em;
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  margin: var(--space-2) 0 0;
+  padding: 0 var(--space-3);
   min-height: 44px;
-  font: italic 400 0.6em/1 var(--font-display);
-  color: var(--ink-muted);
-  text-decoration: underline;
-  text-decoration-color: var(--hairline);
-  text-underline-offset: 0.2em;
-  background: none;
-  border: 0;
+  font: 500 15px/1 var(--font-sans);
+  color: var(--ink);
+  background: color-mix(in srgb, var(--paper-raised) 70%, transparent);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
   cursor: pointer;
 }
 .hook__next:hover {
   color: var(--accent);
+}
+.hook__next:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }

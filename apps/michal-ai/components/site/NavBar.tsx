@@ -29,6 +29,10 @@ function MenuIcon({ open }: { open: boolean }) {
  * indicator, can be added later and will merge with it). Below 640px the pill folds open into a menu
  * sheet that unfolds from, and folds back into, the pill (44px targets, safe-area aware).
  */
+// The nav is a clean frosted bar by default (blur and saturate, hairline edge, soft shadow). The SVG-displacement
+// Liquid Glass path stays in the code behind NEXT_PUBLIC_GLASS=refract until it has a measured precedent.
+const NAV_GLASS = process.env.NEXT_PUBLIC_GLASS === 'refract' ? 'auto' : 'frost'
+
 export function NavBar({ previews }: { previews?: { work: MenuPreview[]; writing: MenuPreview[] } }) {
   const pathname = usePathname()
   const ns = useGlassNamespace('nav')
@@ -55,13 +59,12 @@ export function NavBar({ previews }: { previews?: { work: MenuPreview[]; writing
     }
   }, [open])
 
-  // Scroll is locked only while the sheet is open (phone widths; CSS scopes it). Focus moves into the sheet on open and
-  // returns to the button on close, if it was inside.
+  // Scroll is locked only while the sheet is open (phone widths; CSS scopes it). Focus stays on the toggle on open (the
+  // sheet follows it in tab order, so keyboard users land on the first link next) and returns to it on close.
   useEffect(() => {
     const root = document.documentElement
     if (open) {
       root.setAttribute('data-nav-open', '')
-      document.getElementById('nav-sheet')?.querySelector<HTMLElement>('a')?.focus({ preventScroll: true })
     } else {
       root.removeAttribute('data-nav-open')
       if (wasOpen.current && document.getElementById('nav-sheet')?.contains(document.activeElement)) buttonRef.current?.focus({ preventScroll: true })
@@ -79,6 +82,7 @@ export function NavBar({ previews }: { previews?: { work: MenuPreview[]; writing
     <>
     <div aria-hidden className="nav-scrim" data-open={open ? '' : undefined} onClick={close} />
     <GlassEffectContainer
+      engine={NAV_GLASS}
       as="header"
       spacing={16}
       className="pointer-events-none fixed inset-x-0 z-50 flex flex-col items-center gap-[10px]"

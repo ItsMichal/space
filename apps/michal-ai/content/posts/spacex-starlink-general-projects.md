@@ -8,6 +8,7 @@ tags: ["Web", "TypeScript", "Next.js"]
 cover: /media/spacex-starlink-general-projects/cover.webp
 coverAlt: "Close-up of a black and gold jet wing and engine with SpaceX branding, lit at dusk"
 coverFocus: "28% 60%"
+cardImage: none
 priority: 10
 featured: true
 role: "Software engineer"

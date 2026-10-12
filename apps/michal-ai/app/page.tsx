@@ -10,6 +10,7 @@ import { ProjectList } from '@/components/site/ProjectList'
 import { Showcase } from '@/components/work/Showcase'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { profile } from '@/content/profile'
+import { Disclosure } from '@/components/ui/Disclosure'
 import { ExperienceList, type ExperienceItem } from '@/components/ui/ExperienceList'
 import { homeMetadata, profilePageJsonLd, websiteJsonLd } from '@/lib/seo'
 
@@ -52,7 +53,7 @@ export default function Home() {
         intro={hooks.length ? <HeroHook stem={profile.hookStem} items={hooks} /> : undefined}
       />
 
-      <section id="work" aria-labelledby="work-h" className="mt-space-12">
+      <section id="work" aria-labelledby="work-h" className="mt-space-8 md:mt-space-12">
         <h2 id="work-h" className={h2}>
           Selected work
         </h2>
@@ -77,12 +78,21 @@ export default function Home() {
         <h2 id="about-h" className={h2}>
           About
         </h2>
-        <div className="max-w-[60ch] space-y-space-4 font-serif text-[19px] leading-[1.5] md:text-[21px]">
+        <div className="max-w-[60ch] font-serif text-[19px] leading-[1.5] md:text-[21px]">
           <p>{profile.about[0]}</p>
-          <p className="text-ink-muted">{profile.about[1]}</p>
         </div>
-        <div className="mt-space-8">
-          <ExperienceList items={experience} label="Experience" />
+        {/* Desktop: everything in view. Phones: the second paragraph and the experience rows sit behind the Disclosure. */}
+        <div className="hidden md:block">
+          <p className="mt-space-4 max-w-[60ch] font-serif text-[21px] leading-[1.5] text-ink-muted">{profile.about[1]}</p>
+          <div className="mt-space-8">
+            <ExperienceList items={experience} label="Experience" />
+          </div>
+        </div>
+        <div className="mt-space-2 md:hidden">
+          <Disclosure summary="Experience">
+            <p className="mb-space-4 font-serif text-[19px] leading-[1.5] text-ink-muted">{profile.about[1]}</p>
+            <ExperienceList items={experience} label="Experience" />
+          </Disclosure>
         </div>
       </section>
 

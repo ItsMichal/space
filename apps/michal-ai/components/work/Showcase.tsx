@@ -29,7 +29,9 @@ const SIZES: Record<CardSize, string> = {
 export function ProjectCard({ post, href, size, priority = false }: { post: Post; href: string; size: CardSize; priority?: boolean }) {
   const tint = tintFor(post.slug)
   const meta = [year(post), post.role].filter(Boolean).join(' · ')
-  const plate = size !== 's' && post.cover
+  const src = post.cardImage === 'none' ? undefined : (post.cardImage ?? post.cover)
+  const alt = post.cardImage ? (post.cardImageAlt ?? '') : (post.coverAlt ?? '')
+  const plate = size !== 's' && src
   return (
     <Link href={href} className={`pcard pcard--${size}${plate ? '' : ' pcard--bare'}`} style={{ '--card-tint': `var(--tint-${tint.name})` } as CSSProperties}>
       <div className="pcard__body">
@@ -42,7 +44,7 @@ export function ProjectCard({ post, href, size, priority = false }: { post: Post
       </div>
       {plate ? (
         <div className="pcard__plate">
-          <Picture src={post.cover!} alt={post.coverAlt ?? ''} sizes={SIZES[size]} priority={priority} className="pcard__img" focus={post.coverFocus} />
+          <Picture src={src!} alt={alt} sizes={SIZES[size]} priority={priority} className="pcard__img" focus={post.cardImage ? undefined : post.coverFocus} />
         </div>
       ) : null}
       <CardGlow />

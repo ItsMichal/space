@@ -19,9 +19,22 @@
 
 /* ---- layout */
 .work-bento {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  display: flex;
   gap: var(--space-3);
+  margin-inline: calc(var(--space-4) * -1);
+  padding: var(--space-1) var(--space-4) var(--space-3);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: var(--space-4);
+  scrollbar-width: none;
+}
+.work-bento::-webkit-scrollbar {
+  display: none;
+}
+.work-bento > li {
+  flex: 0 0 min(78vw, 320px);
+  scroll-snap-align: start;
 }
 .work-bento > li,
 .work-grid > li,
@@ -66,8 +79,16 @@
 }
 @media (min-width: 900px) {
   .work-bento {
+    display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
     gap: var(--space-4);
+    margin-inline: 0;
+    padding: 0;
+    overflow: visible;
+    scroll-snap-type: none;
+  }
+  .work-bento > li {
+    flex: none;
   }
   /* Large, Medium / Medium, Large: the big cards alternate sides. */
   .work-bento > li:nth-child(1),
@@ -218,10 +239,64 @@
   height: 100%;
   object-fit: cover;
 }
-/* phones: medium cards are type only, which keeps the page short */
+/* phones and tablets: compact cards in a snap row, small projects as a plain list (title and one line, no card chrome) */
 @media (max-width: 899px) {
-  .pcard--m .pcard__plate {
+  .pcard {
+    padding: var(--space-4);
+  }
+  .pcard__plate {
+    aspect-ratio: 2 / 1;
+    margin-top: var(--space-3);
+  }
+  .pcard__title {
+    font-size: 30px;
+  }
+  .pcard__desc {
+    font-size: 16px;
+    line-height: 23px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .pcard__cta {
+    min-height: 40px;
+    padding-top: var(--space-2);
+  }
+  .work-row {
+    display: block;
+    margin: var(--space-2) 0 0;
+    padding: 0;
+    overflow: visible;
+    scroll-snap-type: none;
+    border-top: 1px solid var(--hairline);
+  }
+  .work-row > li {
+    display: block;
+  }
+  .pcard--s {
+    padding: var(--space-3) 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .pcard--s::after,
+  .pcard--s .pcard__meta,
+  .pcard--s .pcard__cta,
+  .pcard--s .pcard__clip {
     display: none;
+  }
+  .pcard--s .pcard__title {
+    font-size: 24px;
+    margin-top: 0;
+  }
+  .pcard--s .pcard__desc {
+    -webkit-line-clamp: 1;
+  }
+  .pcard--s:hover,
+  .pcard--s:active {
+    transform: none;
   }
 }
 
@@ -310,5 +385,11 @@
   }
   .pcard:hover .pcard__cta svg {
     transform: none;
+  }
+}
+
+@media (min-width: 900px) {
+  .work-row > li {
+    display: flex;
   }
 }
