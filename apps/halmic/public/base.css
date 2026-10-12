@@ -261,9 +261,10 @@ a.tile:is(:hover, :focus-visible) .play { background: var(--blue); color: var(--
 /* stat tiles: a big word or number in the display face, one caption */
 /* cq units on a container's own properties resolve against the container above it, so the padding lives on the children, not on the tile */
 .t-stat { display: flex; flex-direction: column; justify-content: flex-start; background: var(--ink-3); }
-.num { display: block; font: 900 min(66cqh, 80cqw)/.8 var(--display); letter-spacing: -.01em; margin: max(14px, 7cqi) 0 0 max(12px, 6.5cqi); }
-.num.word { font-size: min(58cqh, 44cqw); }
-.t-stat.w2 .num { font-size: min(70cqh, 40cqw); }
+.num { display: block; font: 900 min(54cqh, 80cqw)/.8 var(--display); letter-spacing: -.01em; margin: max(14px, 7cqi) 0 0 max(12px, 6.5cqi); }
+.num.word { font-size: min(50cqh, 44cqw); }
+.t-stat.w2 .num { font-size: min(58cqh, 40cqw); }
+.t-stat .tcap { position: static; margin-top: auto; z-index: 1; }   /* the caption sits under the number in the flow, so the two can never overlap */
 .t-stat.tpaper { background: var(--paper); color: var(--paper-ink); } .tpaper .tt { color: var(--paper-ink); }
 .t-stat.tblue { background: var(--blue); color: var(--ink); } .tblue .tt { color: var(--ink); }
 .tdim .tbg { z-index: -1; } .tdim .tbg img { opacity: .5; } .tdim::after { content: ""; position: absolute; inset: 0; z-index: 0; background: linear-gradient(to top, #0f0e13f2 0, #0f0e1366 55%, #0f0e1333); pointer-events: none; }
@@ -293,7 +294,7 @@ a.tile:hover .goi .ic { transform: rotate(-45deg); }
 .tile.playing { grid-column: span 2; grid-row: span 2; display: flex; flex-direction: column; background: var(--ink-2); container-type: normal; }
 .playing .tp { position: relative; flex: none; aspect-ratio: 16 / 9; background: #000; animation: pin .18s var(--ease) both; }
 .playing .tp .vframe { animation: pin .18s var(--ease) both; }
-.playing .pb { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; padding: 16px 20px 18px; }
+.playing .pb { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 16px 20px 18px; }
 .playing .pb .tt { font-size: clamp(18px, 2.2vw, 28px); } .playing .pb .crow { margin-top: 10px; }
 .playing .tp .pclose { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .tbg img, .tbg video, a.tile .goi, a.tile .play, .ic-end { transform: none !important; } .playing .tp, .playing .tp .vframe { animation: none; } .ldot { animation: none; } }
