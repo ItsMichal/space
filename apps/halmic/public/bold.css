@@ -71,7 +71,6 @@ h2.wide { max-width: none; margin-bottom: var(--s4); }
 .figs { display: flex; flex-wrap: wrap; gap: var(--s4); align-items: center; }
 .figs img:first-child { width: min(100%, 640px); height: auto; border-radius: 16px; }
 .figs .hm { width: 120px; height: auto; border-radius: 26px; }
-.writing { margin-top: var(--s12); } .writing h3 { margin: 0 0 var(--s2); font: 700 24px/1.1 var(--display); letter-spacing: var(--dtrack); }
 .contact { margin-top: var(--s12); display: flex; flex-wrap: wrap; gap: var(--s3); align-items: center; justify-content: space-between; border-top: 1px solid #0f0e1330; padding-top: var(--s6); }
 .contact .big { margin: 0; max-width: 20ch; }
 .hi-btns { margin: 0; display: flex; flex-wrap: wrap; gap: var(--s2); }
