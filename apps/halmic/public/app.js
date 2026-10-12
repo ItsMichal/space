@@ -1,6 +1,7 @@
 // halmic behaviour: live/offline state from /api/live, bar meters (the logotype's bars as a level meter),
-// click-to-load video (youtube-nocookie only after interaction). No dependencies.
+// click-to-load video (youtube-nocookie only after interaction), real Twitch clips in the #clips list played in place. No dependencies.
 // Testing override: ?live=1 (or ?live=0) forces the state and skips the fetch; with ?live=1 you can add &game=Name.
+// ?clips=demo swaps in two fake clips and skips the fetch (layout testing; the embed will not load a real clip).
 (() => {
   const root = document.documentElement;
   const params = new URLSearchParams(location.search);
@@ -106,4 +107,46 @@
     const yt = document.createElement('a'); yt.className = 'vm'; yt.href = a.href; yt.textContent = 'open on YouTube';
     d.append(th, cap, yt); a.replaceWith(d);
   });
+
+  // ---- clips: the built list is the fallback; /api/clips (top clips) replaces it, and a click plays the clip right under its row ----
+  const list = document.querySelector('ul.clips');
+  const mmss = (n) => `${Math.floor(n / 60)}:${String(n % 60).padStart(2, '0')}`;
+  function renderClips(clips) {
+    list.textContent = '';
+    for (const c of clips) {
+      const li = document.createElement('li'), a = document.createElement('a');
+      a.href = c.url; a.dataset.clip = c.id; a.dataset.title = c.title; a.setAttribute('aria-expanded', 'false');
+      for (const [cls, txt] of [['ct', c.title], ['cg', c.game || ''], ['cd', mmss(c.duration)]]) { const sp = document.createElement('span'); sp.className = cls; sp.textContent = txt; a.appendChild(sp); }
+      li.appendChild(a); list.appendChild(li);
+    }
+  }
+  function closeClip() {
+    list.querySelectorAll('.cplayer').forEach((d) => d.remove());   // removing the iframe stops playback
+    list.querySelectorAll('a[aria-expanded="true"]').forEach((a) => a.setAttribute('aria-expanded', 'false'));
+  }
+  if (list) {
+    list.addEventListener('click', (e) => {
+      const a = e.target.closest('a[data-clip]');
+      if (!a || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      const was = a.getAttribute('aria-expanded') === 'true';
+      closeClip();
+      if (was) return;
+      const f = document.createElement('iframe');
+      f.src = `https://clips.twitch.tv/embed?clip=${encodeURIComponent(a.dataset.clip)}&parent=${encodeURIComponent(location.hostname)}&autoplay=true`;
+      f.title = `Twitch clip: ${a.dataset.title}`; f.allowFullscreen = true; f.className = 'cframe';
+      const d = document.createElement('div'); d.className = 'cplayer'; d.appendChild(f);
+      a.after(d); a.setAttribute('aria-expanded', 'true');
+    });
+    if (params.get('clips') === 'demo') renderClips([{ id: 'DemoClipOne', title: 'Demo clip with a rather long title to check how rows wrap on narrow screens', game: 'Minecraft', duration: 40, url: 'https://www.twitch.tv/halmictv/clips' }, { id: 'DemoClipTwo', title: 'Second demo clip', game: '', duration: 125, url: 'https://www.twitch.tv/halmictv/clips' }]);
+    else (async () => {
+      try {
+        const r = await fetch('/api/clips', { headers: { accept: 'application/json' } });
+        if (!r.ok) return;
+        const d = await r.json();
+        const ok = Array.isArray(d.clips) ? d.clips.filter((c) => c && /^[A-Za-z0-9_-]+$/.test(c.id) && typeof c.title === 'string' && typeof c.url === 'string' && c.url.startsWith('https://') && Number.isFinite(c.duration)) : [];
+        if (ok.length) renderClips(ok);
+      } catch { /* keep the built list */ }
+    })();
+  }
 })();

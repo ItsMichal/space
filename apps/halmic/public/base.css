@@ -104,6 +104,8 @@ img { max-width: 100%; height: auto; display: block; }
 .clips a { display: grid; grid-template-columns: 1fr auto auto; gap: 16px; align-items: baseline; min-height: 56px; padding: 14px 0; transition: padding .5s var(--ease), color .3s; }
 .clips a:hover { padding-left: 14px; color: var(--blue-live); }
 .clips .cg { color: var(--mute); font-size: 14px; } .clips .cd { color: var(--mute); font-variant-numeric: tabular-nums; font-size: 14px; }
+.clips a[aria-expanded="true"] { color: var(--blue-live); }
+.cplayer { padding: 2px 0 16px; } .cframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 18px; background: var(--ink-3); }
 @media (max-width: 560px) { .clips a { grid-template-columns: 1fr auto; } .clips .cg { display: none; } }
 
 @media (prefers-reduced-motion: reduce) { * { transition-duration: .01s !important; animation-duration: .01s !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; } }
