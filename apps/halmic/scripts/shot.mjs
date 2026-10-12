@@ -1,5 +1,5 @@
 // Headless Chrome screenshot via CDP (uses the `ws` package from the portfolio repo, or any ws on the path).
-// usage: node halmic/scripts/shot.mjs <url> <out.png> <width> <height> [full] [mobile] [wait-ms] [scrollY]
+// usage: node halmic/scripts/shot.mjs <url> <out.png> <width> <height> [full] [mobile] [wait-ms] [scrollY] [sel=css] [click=css] [clip=x,y,w,h]
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -34,6 +34,8 @@ try {
   await sleep(waitMs);
   const sel = flags.find((f) => f.startsWith('sel='))?.slice(4);
   if (sel) { await send('Runtime.evaluate', { expression: `document.querySelector(${JSON.stringify(sel)}).scrollIntoView()` }); await sleep(1200); }
+  const click = flags.find((f) => f.startsWith('click='))?.slice(6);
+  if (click) { await send('Runtime.evaluate', { expression: `document.querySelector(${JSON.stringify(click)}).click()` }); await sleep(600); }
   if (scrollY) { await send('Runtime.evaluate', { expression: `window.scrollTo(0, ${scrollY})` }); await sleep(900); }
   let clip;
   if (full || clipArg) {

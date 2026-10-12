@@ -1,4 +1,4 @@
-/* Direction 1, bold: dark stage, a field of leaning bars behind a huge wordmark, design on a paper panel with a 13deg edge */
+/* Direction 1, bold: dark stage, a field of leaning bars behind a huge wordmark, then one grid of cards (base.css) */
 .hero { position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; padding: 112px 0 var(--s6); isolation: isolate; }
 .hero .field { position: absolute; z-index: -1; left: 0; right: 0; bottom: 0; height: 78%; overflow: hidden; mask-image: linear-gradient(to top, #000 55%, transparent); }
 .hero .field .bar { background: #221f2d; }
@@ -18,74 +18,11 @@
 /* below 900px the hero sizes to its content (no 100svh): the bar field sits under the buttons and the next heading starts inside the first 812px viewport */
 @media (max-width: 899px) { .hero { min-height: 0; justify-content: flex-start; padding: 104px 0 var(--s8); } .hero .field { height: 52%; } .hero-in { gap: var(--s3); } .hero .cta { margin-top: 4px; } .hero .btn { min-height: 48px; padding: 0 22px; font-size: 16px; } }
 
-.sec { padding-block: var(--s12) 0; }
-.two { display: grid; gap: var(--s3); padding-block: 0 var(--s12); }
-@media (min-width: 900px) { .two { grid-template-columns: 4fr 8fr; gap: var(--s8); } }
-h2 { margin: 0; font: 750 clamp(30px, 4.2vw, 56px)/1.02 var(--display); letter-spacing: var(--dtrack); text-wrap: balance; max-width: 14ch; }
-h2.wide { max-width: none; margin-bottom: var(--s4); }
-.sub-h { margin: var(--s8) 0 var(--s3); font: 650 clamp(20px, 2vw, 26px)/1.1 var(--display); letter-spacing: var(--dtrack); }
-.intro { margin: 0 0 var(--s6); color: var(--mute); max-width: 52ch; font-size: 19px; }
-.plays { list-style: none; margin: 0; padding: 0; }
-.plays li { display: grid; gap: 4px; padding: 22px 0; border-top: 1px solid var(--line); transition: padding .5s var(--ease); }
-.plays li:last-child { border-bottom: 1px solid var(--line); }
-.plays li:hover { padding-left: 16px; }
-.plays b { font: 750 clamp(28px, 4vw, 52px)/1 var(--display); letter-spacing: var(--dtrack); }
-.plays span { color: var(--mute); }
-.muted { color: var(--mute); margin: var(--s3) 0 0; max-width: 52ch; }
-.muted a { color: var(--text); text-decoration: underline; text-decoration-color: #ffffff66; text-underline-offset: 4px; } .muted a:hover { color: var(--blue-live); }
-.more { margin: var(--s3) 0 0; color: var(--mute); } .more a { text-decoration: underline; text-decoration-color: #ffffff44; text-underline-offset: 4px; padding: 10px 0; display: inline-block; } .more a:hover { color: var(--blue-live); } .more .sep { padding: 0 10px; opacity: .4; }
-
-
+.cards { padding-block: var(--s8) var(--s12); }
+.more { margin: var(--s3) 0 0; color: var(--mute); } .more a { text-decoration: underline; text-decoration-color: #ffffff44; text-underline-offset: 4px; padding: 10px 0; display: inline-block; } .more a:hover { color: var(--blue-live); }
 .vfeat { max-width: 1000px; margin-bottom: var(--s6); }
 .vfeat .vt { font: 700 clamp(22px, 2.6vw, 34px)/1.1 var(--display); letter-spacing: var(--dtrack); margin-top: 16px; }
-.reel + .gmeta { margin-top: var(--s3); }
-.reel { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s4) var(--s3); }
-@media (max-width: 900px) { .reel { display: flex; overflow-x: auto; scroll-snap-type: x proximity; scroll-padding-inline: var(--gut); gap: 16px; margin-inline: calc(var(--gut) * -1); padding-inline: var(--gut); touch-action: pan-x pan-y; scrollbar-width: none; } .reel .vid { flex: 0 0 74%; scroll-snap-align: start; } }
-
-/* games */
-.gfeat { display: grid; gap: var(--s6) var(--s4); grid-template-columns: 1fr; }
-@media (min-width: 900px) { .gfeat { grid-template-columns: 7fr 5fr; align-items: start; } .gfeat .g-lg h3 { font-size: clamp(28px, 3.4vw, 44px); } .gfeat .g-sm { margin-top: var(--s12); } }
-.gmore { display: grid; grid-template-columns: 1fr; gap: var(--s4); }
-@media (min-width: 640px) { .gmore { grid-template-columns: repeat(2, 1fr); max-width: 760px; } }
-
-/* design: paper panel; on desktop its left edge leans exactly 13deg (the mark's lean) */
-.studio { margin-top: var(--s12); color: var(--paper-ink); position: relative; padding: var(--s12) 0 var(--s12); overflow: hidden; isolation: isolate; background: var(--paper); }
-.studio::before { content: ""; position: absolute; left: 0; right: 0; top: -1px; height: 40px; background: var(--ink); clip-path: polygon(0 0, 100% 0, 100% 0, 0 100%); }
-@media (min-width: 900px) {
-  .studio { background: var(--ink); padding: 160px 0 var(--s12); }
-  /* the left edge leans 13 degrees (tan 13 = .2309: 83px across 360px), then runs straight down */
-  .studio::before { height: auto; top: 0; bottom: 0; left: 0; right: 0; background: var(--paper); z-index: -1; clip-path: polygon(83px 0, 100% 0, 100% 100%, 0 100%, 0 360px); }
-  .studio-in { padding-left: calc(var(--gut) + 96px); }
-}
-.studio h2 { max-width: 14ch; color: var(--paper-ink); font-size: clamp(36px, 6vw, 88px); line-height: .98; }
-.studio a { text-decoration: underline; text-decoration-color: #0f0e1355; text-underline-offset: 3px; } .studio a:hover { color: var(--blue-paper); }
-.studio .btn { text-decoration: none; }
-.studio :focus-visible { outline-color: var(--blue-paper); }
-.dz { display: grid; gap: var(--s12); padding-top: var(--s8); }
-.dentry h3 { margin: 0 0 var(--s2); font: 700 clamp(24px, 2.6vw, 34px)/1.1 var(--display); letter-spacing: var(--dtrack); }
-.big { font: 600 clamp(20px, 2.1vw, 28px)/1.22 var(--display); letter-spacing: var(--dtrack); margin: 0 0 var(--s3); max-width: 34ch; }
-.shots { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; max-width: 900px; }
-.shot { margin: 0; border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 0 0 0 1px #0f0e1318; }
-.shot img { height: 92px; width: auto; max-width: none; }
-@media (max-width: 480px) { .shot img { height: 72px; } }
-.dnote { margin: var(--s3) 0 0; font-size: 15px; color: var(--paper-mute); max-width: 56ch; }
-.figs { display: flex; flex-wrap: wrap; gap: var(--s4); align-items: center; }
-.figs img:first-child { width: min(100%, 640px); height: auto; border-radius: 16px; }
-.figs .hm { width: 120px; height: auto; border-radius: 26px; }
-.contact { margin-top: var(--s12); display: flex; flex-wrap: wrap; gap: var(--s3); align-items: center; justify-content: space-between; border-top: 1px solid #0f0e1330; padding-top: var(--s6); }
-.contact .big { margin: 0; max-width: 20ch; }
-.hi-btns { margin: 0; display: flex; flex-wrap: wrap; gap: var(--s2); }
 .foot { background: var(--paper); color: var(--paper-mute); padding: 0 0 var(--s12); font-size: 15px; }
 .foot .wrap { display: flex; flex-wrap: wrap; gap: var(--s2); justify-content: space-between; border-top: 1px solid #0f0e1325; padding-top: var(--s3); }
 .foot p { margin: 0; } .links { display: flex; flex-wrap: wrap; gap: 2px; } .links a { padding: 10px 10px; margin: -10px 0; color: var(--paper-ink); } .links a:hover { text-decoration: underline; }
 .foot .links a:focus-visible { outline-color: var(--blue-paper); }
-
-/* videos: the FIFA series (latest large, earlier episodes as a numbered row), other edits, Smash sets */
-.series-head h3 { margin: 0 0 8px; font: 750 clamp(28px, 3.6vw, 48px)/1.02 var(--display); letter-spacing: var(--dtrack); }
-.series-head p { margin: 0 0 var(--s4); color: var(--mute); max-width: 56ch; font-size: 18px; }
-.series-grid { display: grid; gap: var(--s4); }
-.eps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s3); max-width: 1000px; }
-.eps .vt { font-size: 16px; margin-top: 10px; }
-.epn { position: absolute; top: 10px; left: 12px; min-width: 30px; height: 30px; padding: 0 10px; border-radius: 999px; background: #0f0e13c7; color: var(--paper); font: 750 17px/30px var(--display); text-align: center; }
-.vid-featured .epn { top: 16px; left: 16px; height: 36px; min-width: 36px; font-size: 20px; line-height: 36px; }
-@media (max-width: 640px) { .eps { display: flex; overflow-x: auto; scroll-snap-type: x proximity; scroll-padding-inline: var(--gut); gap: 14px; margin-inline: calc(var(--gut) * -1); padding-inline: var(--gut); touch-action: pan-x pan-y; scrollbar-width: none; } .eps li { flex: 0 0 68%; scroll-snap-align: start; } }

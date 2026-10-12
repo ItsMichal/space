@@ -47,4 +47,10 @@ const pageIds = new Set([...cur.series.episodes, ...cur.other.map((o) => o.id)])
 for (const f of fs.readdirSync(out)) if (f.startsWith('video-')) fs.rmSync(path.join(out, f));
 for (const v of videos) { const f = path.join(root, 'public', v.thumb); if (pageIds.has(v.id) && fs.existsSync(f)) await card(`video-${v.id}`, { title: v.title, image: f }); }
 await card('design-sedd', { title: 'Logo for Southeast Denver Dental', image: path.join(root, 'public/work/southeast-denver-dental-header.png'), imageFit: 'contain' });
+// Project Mountaintop: the project and each dev log (image = the log's hero screenshot)
+const mtc = JSON.parse(fs.readFileSync(path.join(root, 'content/mountaintop/index.json'), 'utf8'));
+const mtTitle = (slug) => fs.readFileSync(path.join(root, `content/mountaintop/${slug}.md`), 'utf8').match(/^title: (.*)$/m)[1];
+const mtImg = (f) => sharp(path.join(root, 'public/work/mountaintop', f)).png().toBuffer();
+await card('work-project-mountaintop', { title: mtc.title, image: await mtImg(mtc.cover) });
+for (const l of mtc.logs) await card(`mountaintop-${l.slug}`, { title: `${mtTitle(l.slug)}`, image: await mtImg(l.hero) });
 console.log('og images:', fs.readdirSync(out).length);
