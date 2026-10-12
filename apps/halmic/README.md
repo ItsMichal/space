@@ -1,13 +1,39 @@
 # halmic
 
-Concept work for halmic.com (self-contained; meant to move to its own repository).
+The site for halmic.com: streams, videos, tiny games and design. A static build (zero runtime dependencies) plus one small Worker for the live status. Deploys as the Cloudflare Worker `halmic`.
 
-- `docs/discovery.md`: what exists, benchmark, IA, owner questions. Contains an INTERNAL section to delete before the split.
-- `docs/design-system.md`: sibling design system, shared vs diverging.
-- `docs/technical-plan.md`: Twitch/YouTube plumbing, SEO, owner setup.
-- `brand/`: logotype generator (`node brand/build-logotype.mjs`), SVGs, `specimen.html` and `specimen.png`.
-- `scripts/sync-youtube.mjs`: public-feed sync with an identity deny-list. `scripts/shot.mjs`: headless Chrome screenshots (needs the `ws` package).
-- `content/`: `videos.json`, held-back entries, deny-list.
-- App root (`build.mjs`, `serve.mjs`, `src/`, `public/`): from the repo root run `npm run dev:halmic`, then open http://localhost:4310/ (bold) or /calm.html; add `?live=1` for the live state. Zero runtime dependencies. Deploys as the Worker `halmic` (`wrangler.jsonc`).
+- `src/index.html` + `build.mjs`: the home template and the generator for every other page (games, videos, design, 404), `sitemap.xml`, `robots.txt`, `rss.xml`, `llms.txt` and `_headers`. `content/` holds the data, `brand/` the logotype generator and SVGs.
+- `public/`: hand-kept files (`*.css`, `app.js`, fonts, images) and build output (html, sitemap, rss, robots, llms.txt, `_headers`); all tracked. CSS/JS are linked as `?v=<content hash>` by the build, which is why `_headers` can cache them for a year.
+- `worker/index.js`: `GET /api/live` (Twitch Helix, cached 45s, no KV). Only `/api/*` runs the Worker (`assets.run_worker_first`); everything else is served from `public/`.
+- `scripts/`: `check-links.mjs` (runs in `npm test`), `sync-youtube.mjs`, `sync-itch.mjs`, `build-og.mjs`, `shot.mjs` (headless Chrome screenshots, needs `ws`).
+- `docs/`: discovery (contains an INTERNAL section), design system, technical plan, SEO notes.
 
-Rule: no real name anywhere in `src/`, `public/` or `brand/`. Check with the deny-list patterns in `content/identity-denylist.txt`.
+## Develop
+From the repo root: `npm run dev:halmic` builds and serves http://localhost:4310/ (`serve.mjs`, no-store; answers `/api/live` with an "unknown" payload and unknown paths with `404.html`). After editing, `npm run build:halmic` and reload.
+
+`?live=1` (optionally `&game=Minecraft`) forces the on-air look and skips the fetch; `?live=0` forces offline. Not linked from the UI; for testing only.
+
+## Test
+`npm test -w @space/halmic`: unit tests for the Worker (`node --test`, mocked `fetch`) and `scripts/check-links.mjs` (every internal link/asset/og:image in `public/` resolves, no placeholders, one h1, images have alt and size). Also run `npm run check:identity` from the root.
+
+## Deploy
+`npm run deploy:halmic` from the root (or the Deploy workflow). Dry run: `cd apps/halmic && npx wrangler deploy --dry-run`.
+
+Secrets, set once (create a Twitch app at dev.twitch.tv/console, client-credentials only, no user scopes):
+```
+cd apps/halmic
+npx wrangler secret put TWITCH_CLIENT_ID
+npx wrangler secret put TWITCH_CLIENT_SECRET
+```
+Without them `/api/live` answers `{ "live": false, "unknown": true }` and the page simply shows offline.
+
+## Launch checklist
+1. Add the halmic.com zone in the Cloudflare account (nameservers at the registrar).
+2. Uncomment the `routes` line in `wrangler.jsonc` (custom domains for `halmic.com` and `www.halmic.com`).
+3. `npm run deploy:halmic`, then set the two Twitch secrets above.
+4. Remove the registrar's URL forward for the domain.
+5. In GitHub, set repository variables `DEPLOY_HALMIC=true` and `HALMIC_URL=https://halmic.com` so merges to main deploy and are smoke-tested.
+6. Redirect `www` to the apex with a Cloudflare redirect rule (not in code).
+
+## Identity rule
+No real name and no portfolio domain anywhere in `src/`, `public/`, `brand/` or `worker/`. Check with `npm run check:identity` (patterns in `content/identity-denylist.txt`).
