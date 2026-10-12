@@ -18,7 +18,7 @@ import { Callout } from '@/components/mdx/Callout'
 import { Picture } from '@/components/media/Picture'
 import { Zoomable } from '@/components/media/Zoomable'
 import { PostPreviewLink } from '@/components/ui/PostPreviewLink'
-import { LIVE_REACTIONS_ENABLED } from '@/lib/presence/flag'
+import { LIVE_BLOCK_REACTIONS } from '@/lib/presence/flag'
 import { blockIds } from '@/lib/presence/blocks'
 import { rehypeDropDeadEmbeds } from '@/lib/embeds'
 
@@ -92,6 +92,12 @@ const components = {
   'mdx-youtube': (p: Props) => <YouTube id={String(p.id)} title={p.title as string | undefined} />,
   'mdx-embed': (p: Props) => <Embed url={String(p.url)} title={p.title as string | undefined} ratio={p.ratio as string | undefined} />,
   'mdx-callout': (p: Props & { children?: ReactNode }) => <Callout type={(p.type as string) ?? 'note'}>{p.children}</Callout>,
+  // A wide table scrolls sideways inside its own wrapper (a focusable region), and the <table> keeps its semantics.
+  table: (p: Props & { children?: ReactNode }) => (
+    <div className="table-scroll" role="region" aria-label="Table" tabIndex={0}>
+      <table>{p.children}</table>
+    </div>
+  ),
   img: (p: Props) => {
     const { src, alt, title } = p as { src?: string; alt?: string; title?: string }
     if (!src) return null
@@ -119,7 +125,7 @@ export async function renderMarkdown(source: string): Promise<ReactNode> {
     .use(rehypeUnwrapImages)
     .use(rehypeDropDeadEmbeds)
     .use(rehypeSlug)
-    .use(LIVE_REACTIONS_ENABLED ? rehypeBlockIds : () => () => {})
+    .use(LIVE_BLOCK_REACTIONS ? rehypeBlockIds : () => () => {})
     .use(rehypeAutolinkHeadings, { behavior: 'wrap' })
     .use(rehypePrettyCode, {
       theme: { light: 'github-light', dark: 'github-dark' },

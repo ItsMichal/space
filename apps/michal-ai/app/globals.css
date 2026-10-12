@@ -634,13 +634,14 @@ body {
     color: var(--ink);
   }
 
-  /* ---------- Article prose ---------- */
+  /* ---------- Article prose ----------
+     The column itself (centred, ~70 characters) comes from components/site/reading.css; this block styles what is inside.
+     Tailwind's preflight removes list markers, so lists get theirs back here for every content list. */
   .prose {
     font-family: var(--font-serif);
     font-size: var(--type-prose-size);
     line-height: var(--type-prose-line);
     font-optical-sizing: auto;
-    max-width: 66ch;
     color: var(--ink);
     overflow-wrap: break-word;
   }
@@ -656,6 +657,9 @@ body {
     color: var(--ink);
     position: relative;
     scroll-margin-top: 96px;
+    text-wrap: balance;
+    break-after: avoid;
+    break-inside: avoid;
   }
   .prose h2 {
     font-size: 44px;
@@ -687,7 +691,7 @@ body {
     content: '#';
     margin-left: 0.4em;
     font-weight: 400;
-    color: var(--ink-faint);
+    color: var(--ink-muted);
     opacity: 0;
     transition: opacity var(--motion-fast) var(--ease-out-soft);
   }
@@ -697,6 +701,9 @@ body {
   }
   .prose p {
     margin: 0 0 1.1em;
+    text-wrap: pretty;
+    orphans: 3;
+    widows: 3;
   }
   .prose a {
     color: inherit;
@@ -709,22 +716,80 @@ body {
   .prose a:hover {
     color: var(--accent);
   }
+  .prose a:focus-visible,
+  .prose .table-scroll:focus-visible,
+  .prose pre:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+    border-radius: var(--radius-sm);
+  }
+  /* Links that leave the site carry a small arrow (a glyph in the text face: no icon font, no layout shift). */
+  .prose :not(:is(h2, h3, h4)) > a[href^='http']:not([href*='michal.ai'])::after {
+    content: '\2197';
+    display: inline-block;
+    margin-left: 0.15em;
+    font-size: 0.7em;
+    line-height: 1;
+    vertical-align: 0.35em;
+    color: var(--ink-muted);
+  }
   .prose strong {
     font-weight: 500;
   }
+  .prose del {
+    color: var(--ink-muted);
+  }
+
+  /* Lists. Markers are the browser's own (list-style), so list semantics stay intact. Hanging indent: the marker sits in
+     the padding and wrapped lines align with the first line's text. Nested lists change marker shape. */
   .prose ul,
   .prose ol {
     margin: 0 0 1.1em;
-    padding-left: 1.4em;
+    padding-left: 1.5em;
+  }
+  .prose ul {
+    list-style: disc outside;
+  }
+  .prose ul ul {
+    list-style-type: circle;
+  }
+  .prose ul ul ul {
+    list-style-type: square;
+  }
+  .prose ol {
+    list-style: decimal outside;
+  }
+  .prose ol ol {
+    list-style-type: lower-alpha;
+  }
+  .prose ol ol ol {
+    list-style-type: lower-roman;
   }
   .prose li {
     margin: 0.3em 0;
+    padding-left: 0.2em;
   }
   .prose li::marker {
-    color: var(--ink-faint);
+    color: var(--ink-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .prose li > p {
+    margin: 0.5em 0;
+  }
+  .prose li > :first-child {
+    margin-top: 0;
+  }
+  .prose li > :last-child {
+    margin-bottom: 0;
+  }
+  .prose li > :is(ul, ol) {
+    margin: 0.3em 0 0;
   }
   .prose ul.contains-task-list {
     list-style: none;
+    padding-left: 0;
+  }
+  .prose .task-list-item {
     padding-left: 0;
   }
   .prose .task-list-item input[type='checkbox'] {
@@ -753,15 +818,19 @@ body {
     background: var(--paper-sunk);
     padding: 2px 5px;
     border-radius: var(--radius-sm);
+    overflow-wrap: anywhere;
   }
   .prose pre {
-    font: 400 17px/28px var(--font-serif);
+    font: 400 var(--type-code-size) / var(--type-code-line) var(--font-mono);
     background: var(--paper-raised);
     padding: var(--space-4) var(--space-6);
     border-radius: var(--radius-md);
     overflow-x: auto;
     border: 1px solid var(--hairline);
     margin: 0;
+    max-width: 100%;
+    tab-size: 2;
+    overscroll-behavior-x: contain;
   }
   .prose pre code {
     background: none;
@@ -769,6 +838,7 @@ body {
     font-size: inherit;
     line-height: inherit;
     display: grid;
+    overflow-wrap: normal;
   }
   /* rehype-pretty-code / shiki: dual themes through CSS variables */
   .prose [data-rehype-pretty-code-figure] {
@@ -798,8 +868,11 @@ body {
   .prose :not(pre) > code[data-theme] {
     padding: 2px 5px;
   }
+
+  /* Figures: wide track (reading.css), caption on the text column's left edge. */
   .prose figure {
     margin: var(--space-12) 0;
+    break-inside: avoid;
   }
   .prose figure img {
     width: 100%;
@@ -809,17 +882,30 @@ body {
     background: var(--paper-sunk);
   }
   .prose figcaption {
-    margin-top: var(--space-2);
+    max-width: var(--text);
+    margin: var(--space-2) auto 0;
     font: 400 15px/22px var(--font-serif);
     color: var(--ink-muted);
+    text-wrap: pretty;
+  }
+  .prose figure .zoom:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+    border-radius: var(--radius-md);
+  }
+
+  /* Tables: the renderer wraps each <table> in .table-scroll, so a wide table scrolls sideways inside the wide track
+     and the table keeps its own semantics. */
+  .prose .table-scroll {
+    margin: var(--space-8) 0;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
   }
   .prose table {
-    display: block;
-    max-width: 100%;
-    overflow-x: auto;
+    min-width: 100%;
     border-collapse: collapse;
-    margin: var(--space-8) 0;
     font: 400 16px/24px var(--font-sans);
+    font-variant-numeric: tabular-nums lining-nums;
   }
   .prose th,
   .prose td {
@@ -831,21 +917,47 @@ body {
   .prose th {
     font: 500 15px/22px var(--font-serif);
     color: var(--ink-muted);
+    white-space: nowrap;
   }
+
+  /* Callouts: text column, raised paper with a hairline and a short accent along the left edge (it follows the rounded
+     corner). Precedent: callouts in vercel.com/docs and stripe.com/docs (boxed, tinted, accent on one edge). */
   .prose .callout {
+    --callout-accent: var(--ink-faint);
     margin: var(--space-8) 0;
     padding: var(--space-4) var(--space-6);
     border-radius: var(--radius-md);
-    background: var(--paper-sunk);
-    border-left: 2px solid var(--accent);
+    background: var(--paper-raised);
+    border: 1px solid var(--hairline);
+    box-shadow: inset 3px 0 0 var(--callout-accent);
     font-family: var(--font-sans);
-    font-size: 16px;
-    line-height: 24px;
+    font-size: 17px;
+    line-height: 26px;
+    break-inside: avoid;
+  }
+  .prose .callout--tip {
+    --callout-accent: var(--presence-1);
+  }
+  .prose .callout--warning {
+    --callout-accent: var(--presence-4);
+  }
+  .prose .callout > :first-child {
+    margin-top: 0;
   }
   .prose .callout > :last-child {
     margin-bottom: 0;
   }
+
+  /* Embeds (::youtube, ::embed): 16:9 from the element's inline aspect-ratio, plain rounded corners. */
+  .prose .embed {
+    margin: var(--space-8) 0;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--paper-sunk);
+    break-inside: avoid;
+  }
   .prose iframe {
+    display: block;
     max-width: 100%;
   }
   .prose .lede,

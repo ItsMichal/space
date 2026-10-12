@@ -86,6 +86,22 @@ Starlink image: the build makes 480/960/1600/2400 AVIF and WebP variants. Served
 - Contrast over the busiest backdrop (text hidden, darkest pixel under each text block, desktop): meta 6.25, description 6.67, title 8.81. Phone not measured.
 - Scroll on a 4x throttled 375px profile in headless Chrome with software GL: frame p50 33ms, p95 50ms, max 100ms, 0 long tasks (it was p50 17 / p95 33 before the glass and grid; relative only).
 
+## Reading view: column, prose and components (2026-10-12)
+
+None of these references could be opened and measured from this environment (the sandbox allows no outside browsing). They
+are named from what those sites are known to do and are **not measured**; the numbers in the "Ours" column are ours, tuned
+by eye and checked with `scripts/article-shots.mjs` (centring within 1px at 1440, 1920 and 375; characters per line counted
+on the rendered text). Compare against the live sites before treating any of them as settled.
+
+| Element | Reference (not measured) | Ours |
+| --- | --- | --- |
+| One centred reading column with wider media | stripe.com/blog, vercel.com/blog, apple.com/newsroom articles, medium.com | Text column 35rem (about 67 characters at the 20px prose size, measured), wide track 900px for figures, tables, code, embeds and the timeline, both centred on the viewport axis. Phones: one track. Nothing full-bleed |
+| Side contents list in the margin | stripe.com/docs, vercel.com/docs ("On this page") | Fixed in the margin outside the wide track from 1360px, so it never moves or overlaps the column |
+| Visible bullets, hanging indent, nested marker shapes | any long-form site (medium.com, github.com READMEs) | Native list markers (disc, circle, square; decimal, alpha, roman), 1.5em indent, markers in muted ink |
+| Boxed callout with an accent on one edge | vercel.com/docs, stripe.com/docs | Raised paper, hairline, 14px radius, 3px inset accent by type (note, tip, warning) |
+| External link arrow | github.com, developer.mozilla.org external links | Small arrow glyph after links that leave the site |
+| Wide table scrolling inside its own frame | github.com markdown tables, stripe.com/docs | Table wrapped in a focusable scroll region, semantics kept |
+| Reactions row and view count | github.com issue reactions, medium.com claps and view counts | Five fixed emoji pills with counts, one toggle each (github.com); a quiet count beside them (medium.com). Neither was measured; pill size is the existing 44px touch target |
 ## Glass in dark mode (2026-10-12)
 
 Bug: on a dark reading page the nav pill was a pale milky slab with near-white text. Cause and fix are in the PR; this section records the references the dark material was checked against.

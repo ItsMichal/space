@@ -2,6 +2,7 @@
 title: "Starlink Order Flow"
 slug: order-flow
 kind: project
+id: spacex-starlink-order-flow
 description: "How my team and I rewrote the Starlink.com order flow from scratch in React."
 date: 2025-06-04
 tags: ["Web", "TypeScript", "Next.js"]

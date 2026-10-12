@@ -2,6 +2,7 @@
 title: "Taco Neko Development"
 slug: taco-neko-development
 kind: article
+id: taco-neko-development
 description: "Hello! Welcome to my post about a short game I made for a Design class. This game was ideated and created in the span of 2–3 days. Here was my process."
 date: 2020-05-27
 updated: 2020-11-10

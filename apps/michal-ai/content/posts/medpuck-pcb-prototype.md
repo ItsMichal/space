@@ -2,6 +2,7 @@
 title: "MedPuck PCB Prototype"
 slug: medpuck-pcb-prototype
 kind: article
+id: medpuck-pcb-prototype
 description: "This is a continuation of a previous article. For more context about the MedPuck device, read that article here."
 date: 2021-11-02
 tags: ["Electronics", "Design", "DIY"]

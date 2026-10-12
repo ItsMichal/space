@@ -37,7 +37,10 @@ export type ServerMsg =
 
 export interface ReactionTotals {
   v: 1
-  slug: string
+  /** Stable post id. */
+  id: string
+  /** Visits counted for this post. Present only while the Worker var VIEWS_PUBLIC is not "0". */
+  views?: number
   post: Record<string, number>
   blocks: Record<string, Record<string, number>>
 }

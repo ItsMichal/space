@@ -55,6 +55,15 @@ export async function PostPage({ kind, slug, parent }: { kind: PostKind; slug: s
   const siblings = post.parent ? getChildren(post.parent) : []
   const at = siblings.findIndex((s) => s.slug === post.slug)
   const series = getSeriesOf(post)
+  const nav = (
+    <PostNav
+      parent={parentPost}
+      items={children}
+      prev={at > 0 ? siblings[at - 1] : undefined}
+      next={at >= 0 ? siblings[at + 1] : undefined}
+      position={at >= 0 ? { n: at + 1, of: siblings.length } : undefined}
+    />
+  )
   return (
     <>
       <ReadingTheme />
@@ -78,18 +87,15 @@ export async function PostPage({ kind, slug, parent }: { kind: PostKind; slug: s
         after={
           <>
             <Publications ids={post.publications} />
-            {/* presence: reactions (dark behind LIVE_REACTIONS_ENABLED in lib/presence/flag.ts) */}
-            {LIVE_REACTIONS_ENABLED ? <LiveReactions slug={post.slug} /> : null}
             <OriginalLink url={post.originalUrl} />
             <PostExtras slug={post.slug} />
+            {/* A project's own list of entries is content: it comes before the reactions row. */}
+            {!parentPost ? nav : null}
+            {/* Reactions and views (flags in lib/presence/flag.ts, kill switch LIVE_KILL): the last thing of the
+                article's own content, before series and previous/next navigation. */}
+            {LIVE_REACTIONS_ENABLED ? <LiveReactions postId={post.id ?? post.slug} /> : null}
             {series ? <SeriesNav name={series.name} id={series.id} posts={series.posts} current={post.slug} /> : null}
-            <PostNav
-            parent={parentPost}
-            items={children}
-            prev={at > 0 ? siblings[at - 1] : undefined}
-            next={at >= 0 ? siblings[at + 1] : undefined}
-            position={at >= 0 ? { n: at + 1, of: siblings.length } : undefined}
-            />
+            {parentPost ? nav : null}
           </>
         }
       >

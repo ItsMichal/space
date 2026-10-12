@@ -1,14 +1,18 @@
+import { LIVE_BLOCK_REACTIONS } from '@/lib/presence/flag'
 import { HighlightReactions } from './HighlightReactions'
 import { ReactionBar } from './ReactionBar'
 
-/** Article reactions: the bar at the end of the post plus per-paragraph highlight reactions. Both are client-only and hydrate after load. */
-export function LiveReactions({ slug }: { slug: string }) {
+/**
+ * End-of-article row: five preset reactions and the view count. Client-only, hydrates after load. Paragraph reactions
+ * are built but stay off behind LIVE_BLOCK_REACTIONS.
+ */
+export function LiveReactions({ postId }: { postId: string }) {
   return (
     <>
       <div className="mt-space-12">
-        <ReactionBar slug={slug} />
+        <ReactionBar postId={postId} />
       </div>
-      <HighlightReactions slug={slug} />
+      {LIVE_BLOCK_REACTIONS ? <HighlightReactions postId={postId} /> : null}
     </>
   )
 }

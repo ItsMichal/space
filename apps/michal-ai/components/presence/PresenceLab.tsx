@@ -57,9 +57,9 @@ export function PresenceLab({ mock, pins, full }: { mock: boolean; pins: boolean
           ))}
         </div>
         <div className="mt-space-8">
-          <ReactionBar slug="isat-dashboard" />
+          <ReactionBar postId="isat-dashboard" />
         </div>
-        <HighlightReactions slug="isat-dashboard" />
+        <HighlightReactions postId="isat-dashboard" />
       </article>
     </div>
   )
