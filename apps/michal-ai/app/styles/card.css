@@ -168,3 +168,8 @@ a.card__row:focus-visible {
 .t-meta__part {
   white-space: nowrap;
 }
+
+/* prev/next card: rows carry their own padding (unlayered, so it must live here to beat .card) */
+.card.postnav--nav {
+  padding: 0;
+}
