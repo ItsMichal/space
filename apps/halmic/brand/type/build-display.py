@@ -14,12 +14,18 @@ Pipeline (all scripted, nothing hand-drawn for the alphabet):
      wordmark; all other pairs keep the skeleton's own kerning.
   7. Rename (no Reserved Font Name is used), keep the copyright and the OFL notice, write TTF + WOFF2.
 
-Usage: python3 build-display.py [out_dir]    (needs fonttools, brotli, skia-pathops, uharfbuzz; see README.md)
+Usage: python3 build-display.py [out_dir] [--ship]    (needs fonttools, brotli, skia-pathops, uharfbuzz; see README.md)
+  --ship  copy the woff2 to public/fonts/halmic-display.<sha1[:8]>.woff2 (the old copy is deleted) and point the one
+          url() in public/base.css and the preload in build.mjs at it. /fonts/* is cached for a long time, so a changed
+          font needs a changed URL.
 """
+import hashlib
 import io
 import json
 import math
 import os
+import re
+import shutil
 import sys
 
 import pathops
@@ -40,7 +46,9 @@ from fontTools.varLib import instancer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BRAND = os.path.dirname(HERE)
-OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "out")
+ARGS = [a for a in sys.argv[1:] if not a.startswith("--")]
+SHIP = "--ship" in sys.argv
+OUT = ARGS[0] if ARGS else os.path.join(HERE, "out")
 BASE = os.path.join(HERE, "src", "nunito", "Nunito[wght].ttf")
 
 WGHT = 900
@@ -50,7 +58,17 @@ B_LOGO = 235.02          # logotype ascender / baseline-to-top, in logotype unit
 XH_LOGO = 148.21         # logotype x-height
 LETTERS = "halmic"
 WORDMARK_DIRECTION = "c"
-VERSION = "0.100"
+VERSION = "0.101"
+
+# Tuning of the two logotype letters that read too heavy / too wide in running text (owner feedback on the heading
+# "Want something made? Say hi."). Both are rebuilt here from the logotype's own primitives (round-capped bars and a
+# ring, brand/lib.mjs) with different parameters, instead of using the wordmark outlines; the wordmark itself is
+# untouched (it is an SVG built from wordmark-parts.json).  Units: logotype units (bar T = 53, x-height 148.21).
+T_LOGO = 53.0
+A_STROKE = 47.0         # a: ring + stem stroke (logotype 53). Same outer size, bigger counter, less joint weight.
+M_PITCH = 80.0           # m: distance between stem centres (logotype 90)
+M_VDEPTH = 24.0          # m: how far the V apex is lifted off the baseline bar end (logotype 20); keeps the diagonal angle
+M_SIDE = 0.92            # m: sidebearings as a fraction of the skeleton m's
 
 UNICODES = (
     list(range(0x20, 0x7F))
@@ -105,6 +123,62 @@ def to_ttglyph(rec):
     pen = TTGlyphPen(None)
     replay(rec, pen)
     return pen.glyph()
+
+
+def _pol(cx, cy, r, a):
+    return (cx + r * math.cos(a), cy + r * math.sin(a))
+
+
+def _arc(pen, cx, cy, r, a0, a1):
+    """cubic approximation of a circular arc, same construction as brand/lib.mjs"""
+    n = max(1, math.ceil(abs(a1 - a0) / (math.pi / 2) - 1e-9))
+    da = (a1 - a0) / n
+    k = (4 / 3) * math.tan(da / 4)
+    for i in range(n):
+        s0 = a0 + i * da
+        e = s0 + da
+        p1 = (cx + r * (math.cos(s0) - k * math.sin(s0)), cy + r * (math.sin(s0) + k * math.cos(s0)))
+        p2 = (cx + r * (math.cos(e) + k * math.sin(e)), cy + r * (math.sin(e) - k * math.cos(e)))
+        pen.curveTo(p1, p2, _pol(cx, cy, r, e))
+
+
+def _capsule(pen, p0, p1, r):
+    ph = math.atan2(p1[1] - p0[1], p1[0] - p0[0])
+    pen.moveTo(_pol(*p0, r, ph + math.pi / 2))
+    pen.lineTo(_pol(*p1, r, ph + math.pi / 2))
+    _arc(pen, p1[0], p1[1], r, ph + math.pi / 2, ph - math.pi / 2)
+    pen.lineTo(_pol(*p0, r, ph - math.pi / 2))
+    _arc(pen, p0[0], p0[1], r, ph - math.pi / 2, ph - 3 * math.pi / 2)
+    pen.closePath()
+
+
+def _disc(pen, cx, cy, r):
+    pen.moveTo((cx + r, cy))
+    _arc(pen, cx, cy, r, 0, 2 * math.pi)
+    pen.closePath()
+
+
+def tuned_shapes(ch):
+    """Upright logotype-space (y down) shapes for the rebuilt letters, or None: [(add|sub, drawer)]."""
+    B, XH = B_LOGO, XH_LOGO
+    XT = B - XH
+    if ch == "a":
+        t = A_STROKE
+        cx, cy = XH / 2, B - XH / 2
+        rc = XH / 2 - t / 2
+        return [("add", lambda p: _disc(p, cx, cy, rc + t / 2)),
+                ("sub", lambda p: _disc(p, cx, cy, rc - t / 2)),
+                ("add", lambda p: _capsule(p, (cx + rc, XT + t / 2), (cx + rc, B - t / 2), t / 2))]
+    if ch == "m":
+        r = T_LOGO / 2
+        x0, x2 = r, r + 2 * M_PITCH
+        mid = (x0 + x2) / 2
+        vy = B - r - M_VDEPTH
+        return [("add", lambda p: _capsule(p, (x0, XT + r), (x0, B - r), r)),
+                ("add", lambda p: _capsule(p, (x0, XT + r), (mid, vy), r)),
+                ("add", lambda p: _capsule(p, (mid, vy), (x2, XT + r), r)),
+                ("add", lambda p: _capsule(p, (x2, XT + r), (x2, B - r), r))]
+    return None
 
 
 def main():
@@ -190,6 +264,22 @@ def main():
         bp = BoundsPen(None)
         p.draw(bp)
         logo_x[ch] = bp.bounds                     # upright bbox in wordmark layout coordinates
+    wm_x = dict(logo_x)                            # the wordmark's own boxes: pair offsets below are measured on these
+
+    # a and m are rebuilt (see A_STROKE ... M_SIDE); their boxes are now in the letter's own coordinates
+    flip = (s, 0, 0, -s, 0, s * B_LOGO)
+    for ch in "am":
+        acc = None
+        for op, draw in tuned_shapes(ch):
+            q = pathops.Path()
+            draw(TransformPen(q.getPen(), flip))
+            q.simplify(fix_winding=True)
+            acc = q if acc is None else pathops.op(acc, q, pathops.PathOp.UNION if op == "add" else pathops.PathOp.DIFFERENCE)
+        acc.simplify(fix_winding=True)
+        logo[ch] = acc
+        bp = BoundsPen(None)
+        acc.draw(bp)
+        logo_x[ch] = bp.bounds
 
     base_side = {}
     for ch in LETTERS:
@@ -199,6 +289,7 @@ def main():
         b0 = bounds(font, g)
         adv = hmtx[g][0]
         base_side[ch] = (b0[0], adv - b0[2])       # lsb, rsb of the skeleton's own letter
+    base_side["m"] = (base_side["m"][0] * M_SIDE, base_side["m"][1] * M_SIDE)
 
     new_adv = {}
     for ch in LETTERS:
@@ -245,11 +336,12 @@ def main():
     # 6. exact pair kerning for the wordmark pairs --------------------------------------------
     pairs = []
     for a, b in zip(LETTERS, LETTERS[1:]):
-        offset = (logo_x[b][0] - logo_x[a][0])          # wordmark ink-left to ink-left, upright
+        offset = (wm_x[b][0] - wm_x[a][0])              # wordmark ink-left to ink-left, upright
+        offset -= (wm_x[a][2] - wm_x[a][0]) - (logo_x[a][2] - logo_x[a][0])   # a narrower a / m: the next letter moves up by as much
         lsb_a, lsb_b = base_side[a][0], base_side[b][0]
         kern = offset - new_adv[a] - lsb_b + lsb_a
         pairs.append((gname(a), gname(b), round(kern)))
-    expected = {a + b: (logo_x[b][0] - logo_x[a][0]) - base_side[b][0] + base_side[a][0] for a, b in zip(LETTERS, LETTERS[1:])}
+    expected = {a + b: (wm_x[b][0] - wm_x[a][0]) - ((wm_x[a][2] - wm_x[a][0]) - (logo_x[a][2] - logo_x[a][0])) - base_side[b][0] + base_side[a][0] for a, b in zip(LETTERS, LETTERS[1:])}
     wordmark_pairs = {(a, b) for a, b, _ in pairs}
     # every other pair that involves a logotype letter: place it so the mean white in the x-height band equals what the
     # skeleton had for the same pair (the same measure the wordmark's own spacing uses), so h a l m i c sit evenly in text
@@ -326,6 +418,26 @@ def main():
     f2.save(woff2)
     print("wrote", ttf, os.path.getsize(ttf), "bytes;", woff2, os.path.getsize(woff2), "bytes")
     verify(ttf, expected)
+    if SHIP:
+        ship(woff2)
+
+
+def ship(woff2):
+    app = os.path.dirname(BRAND)
+    fonts = os.path.join(app, "public", "fonts")
+    h = hashlib.sha1(open(woff2, "rb").read()).hexdigest()[:8]
+    name = f"halmic-display.{h}.woff2"
+    for old in os.listdir(fonts):
+        if re.fullmatch(r"halmic-display(\.[0-9a-f]{8})?\.woff2", old) and old != name:
+            os.remove(os.path.join(fonts, old))
+    shutil.copyfile(woff2, os.path.join(fonts, name))
+    for rel in ("public/base.css", "build.mjs"):
+        p = os.path.join(app, rel)
+        src = open(p).read()
+        new = re.sub(r"halmic-display(\.[0-9a-f]{8})?\.woff2", name, src)
+        if new != src:
+            open(p, "w").write(new)
+    print("shipped", name)
 
 
 def add_pair_kerns(font, pairs):
