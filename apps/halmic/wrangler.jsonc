@@ -6,7 +6,9 @@
   // Only /api/* runs the Worker (live status); everything else is served straight from ./public.
   "assets": { "directory": "./public", "binding": "ASSETS", "not_found_handling": "404-page", "run_worker_first": ["/api/*"] },
   // Secrets, set once with `wrangler secret put`: TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET (without them /api/live answers "unknown").
-  // At launch, uncomment the next line; it requires the halmic.com zone to exist in the Cloudflare account.
-  // "routes": [{ "pattern": "halmic.com", "custom_domain": true }, { "pattern": "www.halmic.com", "custom_domain": true }],
+  // Requires the halmic.com zone in the Cloudflare account. workers.dev and preview URLs are off: halmic.com is the only address.
+  "routes": [{ "pattern": "halmic.com", "custom_domain": true }, { "pattern": "www.halmic.com", "custom_domain": true }],
+  "workers_dev": false,
+  "preview_urls": false,
   "observability": { "enabled": true }
 }
