@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import worker, { getClips, getClipThumb, mapClips } from './index.js';
+import worker, { getClips, getClipThumb, getGameArt, mapClips } from './index.js';
 
 const ENV = { TWITCH_CLIENT_ID: 'id', TWITCH_CLIENT_SECRET: 'secret' };
 const NOW = Date.parse('2026-10-11T12:00:00Z');
@@ -142,5 +142,57 @@ test('worker routes /api/clip-thumb/<id> (GET only; unknown id 404)', async () =
   const none = await worker.fetch(new Request('https://halmic.com/api/clip-thumb/Whatever'), {}, {});
   assert.equal(none.status, 404);
   const post = await worker.fetch(new Request('https://halmic.com/api/clip-thumb/Whatever', { method: 'POST' }), {}, {});
+  assert.equal(post.status, 405);
+});
+
+// game-art: clips carry /api/game-art/<game id> when Helix /games gave a box art url on a Twitch host; the endpoint proxies it like clip-thumb
+const ART = 'https://static-cdn.jtvnw.net/ttv-boxart/27471_IGDB-{width}x{height}.jpg';
+const gamesArt = (extra = []) => () => res({ data: [{ id: '27471', name: 'Minecraft', box_art_url: ART }, ...extra] });
+function artFake(img, over = {}) {
+  const f = fake({ clips: () => res({ data: [clip(1), clip(2, { game_id: '32982' }), clip(3, { game_id: '' })] }), games: gamesArt([{ id: '32982', name: 'VALORANT', box_art_url: 'https://evil.example/{width}x{height}.jpg' }]), ...over });
+  const calls = f.calls;
+  const fetchFn = async (url, ...a) => { if (String(url).includes('ttv-boxart')) { calls.push(String(url)); return img(); } return f.fetchFn(url, ...a); };
+  return { fetchFn, calls };
+}
+const adeps = (f) => ({ fetchFn: f.fetchFn, now: NOW, state: {}, ids: {}, thumbs: { map: null, exp: 0 }, arts: { map: null, exp: 0 }, cache: null });
+
+test('game-art: clips get a local gameArt path only when the game has Twitch-hosted art', async () => {
+  const r = await run(artFake(png));
+  assert.deepEqual(r.body.clips.map((c) => c.gameArt), ['/api/game-art/27471', undefined, undefined]);
+  assert.ok(!JSON.stringify(r.body).includes('jtvnw') && !JSON.stringify(r.body).includes('ttv-boxart'));
+});
+
+test('game-art: success fills the size template, proxies the image, caches a day', async () => {
+  const f = artFake(png);
+  const r = await getGameArt('27471', ENV, adeps(f));
+  assert.equal(r.status, 200);
+  assert.equal(r.headers.get('content-type'), 'image/jpeg');
+  assert.equal(r.headers.get('cache-control'), 'public, max-age=86400');
+  assert.ok(f.calls.includes('https://static-cdn.jtvnw.net/ttv-boxart/27471_IGDB-188x250.jpg'));
+});
+
+test('game-art: only ids from the cached clips are served (others, non-numeric, non-Twitch host -> null)', async () => {
+  const f = artFake(png);
+  assert.equal(await getGameArt('99999', ENV, adeps(f)), null);
+  assert.equal(await getGameArt('32982', ENV, adeps(f)), null);   // art url on a non-Twitch host was dropped
+  assert.equal(await getGameArt('27471x', ENV, adeps(f)), null);
+  assert.equal(await getGameArt('../1', ENV, adeps(f)), null);
+  assert.ok(!f.calls.some((u) => u.includes('evil.example')));
+  assert.equal(await getGameArt('27471', {}, adeps(artFake(png))), null);   // no secrets
+});
+
+test('game-art: upstream that is not an image, fails or is huge -> 502', async () => {
+  for (const img of [() => new Response('<html>', { headers: { 'content-type': 'text/html' } }), () => new Response('x', { status: 500, headers: { 'content-type': 'image/jpeg' } }), () => { throw new Error('net'); }, () => new Response(new Uint8Array(2.1e6), { headers: { 'content-type': 'image/jpeg' } })]) {
+    const r = await getGameArt('27471', ENV, adeps(artFake(img)));
+    assert.equal(r.status, 502);
+    assert.equal(r.headers.get('cache-control'), 'no-store');
+  }
+});
+
+test('worker routes /api/game-art/<id> (GET only; unknown id 404; non-numeric 404)', async () => {
+  const none = await worker.fetch(new Request('https://halmic.com/api/game-art/12345'), {}, {});
+  assert.equal(none.status, 404);
+  assert.equal((await worker.fetch(new Request('https://halmic.com/api/game-art/abc')), {}, {}).status, 404);
+  const post = await worker.fetch(new Request('https://halmic.com/api/game-art/12345', { method: 'POST' }), {}, {});
   assert.equal(post.status, 405);
 });
