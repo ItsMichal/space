@@ -48,7 +48,7 @@ if (/class="[^"]*\b(ey|cb|card|ct|cx)\b/.test(home)) bad.push('index.html: old c
 if (/\b(clip|video)\b/i.test([...home.matchAll(/<span class="chip">[\s\S]*?<\/span><\/span>/g)].map((m) => m[0]).join(''))) bad.push('index.html: a chip says clip/video (platforms are shown by icon)');
 for (const m of home.matchAll(/<span class="bdg[^>]*>/g)) if (!/role="img"/.test(m[0]) || !/aria-label="[^"]+"/.test(m[0])) bad.push(`index.html: badge without an accessible name ${m[0].slice(0, 70)}`);
 for (const [id, name] of [['tw', 'Twitch'], ['yt', 'YouTube']]) if (!new RegExp(`class="bdg bdg-${id}" role="img" aria-label="${name}"`).test(home)) bad.push(`index.html: no ${name} badge`);
-for (const [kind, href, extra] of [['tw', 'https://www.twitch.tv/halmictv', 'id="twitch"'], ['yt', 'https://www.youtube.com/@halmic', ''], ['itch', 'https://halmic.itch.io/', ''], ['dc', 'https://discord.gg/4xvveJ8jS5', 'id="hi"'], ['x', 'https://x.com/halmicc', ''], ['md', 'https://halmic.medium.com/', '']]) {
+for (const [kind, href, extra] of [['tw', 'https://www.twitch.tv/halmictv', 'id="twitch"'], ['yt', 'https://www.youtube.com/@halmic', ''], ['itch', 'https://halmic.itch.io/', ''], ['x', 'https://x.com/halmicc', 'id="hi"'], ['rd', 'https://www.reddit.com/r/pokemonphoenixrising/', ''], ['md', 'https://halmic.medium.com/', '']]) {
   const m = home.match(new RegExp(`<a class="tile t-link tl-${kind}[^"]*" href="([^"]+)"[^>]*>`));
   if (!m) bad.push(`index.html: link tile ${kind} missing`);
   else { if (m[1] !== href) bad.push(`index.html: link tile ${kind} points at ${m[1]}`); if (extra && !m[0].includes(extra)) bad.push(`index.html: link tile ${kind} lost ${extra}`); }
@@ -117,12 +117,32 @@ const mtLogLinks = [...mtHome.matchAll(/<a class="card[^"]*" href="(\/work\/proj
 if (mtLogLinks.length < 6) bad.push(`work/project-mountaintop: expected 6 dev-log cards, found ${mtLogLinks.length}`);
 for (const l of mtLogLinks) { const h = fs.readFileSync(path.join(pub, l, 'index.html'), 'utf8'); if (!/<article class="log">/.test(h) || !/"@type":"BlogPosting"/.test(h)) bad.push(`${l}: not a dev-log article with BlogPosting JSON-LD`); }
 for (const f of walk(mtDir).filter((x) => x.endsWith('.html'))) { const h = fs.readFileSync(f, 'utf8'); if (/<iframe/.test(h)) bad.push(`${path.relative(pub, f)}: pre-loaded iframe (embeds must be click-to-load)`); }
-if (!/<a class="tile [^"]*" href="\/work\/project-mountaintop\/"/.test(home)) bad.push('index.html: Project Mountaintop tile missing from Work');
+// Mountaintop leads Play (2x2), Phoenix Rising leads Work (2x2); Discord is gone everywhere; the hi tile is X
+{
+  const sec = (id) => { const i = home.indexOf(`id="${id}"`); return home.slice(i, home.indexOf('class="bsec"', i + 10) > 0 ? home.indexOf('class="bsec"', i + 10) : undefined); };
+  const play = sec('games'), work = sec('work');
+  if (!/^[\s\S]*?<div class="bento b-play"><a class="tile tm lead w2" href="\/work\/project-mountaintop\/"/.test(play)) bad.push('index.html: Project Mountaintop should be the 2x2 lead tile of Play');
+  if (/project-mountaintop\/"[^>]*>/.test(work.replace(/<a class="tile t-stat[^>]*>/g, ''))) bad.push('index.html: Mountaintop tile should not be in Work');
+  if (!/<a class="tile t-stat tdim\s+lead w2" href="\/work\/pokemon-phoenix-rising\/"/.test(work) || !/QA developer/.test(work)) bad.push('index.html: Phoenix Rising 2x2 lead with the QA developer role missing from Work');
+  if ((work.match(/data-vid="/g) ?? []).length < 2) bad.push('index.html: Work should carry the Phoenix Rising videos');
+  if (!/<a class="tile t-link tl-rd[^"]*" href="https:\/\/www\.reddit\.com\/r\/pokemonphoenixrising\/"/.test(work)) bad.push('index.html: subreddit link tile missing from Work');
+  const gamesOrder = [...play.matchAll(/<a class="tile [^"]*" href="([^"]+)"/g)].map((m) => m[1]);
+  if (gamesOrder[1] !== '/games/glass-gunslinger-dod/' || gamesOrder[2] !== '/games/lvasion-du-criminel-de-sa-prison/') bad.push(`index.html: Play order after the lead should be Glass Gunslinger, L'évasion (got ${gamesOrder.slice(1, 3)})`);
+  for (const f of walk(pub).filter((x) => /\.(html|txt|xml|js|css)$/.test(x))) if (/discord/i.test(fs.readFileSync(f, 'utf8'))) bad.push(`${path.relative(pub, f)}: mentions Discord`);
+  if (/discord/i.test(fs.readFileSync(path.join(pub, 'icons.svg'), 'utf8'))) bad.push('icons.svg: Discord glyph still in the sprite');
+  const gi = fs.readFileSync(path.join(pub, 'games/index.html'), 'utf8');
+  if (!/<div class="bento b-play"><a class="tile tm lead w2" href="\/work\/project-mountaintop\/"/.test(gi)) bad.push('games/index.html: Project Mountaintop should be the first tile');
+  const postsJson = JSON.parse(fs.readFileSync(path.join(pub, '..', 'content/posts.json'), 'utf8')).posts;
+  if (postsJson.length) {
+    if (!home.includes('id="posts"') || !/<h2>Posts<\/h2>/.test(home)) bad.push('index.html: #posts bento missing');
+    for (const p of postsJson) { if (!/^https:\/\/x\.com\/halmicc\/status\/\d+$/.test(p.url) || !home.includes(`href="${p.url}"`)) bad.push(`index.html: post tile ${p.id} missing or wrong url`); if (p.media && (!p.alt || !resolve(`/posts/${p.media}`) || fs.statSync(path.join(pub, 'posts', p.media)).size > 200 * 1024)) bad.push(`posts/${p.media}: missing, no alt, or over 200 KB`); }
+  } else if (home.includes('id="posts"')) bad.push('index.html: empty #posts bento rendered');
+}
 const games = fs.readFileSync(path.join(pub, 'games/index.html'), 'utf8');
 const gOrder = [...games.matchAll(/<a class="tile [^"]*" href="\/games\/([^/"]+)\//g)].map((m) => m[1]);
 if (gOrder[0] !== 'glass-gunslinger-dod' || gOrder[1] !== 'lvasion-du-criminel-de-sa-prison') bad.push(`games/index.html: featured games should come first (got ${gOrder.slice(0, 2)})`);
 for (const f of ['games/index.html', 'videos/index.html', 'design/index.html']) { const h = fs.readFileSync(path.join(pub, f), 'utf8'); if (/class="[^"]*\b(ey|cb)\b/.test(h)) bad.push(`${f}: eyebrow/card markup on an index page`); if (!/class="bento /.test(h)) bad.push(`${f}: bento expected`); }
-if ((games.match(/class="tile tm tg lead w2"/g) ?? []).length !== 1) bad.push('games/index.html: expected exactly one lead game tile');
+if ((games.match(/class="tile tm lead w2"/g) ?? []).length !== 1) bad.push('games/index.html: expected exactly one lead tile (Project Mountaintop)');
 const sm = fs.readFileSync(path.join(pub, 'sitemap.xml'), 'utf8');
 for (const m of sm.matchAll(/<loc>([^<]+)<\/loc>/g)) { check('sitemap.xml', m[1]); if (/calm|404/.test(m[1])) bad.push(`sitemap.xml: ${m[1]}`); }
 if (!/name="robots" content="noindex"/.test(fs.readFileSync(path.join(pub, '404.html'), 'utf8'))) bad.push('404.html: not noindex');
