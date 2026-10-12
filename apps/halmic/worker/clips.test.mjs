@@ -192,7 +192,7 @@ test('game-art: upstream that is not an image, fails or is huge -> 502', async (
 test('worker routes /api/game-art/<id> (GET only; unknown id 404; non-numeric 404)', async () => {
   const none = await worker.fetch(new Request('https://halmic.com/api/game-art/12345'), {}, {});
   assert.equal(none.status, 404);
-  assert.equal((await worker.fetch(new Request('https://halmic.com/api/game-art/abc')), {}, {}).status, 404);
+  assert.equal((await worker.fetch(new Request('https://halmic.com/api/game-art/abc'), {}, {})).status, 404);
   const post = await worker.fetch(new Request('https://halmic.com/api/game-art/12345', { method: 'POST' }), {}, {});
   assert.equal(post.status, 405);
 });
