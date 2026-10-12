@@ -198,7 +198,7 @@
     if (!flex) return;
     const cols = parseInt(getComputedStyle(b).getPropertyValue('--cols'), 10) || 2;
     let cells = 0;
-    for (const t of b.children) { if (t === flex) continue; const cs = getComputedStyle(t); cells += Math.min(cols, spanOf(cs.gridColumnEnd)) * spanOf(cs.gridRowEnd); }
+    for (const t of b.children) { if (t === flex) continue; const cs = getComputedStyle(t); cells += Math.min(cols, spanOf(cs.gridColumnStart)) * spanOf(cs.gridRowStart); }
     flex.style.gridColumn = `span ${cols - (cells % cols)}`;
   }
   const bentos = [...document.querySelectorAll('.bento')];

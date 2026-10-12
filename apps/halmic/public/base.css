@@ -240,7 +240,7 @@ a.card:hover .goi, a.card:focus-visible .goi { background: var(--paper); color: 
 .w2:not(.lead) .tbg .yt-img { --z: 1; }
 a.tile:hover .tbg img, a.tile:hover .tbg video { transform: scale(calc(var(--z, 1) * 1.04)); }
 .tm::after { content: ""; position: absolute; inset: 0; z-index: 0; background: linear-gradient(to top, #0f0e13ee 0, #0f0e13a0 30%, #0f0e1300 62%); pointer-events: none; }
-.tg .tbg { background: var(--ink); } .tg .tbg img { object-fit: contain; object-position: 50% 36%; image-rendering: pixelated; }
+.tg .tbg { background: var(--ink-2); } .tg .tbg img { object-fit: contain; object-position: 50% 36%; image-rendering: pixelated; }
 .tpaper { background: var(--paper); }
 .tm-nopic .tbg { display: grid; place-items: center; background: linear-gradient(150deg, #2a2340, var(--ink-2)); }
 .tm-nopic .ghost { width: 34cqi; height: 34cqi; opacity: .22; }
