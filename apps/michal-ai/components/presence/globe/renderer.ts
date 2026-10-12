@@ -136,7 +136,7 @@ in float aB;  // rate of the rate (drag), rad/s^2
 uniform float uT; uniform float uGmst; uniform mat3 uRot; uniform vec2 uRes; uniform float uR; uniform float uPitch;
 uniform float uThin; uniform float uAlpha;
 ${COMMON}
-out float vA; out float vDim;
+out float vA; out float vDim; out vec2 vOff;
 const float MU = 398600.8; const float RE = 6378.135; const float J2 = .001082616; const float TAU = 6.2831853;
 void main(){
   vA = 0.; vDim = 1.;
@@ -156,23 +156,27 @@ void main(){
   vis *= mix(.5, 1., smoothstep(-.3, .3, v.z));
   vis *= 1. - smoothstep(1.04, 1.062, rho);          // inside the canvas margin
   vec2 px = .5 * uRes + v.xy * uR;
-  vec2 c = (floor(px / uPitch) + .5) * uPitch;
-  vDim = dimAt(c);
-  if (uPtr.z > 0.) c += pushAt(c);
+  vDim = dimAt(px);
+  if (uPtr.z > 0.) px += pushAt(px);
+  // off the grid: the sprite sits on the nearest whole pixel, the dot is drawn at the exact sub-pixel position inside it
+  vec2 c = floor(px) + .5;
+  vOff = px - c;
   vA = vis * uAlpha * vDim;
   gl_Position = vec4(c / uRes * 2. - 1., 0., 1.);
-  gl_PointSize = uPitch;
+  gl_PointSize = ceil(uPitch * .6) * 2. + 2.;
 }`
 
 const SAT_FS = `#version 300 es
 precision highp float;
 uniform float uPitch; uniform vec3 uInk;
-in float vA; in float vDim;
+in float vA; in float vDim; in vec2 vOff;
 out vec4 o;
 void main(){
   if (vA <= 0.) discard;
-  float d = length((gl_PointCoord - .5) * uPitch);
-  float rad = uPitch * .2 * (.5 + .5 * vDim);
+  vec2 p = (gl_PointCoord - .5) * (ceil(uPitch * .6) * 2. + 2.);
+  p.y = -p.y;
+  float d = length(p - vOff);
+  float rad = uPitch * .25 * (.5 + .5 * vDim);
   float a = (1. - smoothstep(rad - .55, rad + .55, d)) * vA;
   o = vec4(uInk * a, a);
 }`
@@ -184,7 +188,7 @@ const P_FS = `#version 300 es
 precision highp float;
 uniform sampler2D uPic; uniform sampler2D uAtlas;
 uniform vec4 uRect; uniform vec4 uCrop; uniform vec2 uCell; uniform float uGlyphs;
-uniform float uCircle; uniform float uMode; uniform float uStr; uniform float uDots; uniform float uEdge; uniform vec3 uInk;
+uniform float uCircle; uniform float uMode; uniform float uStr; uniform float uDots; uniform float uEdge; uniform float uBoost; uniform vec3 uInk;
 ${COMMON}
 out vec4 o;
 vec2 picUV(vec2 p){ vec2 t = (p - uRect.xy) / uRect.zw; t.y = 1. - t.y; return mix(uCrop.xy, uCrop.zw, t); }
@@ -199,7 +203,7 @@ void main(){
   if (rel.x < 0. || rel.y < 0. || rel.x > uRect.z || rel.y > uRect.w) discard;
   float edge = uEdge > 0. ? smoothstep(0., uEdge, rel.y) : 1.;
   if (uMode < .5) {
-    float a = uCircle > .5 ? circ(f) : smoothstep(.12, .8, texture(uPic, picUV(f)).a);
+    float a = uCircle > .5 ? circ(f) : smoothstep(.12, .8, texture(uPic, picUV(f)).a) * smoothstep(0., .1, rel.x / uRect.z) * (1. - smoothstep(.86, 1., rel.x / uRect.z));
     o = vec4(0., 0., 0., a * edge * uStr);
     return;
   }
@@ -213,10 +217,15 @@ void main(){
   if (local.x < 0. || local.y < 0. || local.x >= uCell.x || local.y >= uCell.y) discard;
   vec2 q = .25 * uCell;
   vec4 s = texture(uPic, picUV(centre)) * .4 + .15 * (texture(uPic, picUV(centre + vec2(q.x, q.y))) + texture(uPic, picUV(centre + vec2(-q.x, q.y))) + texture(uPic, picUV(centre + vec2(q.x, -q.y))) + texture(uPic, picUV(centre + vec2(-q.x, -q.y))));
-  float m = smoothstep(.3, .75, s.a) * circ(centre);
+  vec2 uvc = (centre - uRect.xy) / uRect.zw;
+  // the figure's picture ends at the texture edge (sleeve, shoulder): fade the sides so there is no straight cut
+  float side = uCircle > .5 ? 1. : smoothstep(0., .1, uvc.x) * (1. - smoothstep(.86, 1., uvc.x));
+  float m = smoothstep(.3, .75, s.a) * circ(centre) * side;
   if (m <= .01) discard;
   float lum = s.r / max(s.a, .001);
   float d = clamp(pow(1. - clamp(lum, 0., 1.), .8) * 1.5 + .05, 0., 1.);
+  d = clamp((d - .5) * uBoost + .5, 0., 1.);
+  d *= uCircle > .5 ? .85 : .6;                                   // darkest areas stay an open texture (coverage about 55-60%)
   float cov;
   if (uDots > .5) {
     float r = min(uCell.x, uCell.y) * (.12 + .46 * d);
@@ -225,7 +234,8 @@ void main(){
     float gi = floor(d * (uGlyphs - 1.) + .5);
     cov = texture(uAtlas, vec2((gi + local.x / uCell.x) / uGlyphs, 1. - local.y / uCell.y)).a;
   }
-  float a = cov * m * uStr * dimAt(centre) * edge;
+  float dm = uCircle > .5 ? mix(1., dimAt(centre), .35) : dimAt(centre);
+  float a = cov * m * uStr * dm * edge;
   o = vec4(uInk * a, a);
 }`
 
@@ -274,6 +284,8 @@ export interface PortraitSpec {
   strength: number
   /** fade the bottom edge over this many canvas px (0 = hard) */
   edge: number
+  /** contrast about mid-tone (1 = none) */
+  boost: number
   /** pointer push for this layer, canvas px */
   push: { radius: number; max: number }
 }
@@ -339,7 +351,7 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
     g.linkProgram(pprog)
     if (!g.getProgramParameter(pprog, g.LINK_STATUS)) throw new Error(g.getProgramInfoLog(pprog) ?? 'link')
     const PU = (n: string) => g.getUniformLocation(pprog, n)
-    const pu = { pic: PU('uPic'), atlas: PU('uAtlas'), rect: PU('uRect'), crop: PU('uCrop'), cell: PU('uCell'), glyphs: PU('uGlyphs'), circle: PU('uCircle'), mode: PU('uMode'), str: PU('uStr'), dots: PU('uDots'), edge: PU('uEdge'), ink: PU('uInk'), box: PU('uBox[0]'), dim: PU('uDim[0]'), feather: PU('uFeather'), ptr: PU('uPtr'), push: PU('uPush') }
+    const pu = { pic: PU('uPic'), atlas: PU('uAtlas'), rect: PU('uRect'), crop: PU('uCrop'), cell: PU('uCell'), glyphs: PU('uGlyphs'), circle: PU('uCircle'), mode: PU('uMode'), str: PU('uStr'), dots: PU('uDots'), edge: PU('uEdge'), boost: PU('uBoost'), ink: PU('uInk'), box: PU('uBox[0]'), dim: PU('uDim[0]'), feather: PU('uFeather'), ptr: PU('uPtr'), push: PU('uPush') }
     let picTex: WebGLTexture | null = null
     let atlasTex: WebGLTexture | null = null
     let atlasN = 1
@@ -491,6 +503,7 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
           g.uniform1f(pu.str, pt.strength)
           g.uniform1f(pu.dots, pt.dots ? 1 : 0)
           g.uniform1f(pu.edge, pt.edge)
+          g.uniform1f(pu.boost, pt.boost)
           g.uniform3fv(pu.ink, palette.ink)
           g.uniform4fv(pu.box, boxes)
           g.uniform1fv(pu.dim, dims)

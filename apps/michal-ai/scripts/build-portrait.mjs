@@ -15,8 +15,8 @@ if (!photo || !matte) {
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
 const W = 384
 const H = 512
-// 3:4 crop of the 1500x2000 original: x 300..1425, y 200..1700 (head top at about 4%, shoulders to the bottom edge).
-const crop = { left: 300, top: 200, width: 1125, height: 1500 }
+// 3:4 crop of the 1500x2000 original: x 300..1500, y 200..1800 (head top at about 4%, shoulders to the bottom edge).
+const crop = { left: 300, top: 200, width: 1200, height: 1600 }
 
 const base = sharp(photo).extract(crop).resize(W, H, { kernel: 'lanczos3' }).greyscale().normalise({ lower: 2, upper: 98 })
 const flat = await base.clone().raw().toBuffer()

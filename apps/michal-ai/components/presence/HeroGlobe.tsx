@@ -17,10 +17,10 @@ const DEG_PER_S = 2.4
 const START = { lat: 18, lon: -100 } // must match GLOBE_FALLBACK_VIEW
 const FALLBACK_FRACTION = GLOBE_FALLBACK_VIEW.radius / (GLOBE_FALLBACK_VIEW.size / 2)
 /** Constellation dot strength (of the ink alpha) and fade-in time. */
-const SAT_ALPHA = 0.6
+const SAT_ALPHA = 0.7
 const SAT_FADE_MS = 1600
 /** Keep every n-th satellite on small canvases. */
-const thinFor = (cssSize: number) => (cssSize < 520 ? 2 : 1)
+const thinFor = (cssSize: number) => (cssSize < 520 ? 3 : 2)
 /** The phrase's own enter animation: 160 ms delay + 320 ms, cubic-bezier(0.22, 1, 0.36, 1) (app/styles/craft.css, --ease-out-soft). */
 const CUT_MS = 480
 const PUSH_RADIUS = 100 // CSS px
@@ -96,7 +96,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     sat: null as Packed | null, satFrom: 0,
     portrait: null as null | { aspect: number; from: number }, pspec: null as PortraitSpec | null, pstr: 0, globeA: 0.4,
     cut: [] as Cut[], cutFeather: 24, anim: null as null | { from: Cut[]; to: Cut[]; t0: number },
-    fine: false, pin: null as null | [number, number],
+    freeze: false, fine: false, pin: null as null | [number, number],
     px: { x: 0, v: 0 }, py: { x: 0, v: 0 }, pk: { x: 0, v: 0 }, tx: 0, ty: 0, over: false, lastMove: 0,
   })
   st.current.mode = mode
@@ -132,12 +132,18 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
         ? [live.querySelector<HTMLElement>('.hook__stem'), live.querySelector<HTMLElement>('.hook__item[data-current] .hook__link')].filter((n): n is HTMLElement => !!n)
         : [t]
       let l = Infinity, tp = Infinity, rt = -Infinity, bt = -Infinity
+      // Union of the actual text runs, not the element boxes: block-level lines (the name's two spans) would otherwise
+      // report the full container width and dim everything to the right of the text.
       for (const n of parts) {
-        const range = document.createRange()
-        range.selectNodeContents(n)
-        const r = range.getBoundingClientRect()
-        if (!r.width || !r.height) continue
-        l = Math.min(l, r.left); tp = Math.min(tp, r.top); rt = Math.max(rt, r.right); bt = Math.max(bt, r.bottom)
+        const walker = document.createTreeWalker(n, NodeFilter.SHOW_TEXT)
+        for (let tn = walker.nextNode(); tn; tn = walker.nextNode()) {
+          if (!tn.textContent?.trim()) continue
+          const range = document.createRange()
+          range.selectNodeContents(tn)
+          const r = range.getBoundingClientRect()
+          if (!r.width || !r.height) continue
+          l = Math.min(l, r.left); tp = Math.min(tp, r.top); rt = Math.max(rt, r.right); bt = Math.max(bt, r.bottom)
+        }
       }
       if (!Number.isFinite(l)) return
       const dim = Number(t.dataset.heroText) || 0.15
@@ -170,26 +176,31 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     let cellW: number
     let circle = false
     let crop: PortraitSpec['crop'] = [0, 0, 1, 1]
-    let strength = 0.9
+    let strength = 0.72
     let edge = 0
+    let boost = 1
     if (vw >= FIGURE_MIN_WIDTH) {
       const hb = document.getElementById('work-h')?.getBoundingClientRect()
-      bottom = hb ? hb.bottom + 10 : w.top + w.height * 0.7
-      height = Math.max(240, Math.min(600, bottom - 64))
+      // He runs down behind the first card (the card is on top and crops him): bottom is 150px below the heading.
+      const anchor = hb ? hb.bottom + 10 : w.top + w.height * 0.7
+      bottom = anchor + 150
+      height = Math.max(300, Math.min(760, bottom - 64))
       width = height * 0.75
       left = w.left + w.width * 0.54 - 0.44 * width
       cellW = 3.2
-      edge = 20 * sc
+      edge = 70 * sc // the part below the card's right edge fades out in dots
     } else {
       const h1 = document.querySelector<HTMLElement>('h1[data-hero-text]')?.getBoundingClientRect()
       const box = document.querySelector<HTMLElement>('h1[data-hero-text]')?.parentElement?.getBoundingClientRect()
-      const D = Math.max(64, Math.min(96, Math.round(vw * 0.2)))
+      const D = Math.max(72, Math.min(104, Math.round(vw * 0.26)))
       width = height = D
-      left = (box?.right ?? vw - 16) - D
-      bottom = (h1?.top ?? 84) - 10 + D
+      left = Math.min((box?.right ?? vw - 16) + 6, vw - 10) - D
+      bottom = 60 + D
       cellW = 1.7
       circle = true
-      crop = [0.148, 0.1, 0.688, 0.505]
+      boost = 1.9
+      // forehead to chin fills about 80% of the circle
+      crop = [0.083, 0.033, 0.709, 0.503]
       strength = Math.min(1, s.globeA + 0.35)
     }
     // Glyphs where they resolve (desktop); density dots on a square grid in the small circle, where a glyph would be a smudge.
@@ -207,6 +218,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
       dots,
       strength,
       edge,
+      boost,
       push: { radius: 90 * s.dpr, max: 5 * s.dpr },
     }
   }
@@ -218,7 +230,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     const dt = Math.min(0.05, (now - s.last) / 1000)
     s.last = now
     const gl = s.mode === 'gl'
-    if (!s.reduced && s.active) s.lon += DEG_PER_S * dt
+    if (!s.reduced && s.active && !s.freeze) s.lon += DEG_PER_S * dt
     const lat = gl ? START.lat : GLOBE_FALLBACK_VIEW.lat
     const lon = gl ? s.lon : GLOBE_FALLBACK_VIEW.lon
     if (s.r && s.anim) {
@@ -280,6 +292,8 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     const el = wrap.current
     if (!el) return
     st.current.reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    // Dev only: ?spin=0 freezes the decorative spin (satellites keep moving in real time), for motion screenshots.
+    if (process.env.NODE_ENV !== 'production') st.current.freeze = new URLSearchParams(window.location.search).get('spin') === '0'
     let near = false
     const update = () => setActive(near && document.visibilityState === 'visible')
     const io = new IntersectionObserver(([e]) => {
@@ -341,7 +355,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     const apply = () => {
       const s = st.current
       s.size = el.clientWidth
-      s.dpr = Math.min(1.5, window.devicePixelRatio || 1)
+      s.dpr = Math.min(s.size < 600 ? 2 : 1.5, window.devicePixelRatio || 1)
       s.r?.resize(s.size, s.dpr)
       const ga = parseFloat(getComputedStyle(el).getPropertyValue('--hero-globe-opacity'))
       if (Number.isFinite(ga)) s.globeA = ga
