@@ -1,6 +1,6 @@
 ---
 title: "Quantum Computing explained in 1 minute."
-slug: quantum-computing-explained-in-1-minute
+slug: quantum-computing-in-1-minute
 kind: article
 id: quantum-computing-explained-in-1-minute
 description: "Warning- massive oversimplifications! But that should have been obvious…"

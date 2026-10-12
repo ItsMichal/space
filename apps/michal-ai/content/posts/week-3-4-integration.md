@@ -1,6 +1,6 @@
 ---
 title: "Week 3→4 - Integration"
-slug: mountaintop-week-3-4-integration
+slug: week-3-4-integration
 kind: article
 id: mountaintop-week-3-4-integration
 description: "A short week with one big milestone: hiking-pole controls finally talk to Unity from custom Arduino hardware over a serial connection."

@@ -1,14 +1,15 @@
-export function YouTube({ id, title = 'YouTube video' }: { id: string; title?: string }) {
+import { LiteYouTube } from './LiteYouTube'
+import { youtubeStatus } from '@/lib/embeds'
+
+/** Renders nothing for a video the build-time check found private, deleted or embed-disabled (content/embed-status.json). */
+export function YouTube({ id, title }: { id: string; title?: string }) {
+  const known = youtubeStatus(id)
+  if (known && !known.embeddable) return null
   return (
-    <div className="embed embed--youtube" style={{ aspectRatio: '16 / 9' }}>
-      <iframe
-        src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}`}
-        title={title}
-        loading="lazy"
-        allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        style={{ width: '100%', height: '100%', border: 0 }}
-      />
-    </div>
+    <LiteYouTube
+      id={id}
+      title={title ?? known?.title ?? 'YouTube video'}
+      thumbnail={known?.thumbnail ?? `https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`}
+    />
   )
 }

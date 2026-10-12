@@ -1,6 +1,6 @@
 ---
 title: "Week 6→7 - Rest Week"
-slug: mountaintop-week-6-7-rest-week
+slug: week-6-7-rest-week
 kind: article
 id: mountaintop-week-6-7-rest-week
 description: "Week 6 to 7 of Project Mountaintop was mostly a recovery week."

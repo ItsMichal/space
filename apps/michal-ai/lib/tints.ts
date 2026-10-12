@@ -1,4 +1,5 @@
 import tokens from '../docs/design-system/tokens.json'
+import { stableKey } from './slug-history'
 import { hashString } from '../components/shader-image/mask'
 
 /**
@@ -12,4 +13,4 @@ export const TINTS: Tint[] = tokens.color.tokens
   .filter((t) => t.name.startsWith('tint-'))
   .map((t) => ({ name: t.name.slice(5), hex: (t.value as { light: string }).light }))
 
-export const tintFor = (slug: string): Tint => TINTS[hashString('paper:' + slug) % TINTS.length]
+export const tintFor = (slug: string): Tint => TINTS[hashString('paper:' + stableKey(slug)) % TINTS.length]

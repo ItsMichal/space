@@ -1,6 +1,6 @@
 ---
 title: "First Steps - Week 1→2 Recap"
-slug: mountaintop-first-steps-week-1-2-recap
+slug: week-1-2-first-steps
 kind: article
 id: mountaintop-first-steps-week-1-2-recap
 description: "Starting Project Mountaintop’s rhythm game from scratch in Unity: a modular rhythm system, ghosts, and a hilariously buggy first prototype."

@@ -1,6 +1,6 @@
 ---
 title: "Office Wizards"
-slug: office-wizards-barcode-game
+slug: office-wizards
 kind: project
 id: office-wizards-barcode-game
 description: "A competitive wizard game played with barcode scanners and printers, built with Unity and Arduino."

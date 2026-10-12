@@ -1,6 +1,6 @@
 ---
 title: "AI Crofty"
-slug: realtime-ai-f1-comentator
+slug: ai-crofty
 kind: project
 id: realtime-ai-f1-comentator
 description: "A realtime F1 23 commentator and race engineer that turns game telemetry into speech with OpenAI and TikTok TTS, with a Discord bot interface."

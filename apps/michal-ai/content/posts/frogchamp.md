@@ -1,6 +1,6 @@
 ---
 title: "Frogchamp"
-slug: frogchamp-ai-chat-stream
+slug: frogchamp
 kind: project
 id: frogchamp-ai-chat-stream
 description: "A streamer dashboard, currently on hold, that uses LLMs and data visualization to show realtime chat behavior and sentiment."

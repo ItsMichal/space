@@ -1,0 +1,63 @@
+{
+  "/projects/frogchamp": { "from": ["/projects/frogchamp-ai-chat-stream"], "key": "frogchamp-ai-chat-stream" },
+  "/projects/office-wizards": {
+    "from": ["/projects/office-wizards-barcode-game", "/projects/barcode-game"],
+    "key": "office-wizards-barcode-game"
+  },
+  "/projects/ai-crofty": { "from": ["/projects/realtime-ai-f1-comentator"], "key": "realtime-ai-f1-comentator" },
+  "/projects/starlink": { "from": ["/projects/spacex-starlink-general-projects"], "key": "spacex-starlink-general-projects" },
+  "/projects/starlink/order-flow": {
+    "from": ["/projects/spacex-starlink-general-projects/spacex-starlink-order-flow", "/projects/spacex-starlink-order-flow"],
+    "key": "spacex-starlink-order-flow"
+  },
+  "/projects/starlink/product-launches": {
+    "from": ["/projects/spacex-starlink-general-projects/spacex-starlink-product-launch", "/projects/spacex-starlink-product-launch"],
+    "key": "spacex-starlink-product-launch"
+  },
+  "/projects/project-mountaintop/week-1-2-first-steps": {
+    "from": ["/projects/project-mountaintop/mountaintop-first-steps-week-1-2-recap", "/writing/mountaintop-first-steps-week-1-2-recap"],
+    "key": "mountaintop-first-steps-week-1-2-recap"
+  },
+  "/projects/project-mountaintop/week-2-3-stay-on-beat": {
+    "from": ["/projects/project-mountaintop/mountaintop-stay-on-beat-week-2-3-recap", "/writing/mountaintop-stay-on-beat-week-2-3-recap"],
+    "key": "mountaintop-stay-on-beat-week-2-3-recap"
+  },
+  "/projects/project-mountaintop/week-3-4-integration": {
+    "from": ["/projects/project-mountaintop/mountaintop-week-3-4-integration", "/writing/mountaintop-week-3-4-integration"],
+    "key": "mountaintop-week-3-4-integration"
+  },
+  "/projects/project-mountaintop/week-4-5-deluxe-combos": {
+    "from": ["/projects/project-mountaintop/mountaintop-week-4-5-deluxe-combos", "/writing/mountaintop-week-4-5-deluxe-combos"],
+    "key": "mountaintop-week-4-5-deluxe-combos"
+  },
+  "/projects/project-mountaintop/week-5-6-space": {
+    "from": ["/projects/project-mountaintop/mountaintop-week-5-6-spaaaaace", "/writing/mountaintop-week-5-6-spaaaaace"],
+    "key": "mountaintop-week-5-6-spaaaaace"
+  },
+  "/projects/project-mountaintop/week-6-7-rest-week": {
+    "from": ["/projects/project-mountaintop/mountaintop-week-6-7-rest-week", "/writing/mountaintop-week-6-7-rest-week"],
+    "key": "mountaintop-week-6-7-rest-week"
+  },
+  "/projects/project-mountaintop/danny-rankin-mentor": {
+    "from": ["/projects/project-mountaintop/mountaintop-danny-rankin-mentor-extraordinaire", "/writing/mountaintop-danny-rankin-mentor-extraordinaire"],
+    "key": "mountaintop-danny-rankin-mentor-extraordinaire"
+  },
+  "/writing/analog-experiments-screaming-robot": {
+    "from": ["/writing/experiments-in-analog-and-a-failed-attempt-at-a-screaming-robot"],
+    "key": "experiments-in-analog-and-a-failed-attempt-at-a-screaming-robot"
+  },
+  "/writing/led-pong-arduino-nano-33-iot": {
+    "from": ["/writing/led-pong-and-more-adventures-with-the-arduino-nano-33-iot"],
+    "key": "led-pong-and-more-adventures-with-the-arduino-nano-33-iot"
+  },
+  "/writing/p5-js-punching-bag-game": { "from": ["/writing/making-a-punching-bag-game-in-p5-js"], "key": "making-a-punching-bag-game-in-p5-js" },
+  "/writing/kinetic-typography": { "from": ["/writing/making-a-kinetic-typography"], "key": "making-a-kinetic-typography" },
+  "/writing/threadboard-constellation": {
+    "from": ["/writing/making-a-literal-threadboard-constellation"],
+    "key": "making-a-literal-threadboard-constellation"
+  },
+  "/writing/quantum-computing-in-1-minute": {
+    "from": ["/writing/quantum-computing-explained-in-1-minute"],
+    "key": "quantum-computing-explained-in-1-minute"
+  }
+}

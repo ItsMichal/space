@@ -102,6 +102,15 @@ on the rendered text). Compare against the live sites before treating any of the
 | External link arrow | github.com, developer.mozilla.org external links | Small arrow glyph after links that leave the site |
 | Wide table scrolling inside its own frame | github.com markdown tables, stripe.com/docs | Table wrapped in a focusable scroll region, semantics kept |
 | Reactions row and view count | github.com issue reactions, medium.com claps and view counts | Five fixed emoji pills with counts, one toggle each (github.com); a quiet count beside them (medium.com). Neither was measured; pill size is the existing 44px touch target |
+## Glass in dark mode (2026-10-12)
+
+Bug: on a dark reading page the nav pill was a pale milky slab with near-white text. Cause and fix are in the PR; this section records the references the dark material was checked against.
+
+| Element | Reference | What we match | How verified |
+| --- | --- | --- | --- |
+| Dark bar tint and backdrop filter | apple.com global nav in dark (`saturate(1.8) blur(20px)` over `rgba(22,22,23,0.8)`), developer.apple.com materials (`rgba(29,29,31,0.7)`), numbers as recorded in the Glass surface row above | Dark tone tint `rgba(18,22,18,0.8)` (the basalt paper at the same 80 percent), frost blur 20px and saturate 1.8 on dark pages (`--glass-blur-dark`, `--glass-saturate-dark`); light tone keeps 10px and 1.6. Not re-measured in this pass (network was not available to the build environment) | Values taken from the rows above, not re-read from apple.com today |
+| Dark rim | iOS 26 and macOS Tahoe Liquid Glass in dark appearance (native, no web measurement; Apple HIG "Materials" and WWDC25 "Meet Liquid Glass" give no numbers) | Highlights are light but thin and low alpha (white at 28 percent, about 1px), the lower-right edge sinks into a deep shadow (black at 55 percent), no wash over the body. The frost bevel lift and the water-drop gloss are cut by 80 to 85 percent on dark tone so they no longer veil the tint | Matched by eye against stills |
+| Tint and glyph colour chosen together | iOS 26 (glass flips light/dark with its backdrop and its glyphs flip with it), macOS menu bar | One decision per piece of glass (`components/glass/theme.ts`): the tone picks the tint, the foreground, the rim and the edge as a set | Unit tested against the real token values, measured on rendered pixels in `docs/glass-shots/` |
 
 ## Citation (verified)
 

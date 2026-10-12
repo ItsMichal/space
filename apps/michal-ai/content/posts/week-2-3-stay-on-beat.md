@@ -1,6 +1,6 @@
 ---
 title: "Stay on Beat - Week 2→3 Recap"
-slug: mountaintop-stay-on-beat-week-2-3-recap
+slug: week-2-3-stay-on-beat
 kind: article
 id: mountaintop-stay-on-beat-week-2-3-recap
 description: "Fixing a shallow-versus-deep copy bug that broke ghost movement, then adding scoring, lighting and theming on the way to a playable demo."
