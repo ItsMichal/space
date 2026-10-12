@@ -31,6 +31,7 @@ h2.wide { max-width: none; margin-bottom: var(--s4); }
 .plays b { font: 750 clamp(28px, 4vw, 52px)/1 var(--display); letter-spacing: var(--dtrack); }
 .plays span { color: var(--mute); }
 .muted { color: var(--mute); margin: var(--s3) 0 0; max-width: 52ch; }
+.muted a { color: var(--text); text-decoration: underline; text-decoration-color: #ffffff66; text-underline-offset: 4px; } .muted a:hover { color: var(--blue-live); }
 .more { margin: var(--s3) 0 0; color: var(--mute); } .more a { text-decoration: underline; text-decoration-color: #ffffff44; text-underline-offset: 4px; padding: 10px 0; display: inline-block; } .more a:hover { color: var(--blue-live); } .more .sep { padding: 0 10px; opacity: .4; }
 
 

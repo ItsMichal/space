@@ -58,7 +58,7 @@ img { max-width: 100%; height: auto; display: block; }
 [data-live="1"] .bar { background: var(--blue-live); }
 [data-live="1"] .mdot { background: var(--blue-live); border-color: var(--blue-live); box-shadow: 0 0 14px #3d7bffaa; animation: onair 2.8s var(--ease) infinite; }
 @keyframes onair { 0%, 100% { scale: 1; opacity: 1; } 50% { scale: 1.14; opacity: .8; } }
-@media (prefers-reduced-motion: reduce) { .mdot { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { .mdot, .wordmark .idot { animation: none !important; } }
 
 /* buttons */
 .btn { display: inline-flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 26px; border-radius: 999px; font-weight: 600; font-size: 17px; transition: transform .32s var(--ease), background .32s var(--ease), color .32s var(--ease); border: 1.5px solid transparent; }
