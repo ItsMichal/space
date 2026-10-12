@@ -14,7 +14,6 @@
   --blue: #3d7bff;          /* signal on ink: 5.0:1 */
   --blue-live: #7fa6ff;     /* live tint: 8.1:1 */
   --blue-paper: #1d4fe0;    /* signal on paper: 5.5:1 */
-  --ph-ink: #f0b44c; --ph-paper: #8a5200;
   --sans: "Halmic Text", "Halmic Text Fallback", ui-sans-serif, system-ui, sans-serif;
   --display: "Halmic Display", "Halmic Display Fallback", "Halmic Text", "Halmic Text Fallback", ui-sans-serif, system-ui, sans-serif;
   --dtrack: 0;              /* heading tracking: the display face carries its own spacing (wordmark pairs kerned in the font) */
@@ -102,13 +101,4 @@ img { max-width: 100%; height: auto; display: block; }
 .clips .cg { color: var(--mute); font-size: 14px; } .clips .cd { color: var(--mute); font-variant-numeric: tabular-nums; font-size: 14px; }
 @media (max-width: 560px) { .clips a { grid-template-columns: 1fr auto; } .clips .cg { display: none; } }
 
-/* prototype dock */
-.dock { position: fixed; z-index: 50; left: 50%; translate: -50% 0; top: 14px; display: flex; gap: 8px; font-size: 13px; }
-.dock div { display: flex; padding: 3px; background: #000000b8; backdrop-filter: blur(10px); border: 1px solid #ffffff22; border-radius: 999px; }
-.dock a { padding: 6px 12px; border-radius: 999px; color: #d6d2dc; min-height: 32px; display: inline-flex; align-items: center; }
-.dock a[aria-current] { background: var(--paper); color: var(--ink); }
-.dock .tag { align-self: center; color: #ffffff77; font-size: 12px; }
-@media (max-width: 640px) { .dock { top: 62px; left: auto; right: 8px; translate: none; font-size: 12px; gap: 4px; } .dock .tag { display: none; } .dock a { padding: 4px 8px; min-height: 28px; } }
-.ph { color: var(--ph-ink); font-style: normal; } /* owner-content placeholders */
-.draft { color: var(--ph-ink); font-size: .55em; font-weight: 500; letter-spacing: 0; white-space: nowrap; vertical-align: .15em; }
 @media (prefers-reduced-motion: reduce) { * { transition-duration: .01s !important; animation-duration: .01s !important; } }

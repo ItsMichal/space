@@ -1,22 +1,35 @@
-// halmic prototype behaviour: live/offline flag, bar meters (the logotype's bars as a level meter),
+// halmic behaviour: live/offline state from /api/live, bar meters (the logotype's bars as a level meter),
 // click-to-load video (youtube-nocookie only after interaction). No dependencies.
+// Testing override: ?live=1 (or ?live=0) forces the state and skips the fetch; with ?live=1 you can add &game=Name.
 (() => {
   const root = document.documentElement;
   const params = new URLSearchParams(location.search);
-  const live = params.get('live') === '1';
-  root.dataset.live = live ? '1' : '0';
+  const override = params.get('live');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const LEAN = 13;
 
-  // ---- dock (prototype-only controls) ----
-  const dockLinks = document.querySelectorAll('[data-dock]');
-  dockLinks.forEach((a) => {
-    const u = new URL(a.getAttribute('href'), location.href);
-    if (a.dataset.dock === 'live') u.searchParams.set('live', a.dataset.val);
-    else u.searchParams.set('live', live ? '1' : '0');
-    a.href = u.pathname + u.search;
-    if ((a.dataset.dock === 'live' && a.dataset.val === (live ? '1' : '0')) || (a.dataset.dock === 'dir' && location.pathname.includes(a.dataset.val))) a.setAttribute('aria-current', 'true');
-  });
+  // ---- live state: the page is offline until the status endpoint says otherwise ----
+  const settle = () => { if (reduce) meters.forEach((m) => { for (let s = 0; s < 40; s++) tick(m, 3, 1 / 20); }); };
+  function setLive(on, game) {
+    root.dataset.live = on ? '1' : '0';
+    const g = document.querySelector('[data-game]');
+    if (g) { g.querySelector('[data-game-name]').textContent = on && game ? game : ''; g.hidden = !(on && game); }
+    settle();
+  }
+  async function poll() {
+    try {
+      const r = await fetch('/api/live', { headers: { accept: 'application/json' } });
+      if (!r.ok) return;
+      const d = await r.json();
+      setLive(d.live === true, typeof d.game === 'string' ? d.game : '');
+    } catch { /* stay as we are: offline on first load */ }
+  }
+  root.dataset.live = '0';
+  if (override === '0' || override === '1') { root.dataset.live = override; if (override === '1') queueMicrotask(() => setLive(true, params.get('game') || '')); }
+  else {
+    poll();
+    setInterval(() => { if (document.visibilityState === 'visible') poll(); }, 60000);
+  }
 
   // ---- noise ----
   const hash = (n) => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
@@ -76,7 +89,7 @@
     if (!document.hidden) meters.forEach((m) => m.run && tick(m, now / 1000, dt));
     requestAnimationFrame(frame);
   }
-  if (reduce) meters.forEach((m) => { for (let s = 0; s < 40; s++) tick(m, 3, 1 / 20); }); else requestAnimationFrame(frame);
+  if (reduce) settle(); else requestAnimationFrame(frame);
 
   // ---- click-to-load video ----
   document.addEventListener('click', (e) => {
