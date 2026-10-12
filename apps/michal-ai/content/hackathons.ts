@@ -82,6 +82,7 @@ export const hackathons: readonly Hackathon[] = [
       demo: 'https://creatle.vercel.app/',
       repo: 'https://github.com/ItsMichal/Creatle',
     },
+    relatedPostSlug: 'creatle',
     thumbnailSourceUrl: 'https://d112y698adiu2z.cloudfront.net/photos/production/software_thumbnail_photos/001/863/139/datas/medium.png',
     sources: [
       'https://devpost.com/software/creatle',
@@ -106,6 +107,7 @@ export const hackathons: readonly Hackathon[] = [
       demo: 'https://www.askawai.com',
       repo: 'https://github.com/ItsMichal/askawAI',
     },
+    relatedPostSlug: 'askawai',
     sources: [
       'https://devpost.com/software/askawai',
       'https://t9hacks-2022.devpost.com/',
@@ -128,6 +130,7 @@ export const hackathons: readonly Hackathon[] = [
       design: 'https://www.figma.com/file/ysP5AWX37W9krzzStFFGQW/PlaySafe',
       demo: 'https://www.figma.com/proto/ysP5AWX37W9krzzStFFGQW/PlaySafe?node-id=1%3A14714&scaling=scale-down',
     },
+    relatedPostSlug: 'playsafe',
     thumbnailSourceUrl: 'https://d112y698adiu2z.cloudfront.net/photos/production/software_thumbnail_photos/001/426/215/datas/medium.png',
     sources: ['https://devpost.com/software/playsafe-rwsxqh', 'https://hackcu-007.devpost.com/'],
   },
@@ -145,6 +148,7 @@ export const hackathons: readonly Hackathon[] = [
       // Listed in the README; returned HTTP 502 when checked on 2026-10-12.
       other: ['https://spectacle.hackmit.org/project/513'],
     },
+    relatedPostSlug: 'sea-of-thoughts',
     sources: ['https://github.com/ItsMichal/sea-of-thoughts'],
   },
 ]

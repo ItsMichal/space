@@ -25,7 +25,9 @@ export function getAllPosts({ includeDrafts = false }: { includeDrafts?: boolean
     .filter((p) => includeDrafts || !p.draft)
     .sort(
       (a, b) =>
-        (b.priority ?? 0) - (a.priority ?? 0) || b.date.localeCompare(a.date)
+        Number(Boolean(a.minor)) - Number(Boolean(b.minor)) ||
+        (b.priority ?? 0) - (a.priority ?? 0) ||
+        b.date.localeCompare(a.date)
     )
 }
 
@@ -41,6 +43,12 @@ export function getPostsByKind(kind: PostKind, opts: { includeDrafts?: boolean }
 export function getTopLevel(kind: PostKind, opts: { includeDrafts?: boolean } = {}): Post[] {
   return getAllPosts(opts).filter((p) => p.kind === kind && !p.parent)
 }
+
+/**
+ * Top-level projects without the `minor` flag: what the home page ("Selected work") and the menu previews show.
+ * /projects, the sitemap, feeds and static params use getTopLevel('project'), which lists minor projects last.
+ */
+export const getMainProjects = (opts: { includeDrafts?: boolean } = {}) => getTopLevel('project', opts).filter((p) => !p.minor)
 
 /** The owner's own blog: articles without a parent project. */
 export const getBlogPosts = () => getTopLevel('article')

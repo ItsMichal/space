@@ -1,4 +1,4 @@
-import { getBlogPosts, getTopLevel } from '@/lib/content'
+import { getBlogPosts, getMainProjects } from '@/lib/content'
 import type { Post } from '@/lib/content/types'
 import { getImageInfo } from '@/lib/media'
 import { postPath } from '@/lib/seo'
@@ -31,7 +31,7 @@ function preview(p: Post): MenuPreview {
 /** Work: the top projects in the site's own order (priority, then newest). Writing: the first posts of the blog, if any. */
 export function getMenuPreviews(): { work: MenuPreview[]; writing: MenuPreview[] } {
   return {
-    work: getTopLevel('project').slice(0, COUNT).map(preview),
+    work: getMainProjects().slice(0, COUNT).map(preview),
     writing: getBlogPosts().slice(0, COUNT).map(preview),
   }
 }
