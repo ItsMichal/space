@@ -86,6 +86,16 @@ Starlink image: the build makes 480/960/1600/2400 AVIF and WebP variants. Served
 - Contrast over the busiest backdrop (text hidden, darkest pixel under each text block, desktop): meta 6.25, description 6.67, title 8.81. Phone not measured.
 - Scroll on a 4x throttled 375px profile in headless Chrome with software GL: frame p50 33ms, p95 50ms, max 100ms, 0 long tasks (it was p50 17 / p95 33 before the glass and grid; relative only).
 
+## Glass in dark mode (2026-10-12)
+
+Bug: on a dark reading page the nav pill was a pale milky slab with near-white text. Cause and fix are in the PR; this section records the references the dark material was checked against.
+
+| Element | Reference | What we match | How verified |
+| --- | --- | --- | --- |
+| Dark bar tint and backdrop filter | apple.com global nav in dark (`saturate(1.8) blur(20px)` over `rgba(22,22,23,0.8)`), developer.apple.com materials (`rgba(29,29,31,0.7)`), numbers as recorded in the Glass surface row above | Dark tone tint `rgba(18,22,18,0.8)` (the basalt paper at the same 80 percent), frost blur 20px and saturate 1.8 on dark pages (`--glass-blur-dark`, `--glass-saturate-dark`); light tone keeps 10px and 1.6. Not re-measured in this pass (network was not available to the build environment) | Values taken from the rows above, not re-read from apple.com today |
+| Dark rim | iOS 26 and macOS Tahoe Liquid Glass in dark appearance (native, no web measurement; Apple HIG "Materials" and WWDC25 "Meet Liquid Glass" give no numbers) | Highlights are light but thin and low alpha (white at 28 percent, about 1px), the lower-right edge sinks into a deep shadow (black at 55 percent), no wash over the body. The frost bevel lift and the water-drop gloss are cut by 80 to 85 percent on dark tone so they no longer veil the tint | Matched by eye against stills |
+| Tint and glyph colour chosen together | iOS 26 (glass flips light/dark with its backdrop and its glyphs flip with it), macOS menu bar | One decision per piece of glass (`components/glass/theme.ts`): the tone picks the tint, the foreground, the rim and the edge as a set | Unit tested against the real token values, measured on rendered pixels in `docs/glass-shots/` |
+
 ## Citation (verified)
 
 Piecing Together Teamwork: A Responsible Approach to an LLM-based Educational Jigsaw Agent. Emily Doherty, E. Margaret Perkoff, Sean von Bayern, Rui Zhang, Indrani Dey, Michal Bodzianowski, Sadhana Puntambekar, Leanne Hirshfield. Proceedings of the 2025 CHI Conference on Human Factors in Computing Systems, pp. 1-17, ACM, published 2025-04-25, doi:10.1145/3706598.3713349. Sources opened: Crossref (`api.crossref.org/works/10.1145/3706598.3713349`, which returns title, authors in order, container, pages and date) and dblp (search results list this title with Michal Bodzianowski among the authors). The ACM page (dl.acm.org) returned a Cloudflare bot check, so it was not opened. Another record with his name: Mason et al., "Coronal Heating as Determined by the Solar Flare Frequency Distribution Obtained by Aggregating Case Studies", The Astrophysical Journal, 2023, doi:10.3847/1538-4357/accc89 (a large CU Boulder class author list). I cannot tell from the record that it is the same person, so it is not on the site.

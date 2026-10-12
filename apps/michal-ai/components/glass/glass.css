@@ -4,22 +4,26 @@
  * draws tint, rim, shadow and lens instead.
  */
 :root {
-  /* The engine picks a tint by the tone of what is behind the glass, but the text on it does not flip (it is the page ink), so
-     both tints are the page's own surface: ink must stay readable on the bar over any image, in light and in dark mode. */
+  /* Two glass tones, each a (tint, foreground, rim, edge) set that is always used together (see theme.ts).
+     Which tone a piece of glass wears: explicit appearance; else, if its glyphs flip with it (adaptiveText), the luminance
+     behind it; else the page theme (the same signal that flips --ink). These are constants, not page-theme overrides:
+     a dark bar over a light page, or the reverse, still carries its own matching foreground and rim.
+     Dark values follow apple.com's dark nav (rgba(22,22,23,.8) behind saturate(1.8) blur(20px)). */
   --glass-tint-light: rgba(251, 249, 243, 0.64);
-  --glass-tint-dark: rgba(251, 249, 243, 0.64);
+  --glass-tint-dark: rgba(18, 22, 18, 0.8);
   --glass-fg-on-light: #18211b;
   --glass-fg-on-dark: #ebe7da;
+  --glass-rim-light: rgba(255, 255, 255, 0.95);
+  --glass-rim-dark: rgba(255, 255, 255, 0.28);
+  --glass-edge-light: rgba(24, 33, 27, 0.1);
+  --glass-edge-dark: rgba(0, 0, 0, 0.55);
+  /* frost backdrop on dark glass: Apple's dark material blurs and saturates harder so content under it dissolves */
+  --glass-blur-dark: 20px;
+  --glass-saturate-dark: 1.8;
 }
 
 .glass-container {
   isolation: isolate;
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-reading] {
-    --glass-tint-light: rgba(18, 22, 18, 0.8);
-    --glass-tint-dark: rgba(18, 22, 18, 0.8);
-  }
 }
 .glass[data-glass-live] {
   isolation: isolate;
@@ -58,6 +62,9 @@
 }
 
 /* flip glyphs with the glass tone (opt-in via adaptiveText) */
+.glass[data-glass-adaptive-text] {
+  transition: color 200ms linear;
+}
 .glass[data-glass-adaptive-text][data-glass-tone='dark'] {
   color: var(--glass-fg-on-dark);
 }
