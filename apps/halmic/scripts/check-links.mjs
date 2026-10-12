@@ -42,6 +42,18 @@ if ((home.match(/<a class="card/g) ?? []).length < 20) bad.push('index.html: few
 if (!home.includes('href="/#stream">clips<')) bad.push('index.html: nav item should be "clips"');
 const px = fs.readFileSync(path.join(pub, 'work/pokemon-phoenix-rising/index.html'), 'utf8');
 if (!/Videos by <a href="https:\/\/www\.youtube\.com\/@PhoenixRisingGame"/.test(px) || (px.match(/data-vid="/g) ?? []).length < 2) bad.push('work/pokemon-phoenix-rising: channel credit or videos missing');
+const mtDir = path.join(pub, 'work/project-mountaintop');
+const mtHome = fs.readFileSync(path.join(mtDir, 'index.html'), 'utf8');
+if (!/data-vid="Gv-xMeMM8m4"/.test(mtHome) || !mtHome.includes('youtube-nocookie.com/embed/Gv-xMeMM8m4')) bad.push('work/project-mountaintop: main video missing');
+const mtLogLinks = [...mtHome.matchAll(/<a class="card[^"]*" href="(\/work\/project-mountaintop\/[^"]+)"/g)].map((m) => m[1]);
+if (mtLogLinks.length < 6) bad.push(`work/project-mountaintop: expected 6 dev-log cards, found ${mtLogLinks.length}`);
+for (const l of mtLogLinks) { const h = fs.readFileSync(path.join(pub, l, 'index.html'), 'utf8'); if (!/<article class="log">/.test(h) || !/"@type":"BlogPosting"/.test(h)) bad.push(`${l}: not a dev-log article with BlogPosting JSON-LD`); }
+for (const f of walk(mtDir).filter((x) => x.endsWith('.html'))) { const h = fs.readFileSync(f, 'utf8'); if (/linkedin\.com|medium\.com|<iframe/.test(h)) bad.push(`${path.relative(pub, f)}: linkedin/medium link or a pre-loaded iframe (embeds must be click-to-load)`); }
+if (!/<a class="card[^"]*" href="\/work\/project-mountaintop\/"/.test(home)) bad.push('index.html: Project Mountaintop card missing from Work');
+const games = fs.readFileSync(path.join(pub, 'games/index.html'), 'utf8');
+const gOrder = [...games.matchAll(/<a class="card[^"]*" href="\/games\/([^/"]+)\//g)].map((m) => m[1]);
+if (gOrder[0] !== 'glass-gunslinger-dod' || gOrder[1] !== 'lvasion-du-criminel-de-sa-prison') bad.push(`games/index.html: featured games should come first (got ${gOrder.slice(0, 2)})`);
+if ((games.match(/class="card px w2 gf big"/g) ?? []).length !== 2) bad.push('games/index.html: expected exactly two featured (gf) cards');
 const sm = fs.readFileSync(path.join(pub, 'sitemap.xml'), 'utf8');
 for (const m of sm.matchAll(/<loc>([^<]+)<\/loc>/g)) { check('sitemap.xml', m[1]); if (/calm|404/.test(m[1])) bad.push(`sitemap.xml: ${m[1]}`); }
 if (!/name="robots" content="noindex"/.test(fs.readFileSync(path.join(pub, '404.html'), 'utf8'))) bad.push('404.html: not noindex');

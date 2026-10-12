@@ -105,6 +105,8 @@ img { max-width: 100%; height: auto; display: block; }
 a.card:hover .cm img { transform: scale(1.03); }
 .h2 .cm, .h4 .cm, .side .cm { flex: 1 0 auto; }   /* only the tall cards let their image take the spare height; elsewhere the images line up along a row */
 .px .cm { aspect-ratio: 16 / 9; } .px .cm img { image-rendering: pixelated; }
+/* featured game: the whole cover, never cropped, text below it */
+.gf .cm { aspect-ratio: 640 / 508; background: var(--ink); } .gf .cm img { object-fit: contain; }
 .cb { flex: 1 0 auto; display: flex; flex-direction: column; gap: 6px; padding: 18px 20px 22px; }
 .ey { margin: 0; font: 700 13px/1.3 var(--sans); letter-spacing: .02em; color: var(--mute); }
 .c-paper .ey { color: var(--paper-mute); } .c-blue .ey { color: var(--ink); }

@@ -11,11 +11,18 @@
 ## Pages
 - https://halmic.com/ : home
 - https://halmic.com/games/ : little games
-- https://halmic.com/games/taco-neko/ : Taco Neko
-- https://halmic.com/games/soupman/ : Soupman
 - https://halmic.com/games/glass-gunslinger-dod/ : Glass Gunslinger - Drop of Doom
 - https://halmic.com/games/lvasion-du-criminel-de-sa-prison/ : L'évasion du Criminel de sa Prison (The escape of the criminal from his prison)
+- https://halmic.com/games/taco-neko/ : Taco Neko
+- https://halmic.com/games/soupman/ : Soupman
 - https://halmic.com/videos/ : videos
 - https://halmic.com/design/ : design
 - https://halmic.com/design/southeast-denver-dental/ : logo for Southeast Denver Dental
 - https://halmic.com/work/pokemon-phoenix-rising/ : QA developer on Pokémon Phoenix Rising, a fan-made game
+- https://halmic.com/work/project-mountaintop/ : Project Mountaintop, a Unity rhythm game played with Arduino hiking poles
+- https://halmic.com/work/project-mountaintop/first-steps-week-1-2-recap/ : dev log, First Steps - Week 1→2 Recap
+- https://halmic.com/work/project-mountaintop/stay-on-beat-week-2-3-recap/ : dev log, Stay on Beat - Week 2→3 Recap
+- https://halmic.com/work/project-mountaintop/week-3-4-integration/ : dev log, Week 3→4 - Integration
+- https://halmic.com/work/project-mountaintop/week-4-5-deluxe-combos/ : dev log, Week 4→5 - Deluxe Combos
+- https://halmic.com/work/project-mountaintop/week-5-6-spaaaaace/ : dev log, Week 5→6 - SPAAAAACE!
+- https://halmic.com/work/project-mountaintop/danny-mentor-extraordinaire/ : dev log, Danny - Mentor Extraordinaire
