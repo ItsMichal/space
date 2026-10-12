@@ -83,11 +83,13 @@
   }
 }
 
-/* ---- the tile: calm paper
-   Glass needs imagery or colour behind it to read as glass. Behind the lower rows of the page there is only flat paper, so
-   a blurred translucent card there is just a frosted white card (checked: gl-card-1440). So the ordinary tiles are calm
-   raised paper with a hairline and a barely-there shadow, and the glass is kept where there IS something behind it: the
-   feature tile's caption over the photograph (below), the nav bar and the phone menu. Same glass tokens throughout. */
+/* ---- the tile: glass over a graph-paper page
+   Glass needs something behind it to blur. The home page now carries a fixed dot-and-line grid (components/site/paper-grid.css),
+   so as the page scrolls the grid slides under the cards and the blur visibly works. The surface follows Apple's material
+   (measured: `saturate(1.8) blur(20px)` over a translucent tint): a translucent paper tint, `blur(20px) saturate(1.4)`,
+   a 1px inner highlight brightest on the top-left (a masked gradient ring), an outer hairline, a two-layer soft shadow.
+   The image is NOT under glass: it stays an opaque picture clipped by the card radius; only the text block is on glass.
+   Same tokens as the nav bar and phone menu. Reduced transparency: solid paper. */
 .tile {
   position: relative;
   display: flex;
@@ -96,15 +98,55 @@
   min-width: 0;
   overflow: hidden;
   border-radius: var(--tile-r);
-  background: var(--paper-raised);
+  background: color-mix(in srgb, var(--paper-raised) 54%, transparent);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  backdrop-filter: blur(20px) saturate(1.4);
   box-shadow:
-    0 0 0 1px rgb(24 33 27 / 0.07),
-    0 1px 2px rgb(24 33 27 / 0.04),
-    0 14px 30px -20px rgb(24 33 27 / 0.2);
+    0 0 0 1px rgb(24 33 27 / 0.1),
+    0 2px 4px rgb(24 33 27 / 0.05),
+    0 18px 32px -18px rgb(24 33 27 / 0.28);
   color: var(--ink);
   text-decoration: none;
   isolation: isolate;
   -webkit-tap-highlight-color: transparent;
+  transition: background-color 300ms cubic-bezier(0.4, 0, 0.25, 1);
+}
+/* the specular rim: a 1px ring, about 60% white on the top-left edge fading to nothing round the card, then a trace back on the
+   bottom-right (a masked gradient border) */
+.tile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgb(255 255 255 / 0.95) 0%, rgb(255 255 255 / 0.6) 24%, rgb(255 255 255 / 0.12) 55%, rgb(255 255 255 / 0.35) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  pointer-events: none;
+  opacity: 0.9;
+  transition: opacity 300ms cubic-bezier(0.4, 0, 0.25, 1);
+}
+@media (hover: hover) {
+  .tile:hover {
+    background: color-mix(in srgb, var(--paper-raised) 64%, transparent);
+  }
+  .tile:hover::before {
+    opacity: 1;
+  }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .tile {
+    background: color-mix(in srgb, var(--paper-raised) 94%, transparent);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .tile {
+    background: var(--paper-raised);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
 .tile:focus-visible {
   outline: 2px solid var(--focus);
@@ -178,6 +220,7 @@
   overflow: hidden;
 }
 .tile__desc {
+  color: color-mix(in srgb, var(--ink) 76%, var(--paper));
   text-wrap: pretty;
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -308,4 +351,8 @@
 .tile--fill .tile__media {
   flex: 1;
   aspect-ratio: auto;
+}
+
+.tile__pub {
+  color: var(--accent);
 }

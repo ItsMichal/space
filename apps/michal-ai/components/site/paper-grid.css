@@ -1,0 +1,21 @@
+/* The page backdrop on the home page: graph paper. A fixed layer, so the pattern stays put while the page scrolls and slides
+   under the glass cards (the blur reads as live). 24px dots, with a 1px line every fourth cell (96px): the pitch family of the
+   globe's 6px dot matrix (24 = 4 x 6), so the hero's matrix dissolves into the paper grid as the hero tint fades out
+   behind the work section. Painted once with CSS gradients, no JS, no per-frame work. Sits below the hero tint (z -2). */
+.paper-grid {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgb(24 33 27 / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(24 33 27 / 0.06) 1px, transparent 1px),
+    radial-gradient(circle at 12px 12px, rgb(24 33 27 / 0.24) 1.1px, transparent 1.6px);
+  background-size: 96px 96px, 96px 96px, 24px 24px;
+  background-position: 0 0, 0 0, 0 0;
+}
+@media print {
+  .paper-grid {
+    display: none;
+  }
+}
