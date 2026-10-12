@@ -1,7 +1,8 @@
 import './globals.css'
 import './styles/craft.css'
+import './styles/type.css'
 import type { Metadata, Viewport } from 'next'
-import { IBM_Plex_Mono, Newsreader, Schibsted_Grotesk } from 'next/font/google'
+import { IBM_Plex_Mono, Newsreader } from 'next/font/google'
 import React, { StrictMode } from 'react'
 import { NavBar } from '@/components/site/NavBar'
 import { Footer } from '@/components/site/Footer'
@@ -12,13 +13,6 @@ import { display } from './fonts/display'
 import { DEFAULT_SHARE_IMAGE, siteMetadata } from '@/lib/seo'
 import { getMenuPreviews } from '@/lib/menu'
 import { profile } from '@/content/profile'
-
-const sans = Schibsted_Grotesk({
-  subsets: ['latin', 'latin-ext'],
-  weight: ['400', '500', '600', '700'],
-  display: 'swap',
-  variable: '--font-schibsted',
-})
 
 const serif = Newsreader({
   subsets: ['latin', 'latin-ext'],
@@ -71,7 +65,7 @@ export default function RootLayout({
     <StrictMode>
       <html
         lang="en"
-        className={`${display.variable} ${sans.variable} ${serif.variable} ${mono.variable}`}
+        className={`${display.variable} ${serif.variable} ${mono.variable}`}
       >
         <body className="flex min-h-screen flex-col font-sans text-ink">
           <a href="#main" className="skip-link">
