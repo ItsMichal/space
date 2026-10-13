@@ -54,10 +54,14 @@ export function stripAllowed(content, allowances) {
   return s
 }
 
+// The owner approved outbound links to his own X posts on 2026-10-12: this exact URL form only, never the handle as text.
+const APPROVED_LINK = /https:\/\/x\.com\/itsmichal\/status\/\d+/gi
+
 /** Scan one file's content for denied patterns after removing the allowed occurrences. Returns [{ line, match }]. */
 export function scanContent(content, patterns, allowances = []) {
   const hits = []
   stripAllowed(content, allowances)
+    .replace(APPROVED_LINK, (m) => ' '.repeat(m.length))
     .split('\n')
     .forEach((line, i) => {
       for (const re of patterns) {

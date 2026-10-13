@@ -1,4 +1,48 @@
 {
-  "_note": "Showcase posts from the persona's X account, shown as the Posts bento on the home page (hidden while this list is empty). Fields: id, url, date (ISO), text (verbatim), media (file in public/posts/, optional), w, h, alt (what the image shows). Research on 2026-10-12 found no technical or creative showcase posts on the account (it has about a dozen posts, all 2019 Smash results and 2024 stream notes), so the list is empty on purpose.",
-  "posts": []
+  "_note": "Showcase posts shown as the Posts bento on the home page (hidden while this list is empty). Fields: id, url, date (ISO), text (verbatim, hashtag piles and t.co links dropped), kind (web | game | hardware | design | video | music, picks the chip icon and label), media (file in public/posts/, optional), video (true when the media is a video poster, adds a play glyph), w, h, alt (what the image shows, written by hand). Source: the owner's own posts, picked 2026-10-12.",
+  "posts": [
+    {
+      "id": "1687321481167216640",
+      "url": "https://x.com/itsmichal/status/1687321481167216640",
+      "date": "2023-08-03",
+      "text": "contours shader practice",
+      "kind": "web",
+      "media": "post-2023-contours-shader.webp",
+      "video": true,
+      "w": 660,
+      "h": 660,
+      "alt": "Thin glowing green and yellow contour lines drawing organic blob shapes on a dark navy background, a shader test."
+    },
+    {
+      "id": "1387319419794169857",
+      "url": "https://x.com/itsmichal/status/1387319419794169857",
+      "date": "2021-04-28",
+      "text": "finally figured out inverse kinematics, our boy can now pick up an orange. Just need some path planning and a grocery basket!",
+      "kind": "hardware",
+      "media": "post-2021-robot-arm-ik.webp",
+      "video": true,
+      "w": 1200,
+      "h": 675,
+      "alt": "A simulated mobile robot with a gripper arm in a grey warehouse next to a shelf of oranges, with its camera view inset in the corner."
+    },
+    {
+      "id": "1626007142422687746",
+      "url": "https://x.com/itsmichal/status/1626007142422687746",
+      "date": "2023-02-15",
+      "text": "New rhythm game, and early progress... more to come.",
+      "kind": "game",
+      "media": "post-2023-rhythm-game.webp",
+      "video": true,
+      "w": 1200,
+      "h": 675,
+      "alt": "A work-in-progress rhythm game in Unity: two orange drums with Z and X key prompts, a score counter and a Get Ready message on a dark green stage."
+    },
+    {
+      "id": "1489393132630208516",
+      "url": "https://x.com/itsmichal/status/1489393132630208516",
+      "date": "2022-02-04",
+      "text": "Making a basic and working Battle system in Bitsy ...Without any Bitsy hacks! See my write-up here if you're interested in creating your own.",
+      "kind": "game"
+    }
+  ]
 }
