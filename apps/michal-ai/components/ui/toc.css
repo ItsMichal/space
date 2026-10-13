@@ -1,13 +1,15 @@
 .toc {
   display: none;
 }
-@media (min-width: 1180px) {
+/* Floats in the margin just outside the wide track (reading.css: 900px, centred), so it can never push or overlap the
+   column or a wide figure. It needs 900px + 2 x (24px gap + 200px) of viewport. */
+@media (min-width: 1360px) {
   .toc {
     position: fixed;
     z-index: 10;
     top: 50%;
-    right: max(24px, calc((100vw - 1120px) / 2 - 8px));
-    width: 220px;
+    left: calc(50% + var(--wide) / 2 + 24px);
+    width: 200px;
     translate: 0 -50%;
     display: grid;
     grid-template-columns: 10px 1fr;

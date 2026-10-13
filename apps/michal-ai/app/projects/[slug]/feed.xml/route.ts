@@ -15,7 +15,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   const project = getPost(slug)
   if (!project) return new Response('Not found', { status: 404 })
   return rssResponse({
-    title: `${project.title} — ${getChildren(slug).find((c) => c.series)?.series ?? 'updates'}`,
+    title: `${project.title} · ${getChildren(slug).find((c) => c.series)?.series ?? 'updates'}`,
     link: `${SITE_URL}/projects/${slug}`,
     self: `${SITE_URL}/projects/${slug}/feed.xml`,
     description: project.description,

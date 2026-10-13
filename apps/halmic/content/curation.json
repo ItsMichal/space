@@ -42,11 +42,15 @@
     "other": [
       {
         "id": "qVEDjNc5Gmg",
+      "name": "Special Force: Origins",
+      "thumbFit": "contain",
         "kind": "short film",
         "desc": "A short action-comedy film made with friends, the first of two. Written, shot and edited by me."
       },
       {
         "id": "IIJVKHEtawU",
+      "name": "Special Force 2: The Array",
+      "thumbFit": "contain",
         "kind": "short film",
         "desc": "The sequel, episode 1."
       },

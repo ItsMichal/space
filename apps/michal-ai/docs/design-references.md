@@ -105,7 +105,49 @@ Original site (2023, first commits `4ca66cb` "added really cool bg shader" and `
 to cyan `#6DF7F5` gradient over deep indigo (`#1A041B`, `#150C64`), slowly animated, dark and saturated, behind frosted-glass
 panels. This backdrop keeps its spirit (warped noise fields in yellow and cyan, slow, behind glass) and inverts it: pale
 inks on cream instead of neon on near-black.
+## Reading view: column, prose and components (2026-10-12)
+
+None of these references could be opened and measured from this environment (the sandbox allows no outside browsing). They
+are named from what those sites are known to do and are **not measured**; the numbers in the "Ours" column are ours, tuned
+by eye and checked with `scripts/article-shots.mjs` (centring within 1px at 1440, 1920 and 375; characters per line counted
+on the rendered text). Compare against the live sites before treating any of them as settled.
+
+| Element | Reference (not measured) | Ours |
+| --- | --- | --- |
+| One centred reading column with wider media | stripe.com/blog, vercel.com/blog, apple.com/newsroom articles, medium.com | Text column 35rem (about 67 characters at the 20px prose size, measured), wide track 900px for figures, tables, code, embeds and the timeline, both centred on the viewport axis. Phones: one track. Nothing full-bleed |
+| Side contents list in the margin | stripe.com/docs, vercel.com/docs ("On this page") | Fixed in the margin outside the wide track from 1360px, so it never moves or overlaps the column |
+| Visible bullets, hanging indent, nested marker shapes | any long-form site (medium.com, github.com READMEs) | Native list markers (disc, circle, square; decimal, alpha, roman), 1.5em indent, markers in muted ink |
+| Boxed callout with an accent on one edge | vercel.com/docs, stripe.com/docs | Raised paper, hairline, 14px radius, 3px inset accent by type (note, tip, warning) |
+| External link arrow | github.com, developer.mozilla.org external links | Small arrow glyph after links that leave the site |
+| Wide table scrolling inside its own frame | github.com markdown tables, stripe.com/docs | Table wrapped in a focusable scroll region, semantics kept |
+| Reactions row and view count | github.com issue reactions, medium.com claps and view counts | Five fixed emoji pills with counts, one toggle each (github.com); a quiet count beside them (medium.com). Neither was measured; pill size is the existing 44px touch target |
+## Glass in dark mode (2026-10-12)
+
+Bug: on a dark reading page the nav pill was a pale milky slab with near-white text. Cause and fix are in the PR; this section records the references the dark material was checked against.
+
+| Element | Reference | What we match | How verified |
+| --- | --- | --- | --- |
+| Dark bar tint and backdrop filter | apple.com global nav in dark (`saturate(1.8) blur(20px)` over `rgba(22,22,23,0.8)`), developer.apple.com materials (`rgba(29,29,31,0.7)`), numbers as recorded in the Glass surface row above | Dark tone tint `rgba(18,22,18,0.8)` (the basalt paper at the same 80 percent), frost blur 20px and saturate 1.8 on dark pages (`--glass-blur-dark`, `--glass-saturate-dark`); light tone keeps 10px and 1.6. Not re-measured in this pass (network was not available to the build environment) | Values taken from the rows above, not re-read from apple.com today |
+| Dark rim | iOS 26 and macOS Tahoe Liquid Glass in dark appearance (native, no web measurement; Apple HIG "Materials" and WWDC25 "Meet Liquid Glass" give no numbers) | Highlights are light but thin and low alpha (white at 28 percent, about 1px), the lower-right edge sinks into a deep shadow (black at 55 percent), no wash over the body. The frost bevel lift and the water-drop gloss are cut by 80 to 85 percent on dark tone so they no longer veil the tint | Matched by eye against stills |
+| Tint and glyph colour chosen together | iOS 26 (glass flips light/dark with its backdrop and its glyphs flip with it), macOS menu bar | One decision per piece of glass (`components/glass/theme.ts`): the tone picks the tint, the foreground, the rim and the edge as a set | Unit tested against the real token values, measured on rendered pixels in `docs/glass-shots/` |
 
 ## Citation (verified)
 
 Piecing Together Teamwork: A Responsible Approach to an LLM-based Educational Jigsaw Agent. Emily Doherty, E. Margaret Perkoff, Sean von Bayern, Rui Zhang, Indrani Dey, Michal Bodzianowski, Sadhana Puntambekar, Leanne Hirshfield. Proceedings of the 2025 CHI Conference on Human Factors in Computing Systems, pp. 1-17, ACM, published 2025-04-25, doi:10.1145/3706598.3713349. Sources opened: Crossref (`api.crossref.org/works/10.1145/3706598.3713349`, which returns title, authors in order, container, pages and date) and dblp (search results list this title with Michal Bodzianowski among the authors). The ACM page (dl.acm.org) returned a Cloudflare bot check, so it was not opened. Another record with his name: Mason et al., "Coronal Heating as Determined by the Solar Flare Frequency Distribution Obtained by Aggregating Case Studies", The Astrophysical Journal, 2023, doi:10.3847/1538-4357/accc89 (a large CU Boulder class author list). I cannot tell from the record that it is the same person, so it is not on the site.
+
+## Cards everywhere (2026-10-12)
+
+One surface, shared by every card on the site: `app/styles/card.css` (`.surface`, `.surface--glass`, `.surface--link`, `.card`, `.card--list`). Tokens: one radius (`--card-r`, 24 phone / 28 from 900px), one inner padding (`--card-pad`, 16 phone / 24 from 640px), one gap (`--card-gap`, 12 / 16), one hover. Precedents were read by eye from the sites named; none was re-measured in this pass, so "matched by eye" throughout.
+
+| Pattern | Reference | What we match | How verified |
+| --- | --- | --- | --- |
+| Bento grid for About (intro, experience, publications as cards on one grid, one tall card beside two) | apple.com product "features" bento sections (iPhone, Mac pages), linear.app feature grid | Cards of different spans on one column grid with one gap; the tall card runs the height of two. Three columns from 1100px so the grid lines up with the three-column work grid above it | Matched by eye |
+| List card: rows inside a card, hairline between rows (experience, publications, writing by year, series, home writing) | vercel.com dashboard and docs list cards, linear.app settings lists, apple.com Settings-style grouped rows | One rounded card holds the rows edge to edge; the row is the link and tints on hover; hairline divides rows | Matched by eye |
+| Link card (page-end links, 404 action, prev/next) | apple.com newsroom and store tile links, stripe.com docs card links | Whole card is the link; background steps up on hover, no lift, no shadow change; focus ring offset 3px | Matched by eye |
+| Facts as a card of label-over-value cells | apple.com tech specs summary, vercel.com project overview | Small muted label above the value, cells in an auto-fit grid inside one card | Matched by eye |
+| Tertiary meta line pinned to the foot of a tile | apple.com newsroom (date on the last line), linear.app changelog cards | Title, description, then the small muted line at the bottom; titles share one baseline across a row because the image above them has one aspect ratio | Checked programmatically (title tops equal within 1px, see scripts/shoot-cards.mjs) |
+| Glass only where something is behind it | apple.com iOS 26 pages (material over media), our nav | Home work tiles keep `blur(10px) saturate(1.5)` (hero tint and paper grid behind); every other card is the same surface at a near-solid 92% tint, so no extra `backdrop-filter` layers on phones | Reasoned; not profiled |
+| Reading pages: the same card in dark | linear.app and vercel.com dark cards (1px light ring at about 10 percent, deeper shadow) | Ring and shadow switch through tokens under `:root[data-reading]`; rim opacity 0.2 | Screenshots |
+| Full-width cover image on article pages, narrow text column | apple.com newsroom articles, stripe.com blog | Cover and chrome cards run the container width; article prose stays in a 66ch reading column | Matched by eye |
+
+Dashes: em and en dashes removed from everything shipped (owner instruction); separators are the middle dot, ranges "to" or a hyphen. `scripts/check-dashes.mjs` enforces it.

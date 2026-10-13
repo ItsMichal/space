@@ -8,7 +8,8 @@ export type NextLink = { label: string; href: string; external?: boolean }
 export function NextLinks({ links, label }: { links: NextLink[]; label: string }) {
   return (
     <nav aria-label={label}>
-      <ul className="nx">
+      <div className="nx surface card">
+      <ul className="nx__list">
         {links.map((l) => (
           <li key={l.href}>
             {l.external ? (
@@ -25,6 +26,7 @@ export function NextLinks({ links, label }: { links: NextLink[]; label: string }
           </li>
         ))}
       </ul>
+      </div>
     </nav>
   )
 }

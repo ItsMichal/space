@@ -21,13 +21,13 @@ interface Box {
  *  - Blocks that already have reactions show a quiet mark with the top emoji and the total.
  * Everything lives in one absolutely positioned layer inside the article, so nothing in the text column moves.
  */
-export function HighlightReactions({ slug }: { slug: string }) {
+export function HighlightReactions({ postId }: { postId: string }) {
   const [host, setHost] = useState<HTMLElement | null>(null)
   const [boxes, setBoxes] = useState<Record<string, Box>>({})
   const [hover, setHover] = useState<string | null>(null)
   const [open, setOpen] = useState<string | null>(null)
   const [wide, setWide] = useState(true)
-  const r = useReactions(slug, host !== null)
+  const r = useReactions(postId, host !== null)
   const hoverT = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -185,7 +185,7 @@ export function HighlightReactions({ slug }: { slug: string }) {
             const on = (r.mine[open] ?? []).includes(e.id)
             const n = r.blocks[open]?.[e.id] ?? 0
             return (
-              <button key={e.id} type="button" aria-pressed={on} aria-label={`${e.label}, ${n}`} onClick={() => void toggle(slug, open, e.id)}>
+              <button key={e.id} type="button" aria-pressed={on} aria-label={`${e.label}, ${n}`} onClick={() => void toggle(postId, open, e.id)}>
                 <span aria-hidden>{e.glyph}</span>
                 {n > 0 ? <small aria-hidden>{n}</small> : null}
               </button>

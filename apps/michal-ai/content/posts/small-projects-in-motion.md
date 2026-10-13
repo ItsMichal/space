@@ -2,6 +2,7 @@
 title: "Small Projects in Motion"
 slug: small-projects-in-motion
 kind: article
+id: small-projects-in-motion
 description: "Please enjoy my walking animation! Not much to say about this one, just a very basic…ahem…walking? Animation."
 date: 2021-09-29
 tags: ["Motion Design", "Animation"]

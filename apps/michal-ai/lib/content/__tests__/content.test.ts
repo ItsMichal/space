@@ -40,7 +40,7 @@ describe('content integrity', () => {
     const logs = getChildren('project-mountaintop')
     expect(logs).toHaveLength(7)
     expect(logs.map((l) => l.order)).toEqual([1, 2, 3, 4, 5, 6, 7])
-    expect(postPath(logs[0])).toBe('/projects/project-mountaintop/mountaintop-first-steps-week-1-2-recap')
+    expect(postPath(logs[0])).toBe('/projects/project-mountaintop/week-1-2-first-steps')
     expect(getBlogPosts().some((p) => p.parent)).toBe(false)
     expect(getTopLevel('project').some((p) => p.parent)).toBe(false)
   })

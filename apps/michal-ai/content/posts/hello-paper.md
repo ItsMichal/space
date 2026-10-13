@@ -2,6 +2,7 @@
 title: Hello, Paper
 slug: hello-paper
 kind: article
+id: hello-paper
 description: A sample post that exercises every renderer feature.
 date: 2026-10-01
 tags: [meta, sample]

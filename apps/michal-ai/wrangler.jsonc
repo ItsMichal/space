@@ -17,6 +17,13 @@
       { "name": "REACTIONS", "class_name": "ReactionsRoom" }
     ]
   },
+  // Live features (docs/presence.md). Reactions and views are on; presence pins stay off (PRESENCE_PINS in lib/presence/flag.ts).
+  // LIVE_KILL "1" is the emergency switch: every /api/live/* route answers 204 and the row disappears. VIEWS_PUBLIC "0" hides the
+  // number but keeps counting. LIVE_BLOCK_REACTIONS stays unset (paragraph reactions off).
+  "vars": {
+    "LIVE_KILL": "0",
+    "VIEWS_PUBLIC": "1"
+  },
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["PresenceRoom"] },
     { "tag": "v2", "new_sqlite_classes": ["ReactionsRoom"] }

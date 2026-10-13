@@ -6,7 +6,8 @@
     "predev": "node scripts/build-images.mjs",
     "dev": "next dev",
     "images": "node scripts/build-images.mjs",
-    "prebuild": "node scripts/build-images.mjs && node scripts/build-live-slugs.mjs",
+    "embeds": "node scripts/build-embeds.mjs",
+    "prebuild": "node scripts/build-images.mjs && node scripts/build-embeds.mjs && node scripts/build-live-slugs.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -16,7 +17,8 @@
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check:do": "node scripts/check-do-exports.mjs",
+    "check:social": "node scripts/check-social.mjs",
+    "check:do":"node scripts/check-do-exports.mjs",
     "typecheck": "tsc --noEmit && tsc --noEmit -p worker/tsconfig.json"
   },
   "dependencies": {

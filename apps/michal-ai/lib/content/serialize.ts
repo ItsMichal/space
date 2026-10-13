@@ -7,6 +7,7 @@ const KEY_ORDER: (keyof PostFrontmatter)[] = [
   'title',
   'slug',
   'kind',
+  'id',
   'description',
   'date',
   'updated',
@@ -106,6 +107,7 @@ export function frontmatterFromData(data: Record<string, unknown>, fileSlug: str
   return {
     title: String(data.title ?? fileSlug),
     slug: String(data.slug ?? fileSlug),
+    ...(data.id ? { id: String(data.id) } : {}),
     kind: (data.kind === 'article' ? 'article' : 'project') as PostKind,
     description: String(data.description ?? ''),
     date: toIsoDate(data.date),
