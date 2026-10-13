@@ -65,7 +65,14 @@ const shot = async (file) => {
   console.log('wrote', file)
 }
 if (opt('eval')) console.log(JSON.stringify(await ev(opt('eval'))))
-if (out !== '-') await shot(out)
+if (args.includes('--seq')) {
+  // --seq N MS: N screenshots MS apart (out-1.png, out-2.png, ...), e.g. a mesh ping travelling
+  const i = args.indexOf('--seq')
+  for (let k = 1; k <= Number(args[i + 1]); k++) {
+    await shot(out.replace(/\.png$/, `-${k}.png`))
+    await sleep(Number(args[i + 2]))
+  }
+} else if (out !== '-') await shot(out)
 if (args.includes('--then')) {
   const i = args.indexOf('--then')
   await sleep(Number(args[i + 1]))

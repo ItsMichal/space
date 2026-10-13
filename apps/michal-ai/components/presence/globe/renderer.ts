@@ -48,7 +48,10 @@ export function projectPoint(lat: number, lon: number, rot: Float32Array): { x: 
 }
 
 /** Fraction of the canvas half-size used by the sphere (the rest is margin, so dots fade out well inside the box). */
-export const SPHERE_FRACTION = 0.94
+/** The canvas is this much larger than the old globe box, so the exaggerated satellite shell fits; the sphere keeps its old CSS size. */
+export const SHELL_SCALE = 1.55
+export const PING_CAP = 32
+export const SPHERE_FRACTION = 0.94 / SHELL_SCALE
 
 // Shared by the land, satellite and portrait passes: the text halo and the pointer push.
 // uMaskA / uMaskB: the hero text rendered from the real glyphs and blurred (HeroGlobe.tsx), canvas-sized at 1/4 scale, row 0 at the top;
@@ -120,41 +123,58 @@ void main(){
 }`
 
 
-// Satellite pass: one GL point per satellite, propagated here (mirror of lib/starlink/orbit.mjs positionEcef). The point is snapped
-// to the same cell grid as the land dots and drawn as one small round dot, so it reads as part of the same dot matrix.
+// Satellite passes: dots, trails and mesh pings, all propagated here (mirror of lib/starlink/orbit.mjs positionEcef). Positions and
+// motion are the real elements; the DRAWN orbit radius is exaggerated (the true 1.05 to 1.10 globe radii are mapped onto uShell) so
+// the constellation reads as a cloud around the globe. Depth: nearer to the viewer is a little bigger and stronger.
+const SATLIB = `
+const float MU = 398600.8; const float RE = 6378.135; const float J2 = .001082616; const float TAU = 6.2831853; const float OMEGA = 7.2921159e-5;
+uniform float uT; uniform float uGmst; uniform mat3 uRot; uniform float uR; uniform float uPitch;
+uniform vec2 uShell; uniform float uHalf; uniform float uAlpha;
+// e = (inclination, RAAN at epoch, argument of latitude at epoch, rate), d = drag rate, tt = seconds since the reference epoch
+vec3 satView(vec4 e, float d, float tt){
+  float udot = e.w;
+  float aKm = pow(MU / (udot * udot), 1. / 3.);
+  float k = J2 * (RE / aKm) * (RE / aKm);
+  float gm = uGmst + (tt - uT) * OMEGA;
+  float raan = e.y - 1.5 * k * udot * cos(e.x) * tt - gm;
+  float u = mod(e.z + udot * tt + .5 * d * tt * tt, TAU);
+  float cu = cos(u), su = sin(u), cr = cos(raan), sr = sin(raan), ci = cos(e.x);
+  vec3 dir = vec3(cr * cu - sr * su * ci, sr * cu + cr * su * ci, su * sin(e.x));
+  float shell = mix(uShell.x, uShell.y, clamp((aKm / 6371. - 1.045) / .05, 0., 1.));
+  return uRot * (shell * vec3(dir.y, dir.z, dir.x));   // globe frame: x = east at lon 90, y = north, z = lon 0
+}
+float depthOf(vec3 v){ return clamp(.5 + .5 * v.z / max(length(v), .001), 0., 1.); }
+// hidden behind the Earth's disc, dimmer far away, fading out before the canvas edge
+float visAt(vec3 v){
+  float rho = length(v.xy);
+  float vis = v.z < 0. ? smoothstep(.985, 1.03, rho) : 1.;
+  vis *= mix(.4, 1., depthOf(v));
+  vis *= 1. - smoothstep(uHalf * .9, uHalf * .985, rho);
+  return vis;
+}
+`
+
 const SAT_VS = `#version 300 es
 precision highp float;
 in vec4 aA;   // inclination, RAAN at epoch, argument of latitude at epoch, rate (rad/s)
 in float aB;  // rate of the rate (drag), rad/s^2
-uniform float uT; uniform float uGmst; uniform mat3 uRot; uniform float uR; uniform float uPitch;
-uniform float uThin; uniform float uAlpha;
+uniform float uThin;
 ${COMMON}
-out float vA; out float vDim; out vec2 vOff;
-const float MU = 398600.8; const float RE = 6378.135; const float J2 = .001082616; const float TAU = 6.2831853;
+${SATLIB}
+out float vA; out float vDim; out vec2 vOff; out float vS;
 void main(){
-  vA = 0.; vDim = 1.;
+  vA = 0.; vDim = 1.; vS = 1.;
   gl_Position = vec4(2., 2., 2., 1.); gl_PointSize = 1.;
   if (uThin > 1. && mod(float(gl_VertexID), uThin) > .5) return;
-  float udot = aA.w;
-  float aKm = pow(MU / (udot * udot), 1. / 3.);
-  float k = J2 * (RE / aKm) * (RE / aKm);
-  float raan = aA.y - 1.5 * k * udot * cos(aA.x) * uT - uGmst;
-  float u = mod(aA.z + udot * uT + .5 * aB * uT * uT, TAU);
-  float cu = cos(u), su = sin(u), cr = cos(raan), sr = sin(raan), ci = cos(aA.x);
-  vec3 ecef = (aKm / 6371.) * vec3(cr * cu - sr * su * ci, sr * cu + cr * su * ci, su * sin(aA.x));
-  vec3 v = uRot * vec3(ecef.y, ecef.z, ecef.x);   // globe frame: x = east at lon 90, y = north, z = lon 0
-  float rho = length(v.xy);
-  // hidden behind the Earth's disc; on the far side but outside the disc they stay, dimmer
-  float vis = v.z < 0. ? smoothstep(.985, 1.03, rho) : 1.;
-  vis *= mix(.5, 1., smoothstep(-.3, .3, v.z));
-  vis *= 1. - smoothstep(1.04, 1.062, rho);          // inside the canvas margin
+  vec3 v = satView(aA, aB, uT);
   vec2 px = .5 * uRes + v.xy * uR;
   vDim = dimAt(px);
   if (uPtr.z > 0.) px += pushAt(px);
   // off the grid: the sprite sits on the nearest whole pixel, the dot is drawn at the exact sub-pixel position inside it
   vec2 c = floor(px) + .5;
   vOff = px - c;
-  vA = vis * uAlpha * vDim;
+  vS = mix(.7, 1.2, depthOf(v));
+  vA = visAt(v) * uAlpha * vDim;
   gl_Position = vec4(c / uRes * 2. - 1., 0., 1.);
   gl_PointSize = ceil(uPitch * .6) * 2. + 2.;
 }`
@@ -162,15 +182,90 @@ void main(){
 const SAT_FS = `#version 300 es
 precision highp float;
 uniform float uPitch; uniform vec3 uInk;
-in float vA; in float vDim; in vec2 vOff;
+in float vA; in float vDim; in vec2 vOff; in float vS;
 out vec4 o;
 void main(){
   if (vA <= 0.) discard;
   vec2 p = (gl_PointCoord - .5) * (ceil(uPitch * .6) * 2. + 2.);
   p.y = -p.y;
   float d = length(p - vOff);
-  float rad = uPitch * .25 * (.5 + .5 * vDim);
+  float rad = uPitch * .25 * vS * (.5 + .5 * vDim);
   float a = (1. - smoothstep(rad - .55, rad + .55, d)) * vA;
+  o = vec4(uInk * a, a);
+}`
+
+// Trails: each satellite's path over the last uTrail seconds, TRAIL_N segments, drawn as 1 px lines (instanced, one instance per
+// satellite; the two ends of each segment are the same elements evaluated at t - age). Fading towards the tail.
+const TRAIL_N = 10
+const TRAIL_VS = `#version 300 es
+precision highp float;
+in vec4 aA; in float aB;
+uniform float uThin; uniform float uTrail;
+${COMMON}
+${SATLIB}
+out float vA;
+void main(){
+  vA = 0.;
+  gl_Position = vec4(2., 2., 2., 1.);
+  if (uThin > 1. && mod(float(gl_InstanceID), uThin) > .5) return;
+  float k = float((gl_VertexID >> 1) + (gl_VertexID & 1));
+  float f = k / ${TRAIL_N}.;
+  vec3 v = satView(aA, aB, uT - f * uTrail);
+  vec2 px = .5 * uRes + v.xy * uR;
+  float dim = dimAt(px);
+  if (uPtr.z > 0.) px += pushAt(px);
+  vA = visAt(v) * uAlpha * dim * pow(1. - f, 1.7);
+  gl_Position = vec4(px / uRes * 2. - 1., 0., 1.);
+}`
+const LINE_FS = `#version 300 es
+precision highp float;
+uniform vec3 uInk;
+in float vA;
+out vec4 o;
+void main(){ if (vA <= .002) discard; o = vec4(uInk * vA, vA); }`
+
+// Mesh pings: PING_MAX short-lived links between neighbouring satellites (chosen on the CPU from a precomputed neighbour table, a few
+// per second). Both ends are evaluated here from their elements, so the link stays attached as they move. A thin line fades in and out
+// and a brighter pulse travels along it (lines), plus a small round head at the pulse (points).
+const PING_MAX = 32
+const PING_SEG = 20
+const PING_VS = `#version 300 es
+precision highp float;
+uniform vec4 uPA[${PING_MAX}]; uniform float uPAd[${PING_MAX}];
+uniform vec4 uPB[${PING_MAX}]; uniform float uPBd[${PING_MAX}];
+uniform vec2 uPT[${PING_MAX}];   // start, duration (seconds on the page clock)
+uniform float uNowP; uniform float uHead;
+${COMMON}
+${SATLIB}
+out float vA; out float vHead;
+void main(){
+  vA = 0.; vHead = uHead;
+  gl_Position = vec4(2., 2., 2., 1.); gl_PointSize = 1.;
+  vec2 w = uPT[gl_InstanceID];
+  float f = (uNowP - w.x) / max(w.y, .001);
+  if (w.y <= 0. || f < 0. || f > 1.) return;
+  vec3 a = satView(uPA[gl_InstanceID], uPAd[gl_InstanceID], uT);
+  vec3 b = satView(uPB[gl_InstanceID], uPBd[gl_InstanceID], uT);
+  float s = uHead > .5 ? f : float(gl_VertexID) / ${PING_SEG}.;
+  vec3 v = mix(a, b, s);
+  vec2 px = .5 * uRes + v.xy * uR;
+  float dim = dimAt(px);
+  if (uPtr.z > 0.) px += pushAt(px);
+  float env = sin(3.14159 * f);
+  float pulse = exp(-pow((s - f) / .1, 2.));
+  vA = visAt(v) * uAlpha * dim * (uHead > .5 ? env : env * (.3 + .9 * pulse));
+  gl_Position = vec4(px / uRes * 2. - 1., 0., 1.);
+  gl_PointSize = max(5., uPitch * .9);
+}`
+const PING_FS = `#version 300 es
+precision highp float;
+uniform vec3 uInk;
+in float vA; in float vHead;
+out vec4 o;
+void main(){
+  if (vA <= .002) discard;
+  float a = vA;
+  if (vHead > .5) { float d = length(gl_PointCoord - .5) * 2.; a *= 1. - smoothstep(.55, 1., d); }
   o = vec4(uInk * a, a);
 }`
 
@@ -195,7 +290,7 @@ void main(){
   if (uMode < .5) {
     // hard knockout by the real matte (anti-aliased at the edge only): inside the silhouette the globe and satellites are removed
     float a = smoothstep(.42, .58, texture(uPic, picUV(f)).a);
-    o = vec4(0., 0., 0., a * uStr);
+    o = vec4(0., 0., 0., a * edge * uStr);   // over the last rows the knockout follows the dot taper, so globe dots take over as the bust's dots shrink
     return;
   }
   vec2 src = f;
@@ -287,7 +382,24 @@ export interface PortraitSpec {
   push: { radius: number; max: number }
 }
 
+export interface PingSet {
+  count: number
+  /** per ping: 4 floats of elements A, B (inc, raan, u, udot), drag A, B, start and duration */
+  a: Float32Array
+  ad: Float32Array
+  b: Float32Array
+  bd: Float32Array
+  t: Float32Array
+  /** the page clock, seconds, same origin as `t` */
+  now: number
+}
+
 export interface DrawExtra {
+  /** Drawn orbit radius range in globe radii (exaggerated; see SATLIB). */
+  shell?: [number, number]
+  /** Trail length in seconds (0 = no trails). */
+  trailSeconds?: number
+  pings?: PingSet
   /** 0..1 cross-fade from the previous text mask to the current one. */
   maskMix?: number
   /** CSS opacity the globe is meant to have (the canvas itself is drawn at full opacity so the portrait can be stronger). */
@@ -343,8 +455,29 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
     g.bindAttribLocation(sprog, 1, 'aB')
     g.linkProgram(sprog)
     if (!g.getProgramParameter(sprog, g.LINK_STATUS)) throw new Error(g.getProgramInfoLog(sprog) ?? 'link')
-    const SU = (n: string) => g.getUniformLocation(sprog, n)
-    const su = { t: SU('uT'), gmst: SU('uGmst'), rot: SU('uRot'), res: SU('uRes'), r: SU('uR'), pitch: SU('uPitch'), thin: SU('uThin'), alpha: SU('uAlpha'), ink: SU('uInk'), maskA: SU('uMaskA'), maskB: SU('uMaskB'), maskMix: SU('uMaskMix'), ptr: SU('uPtr'), push: SU('uPush') }
+    const mk = (vs: string, fs: string, attribs: boolean) => {
+      const pr = g.createProgram()!
+      g.attachShader(pr, compile(g, g.VERTEX_SHADER, vs))
+      g.attachShader(pr, compile(g, g.FRAGMENT_SHADER, fs))
+      if (attribs) {
+        g.bindAttribLocation(pr, 0, 'aA')
+        g.bindAttribLocation(pr, 1, 'aB')
+      }
+      g.linkProgram(pr)
+      if (!g.getProgramParameter(pr, g.LINK_STATUS)) throw new Error(g.getProgramInfoLog(pr) ?? 'link')
+      return pr
+    }
+    const COMMON_U = ['uT', 'uGmst', 'uRot', 'uRes', 'uR', 'uPitch', 'uShell', 'uHalf', 'uAlpha', 'uInk', 'uMaskA', 'uMaskB', 'uMaskMix', 'uPtr', 'uPush']
+    const uloc = (pr: WebGLProgram, more: string[]) => {
+      const o: Record<string, WebGLUniformLocation | null> = {}
+      for (const n of [...COMMON_U, ...more]) o[n] = g.getUniformLocation(pr, n)
+      return o
+    }
+    const sl = uloc(sprog, ['uThin'])
+    const tprog = mk(TRAIL_VS, LINE_FS, true)
+    const tl = uloc(tprog, ['uThin', 'uTrail'])
+    const qprog = mk(PING_VS, PING_FS, false)
+    const ql = uloc(qprog, ['uPA[0]', 'uPAd[0]', 'uPB[0]', 'uPBd[0]', 'uPT[0]', 'uNowP', 'uHead'])
     const pprog = g.createProgram()!
     g.attachShader(pprog, compile(g, g.VERTEX_SHADER, VS))
     g.attachShader(pprog, compile(g, g.FRAGMENT_SHADER, P_FS))
@@ -367,6 +500,7 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
       return t
     }
     const svao = g.createVertexArray()!
+    const tvao = g.createVertexArray()!
     const sbuf = g.createBuffer()!
     let satCount = 0
 
@@ -446,6 +580,15 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
         g.vertexAttribPointer(0, 4, g.FLOAT, false, 20, 0)
         g.enableVertexAttribArray(1)
         g.vertexAttribPointer(1, 1, g.FLOAT, false, 20, 16)
+        // the same buffer, one instance per satellite, for the trails
+        g.bindVertexArray(tvao)
+        g.bindBuffer(g.ARRAY_BUFFER, sbuf)
+        g.enableVertexAttribArray(0)
+        g.vertexAttribPointer(0, 4, g.FLOAT, false, 20, 0)
+        g.vertexAttribDivisor(0, 1)
+        g.enableVertexAttribArray(1)
+        g.vertexAttribPointer(1, 1, g.FLOAT, false, 20, 16)
+        g.vertexAttribDivisor(1, 1)
         g.bindVertexArray(null)
       },
       draw(lat0, lon0, extra = {}) {
@@ -477,21 +620,52 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
         g.drawArrays(g.TRIANGLES, 0, 3)
         g.bindVertexArray(null)
         if (satCount > 0 && (extra.satAlpha ?? 0) > 0.003) {
+          const alphaBase = (extra.satAlpha ?? 0) * (extra.globeA ?? 1)
+          const common = (l: Record<string, WebGLUniformLocation | null>, alpha: number) => {
+            g.uniform1f(l.uT, extra.satT ?? 0)
+            g.uniform1f(l.uGmst, extra.gmst ?? 0)
+            g.uniformMatrix3fv(l.uRot, false, rot)
+            g.uniform2f(l.uRes, px, px)
+            g.uniform1f(l.uR, R)
+            g.uniform1f(l.uPitch, pitch)
+            const sh = extra.shell ?? [1.34, 1.58]
+            g.uniform2f(l.uShell, sh[0], sh[1])
+            g.uniform1f(l.uHalf, (0.5 * px) / R)
+            g.uniform1f(l.uAlpha, alpha)
+            g.uniform3fv(l.uInk, palette.ink)
+            bindMasks({ a: l.uMaskA, b: l.uMaskB, mix: l.uMaskMix }, extra.maskMix ?? 1)
+            g.uniform3f(l.uPtr, ptr?.x ?? 0, ptr?.y ?? 0, ptr?.k ?? 0)
+            g.uniform2f(l.uPush, push.radius, push.max)
+          }
           g.useProgram(sprog)
-          g.uniform1f(su.t, extra.satT ?? 0)
-          g.uniform1f(su.gmst, extra.gmst ?? 0)
-          g.uniformMatrix3fv(su.rot, false, rot)
-          g.uniform2f(su.res, px, px)
-          g.uniform1f(su.r, R)
-          g.uniform1f(su.pitch, pitch)
-          g.uniform1f(su.thin, extra.satThin ?? 1)
-          g.uniform1f(su.alpha, (extra.satAlpha ?? 0) * (extra.globeA ?? 1))
-          g.uniform3fv(su.ink, palette.ink)
-          bindMasks({ a: su.maskA, b: su.maskB, mix: su.maskMix }, extra.maskMix ?? 1)
-          g.uniform3f(su.ptr, ptr?.x ?? 0, ptr?.y ?? 0, ptr?.k ?? 0)
-          g.uniform2f(su.push, push.radius, push.max)
+          common(sl, alphaBase)
+          g.uniform1f(sl.uThin, extra.satThin ?? 1)
           g.bindVertexArray(svao)
           g.drawArrays(g.POINTS, 0, satCount)
+          if ((extra.trailSeconds ?? 0) > 0) {
+            g.useProgram(tprog)
+            common(tl, alphaBase * 0.85)
+            g.uniform1f(tl.uThin, extra.satThin ?? 1)
+            g.uniform1f(tl.uTrail, extra.trailSeconds ?? 0)
+            g.bindVertexArray(tvao)
+            g.drawArraysInstanced(g.LINES, 0, TRAIL_N * 2, satCount)
+          }
+          const pg = extra.pings
+          if (pg && pg.count > 0) {
+            g.useProgram(qprog)
+            common(ql, Math.min(1, alphaBase * 2))
+            g.uniform4fv(ql['uPA[0]'], pg.a)
+            g.uniform1fv(ql['uPAd[0]'], pg.ad)
+            g.uniform4fv(ql['uPB[0]'], pg.b)
+            g.uniform1fv(ql['uPBd[0]'], pg.bd)
+            g.uniform2fv(ql['uPT[0]'], pg.t)
+            g.uniform1f(ql.uNowP, pg.now)
+            g.bindVertexArray(svao)
+            g.uniform1f(ql.uHead, 0)
+            g.drawArraysInstanced(g.LINE_STRIP, 0, PING_SEG + 1, pg.count)
+            g.uniform1f(ql.uHead, 1)
+            g.drawArraysInstanced(g.POINTS, 0, 1, pg.count)
+          }
           g.bindVertexArray(null)
         }
         const pt = extra.portrait
