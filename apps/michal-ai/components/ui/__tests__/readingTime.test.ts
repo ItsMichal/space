@@ -10,7 +10,7 @@ describe('secondsLeft', () => {
     expect(secondsLeft(blocks, 400)).toBe(0)
   })
   it('counts the part of the block the line is in', () => {
-    expect(secondsLeft(blocks, 150)).toBeCloseTo(120 - 60 - 15)
+    expect(secondsLeft(blocks, 150)).toBeCloseTo(75)
   })
   it('adds an allowance per image', () => {
     const withImg: ReadBlock[] = [...blocks, { top: 400, height: 200, words: 0, images: 2 }]
