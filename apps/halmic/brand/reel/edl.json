@@ -2,7 +2,10 @@
  "note": "Moments cut from the owner's own published videos and clips (YouTube @halmic, Twitch halmictv). Source footage is not in the repo; download video-only up to 1080p (see README.md). Times are source seconds. crop (landscape, 16:9) and pcrop (portrait, 9:16) are w:h:x:y in a 1280x720 reference frame (scaled to the real source size) and always exclude HUD text, captions, credits and facecam.",
  "fps": 24,
  "speed": 0.5,
- "poster": [3, 30],
+ "poster": [
+  3,
+  30
+ ],
  "srcSeconds": 1.4,
  "crossfadeFrames": 10,
  "moments": [
@@ -12,9 +15,9 @@
    "id": "Et47QCJ3-3g",
    "title": "Robomaster 2019 Robotics Competition - Highlight Reel",
    "in": 121,
-   "crop": "680:382:170:112",
-   "why": "arena fight, robots clustering around the red tower",
-   "pcrop": "253:450:400:150"
+   "crop": "604:340:200:175",
+   "why": "arena fight, robots clustering around the red tower; \"Base Shield\" caption cropped",
+   "pcrop": "225:400:400:215"
   },
   {
    "src": "yt-pl6lJAYPLgc",
@@ -122,9 +125,9 @@
    "id": "Et47QCJ3-3g",
    "title": "Robomaster highlight reel",
    "in": 329,
-   "crop": "680:382:170:112",
-   "why": "multi-robot melee; lower-third caption cropped out",
-   "pcrop": "253:450:380:140"
+   "crop": "604:340:200:100",
+   "why": "multi-robot melee; lower-third caption cropped out; lower-third counter cropped",
+   "pcrop": "225:400:385:100"
   }
  ],
  "excluded": [

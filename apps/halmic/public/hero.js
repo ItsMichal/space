@@ -59,15 +59,15 @@ precision highp float;
 #else
 precision mediump float;
 #endif
-varying vec2 v;uniform sampler2D img;uniform vec2 res,quiet;uniform float cell,live,lean,time,sc,bt,amp;
+varying vec2 v;uniform sampler2D img;uniform vec2 res,quiet;uniform float cell,live,lean,time,sc,bt,amp,gain,sideW,hdrE;
 const vec3 INK=vec3(.0588,.0549,.0745);
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 vec3 S(vec2 p){return texture2D(img,vec2(p.x/res.x,1.-p.y/res.y)).rgb;}
 float lum(vec3 c){return dot(c,vec3(.2126,.7152,.0722));}
 float zone(vec2 p){                          // 1 = show the footage, 0 = pure ink
   vec2 s=p/res;
-  float vig=smoothstep(.0,.14,min(s.x,1.-s.x))*smoothstep(.0,.06,1.-s.y);
-  float hdr=smoothstep(30.,110.,p.y/sc);     // the nav band
+  float vig=smoothstep(.0,sideW,min(s.x,1.-s.x))*smoothstep(.0,.06,1.-s.y);
+  float hdr=smoothstep(30.,hdrE,p.y/sc);     // the nav band
   float fade=1.-smoothstep(quiet.x,quiet.y,s.y);   // long fade to ink above the topline and buttons
   return vig*hdr*fade;
 }
@@ -78,10 +78,10 @@ void main(){
   float L0=lum(c0);
   float o=bt*1.5;
   float Lb=(lum(S(px+vec2(o,o)))+lum(S(px+vec2(-o,o)))+lum(S(px+vec2(o,-o)))+lum(S(px+vec2(-o,-o))))*.25;
-  float Ls=L0+(L0-Lb)*1.5;
-  float tu=smoothstep(.04,.60,Ls);
+  float Ls=L0+(L0-Lb)*2.2;
+  float tu=min(pow(smoothstep(.04,.92,Ls),1.25)*.85*gain,.95);
   float m=zone(px);
-  vec3 duo=mix(INK,vec3(.105,.175,.40),tu);
+  vec3 duo=mix(INK,vec3(.10,.17,.40),tu);
   float warmU=smoothstep(.02,.16,(c0.r+c0.b)*.5-c0.g)*tu;
   duo=mix(duo,vec3(.21,.10,.37),warmU*.55);
   vec3 col=mix(INK,duo,amp*smoothstep(.0,.5,m));
@@ -91,16 +91,16 @@ void main(){
   vec2 cp=(id+.5)*cell; cp.x-=cp.y*lean;     // the cell centre back in screen space
   float a=cell*.3;
   vec3 cc=(S(cp)*2.+S(cp+vec2(a,0.))+S(cp-vec2(a,0.))+S(cp+vec2(0.,a))+S(cp-vec2(0.,a)))/6.;
-  float th=smoothstep(.05,.58,lum(cc));
+  float th=min(pow(smoothstep(.06,.92,lum(cc)),1.2)*.92*gain,.98);
   float mc=zone(cp);
   th*=smoothstep(.0,.3,mc-hash(id)*.4);      // dots dissolve one by one toward the edges and quiet zones
-  float r=mix(.08,.41,th), hh=mix(.0,.2,th*th);
+  float r=mix(.07,.37,th), hh=mix(.0,.16,th*th);
   vec2 d2=vec2(f.x,max(abs(f.y)-hh,0.));
   float aa=.7/cell+.02;
   float cov=smoothstep(aa,-aa,length(d2)-r)*step(.04,th);
-  vec3 cob=mix(vec3(.115,.15,.34),vec3(.165,.28,.58),th);
+  vec3 cob=mix(vec3(.07,.09,.22),vec3(.145,.25,.52),smoothstep(.0,.9,th));
   cob=mix(cob,vec3(.27,.38,.68),live*.15)*(1.+.1*live);
-  float k=smoothstep(.015,.14,(cc.r+cc.b)*.5-cc.g)*smoothstep(.2,.6,th);   // warm footage -> the second ink
+  float k=smoothstep(.015,.14,(cc.r+cc.b)*.5-cc.g)*smoothstep(.15,.5,th);   // warm footage -> the second ink
   vec3 dot_=mix(cob,vec3(.36,.16,.52),k*.85);
   col=mix(col,dot_,cov);
   col+=(hash(px+floor(time*10.))-.5)*.014*smoothstep(.0,.4,m);   // fine grain
@@ -154,7 +154,7 @@ void main(){
       if (hf && gl.getExtension('EXT_color_buffer_half_float') && gl.getExtension('OES_texture_half_float_linear')) bufType = hf.HALF_FLOAT_OES;
       for (let i = 0; i < 2; i++) { ftex[i] = tex(0); fbo[i] = gl.createFramebuffer(); }
       vidTex = tex(0);
-      for (const [p, names] of [[prog1, ['vid', 'prev', 'asp', 'px', 'drift', 'k', 'cap', 'first']], [prog2, ['img', 'res', 'cell', 'live', 'lean', 'time', 'sc', 'quiet', 'bt', 'amp']]]) for (const n of names) loc[n] = gl.getUniformLocation(p, n);
+      for (const [p, names] of [[prog1, ['vid', 'prev', 'asp', 'px', 'drift', 'k', 'cap', 'first']], [prog2, ['img', 'res', 'cell', 'live', 'lean', 'time', 'sc', 'quiet', 'bt', 'amp', 'gain', 'sideW', 'hdrE']]]) for (const n of names) loc[n] = gl.getUniformLocation(p, n);
     } catch { return false; }
     canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); stop(); fallback(); });
     return true;
@@ -196,7 +196,7 @@ void main(){
     // the topline and CTAs must sit on near-pure ink: the fade to ink ends where .hero-foot starts (as a fraction of the canvas)
     const ft = hero.querySelector('.hero-foot');
     const end = ft ? Math.min(0.94, Math.max(0.4, (ft.getBoundingClientRect().top - r.top) / cssH)) : 0.8;
-    quietY = end; quietX = Math.max(0.2, end - (phone ? 0.2 : 0.3));
+    quietY = end; quietX = Math.max(0.2, end - (phone ? 0.08 : 0.3));
     load(cssW);
     return sc;
   }
@@ -249,7 +249,7 @@ void main(){
     gl.useProgram(prog2);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, ftex[next]); gl.uniform1i(loc.img, 0);
     gl.uniform2f(loc.res, W, H);
-    gl.uniform1f(loc.cell, cell0 * sc); gl.uniform1f(loc.bt, W / BW); gl.uniform1f(loc.amp, .5);
+    gl.uniform1f(loc.cell, cell0 * sc); gl.uniform1f(loc.bt, W / BW); gl.uniform1f(loc.amp, .36); gl.uniform1f(loc.gain, cell0 < 6 ? 1.3 : 1); gl.uniform1f(loc.sideW, cell0 < 6 ? .16 : .2); gl.uniform1f(loc.hdrE, cell0 < 6 ? 100 : 170);
     gl.uniform2f(loc.quiet, quietX, quietY); gl.uniform1f(loc.sc, sc); gl.uniform1f(loc.live, liveV); gl.uniform1f(loc.lean, LEAN); gl.uniform1f(loc.time, t);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     cur = next;
@@ -276,9 +276,10 @@ void main(){
     if (!init()) { fallback(); return; }
     video.muted = true; video.defaultMuted = true;
     video.addEventListener('error', () => { stop(); fallback(); }, { once: true });
+    load(canvas.getBoundingClientRect().width);   // the source must be set before the first play()
     go();
     // no decoded frame within a few seconds (blocked autoplay, stalled network): keep the poster
-    setTimeout(() => { if (started && !hasFrame) { stop(); fallback(); } }, 6000);
+    setTimeout(() => { if (started && !hasFrame) { stop(); fallback(); } }, 8000);
   }
 
   const io = new IntersectionObserver((es) => { inView = es[es.length - 1].isIntersecting; if (inView) go(); else if (started) stop(); });

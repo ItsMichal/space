@@ -66,14 +66,16 @@ if (process.env.REEL_SKIP_ENC) process.exit(0);
 
 // encodes (no audio track anywhere)
 fs.mkdirSync(out, { recursive: true });
-const vp9 = (loop, file, w, crf, extra = []) => ff(['-i', loop, '-an', '-vf', `scale=${w}:-2:flags=lanczos,format=yuv420p`, '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', String(crf), '-row-mt', '1', '-tile-columns', '1', '-deadline', 'good', '-cpu-used', '1', '-g', '96', '-pix_fmt', 'yuv420p', ...extra, path.join(out, file)]);
-const h264 = (loop, file, w, crf) => ff(['-i', loop, '-an', '-vf', `scale=${w}:-2:flags=lanczos,format=yuv420p`, '-c:v', 'libx264', '-preset', 'slow', '-profile:v', 'high', '-crf', String(crf), '-g', '96', '-movflags', '+faststart', '-pix_fmt', 'yuv420p', path.join(out, file)]);
+// a strong spatio-temporal denoise just before encoding: the footage is graded dark and the shader re-screens it, so noise is wasted bytes
+const DN = 'hqdn3d=3:3:9:9';
+const vp9 = (loop, file, w, crf, extra = []) => ff(['-i', loop, '-an', '-vf', `${DN},scale=${w}:-2:flags=lanczos,format=yuv420p`, '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', String(crf), '-row-mt', '1', '-tile-columns', '1', '-deadline', 'good', '-cpu-used', '1', '-lag-in-frames', '25', '-auto-alt-ref', '1', '-g', '96', '-pix_fmt', 'yuv420p', ...extra, path.join(out, file)]);
+const h264 = (loop, file, w, crf) => ff(['-i', loop, '-an', '-vf', `${DN},scale=${w}:-2:flags=lanczos,format=yuv420p`, '-c:v', 'libx264', '-preset', 'slow', '-profile:v', 'high', '-crf', String(crf), '-g', '96', '-movflags', '+faststart', '-pix_fmt', 'yuv420p', path.join(out, file)]);
 await Promise.all([
-  vp9(loopL, 'reel-1080.webm', 1920, +(process.env.CRF1080 ?? 40)),
-  vp9(loopL, 'reel-720.webm', 1280, +(process.env.CRF720 ?? 38)),
-  vp9(loopP, 'reel-m.webm', 540, +(process.env.CRFM ?? 38)),
-  h264(loopL, 'reel-720.mp4', 1280, +(process.env.CRFMP4 ?? 29)),
-  h264(loopP, 'reel-m.mp4', 540, +(process.env.CRFMMP4 ?? 30)),
+  vp9(loopL, 'reel-1080.webm', 1920, +(process.env.CRF1080 ?? 54)),
+  vp9(loopL, 'reel-720.webm', 1280, +(process.env.CRF720 ?? 54)),
+  vp9(loopP, 'reel-m.webm', 540, +(process.env.CRFM ?? 52)),
+  h264(loopL, 'reel-720.mp4', 1280, +(process.env.CRFMP4 ?? 35)),
+  h264(loopP, 'reel-m.mp4', 540, +(process.env.CRFMMP4 ?? 36)),
 ]);
 // posters: one recognisable frame (edl.poster = [moment index, frames into it]), same grade as the video
 const pf = (N - X) * edl.poster[0] - X + edl.poster[1];
