@@ -89,6 +89,25 @@ Starlink image: the build makes 480/960/1600/2400 AVIF and WebP variants. Served
 - Contrast over the busiest backdrop (text hidden, darkest pixel under each text block, desktop): meta 6.25, description 6.67, title 8.81. Phone not measured.
 - Scroll on a 4x throttled 375px profile in headless Chrome with software GL: frame p50 33ms, p95 50ms, max 100ms, 0 long tasks (it was p50 17 / p95 33 before the glass and grid; relative only).
 
+## Page backdrop: ink-wash blobs, god rays, glyph star field, glass lensing (2026-10-12)
+
+Replaces the graph-paper dots. Nothing here was measured in a browser pass; precedents are named so they can be opened and
+compared, and the "How verified" column says what was and was not checked.
+
+| Element | Reference | What we take from it | How verified |
+| --- | --- | --- | --- |
+| Very large, slow, soft colour blobs on a page background | stripe.com home hero (WebGL gradient, the open-source "stripe-gradient" mesh shader), apple.com colour washes behind product pages | Colour fields wider than the viewport, edges with no visible shape, motion measured in tens of seconds; the page never shows a distinct blob | Matched by eye from memory of those pages, not opened in this pass |
+| Pale, subtractive process-colour inks on cream stock | Risograph and CMYK print (misregistration, overprint: cyan over yellow gives green); the owner's own 2023 site (below) | Multiply blending so overlaps mix like inks, kept pale, never emissive | Overlap colours checked in the shader output; print precedent is a process, not a site |
+| Soft light shafts from an off-screen point | linear.app and vercel.com hero light fields and "god ray" gradients | A few wide, low-contrast shafts, slowly breathing, never a hard edge | Matched by eye, not measured |
+| Terminal glyph / dot-matrix field as texture | The hero globe on this site (6px dot matrix, ink `0.13 0.13 0.11`, 0.28 to 0.42 of ink); ASCII and glyph fields on studio and developer sites (for example ordered-dither and character-grid heroes) | Same pitch family (12px cell, 6px matrix), same ink, same "faint speck" size; symbol variety on top (`. : + x * o`, 4-point stars, constellation segments, a rare shooting star) | Ink, radius and alpha read from `components/presence/globe/renderer.ts`; the studio-site precedents were not opened |
+| Glyph opacity | Our own contrast rule | Capped at 0.22 so 4.5:1 holds for muted ink over the worst glyph pixel | Computed, see docs/backdrop.md |
+| Glass lensing: edge-weighted refraction, slight magnification, chromatic split, thin specular rim | Apple Liquid Glass (iOS 26, apple.com), the same references as the glass cards above | Bend concentrated in the first ~15px, almost nothing in the middle, rim lit from the top left | Not measurable on the web (see the glass section above); matched by eye |
+
+Original site (2023, first commits `4ca66cb` "added really cool bg shader" and `4f5934a`): a react-three-fiber full-screen plane
+(`components/BGAnim.tsx`, `BGShaders.tsx`) with a domain-warped fbm displacement driving contour lines in a yellow `#F2EA72`
+to cyan `#6DF7F5` gradient over deep indigo (`#1A041B`, `#150C64`), slowly animated, dark and saturated, behind frosted-glass
+panels. This backdrop keeps its spirit (warped noise fields in yellow and cyan, slow, behind glass) and inverts it: pale
+inks on cream instead of neon on near-black.
 ## Reading view: column, prose and components (2026-10-12)
 
 None of these references could be opened and measured from this environment (the sandbox allows no outside browsing). They
@@ -114,6 +133,19 @@ Bug: on a dark reading page the nav pill was a pale milky slab with near-white t
 | Dark bar tint and backdrop filter | apple.com global nav in dark (`saturate(1.8) blur(20px)` over `rgba(22,22,23,0.8)`), developer.apple.com materials (`rgba(29,29,31,0.7)`), numbers as recorded in the Glass surface row above | Dark tone tint `rgba(18,22,18,0.8)` (the basalt paper at the same 80 percent), frost blur 20px and saturate 1.8 on dark pages (`--glass-blur-dark`, `--glass-saturate-dark`); light tone keeps 10px and 1.6. Not re-measured in this pass (network was not available to the build environment) | Values taken from the rows above, not re-read from apple.com today |
 | Dark rim | iOS 26 and macOS Tahoe Liquid Glass in dark appearance (native, no web measurement; Apple HIG "Materials" and WWDC25 "Meet Liquid Glass" give no numbers) | Highlights are light but thin and low alpha (white at 28 percent, about 1px), the lower-right edge sinks into a deep shadow (black at 55 percent), no wash over the body. The frost bevel lift and the water-drop gloss are cut by 80 to 85 percent on dark tone so they no longer veil the tint | Matched by eye against stills |
 | Tint and glyph colour chosen together | iOS 26 (glass flips light/dark with its backdrop and its glyphs flip with it), macOS menu bar | One decision per piece of glass (`components/glass/theme.ts`): the tone picks the tint, the foreground, the rim and the edge as a set | Unit tested against the real token values, measured on rendered pixels in `docs/glass-shots/` |
+
+## Logo hover switcher between the two sites (2026-10-12)
+
+Written without network access to the references (the build sandbox could not reach them), so every row is **from memory** and
+unmeasured; the behaviour numbers are ours, chosen to sit in the range these sites use. Re-measure before treating as settled.
+
+| Element | Reference | What we match | How verified |
+| --- | --- | --- | --- |
+| Hover flyout from a nav item with an intent delay, a bridge between trigger and panel, and the same panel opening on keyboard focus | stripe.com main navigation (Products, Solutions flyouts open on hover and on focus), apple.com global nav (flyout on hover, Escape closes) | Panel under the trigger, no gap to cross (8px transparent bridge), about 120ms in and 150ms out so a passing pointer does not open it, opacity and a 4px rise only, Escape closes, focus-within opens it | From memory (stripe.com, apple.com); behaviour checked by the headless-Chrome walk-through in `scripts/switcher-shots.mjs` |
+| The logo as a switcher between a company's products or sites | vercel.com (right-clicking the logo offers brand assets and a link to the sibling site), linear.app and notion.so (workspace switcher on the top-left mark), atlassian.com (app switcher) | The mark is the trigger and still navigates home; the row holds the sibling's mark and its domain only | From memory; none of these use hover on the mark, so only the placement and content are matched. Weakest precedent here |
+| Sibling-site assertion with `rel="me"` | IndieWeb rel=me (indieweb.org/rel-me), used by Mastodon profile verification | Both links carry `rel="me"` and are plain same-tab anchors | From memory |
+| Touch fallback as a quiet last row in the phone menu | apple.com mobile nav sheet | Same row as the dropdown, hairline above, no extra control | Matched by eye |
+| Bar without a wordmark, mark alone at the left | vercel.com, linear.app (mark only, no wordmark, in the top bar) | Mark at 20px, links right of it | From memory |
 
 ## Citation (verified)
 

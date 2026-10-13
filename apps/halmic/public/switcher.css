@@ -1,0 +1,30 @@
+/* Logo switcher: the h mark with one dropdown row under it, plus the same row in the footer for touch screens and one link on
+   paired pages. Dark surface, Halmic Text. Open on hover (fine pointers, 120ms in, 150ms out) or keyboard focus inside; Escape
+   closes (switcher.js sets data-dismissed). The closed menu is only transparent, never display:none or visibility:hidden, so its
+   link stays focusable and in the accessibility tree. Opacity and a 4px rise, 140ms, none under reduced motion. */
+.xs { position: relative; align-self: stretch; display: flex; align-items: center; }
+.xs-logo { display: flex; align-items: center; min-height: 44px; }
+.xs-menu { position: absolute; z-index: 6; left: -10px; top: 100%; margin: 0; padding: 4px 0 0; list-style: none; opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity .14s ease .15s, transform .14s ease .15s; }
+.xs-menu li { background: var(--ink-2); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 12px 32px -8px #000a; }
+.xs-row { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 16px 0 14px; border-radius: 14px; white-space: nowrap; color: var(--mute); font: 600 15px/1 var(--sans); transition: color .15s ease; }
+.xs-row:hover, .xs-row:focus-visible { color: var(--text); }
+.xs-row:focus-visible { outline-offset: -2px; }
+.xs-mark { height: 14px; width: auto; fill: currentColor; flex: none; }
+.xs-go { font-style: normal; font-size: 13px; opacity: .6; }
+@media (hover: hover) and (pointer: fine) {
+  .xs:hover:not([data-dismissed]) .xs-menu { opacity: 1; transform: none; pointer-events: auto; transition-delay: .12s; }
+}
+.xs:has(:focus-visible):not([data-dismissed]) .xs-menu { opacity: 1; transform: none; pointer-events: auto; transition-delay: 0s; }
+@media (prefers-reduced-motion: reduce) { .xs-menu { transform: none; transition: none; } }
+@media (max-width: 640px) { .xs-menu { display: none; } }   /* phones: the footer row carries the link instead (one link, not two) */
+
+/* touch fallback: the last link in the footer, shown only where there is no hover */
+.foot .links a.xs-foot { display: inline-flex; align-items: center; gap: 8px; }
+.foot .links a.xs-foot .xs-mark { height: 12px; }
+@media (hover: hover) and (pointer: fine) { .foot .links a.xs-foot { display: none; } }
+
+/* the link on a paired page */
+.pg p.xl { margin: var(--s2) 0 0; }
+.pg p.xl a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--mute); text-decoration: none; }
+.pg p.xl a:hover { color: var(--text); text-decoration: underline; text-decoration-color: #ffffff44; }
+.pg p.xl .xs-mark { height: 12px; }

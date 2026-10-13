@@ -4,6 +4,8 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { md, inline, frontMatter } from './md.mjs';
+import { FOR_HALMIC as SIB, markSvg } from '@space/crosslinks';
+import { readSiblingPosts } from '@space/crosslinks/node';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const SITE = 'https://halmic.com';
@@ -39,6 +41,11 @@ function wordmark(dir = 'c') {
 const hbare = read('./brand/svg/hmark-3-bare.svg');
 const hv = hbare.match(/viewBox="([^"]+)"/)[1];
 const hpaths = [...hbare.matchAll(/<path d="([^"]+)"/g)].map((m) => `<path d="${m[1]}"/>`).join('');
+// ---- the one link to the sibling site (packages/crosslinks): logo switcher in the header, the same row in the footer for
+// touch screens, and one link on each paired page. Nothing else on the site names it; scripts/check-identity.mjs enforces that. ----
+const sibPosts = readSiblingPosts(path.resolve(here, '../..'));
+const xrow = (cls) => `<a class="${cls}" href="${SIB.origin}" rel="me">${markSvg(SIB.mark, 'xs-mark')}<span>${SIB.domain}</span>${icon('arrow-up-right', 'xs-go')}</a>`;
+const xpair = (p) => { const l = SIB.pairLink(p, sibPosts); return l ? `<p class="xl"><a href="${l.href}" rel="me">${markSvg(SIB.mark, 'xs-mark')}<span>${l.domain}</span>${l.title ? ` · ${esc(l.title)}` : ''}${icon('arrow-up-right', 'xs-go')}</a></p>` : ''; };
 const mark = `<svg class="mark" viewBox="${hv}" aria-hidden="true" focusable="false">${hpaths}</svg>`;
 
 // ---- content ----
@@ -178,8 +185,9 @@ const navLinks = [['watch', '/#stream', 'video-camera'], ['play', '/#games', 'ga
 const NAV_OF = { videos: 'watch', games: 'play' };   // an inner page's section name -> its nav item
 const navFor = (section) => `<nav aria-label="Primary">${navLinks.map(([t, h, i]) => `<a href="${h}"${t === (NAV_OF[section] ?? section) ? ' aria-current="true"' : ''}>${icon(i)}<span>${t}</span></a>`).join('')}</nav>`;   // on an inner page the link to its own section is marked as current
 const NAV = navFor();
+const LOGO = `<div class="xs"><a class="xs-logo" href="/" aria-label="halmic, home">${mark}</a><ul class="xs-menu"><li>${xrow('xs-row')}</li></ul></div>`;
 const SKIP = '<a class="skip" href="#main">Skip to content</a>';
-const FOOT = `<footer class="foot"><div class="wrap"><p>© ${new Date().getFullYear()} halmic</p><p class="links">${[['Twitch', 'https://www.twitch.tv/halmictv', 'b-twitch', ' rel="me"'], ['YouTube', 'https://www.youtube.com/@halmic', 'b-youtube', ' rel="me"'], ['itch.io', 'https://halmic.itch.io/', 'b-itchdotio', ' rel="me"'], ['Medium', 'https://halmic.medium.com/', 'b-medium', ' rel="me"'], ['X', 'https://x.com/halmicc', 'b-x', ' rel="me"']].map(([t, h, i, r]) => `<a href="${h}"${r}>${icon(i)}<span>${t}</span></a>`).join('')}</p></div></footer>`;
+const FOOT = `<footer class="foot"><div class="wrap"><p>© ${new Date().getFullYear()} halmic</p><p class="links">${[['Twitch', 'https://www.twitch.tv/halmictv', 'b-twitch', ' rel="me"'], ['YouTube', 'https://www.youtube.com/@halmic', 'b-youtube', ' rel="me"'], ['itch.io', 'https://halmic.itch.io/', 'b-itchdotio', ' rel="me"'], ['Medium', 'https://halmic.medium.com/', 'b-medium', ' rel="me"'], ['X', 'https://x.com/halmicc', 'b-x', ' rel="me"']].map(([t, h, i, r]) => `<a href="${h}"${r}>${icon(i)}<span>${t}</span></a>`).join('')}${xrow('xs-foot')}</p></div></footer>`;
 // buttons and button rows for the inner pages; ext adds the external-link arrow
 const btn = ({ href, label, ic = '', kind = 'ghost', ext = false, rel = '' }) => `<a class="btn btn-sm btn-${kind}" href="${href}"${ext ? ` rel="noopener${rel}"` : ''}>${ic ? icon(ic) : ''}<span>${label}</span>${ext ? icon('arrow-up-right', 'ic-end') : ''}</a>`;
 const mrow = (...b) => `<div class="mrow">${b.map(btn).join('')}</div>`;
@@ -193,9 +201,9 @@ const head = ({ title, desc, path: p, og, ogAlt, published, ld, css = ['bold.css
 <meta property="og:site_name" content="halmic productions"><meta property="og:type" content="${type}"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${SITE}${p}"><meta property="og:image" content="${SITE}${og}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:type" content="${ogType(og)}"><meta property="og:image:alt" content="${ogAltOf(title, ogAlt)}"><meta property="og:locale" content="en_US">${published ? `<meta property="article:published_time" content="${published}">` : ''}
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${esc(title)}"><meta name="twitter:description" content="${esc(desc)}"><meta name="twitter:image" content="${SITE}${og}"><meta name="twitter:image:alt" content="${ogAltOf(title, ogAlt)}"><meta name="twitter:site" content="@halmicc">
 <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16"><link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32"><link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="alternate" type="application/rss+xml" title="halmic" href="/rss.xml"><link rel="preload" href="/fonts/halmic-display.43848237.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/halmic-text-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="${V('base.css')}">${css.map((c) => `<link rel="stylesheet" href="${V(c)}">`).join('')}${ld ? ldTag(ld) : ''}`;
+<link rel="stylesheet" href="${V('base.css')}"><link rel="stylesheet" href="${V('switcher.css')}"><script src="${V('switcher.js')}" defer></script>${css.map((c) => `<link rel="stylesheet" href="${V(c)}">`).join('')}${ld ? ldTag(ld) : ''}`;
 const inner = ({ title, desc, path: p, og, ogAlt, published, ld, body, type, noindex, section, wide = false }) => `<!doctype html><html lang="en"><head>${head({ title, desc, path: p, og, ogAlt, published, ld, css: ['bold.css', 'page.css'], type, noindex })}</head><body>
-${SKIP}<header class="top"><div class="wrap"><a href="/" aria-label="halmic, home">${mark}</a>${navFor(section)}</div></header>
+${SKIP}<header class="top"><div class="wrap">${LOGO}${navFor(section)}</div></header>
 <main id="main" class="pg wrap${wide ? ' pgw' : ''}">${body}</main>${FOOT}<script src="${V('app.js')}" defer></script></body></html>`;
 
 // ---- home templates ----
@@ -204,7 +212,7 @@ const subs = {
   cards: homeCards(),
   head_bold: head({ title: 'halmic productions: streams, videos, games and design', desc: 'An assortment of various somewhat creative work I’ve done: Twitch (halmictv) clips, YouTube videos, tiny itch.io games, logo design and QA work.', path: '/', og: '/og/home.jpg', ogAlt: 'halmic productions: the halmic wordmark in cream on a dark background with blue leaning bars', ld: [PERSON, { '@type': 'WebSite', '@id': `${SITE}/#site`, url: `${SITE}/`, name: 'halmic productions', alternateName: 'halmic', description: 'An assortment of various somewhat creative work I’ve done.', publisher: { '@id': `${SITE}/#halmic` } }, ...pageVideos.map(videoLd), ...gl.map(gameLd), designLd], css: ['bold.css'] }),
   ic_twitch: icon('b-twitch'), ic_out: icon('arrow-up-right', 'ic-end'), ic_down: icon('arrow-down', 'ic-end'),
-  nav: NAV, skip: SKIP, appjs: V('app.js'), herojs: V('hero.js'), foot: FOOT,
+  nav: NAV, logo: LOGO, skip: SKIP, appjs: V('app.js'), herojs: V('hero.js'), foot: FOOT,
   design_shots: ['header', 'footer', 'phone'].map((k) => { const png = fs.readFileSync(path.join(here, `public/work/southeast-denver-dental-${k}.png`)); return `<figure class="shot shot-${k}"><img src="/work/southeast-denver-dental-${k}.png" width="${png.readUInt32BE(16)}" height="${png.readUInt32BE(20)}" loading="lazy" decoding="async" alt="${{ header: 'The Southeast Denver Dental logo in the header of their website: an orange and blue four-lobed tooth mark beside the name in blue and orange capitals.', footer: 'The same logo in white on the blue footer of their website.', phone: 'The logo in the phone header of their website, next to a menu button.' }[k]}"></figure>`; }).join(''),
 };
 for (const d of ['videos', 'games']) { const dir = path.join(here, 'public', d); if (fs.existsSync(dir)) for (const e of fs.readdirSync(dir, { withFileTypes: true })) if (e.isDirectory()) fs.rmSync(path.join(dir, e.name), { recursive: true, force: true }); }
@@ -230,7 +238,7 @@ for (const g of gl) {
   urls.push({ loc: `/games/${g.slug}/`, pri: g.tier === 'feature' ? 0.8 : 0.7 });
   write(`games/${g.slug}/index.html`, inner({
     title: `${g.title.replace(/ \(.*\)$/, '')}: a tiny ${g.madeWith ?? 'browser'} game by halmic`, desc: `${g.line} Play ${g.title.replace(/ \(.*\)$/, '')} in your browser on itch.io.`, path: `/games/${g.slug}/`, og: `/og/game-${g.slug}.jpg`, ogAlt: `${g.title.replace(/ \(.*\)$/, '')}, a tiny game by halmic: cover art next to the title`, ld: [PERSON, gameLd(g)], section: 'games',
-    body: `${crumb('/#games', 'games')}<h1>${esc(g.title)}</h1><div class="gpage"><img class="gcover" src="${g.coverLocal}" width="640" height="508" fetchpriority="high" alt="${esc(g.alt)}"><div><p class="lede2">${esc(g.line)}</p>${g.description ? `<p>${esc(g.description)}</p>` : ''}${meta(['tag', g.status], ['cpu', g.madeWith], ['game-controller', g.genre?.replace(/ ,/g, ',')], ['calendar-blank', g.jam])}<p class="crow"><a class="btn btn-blue" href="${g.url}" rel="noopener">${icon('b-itchdotio')}<span>Play on itch.io</span>${icon('arrow-up-right', 'ic-end')}</a></p></div></div>${mrow({ href: '/#games', label: 'More little games', ic: 'game-controller' }, { href: '/#videos', label: 'Videos', ic: 'video-camera' }, { href: 'https://www.twitch.tv/halmictv', label: 'halmic on Twitch', ic: 'b-twitch', ext: true })}`,
+    body: `${crumb('/#games', 'games')}<h1>${esc(g.title)}</h1><div class="gpage"><img class="gcover" src="${g.coverLocal}" width="640" height="508" fetchpriority="high" alt="${esc(g.alt)}"><div><p class="lede2">${esc(g.line)}</p>${g.description ? `<p>${esc(g.description)}</p>` : ''}${meta(['tag', g.status], ['cpu', g.madeWith], ['game-controller', g.genre?.replace(/ ,/g, ',')], ['calendar-blank', g.jam])}${xpair(`/games/${g.slug}/`)}<p class="crow"><a class="btn btn-blue" href="${g.url}" rel="noopener">${icon('b-itchdotio')}<span>Play on itch.io</span>${icon('arrow-up-right', 'ic-end')}</a></p></div></div>${mrow({ href: '/#games', label: 'More little games', ic: 'game-controller' }, { href: '/#videos', label: 'Videos', ic: 'video-camera' }, { href: 'https://www.twitch.tv/halmictv', label: 'halmic on Twitch', ic: 'b-twitch', ext: true })}`,
   }));
 }
 write('games/index.html', inner({ title: 'Games by halmic: tiny jam games and experiments', desc: 'Tiny games made by halmic in PICO-8, PuzzleScript, Bitsy and GB Studio. Play them in the browser on itch.io.', path: '/games/', og: '/og/games.jpg', ogAlt: 'Little games by halmic: screenshots of four tiny games', section: 'games', wide: true, ld: [PERSON, ...gl.map(gameLd)], body: `<h1>Little games</h1><p class="lede2">Jam entries and experiments, mostly in tiny engines.</p>${bento({ cls: 'b-play', tiles: playTiles() })}` }));
@@ -265,13 +273,13 @@ urls.push({ loc: mtBase, pri: 0.7 }, ...mtLogs.map((l) => ({ loc: l.url, pri: 0.
 const mtLogCard = (l, i) => card({ href: l.url, cls: l.hero === mt.cover ? 'c-3 txt' : '', m: l.hero === mt.cover ? '' : media(`/work/mountaintop/${l.hero}`, l.heroAlt, { w: mt.images[l.hero].w, h: mt.images[l.hero].h }), tile: l.hero === mt.cover ? 'notebook' : '', ei: 'notebook', ey: `dev log ${l.order} · ${mtDate(l.date)}`, title: l.title, text: l.description });
 write('work/project-mountaintop/index.html', inner({
   title: `${mt.title}: a hiking-pole rhythm game | halmic productions`, desc: `${mt.title}, a Unity rhythm game played with custom Arduino hiking-pole controllers. Gameplay video and the dev logs, by halmic.`, path: mtBase, og: '/og/work-project-mountaintop.jpg', ogAlt: mt.coverAlt, section: 'work', ld: [PERSON, mtWorkLd, mtVideoLd], wide: true,
-  body: `${crumb('/#work', 'work')}<h1>${esc(mt.title)}</h1><p class="lede2">${esc(mt.hook)}</p>${meta(['user-circle', mt.role], ['cpu', 'Unity'], ['cpu', 'Arduino'], ['tag', 'C#'])}<div class="mtintro"><div class="log">${md(mtIntro, mtOpts)}</div><div class="vfeat">${mtVideo(mt.video, false)}</div></div>${gh('Dev logs', 'logs', 'Written while it was being built, in 2023.', 'notebook')}<div class="grid g3">${mtLogs.map(mtLogCard).join('')}</div>${mrow({ href: '/#work', label: 'More work', ic: 'briefcase' }, { href: '/#games', label: 'Little games', ic: 'game-controller' }, { href: 'https://www.youtube.com/@halmic', label: 'halmic on YouTube', ic: 'b-youtube', ext: true })}`,
+  body: `${crumb('/#work', 'work')}<h1>${esc(mt.title)}</h1><p class="lede2">${esc(mt.hook)}</p>${meta(['user-circle', mt.role], ['cpu', 'Unity'], ['cpu', 'Arduino'], ['tag', 'C#'])}${xpair(mtBase)}<div class="mtintro"><div class="log">${md(mtIntro, mtOpts)}</div><div class="vfeat">${mtVideo(mt.video, false)}</div></div>${gh('Dev logs', 'logs', 'Written while it was being built, in 2023.', 'notebook')}<div class="grid g3">${mtLogs.map(mtLogCard).join('')}</div>${mrow({ href: '/#work', label: 'More work', ic: 'briefcase' }, { href: '/#games', label: 'Little games', ic: 'game-controller' }, { href: 'https://www.youtube.com/@halmic', label: 'halmic on YouTube', ic: 'b-youtube', ext: true })}`,
 }));
 for (const l of mtLogs) {
   const i = mtLogs.indexOf(l), prev = mtLogs[i - 1], next = mtLogs[i + 1];
   write(`work/project-mountaintop/${l.slug}/index.html`, inner({
     title: `${l.title} | Project Mountaintop dev log`, desc: l.description.slice(0, 160), path: l.url, og: `/og/mountaintop-${l.slug}.jpg`, ogAlt: l.heroAlt, published: l.date, section: 'work', type: 'article', ld: [PERSON, mtWorkLd, mtLogLd(l)],
-    body: `${crumb(mtBase, `Project Mountaintop · dev log ${l.order}`)}<h1>${esc(l.title)}</h1>${meta(['calendar-blank', mtDate(l.date)], ['notebook', `Dev log ${l.order} of ${mtLogs.length}`])}<article class="log">${md(l.body, mtOpts)}</article>${mrow(...(prev ? [{ href: prev.url, label: prev.title, ic: 'arrow-left' }] : []), ...(next ? [{ href: next.url, label: next.title, ic: 'arrow-right' }] : []), { href: mtBase, label: 'All dev logs', ic: 'notebook' })}`,
+    body: `${crumb(mtBase, `Project Mountaintop · dev log ${l.order}`)}<h1>${esc(l.title)}</h1>${meta(['calendar-blank', mtDate(l.date)], ['notebook', `Dev log ${l.order} of ${mtLogs.length}`])}${xpair(l.url)}<article class="log">${md(l.body, mtOpts)}</article>${mrow(...(prev ? [{ href: prev.url, label: prev.title, ic: 'arrow-left' }] : []), ...(next ? [{ href: next.url, label: next.title, ic: 'arrow-right' }] : []), { href: mtBase, label: 'All dev logs', ic: 'notebook' })}`,
   }));
 }
 

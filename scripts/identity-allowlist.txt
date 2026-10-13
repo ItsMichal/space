@@ -19,3 +19,6 @@ apps/michal-ai/content/posts/quantum-computing-in-1-minute.md
 apps/michal-ai/content/posts/small-projects-in-motion.md
 apps/michal-ai/content/posts/taco-neko-development.md
 apps/michal-ai/lib/content/__tests__/content.test.ts
+
+# Unit test of the logo switcher markup (not shipped; it asserts the one sanctioned link).
+apps/michal-ai/components/site/switcher.test.ts
