@@ -77,7 +77,7 @@
   position: absolute;
   top: 0;
   transform: translateX(-50%);
-  font: 400 15px/18px var(--ui-display);
+  font: 400 var(--type-small-size) / var(--type-small-line) var(--ui-display);
   font-variant-numeric: lining-nums;
   color: var(--ink-muted);
   pointer-events: none;
@@ -112,12 +112,12 @@
   outline-offset: -2px;
 }
 .tl-date {
-  font: 400 14px/18px var(--font-serif);
+  font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
   color: var(--ink-muted);
   font-variant-numeric: tabular-nums lining-nums;
 }
 .tl-name {
-  font: 500 13px/16px var(--font-sans);
+  font: 500 var(--type-small-size) / var(--type-small-line) var(--font-sans);
   letter-spacing: -0.005em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -183,18 +183,18 @@
 }
 .tl-p-date {
   margin: 0 0 var(--space-1);
-  font: 400 15px/22px var(--font-serif);
+  font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
   color: var(--ink-muted);
   font-variant-numeric: tabular-nums lining-nums;
 }
 .tl-p-title {
   margin: 0;
-  font: 500 clamp(24px, 6.4vw, 32px) / 1.12 var(--ui-display);
-  letter-spacing: -0.015em;
+  font: 500 var(--type-heading-size) / var(--type-heading-line) var(--ui-display);
+  letter-spacing: var(--type-heading-tracking);
 }
 .tl-p-sum {
   margin: var(--space-2) 0 0;
-  font: 400 18px/1.5 var(--font-serif);
+  font: 400 var(--type-body-size) / var(--type-body-line) var(--font-serif);
   color: var(--ink-muted);
 }
 .tl-p-img {
@@ -215,7 +215,7 @@
   align-items: center;
   min-height: 44px;
   color: var(--ink);
-  font: 500 15px/1 var(--font-sans);
+  font: 500 var(--type-small-size) / 1 var(--font-sans);
   text-decoration: underline;
   text-decoration-color: var(--hairline);
   text-underline-offset: 0.25em;
@@ -306,13 +306,13 @@
 }
 .st-text {
   display: inline;
-  font: 500 14px/20px var(--font-sans);
+  font: 500 var(--type-small-size) / var(--type-small-line) var(--font-sans);
 }
 .st-title {
   letter-spacing: -0.005em;
 }
 .st-sub {
-  font: 400 14px/20px var(--font-serif);
+  font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
   color: var(--ink-muted);
 }
 .st-text--in {

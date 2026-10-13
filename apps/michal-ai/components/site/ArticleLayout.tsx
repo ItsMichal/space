@@ -66,22 +66,22 @@ export function ArticleLayout({
     <article data-post className="reading">
       <header className="reading__head">
         {back ? (
-          <p className="mb-space-4 font-serif text-[16px] text-ink-muted">
+          <p className="mb-space-4 font-serif text-small text-ink-muted">
             <Link href={back.href} className="link inline-flex min-h-[44px] items-center">
               {back.label}
             </Link>
             {back.series ? ` · ${back.series}` : ''} · {readingMinutes} min read
           </p>
         ) : (
-          <p className="mb-space-4 font-serif text-[16px] text-ink-muted">
+          <p className="mb-space-4 font-serif text-small text-ink-muted">
             {kind === 'project' ? 'Project' : 'Article'} · {readingMinutes} min read
           </p>
         )}
-        <h1 className="font-display text-[clamp(46px,13vw,60px)] font-normal leading-none tracking-[-0.02em] md:text-display">
+        <h1 className="font-display text-title">
           {title}
         </h1>
         <p className="lede mt-space-6 max-w-[40ch]">{description}</p>
-        <p className="mt-space-6 font-serif text-[16px] italic text-ink-muted">
+        <p className="mt-space-6 font-serif text-small italic text-ink-muted">
           <time dateTime={date}>{fmt(date)}</time>
           {updated && updated !== date ? (
             <>

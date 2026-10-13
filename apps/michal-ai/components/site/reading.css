@@ -64,14 +64,14 @@
 .reading .postextra__lede {
   margin-top: 0;
   margin-bottom: var(--space-1);
-  font: 400 17px/25px var(--font-serif);
+  font: 400 var(--type-body-size) / var(--type-body-line) var(--font-serif);
   color: var(--ink-muted);
 }
 /* The keyboard hint is tertiary text: smaller, quiet, still above 4.5:1 in both themes (ink-muted). */
 .reading .postextra__hint {
   margin-top: 0;
   margin-bottom: var(--space-4);
-  font: 400 15px/22px var(--font-serif);
+  font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
   color: var(--ink-muted);
 }
 .reading .postextra .tl {
@@ -121,7 +121,7 @@
   }
   .prose a[href^='http']::after {
     content: ' (' attr(href) ')';
-    font-size: 0.8em;
+    font-size: inherit;
     vertical-align: baseline;
     color: #000;
   }

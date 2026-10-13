@@ -81,7 +81,7 @@
   min-height: 44px;
   padding: 0 var(--space-4);
   border: 0;
-  font: 500 16px/24px var(--font-sans);
+  font: 500 var(--type-body-strong-size) / var(--type-body-strong-line) var(--font-sans);
   color: var(--ink);
   cursor: pointer;
   text-decoration: none;
@@ -199,14 +199,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font: 400 20px/1.2 var(--font-display);
-  letter-spacing: -0.01em;
+  font: 500 var(--type-body-strong-size) / var(--type-body-strong-line) var(--font-serif);
 }
 .sheet-prow__sub {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font: 400 15px/22px var(--font-serif);
+  font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
   color: var(--ink-muted);
 }
 @media (max-width: 639px) {

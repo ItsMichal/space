@@ -20,7 +20,7 @@ export function StressToggle({ pick, children, label = 'Interrupt me' }: { pick:
   }, [on, pick])
   return (
     <div ref={root}>
-      <label className="mb-space-3 inline-flex min-h-[44px] items-center gap-space-2 font-serif text-[15px] text-ink-muted">
+      <label className="mb-space-3 inline-flex min-h-[44px] items-center gap-space-2 font-serif text-small text-ink-muted">
         <input type="checkbox" checked={on} onChange={(e) => setOn(e.target.checked)} />
         {label}
       </label>

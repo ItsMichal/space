@@ -4,7 +4,8 @@
 //   color.tokens[]  { name, value: string | { light, dark } }
 //   shadow.tokens[] { name, value: string | { light, dark } }
 //   type.families   { sans, display, serif, mono }
-//   type.groups[]   { styles: [{ name, fontSize, lineHeight, fontWeight, letterSpacing? }] }
+//   type.groups[]   { styles: [{ name, fontSize, lineHeight, fontWeight, letterSpacing?, fontSizeMobile?, lineHeightMobile? }] }
+//                   fontSizeMobile / lineHeightMobile step a style down below 768px (emitted in one max-width: 767px block)
 //   spacing|radius|blur .tokens[] { name, value }
 
 /** Throws a readable error when a tokens object does not match the shared structure. */
@@ -59,13 +60,22 @@ export function tokensToCss(t, opts = {}) {
     return out
   }
 
+  const mobile = []
+  for (const g of t.type.groups) {
+    for (const s of g.styles) {
+      if (s.fontSizeMobile) mobile.push(`    --type-${s.name}-size: ${s.fontSizeMobile};`)
+      if (s.lineHeightMobile) mobile.push(`    --type-${s.name}-line: ${s.lineHeightMobile};`)
+    }
+  }
+  const mobileBlock = mobile.length ? `\n/* Phones: the same tokens, stepped down. */\n@media (max-width: 767px) {\n  :root {\n${mobile.join('\n')}\n  }\n}\n` : ''
+
   return `/* ${header} */
 :root {
   color-scheme: light;
 ${fixed().join('\n')}
 ${themed('light').join('\n')}
 }
-
+${mobileBlock}
 /* Basalt (dark) only applies in reading contexts, which opt in with <html data-reading>.
    The landing page and index pages are always Birch (light). */
 @media (prefers-color-scheme: dark) {
