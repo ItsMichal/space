@@ -96,7 +96,7 @@ export function ArticleLayout({
             priority
             focus={coverFocus}
             className="hero__img"
-            sizes="(min-width: 948px) 900px, calc(100vw - 32px)"
+            sizes="(min-width: 1184px) 1120px, calc(100vw - 32px)"
           />
         </figure>
       ) : (

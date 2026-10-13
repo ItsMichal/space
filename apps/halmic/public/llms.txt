@@ -19,7 +19,7 @@
 - https://halmic.com/videos/ : videos
 - https://halmic.com/design/ : design
 - https://halmic.com/design/southeast-denver-dental/ : logo for Southeast Denver Dental
-- https://halmic.com/work/pokemon-phoenix-rising/ : QA developer on Pokémon Phoenix Rising, a fan-made game
+- https://halmic.com/work/pokemon-phoenix-rising/ : QA developer on Pokémon Phoenix Rising, a fan-made game (about the game, official videos, subreddit)
 - https://halmic.com/work/project-mountaintop/ : Project Mountaintop, a Unity rhythm game played with Arduino hiking poles
 - https://halmic.com/work/project-mountaintop/first-steps-week-1-2-recap/ : dev log, First Steps - Week 1→2 Recap
 - https://halmic.com/work/project-mountaintop/stay-on-beat-week-2-3-recap/ : dev log, Stay on Beat - Week 2→3 Recap

@@ -13,7 +13,7 @@ export function SeriesNav({ name, id, posts, current }: { name: string; id: stri
   const prev = posts[at - 1]
   const next = posts[at + 1]
   return (
-    <nav aria-label={`${name} series`} className="postnav">
+    <nav aria-label={`${name} series`} className="postnav card surface reading__wide postnav--nav">
       <p className="postnav__pos">
         {name} {at + 1} of {posts.length} ·{' '}
         <Link href={`/writing#${id}`} className="link">

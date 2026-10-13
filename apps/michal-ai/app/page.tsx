@@ -12,8 +12,8 @@ import { Showcase } from '@/components/work/Showcase'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { profile } from '@/content/profile'
 import { doiUrl, venueLine } from '@/lib/publications'
-import { Disclosure } from '@/components/ui/Disclosure'
 import { ExperienceList, type ExperienceItem } from '@/components/ui/ExperienceList'
+import '@/components/site/about.css'
 import { homeMetadata, profilePageJsonLd, websiteJsonLd } from '@/lib/seo'
 
 export const metadata = homeMetadata()
@@ -61,7 +61,7 @@ export default function Home() {
         <h2 id="work-h" className={h2}>
           Selected work
         </h2>
-        <Showcase posts={projects} base="/projects" variant="row" priority />
+        <Showcase posts={projects} base="/projects" variant="row" priority glass />
       </section>
 
       {articles.length > 0 ? (
@@ -82,39 +82,40 @@ export default function Home() {
         <h2 id="about-h" className={h2}>
           About
         </h2>
-        <div className="max-w-[60ch] font-serif text-[19px] leading-[1.5] md:text-[21px]">
-          <p>{profile.about[0]}</p>
-        </div>
-        {profile.publications.length ? (
-          <div id="publications" className="mt-space-6 max-w-[60ch] scroll-mt-24">
-            <h3 className="mb-space-2 font-display text-[24px] font-normal leading-[1.15] tracking-[-0.01em]">Publications</h3>
-            <ul className="m-0 list-none space-y-space-2 p-0 font-serif text-[17px] leading-[26px] text-ink-muted">
-              {profile.publications.map((p) => (
-                <li key={p.id}>
-                  {p.shortAuthors ? `${p.shortAuthors} (${p.year}). ` : ''}
-                  <a href={doiUrl(p)} className="link" target="_blank" rel="noopener noreferrer">
-                    {p.title}
-                  </a>
-                  . {venueLine(p)}
-                  {p.shortAuthors ? '.' : `, ${p.year}.`}
-                  {p.authorCount ? ` ${p.authorCount.toLocaleString('en-US')} authors.` : ''}
-                </li>
-              ))}
-            </ul>
+        <div className="about">
+          <div className="about__intro card surface">
+            <p className="t-text">{profile.about[0]}</p>
+            <p className="t-text">{profile.about[1]}</p>
           </div>
-        ) : null}
-        {/* Desktop: everything in view. Phones: the second paragraph and the experience rows sit behind the Disclosure. */}
-        <div className="hidden md:block">
-          <p className="mt-space-4 max-w-[60ch] font-serif text-[21px] leading-[1.5] text-ink-muted">{profile.about[1]}</p>
-          <div className="mt-space-8">
+          <div className="about__xp card surface card--list">
+            <h3 className="card__h t-title">Experience</h3>
             <ExperienceList items={experience} label="Experience" />
           </div>
-        </div>
-        <div className="mt-space-2 md:hidden">
-          <Disclosure summary="Experience">
-            <p className="mb-space-4 font-serif text-[19px] leading-[1.5] text-ink-muted">{profile.about[1]}</p>
-            <ExperienceList items={experience} label="Experience" />
-          </Disclosure>
+          {profile.publications.length ? (
+            <div id="publications" className="about__pubs card surface card--list">
+              <h3 className="card__h t-title">Publications</h3>
+              <ul className="card__rows">
+                {profile.publications.map((p) => (
+                  <li key={p.id} className="pub">
+                    <p className="pub__title t-ui">
+                      <a href={doiUrl(p)} className="link" target="_blank" rel="noopener noreferrer">
+                        {p.title}
+                      </a>
+                    </p>
+                    <p className="pub__year t-meta">
+                      <time dateTime={p.published}>{p.year}</time>
+                    </p>
+                    <p className="pub__ref t-meta">
+                      {p.shortAuthors ? `${p.shortAuthors} ` : ''}
+                      {venueLine(p)}
+                      {p.shortAuthors ? '.' : ''}
+                      {p.authorCount ? ` ${p.authorCount.toLocaleString('en-US')} authors.` : ''}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </div>
       </section>
 

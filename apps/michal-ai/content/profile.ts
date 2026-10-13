@@ -53,7 +53,7 @@ export const profile = {
   /** Site-wide meta description, 155 characters or fewer. */
   description:
     'Michał Bodzianowski is an award-winning creative developer and a software engineer at SpaceX, working on Starlink.com.',
-  /** Page-title tagline: "<name> — <tagline>". */
+  /** Page-title tagline: "<name> · <tagline>". */
   titleTagline: 'Creative developer',
   /** About section paragraphs, first person. */
   about: [

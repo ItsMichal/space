@@ -1,27 +1,45 @@
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_SHARE_IMAGE, homeMetadata, listMetadata, profilePageJsonLd, websiteJsonLd, shareImagePath, SITE_URL } from '../seo'
+import { getAllPosts } from '@/lib/content'
+import { homeMetadata, listMetadata, postMetadata, profilePageJsonLd, websiteJsonLd, SITE_URL } from '../seo'
 
-const images = (v: unknown) => (Array.isArray(v) ? v : v ? [v] : [])
+const appDir = join(__dirname, '../../app')
 
-describe('homeMetadata', () => {
-  // Regression: a page-level `openGraph` replaces the layout's, so the home page lost og:image.
-  it('carries og:image and twitter:image with absolute URLs', () => {
-    const m = homeMetadata()
-    expect(images(m.openGraph?.images)).toHaveLength(1)
-    expect(JSON.stringify(m.openGraph?.images)).toContain(`${SITE_URL}/`)
-    expect(images(m.twitter?.images)).toHaveLength(1)
-    expect(m.alternates?.canonical).toBe(SITE_URL)
-    expect(m.openGraph?.title).toBeTruthy()
-    expect(m.openGraph?.description).toBeTruthy()
+// Share cards come from app/**/opengraph-image.tsx. Next uses a page's own `images` instead of the file convention, so
+// no metadata builder may set them (that is how the home page once lost its card, and how posts got raw WebP covers).
+describe('share card metadata', () => {
+  it('leaves og:image / twitter:image to the generated cards', () => {
+    expect(homeMetadata().openGraph?.images).toBeUndefined()
+    expect(homeMetadata().twitter?.images).toBeUndefined()
+    expect(listMetadata('article', 'Writing', 'd').openGraph?.images).toBeUndefined()
+    for (const post of getAllPosts()) {
+      const m = postMetadata(post)
+      expect(m.openGraph?.images, post.slug).toBeUndefined()
+      expect(m.twitter?.images, post.slug).toBeUndefined()
+    }
+  })
+
+  it('has a generated card next to every page that sets openGraph', () => {
+    for (const dir of ['', 'projects', 'writing', 'projects/[slug]', 'projects/[slug]/[child]', 'writing/[slug]']) {
+      expect(existsSync(join(appDir, dir, 'opengraph-image.tsx')), `${dir || '.'}/opengraph-image.tsx`).toBe(true)
+    }
+  })
+
+  it('sets twitter:site and creator on every page type', () => {
+    const post = getAllPosts()[0]
+    for (const m of [homeMetadata(), listMetadata('project', 'Projects', 'd'), postMetadata(post)]) {
+      expect(m.twitter).toMatchObject({ card: 'summary_large_image', site: expect.stringMatching(/^@/), creator: expect.stringMatching(/^@/) })
+    }
   })
 })
 
-describe('share images', () => {
-  it('points WebP covers and the default card at JPEG twins', () => {
-    expect(shareImagePath('/media/foo/cover.webp')).toBe('/media/_og/foo.jpg')
-    expect(shareImagePath('/media/foo/cover.png')).toBe('/media/foo/cover.png')
-    expect(DEFAULT_SHARE_IMAGE).toMatch(/\.jpg$/)
-    expect(JSON.stringify(homeMetadata().openGraph?.images)).toContain('.jpg')
+describe('homeMetadata', () => {
+  it('has canonical, title and description', () => {
+    const m = homeMetadata()
+    expect(m.alternates?.canonical).toBe(SITE_URL)
+    expect(m.openGraph?.title).toBeTruthy()
+    expect(m.openGraph?.description).toBeTruthy()
   })
 })
 
@@ -32,11 +50,5 @@ describe('home JSON-LD', () => {
     expect(profilePageJsonLd.mainEntity['@type']).toBe('Person')
     expect(profilePageJsonLd.mainEntity.alternateName).toBe('Michal Bodzianowski')
     expect(websiteJsonLd.alternateName).toBe('Michal Bodzianowski')
-  })
-})
-
-describe('listMetadata', () => {
-  it('has og:image', () => {
-    expect(images(listMetadata('article', 'Writing', 'd').openGraph?.images)).toHaveLength(1)
   })
 })

@@ -109,7 +109,7 @@ export default async function KitchenSink() {
         coverAlt={donor?.coverAlt}
         coverFocus={donor?.coverFocus}
         role="Placeholder role"
-        years="2024 – present"
+        years="2024 to now"
         links={[{ label: 'A link', href: 'https://example.com' }]}
         gallery={donor?.gallery}
         kind="project"

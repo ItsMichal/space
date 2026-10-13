@@ -30,7 +30,7 @@ We started off with a brainstorming session to iterate on the rhythm concept, wh
 
 ![Hand-drawn sketch of a hiker running past ghosts toward a hit guide, with helmet light, water and night cycle ideas](/media/mountaintop-first-steps-week-1-2-recap/488238f2-2c68-45eb-bb49-d11639b9a1d7-795fcc.webp)
 
-While its a pretty rough sketch, we came up with a lot of unique ideas. The main premise is to fight “ghosts” which are really just rhythm beats. You run into them and then have to hit an input (first on keyboard, later on our custom controllers) with precise timing. We came up with a few spins too— like a day/night cycle affected by rhythm (you’d have to turn on your headlamp to see ghosts), or a water/stamina/health meter that can be refilled by drinking from a “water bottle” during breaks in the song. To start though, we agreed on implementing the “ghost” system first.
+While its a pretty rough sketch, we came up with a lot of unique ideas. The main premise is to fight “ghosts” which are really just rhythm beats. You run into them and then have to hit an input (first on keyboard, later on our custom controllers) with precise timing. We came up with a few spins too, like a day/night cycle affected by rhythm (you’d have to turn on your headlamp to see ghosts), or a water/stamina/health meter that can be refilled by drinking from a “water bottle” during breaks in the song. To start though, we agreed on implementing the “ghost” system first.
 
 ### Initial Development
 
@@ -38,7 +38,7 @@ I ended up deciding to use my MacBook for this project so I can be more flexible
 
 ![Early Unity prototype with a capsule character and placeholder objects on a green plane](/media/mountaintop-first-steps-week-1-2-recap/screenshot-2023-01-25-at-5-26-10-pm-eb143c.webp)
 
-I will be using placeholders for the forseeable future— I plan on making a huggge graphics/animations/etc push at the end, but using capsules and basic elements allows me to focus on the parts I can do best on my laptop- the code.
+I will be using placeholders for the forseeable future. I plan on making a huggge graphics/animations/etc push at the end, but using capsules and basic elements allows me to focus on the parts I can do best on my laptop- the code.
 
 Oh and there’s code.
 
@@ -70,7 +70,7 @@ My basic approach here was to have a script, RhythmSystem, that utilized a bunch
 
 So, Rhythm System would take these RhythmMaps and read them. Then, it would sent out events based on when an event/action comes up in said RhythmMap. Where would these events go? Well, to a RhythmBeatHandler! This is a template class basically that my first handler, GhostSpawner inherits and overrides.
 
-GhostSpawner would take these events, and  spawn Ghosts that fly at the player and must be dealt with a precise swing of the fist! These Ghosts’ movement would be controlled by— you guessed it— GhostController since GhostSpawner is more of a delegate.
+GhostSpawner would take these events, and  spawn Ghosts that fly at the player and must be dealt with a precise swing of the fist! These Ghosts’ movement would be controlled by, you guessed it, GhostController since GhostSpawner is more of a delegate.
 
 :::callout{type="note"}
 RhythmEvents include when to Spawn, when to Hit, if it was successfully hit, and if it should delete itself bc its past its time.
@@ -81,7 +81,7 @@ Whew!
 So with the power of Github’s Copilot at my back, saving me a ton of time from looking up Unity’s documentation every 5 seconds, albeit at the cost of sometimes dubious logic… I whipped up a quick 5-600 lines of code and had my basic components filled out. It was time to test.
 
 :::callout{type="note"}
-Github’s Copilot is a nifty AI tool that I try to leverage whenever I can. While its not a drop-in replacement for writing code yourself, it saves time trying to finangle syntaxes. If you know what you’re doing but want to save time— check it out.
+Github’s Copilot is a nifty AI tool that I try to leverage whenever I can. While its not a drop-in replacement for writing code yourself, it saves time trying to finangle syntaxes. If you know what you’re doing but want to save time. Check it out.
 
 [GitHub Copilot · Your AI pair programmer](https://github.com/features/copilot)
 :::
@@ -90,9 +90,9 @@ And here’s what happened
 
 ::youtube{id="2DPVz25OXSM"}
 
-Well… It’s doing something. The largest problem here is that the timing is off in the GhostController . It seems to be receiving all the right values but the lerp ing this time (no more Slerp, sorry). is just off. I chose the video above bc it was a hilarious example of when bugs can be somewhat entertaining, and interesting— but the reality of the debugging was much more boring- going though the whole RhythmMap → RhythmSystem → GhostSpawner → GhostController was certainly a pain, as was cleaning up some of Copilot’s mistakes.
+Well… It’s doing something. The largest problem here is that the timing is off in the GhostController . It seems to be receiving all the right values but the lerp ing this time (no more Slerp, sorry). is just off. I chose the video above bc it was a hilarious example of when bugs can be somewhat entertaining, and interesting, but the reality of the debugging was much more boring- going though the whole RhythmMap → RhythmSystem → GhostSpawner → GhostController was certainly a pain, as was cleaning up some of Copilot’s mistakes.
 
-In the end I didn’t have time to really figure everything out. It seems to kinda sorta work system-wise, but the visual aspect is off and its hard to tell using the console. I can already feel I’ll have to make changes to sync up the timing more, as we have variances of 5-10ms already— potentially more. 5-10ms is not a lot, but if it adds up, well a rhythm game is going to feel terrible.
+In the end I didn’t have time to really figure everything out. It seems to kinda sorta work system-wise, but the visual aspect is off and its hard to tell using the console. I can already feel I’ll have to make changes to sync up the timing more, as we have variances of 5-10ms already, potentially more. 5-10ms is not a lot, but if it adds up, well a rhythm game is going to feel terrible.
 
 ### Summary and Looking Forward
 
@@ -104,12 +104,12 @@ Week 2 Goals
 - Start reaching out to third-party developers
   - Oof. Did not do this.
 - Create an overall outline and rough design docs for the overarching final game (story, gameplay loop)
-  - Okay! We have basically this— but more could be done too
+  - Okay! We have basically this, but more could be done too
 :::
 
 Well obviously figuring out the bugs is step one, and step two will be to build in the supporting systems like scoring, menus, etc. Getting to the point where we can demo asap is a must. I also want to keep fleshing out design docs, especially for UI and such. If the debugging doesn’t take too long- having a basic song select and 2-3 maps done for testing would be a huge help.
 
-Speaking of testing, reaching out to developers is another thing! I want to have more I can show off first though— so future developer and potential mentor, hello! If you’re not one… well that’s awkward. But something that’s also a priority.
+Speaking of testing, reaching out to developers is another thing! I want to have more I can show off first though, so future developer and potential mentor, hello! If you’re not one… well that’s awkward. But something that’s also a priority.
 
 Ultimately tho its pretty satisfying to see to player’s “hits”. Just giving the player something to hit is now the next big step in validating the idea.
 

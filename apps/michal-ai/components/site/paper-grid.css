@@ -1,26 +1,76 @@
-/* The page backdrop on the home page: paper tooth, barely there. A fixed layer, so the texture stays put while the page scrolls
-   and slides under the glass cards. Three things, all static and painted once (no JS, no per-frame work):
-     1. dots at 24px, ~1px, 5% ink: you only notice them when you look for them (the 6px globe matrix is the same family);
-     2. a second set of dots at 37px, 4% ink: two pitches that do not divide each other, so the pattern never lines up into a grid;
-     3. a fine noise tile (SVG turbulence as a background image, rasterised once), about 2-3% typical alpha.
-   No grid lines. Sits below the hero tint (z -2), which covers it behind the globe, so the two never clash. */
+/* The page backdrop, on every page: a fixed layer behind everything (z -2, below the hero tint at -1).
+   Two children:
+     .paper-grid__css  the static fallback and the first paint: a baked, pre-rendered ink-wash image (public/backdrop, made
+                       by scripts/bake-backdrop.mjs from the same shader), 24px dots at ~5% ink and a fine noise tile. Used
+                       with no WebGL, context loss, reduced transparency and `?backdrop=off`. Hidden once the canvas is live.
+     .paper-grid__gl   the WebGL canvas (components/site/backdrop): CMYK ink-wash blobs, god rays, glyph star field, glass
+                       lensing. Starts transparent and fades in over the CSS layer, so there is no flash and no layout shift.
+   Light is the primary theme; the dark variant applies only where the tokens go dark (`:root[data-reading]` on dark systems). */
 .paper-grid {
   position: fixed;
   inset: 0;
   z-index: -2;
   pointer-events: none;
+  contain: strict;
+}
+.paper-grid__css {
+  position: absolute;
+  inset: 0;
+  background-color: var(--paper);
   background-image:
     radial-gradient(circle at 7px 7px, rgb(24 33 27 / 0.05) 1px, transparent 1.4px),
-    radial-gradient(circle at 17px 25px, rgb(24 33 27 / 0.04) 0.9px, transparent 1.3px);
-  background-size: 24px 24px, 37px 37px;
+    radial-gradient(circle at 17px 25px, rgb(24 33 27 / 0.04) 0.9px, transparent 1.3px),
+    url('/backdrop/blobs-light.webp');
+  background-size: 24px 24px, 37px 37px, cover;
+  background-position: 0 0, 0 0, 50% 0;
+  transition: opacity 1100ms ease;
 }
-.paper-grid::before {
+.paper-grid__css::before {
   content: '';
   position: absolute;
   inset: 0;
   opacity: 0.4;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .09 0 0 0 0 .13 0 0 0 0 .11 0 0 0 .5 -.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 200px 200px;
+}
+.paper-grid__gl {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1100ms ease;
+}
+.paper-grid__gl[data-ready] {
+  opacity: 1;
+}
+/* Canvas live: the CSS layer fades out underneath it. Fallback states bring it back and hide the canvas. */
+.paper-grid:has(.paper-grid__gl[data-ready]) .paper-grid__css {
+  opacity: 0;
+}
+.paper-grid[data-fallback] .paper-grid__css {
+  opacity: 1;
+}
+.paper-grid[data-fallback] .paper-grid__gl {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-reading] .paper-grid__css {
+    background-image:
+      radial-gradient(circle at 7px 7px, rgb(235 231 218 / 0.06) 1px, transparent 1.4px),
+      radial-gradient(circle at 17px 25px, rgb(235 231 218 / 0.045) 0.9px, transparent 1.3px),
+      url('/backdrop/blobs-dark.webp');
+  }
+  :root[data-reading] .paper-grid__css::before {
+    opacity: 0.2;
+    filter: invert(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .paper-grid__css,
+  .paper-grid__gl {
+    transition: none;
+  }
 }
 @media print {
   .paper-grid {
