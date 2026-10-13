@@ -164,6 +164,39 @@ The home page has three WebGL contexts (this canvas, the hero globe, the shared 
 loses and restores the backdrop's context: the CSS fallback appears at once, the globe and the shared shader canvas stay live,
 and the canvas returns after restore.
 
+## iOS Safari constraints
+
+Reported: a flicker in the background behind the hero and the first work cards while scrolling down on iPhone Safari. It was
+not reproduced (no Xcode or Simulator in the build environment, `xcrun simctl` is missing), so the cause is reasoned from the code
+and the measures below remove every backdrop-side trigger. What changed, and why:
+
+1. **The layer no longer follows the toolbar.** `.paper-grid` was `position: fixed; inset: 0`. On iOS Safari the first scroll collapses
+   the toolbar, which grows the dynamic viewport, which resizes a fixed `inset: 0` box mid-scroll; the canvas then got a new
+   `width`/`height`, which clears its bitmap (opaque black, the context is `alpha: false`) until the next draw. It is now
+   `height: 100lvh` (the large viewport, never changes with the toolbar), and the engine ignores height-only size changes under 96px
+   and, for real resizes, redraws in the same task as the resize so a cleared bitmap is never presented. Measured in desktop Chrome
+   with the layout height changed 30 times: before, 60 canvas clears (width and height, once per change); after, 0.
+2. **No redraws while the page scrolls on iOS WebKit** (`/iP(hone|ad|od)/` or iPadOS desktop mode; `?bdscroll=still|live`
+   forces a mode). The cards' `backdrop-filter: blur()` re-samples whatever is behind it every time that layer changes, and a
+   WebGL canvas redrawn at 30 to 60Hz under blurred cards is a known WebKit flicker source. In this mode the canvas is 480px taller
+   than the layer and the parallax is a compositor `translate3d` driven by a passive scroll listener (one rate, 0.2 of scroll,
+   instead of separate blob and glyph rates). It redraws only when the spare margin is nearly used up (about 1000px of scroll), when
+   scrolling has been quiet for 300ms and the offset is large, on resize, and at 5 per second while idle. Lensing is off there
+   (the rects cannot follow a layer that is not redrawn), so `data-backdrop-lens` is not set.
+   Measured with an iPhone user agent in Chrome over a 3 second, 14px-per-16ms scroll: 80 draws (live) versus 1 (still).
+3. The CSS layer, fade-in, reduced motion, context-loss and print behaviour are unchanged.
+
+Not the cause, checked in the code: the CSS layer and canvas cross-fade happens once, on first ready; `will-change` is only
+added in the iOS mode; the low-res texture is only reallocated in `sizeTargets`, which now only runs on real size changes.
+Candidates outside this layer, not changed here: `.hero-atm` and `.hero-slot` (`components/site/hero.css`) combine
+`contain: strict`, `overflow: hidden`, a `mask-image` gradient and opacity transitions on a scrolling layer, which WebKit is
+known to repaint badly; if the flicker survives this PR, test with the mask removed first. The hero globe canvas
+(`components/presence/globe/renderer.ts`, `resize()`) assigns `canvas.width/height` on every ResizeObserver callback even when
+the value is unchanged, which clears it; guard it with `if (canvas.width !== px)` and redraw in the same task. The wrap is not
+viewport-height-dependent, so it should not fire during scroll, but it is the same class of bug.
+Repro tool: `scripts/backdrop-resize-flicker.mjs` (`IOS=1` for the iPhone user agent, a query such as `?bdscroll=live` as the
+third argument).
+
 ## Verification
 
 `npm run dev:michal`, then `node apps/michal-ai/scripts/backdrop-shots.mjs http://localhost:3000` (Chrome with software GL;
