@@ -194,6 +194,26 @@
   }
 }
 
+/* Publications: the "Acknowledged in" sub-section and its quotations (type roles only, no new sizes) */
+.ab-subhead {
+  margin: 0;
+  padding: var(--space-4) var(--card-pad) var(--space-1);
+  border-top: 1px solid var(--hairline);
+}
+.pub__quote {
+  grid-column: 1 / -1;
+  margin: var(--space-1) 0 0;
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--hairline);
+}
+.pub__quote p,
+.pub__quote footer {
+  margin: 0;
+}
+.pub__quote q {
+  quotes: '\201C' '\201D';
+}
+
 /* the photograph: a plain card, the picture fills it. Phones: a modest 4:3 window with the face centred. From 900px it takes the
    height of the intro beside it (the picture is absolutely filled so it never sets the row height). */
 .ab-photo {
