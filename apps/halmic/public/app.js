@@ -1,7 +1,8 @@
 // halmic behaviour: live/offline state from /api/live, bar meters (the logotype's bars as a level meter),
 // click-to-load video (youtube-nocookie only after interaction) and Twitch clips, played in place inside their card. No dependencies.
 // Testing override: ?live=1 (or ?live=0) forces the state and skips the fetch; with ?live=1 you can add &game=Name.
-// ?clips=demo swaps in six fake clips (local placeholder thumbnail) and skips the fetch (layout testing; the embed will not load a real clip).
+// ?clips=demo swaps in six fake clips (local video thumbnails, stand-in game art) and skips the fetch (layout testing; the embed will not load a real clip);
+// the first four demo clips use real clip ids, so their hover previews (public/previews/clip-<id>) play; &n=3 shows only three, ?clips=none none (the Watch bento then holds videos only).
 (() => {
   const root = document.documentElement;
   const params = new URLSearchParams(location.search);
@@ -93,85 +94,219 @@
   }
   if (reduce) settle(); else requestAnimationFrame(frame);
 
-  // ---- click-to-load video and clips: the card's media area becomes the player; one player open at a time ----
+  // ---- icons (same sprite the build links) and small element helpers ----
+  const SPRITE = (document.querySelector('use[href*="icons.svg"]')?.getAttribute('href') ?? '/icons.svg').split('#')[0];
+  const NS = 'http://www.w3.org/2000/svg';
+  const icon = (name, cls = '') => { const s = document.createElementNS(NS, 'svg'); s.setAttribute('class', `ic${cls ? ` ${cls}` : ''}`); s.setAttribute('aria-hidden', 'true'); s.setAttribute('focusable', 'false'); const u = document.createElementNS(NS, 'use'); u.setAttribute('href', `${SPRITE}#${name}`); s.appendChild(u); return s; };
+  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
+  const label = (a, ic, text, end) => { a.append(...(ic ? [icon(ic)] : []), el('span', '', text), ...(end ? [icon(end, 'ic-end')] : [])); return a; };
+
+  // ---- click-to-load video and clips: the card's media area cross-fades to the player; one player open at a time ----
   let open = null;   // { el: the playing card, orig: the card it replaced }
-  function closePlayer() {
+  function closePlayer(focus = true) {
     if (!open) return;
-    const { el, orig } = open; open = null;
-    el.replaceWith(orig);   // dropping the iframe stops playback
-    orig.focus({ preventScroll: true });
+    const { el: cur, orig } = open; open = null;
+    cur.replaceWith(orig);   // dropping the iframe stops playback
+    refit();
+    if (focus) orig.focus({ preventScroll: true });
   }
-  function playCard(a, src, title, allow, linkText) {
-    closePlayer();
-    const f = document.createElement('iframe');
-    f.src = src; f.title = title; f.allow = allow; f.allowFullscreen = true; f.className = 'vframe';
-    const d = document.createElement('div'); d.className = `${a.className} playing`;
-    const m = document.createElement('div'); m.className = 'cm'; m.appendChild(f);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && open) { e.preventDefault(); closePlayer(); } });
+  // the control row and the corner close button, shared by clips, video cards and the featured player
+  function controls(a, site, siteIcon) {
+    const x = el('button', 'btn btn-sm btn-blue'); x.type = 'button'; label(x, 'x', 'Close');
+    x.addEventListener('click', () => closePlayer());
+    const l = el('a', 'btn btn-sm btn-ghost'); l.href = a.href; l.rel = 'noopener'; label(l, siteIcon, `Open on ${site}`, 'arrow-up-right');
+    const row = el('div', 'crow'); row.append(x, l);
+    const c = el('button', 'ibtn pclose'); c.type = 'button'; c.setAttribute('aria-label', 'Close player'); c.title = 'Close player'; c.appendChild(icon('x'));
+    c.addEventListener('click', () => closePlayer());
+    return { row, corner: c, first: x };
+  }
+  const mkFrame = (src, title, allow) => { const f = el('iframe', 'vframe'); f.src = src; f.title = title; f.allow = allow; f.allowFullscreen = true; return f; };
+  function playCard(a, src, title, allow, site, siteIcon) {
+    closePlayer(false);
+    const d = el('div', `${a.className} playing`);
+    const m = el('div', 'cm'); const c = controls(a, site, siteIcon);
+    m.append(mkFrame(src, title, allow), c.corner);
     const b = a.querySelector('.cb').cloneNode(true);
-    const row = document.createElement('p'); row.className = 'crow';
-    const x = document.createElement('button'); x.type = 'button'; x.className = 'cclose'; x.textContent = 'Close player';
-    x.addEventListener('click', closePlayer);
-    const l = document.createElement('a'); l.className = 'clink'; l.href = a.href; l.rel = 'noopener'; l.textContent = linkText;
-    row.append(x, l); b.appendChild(row);
+    b.querySelector('.bt').appendChild(c.row);
     d.append(m, b); a.replaceWith(d);
     open = { el: d, orig: a };
-    x.focus({ preventScroll: true });
+    c.first.focus({ preventScroll: true });
+  }
+  // a bento tile that is playing grows to 2x2: player on top, title and the same Close / Open-on buttons beneath
+  function playTile(a, src, title, allow, site, siteIcon) {
+    closePlayer(false);
+    const d = el('div', 'tile playing');
+    const tp = el('div', 'tp'); const c = controls(a, site, siteIcon);
+    tp.append(mkFrame(src, title, allow), c.corner);
+    const pb = el('div', 'pb'); pb.append(el('h3', 'tt', a.querySelector('.tt')?.textContent ?? title), c.row);
+    d.append(tp, pb); a.replaceWith(d);
+    open = { el: d, orig: a };
+    c.first.focus({ preventScroll: true });
+    d.scrollIntoView({ block: 'nearest', behavior: reduce ? 'auto' : 'smooth' });
+    refit();
   }
   document.addEventListener('click', (e) => {
     const a = e.target.closest('a[data-vid], a[data-clip]');
     if (!a || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
-    if (a.dataset.clip) {
-      playCard(a, `https://clips.twitch.tv/embed?clip=${encodeURIComponent(a.dataset.clip)}&parent=${encodeURIComponent(location.hostname)}&autoplay=true`, `Twitch clip: ${a.dataset.title}`, 'autoplay; fullscreen', 'open on Twitch');
+    pvStop(true);
+    if (a.classList.contains('tile')) {
+      if (a.dataset.clip) playTile(a, `https://clips.twitch.tv/embed?clip=${encodeURIComponent(a.dataset.clip)}&parent=${encodeURIComponent(location.hostname)}&autoplay=true`, `Twitch clip: ${a.dataset.title}`, 'autoplay; fullscreen', 'Twitch', 'b-twitch');
+      else playTile(a, `https://www.youtube-nocookie.com/embed/${a.dataset.vid}?autoplay=1&rel=0`, a.dataset.title, 'autoplay; encrypted-media; picture-in-picture', 'YouTube', 'b-youtube');
+    } else if (a.dataset.clip) {
+      playCard(a, `https://clips.twitch.tv/embed?clip=${encodeURIComponent(a.dataset.clip)}&parent=${encodeURIComponent(location.hostname)}&autoplay=true`, `Twitch clip: ${a.dataset.title}`, 'autoplay; fullscreen', 'Twitch', 'b-twitch');
     } else if (a.classList.contains('card')) {
-      playCard(a, `https://www.youtube-nocookie.com/embed/${a.dataset.vid}?autoplay=1&rel=0`, a.dataset.title, 'autoplay; encrypted-media; picture-in-picture', 'open on YouTube');
+      playCard(a, `https://www.youtube-nocookie.com/embed/${a.dataset.vid}?autoplay=1&rel=0`, a.dataset.title, 'autoplay; encrypted-media; picture-in-picture', 'YouTube', 'b-youtube');
     } else {
-      // the featured player on a video's own page: swap the link for a div with the player, same caption, plus a plain YouTube link
-      const f = document.createElement('iframe');
-      f.src = `https://www.youtube-nocookie.com/embed/${a.dataset.vid}?autoplay=1&rel=0`;
-      f.title = a.dataset.title; f.allow = 'autoplay; encrypted-media; picture-in-picture'; f.allowFullscreen = true; f.className = 'vframe';
-      const d = document.createElement('div'); d.className = a.className + ' playing';
-      const th = document.createElement('span'); th.className = 'thumb'; th.appendChild(f);
-      const cap = document.createElement('span'); cap.className = 'vt'; cap.textContent = a.dataset.title;
-      const yt = document.createElement('a'); yt.className = 'vm'; yt.href = a.href; yt.textContent = 'open on YouTube';
-      d.append(th, cap, yt); a.replaceWith(d);
+      // the featured player on a video's own page: swap the link for a div with the player, same caption, the same control row
+      closePlayer(false);
+      const d = el('div', `${a.className} playing`);
+      const th = el('span', 'thumb'); const c = controls(a, 'YouTube', 'b-youtube');
+      th.append(mkFrame(`https://www.youtube-nocookie.com/embed/${a.dataset.vid}?autoplay=1&rel=0`, a.dataset.title, 'autoplay; encrypted-media; picture-in-picture'), c.corner);
+      const parts = [th];
+      if (a.querySelector('.vt')) parts.push(el('span', 'vt', a.dataset.title));
+      parts.push(c.row);
+      d.append(...parts); a.replaceWith(d);
+      open = { el: d, orig: a };
+      c.first.focus({ preventScroll: true });
     }
   });
 
-  // ---- clips: the built text-only cards are the fallback; /api/clips (top clips, thumbnails proxied by the Worker) replaces them ----
-  const clipAll = document.getElementById('clips-all');
+  // ---- hover previews: a silent highlight loop fades in over a video or clip tile's thumbnail on hover / keyboard focus ----
+  // Nothing is requested until a tile is hovered or focused (previews/index.json first, then the one loop). Hover-capable pointers only: touch devices skip
+  // previews entirely (autoplaying on scroll would spend data nobody asked for). Not with reduced motion, Save-Data, or while a real player is open.
+  const PV_SEL = 'a.tile[data-vid], a.tile[data-clip]';
+  let pvIds = null, pvIdsP = null, pv = null, pvTimer = 0;
+  const pvIndex = () => (pvIdsP ??= fetch('/previews/index.json', { cache: 'no-cache', headers: { accept: 'application/json' } }).then((r) => (r.ok ? r.json() : { ids: [] })).catch(() => ({ ids: [] })).then((d) => { pvIds = new Set(Array.isArray(d.ids) ? d.ids.filter((x) => typeof x === 'string') : []); return pvIds; }));
+  const pvAllowed = () => !open && !matchMedia('(prefers-reduced-motion: reduce)').matches && !navigator.connection?.saveData;
+  function pvStop(now) {
+    clearTimeout(pvTimer);
+    if (!pv) return;
+    const { tile, video, bar, raf } = pv; pv = null;
+    cancelAnimationFrame(raf);
+    video.classList.remove('on'); bar.remove();
+    const drop = () => { video.pause(); video.removeAttribute('src'); video.replaceChildren(); video.load(); video.remove(); };   // free the decoder and the buffered data
+    if (now) drop(); else setTimeout(drop, 170);
+    tile.removeAttribute('data-pv');
+  }
+  async function pvStart(tile) {
+    if (!pvAllowed() || !tile.isConnected) return;
+    const key = tile.dataset.clip ? `clip-${tile.dataset.clip}` : tile.dataset.vid;
+    const ids = pvIds ?? await pvIndex();
+    if (!ids.has(key) || !tile.isConnected || !pvAllowed() || pv?.tile === tile) return;
+    if (!(tile.matches(':hover') || tile.matches(':focus-visible'))) return;   // the pointer left while the list loaded
+    pvStop(true);
+    const bg = tile.querySelector('.tbg'); if (!bg) return;
+    const video = el('video', 'pv'); video.muted = true; video.loop = true; video.playsInline = true; video.preload = 'auto'; video.disablePictureInPicture = true;
+    video.setAttribute('muted', ''); video.setAttribute('aria-hidden', 'true'); video.tabIndex = -1;
+    for (const [ext, type] of [['webm', 'video/webm'], ['mp4', 'video/mp4']]) { const s = el('source'); s.src = `/previews/${key}.${ext}`; s.type = type; video.appendChild(s); }
+    const bar = el('i', 'pvbar'); bar.setAttribute('aria-hidden', 'true');
+    const state = { tile, video, bar, raf: 0 }; pv = state;
+    const tickBar = () => { if (pv !== state) return; if (video.duration) bar.style.transform = `scaleX(${(video.currentTime / video.duration).toFixed(3)})`; state.raf = requestAnimationFrame(tickBar); };
+    video.addEventListener('playing', () => { if (pv !== state) return; video.classList.add('on'); cancelAnimationFrame(state.raf); state.raf = requestAnimationFrame(tickBar); }, { once: true });
+    video.addEventListener('error', () => { if (pv === state) pvStop(true); }, true);
+    bg.appendChild(video); tile.appendChild(bar); tile.dataset.pv = key;
+    video.play().catch(() => { if (pv === state) pvStop(true); });
+  }
+  const pvArm = (tile) => { if (pv?.tile === tile) return; clearTimeout(pvTimer); if (pvAllowed()) pvTimer = setTimeout(() => pvStart(tile), 120); };
+  if (matchMedia('(hover: hover)').matches) {
+    document.addEventListener('pointerover', (e) => { if (e.pointerType === 'touch') return; const t = e.target.closest?.(PV_SEL); if (t) pvArm(t); });
+    document.addEventListener('pointerout', (e) => { const t = e.target.closest?.(PV_SEL); if (t && !t.contains(e.relatedTarget)) { clearTimeout(pvTimer); if (pv?.tile === t) pvStop(); } });
+  }
+  document.addEventListener('focusin', (e) => { const t = e.target.closest?.(PV_SEL); if (t && t === e.target && t.matches(':focus-visible')) pvArm(t); });
+  document.addEventListener('focusout', (e) => { const t = e.target.closest?.(PV_SEL); if (t && pv?.tile === t && !t.matches(':hover')) pvStop(); else clearTimeout(pvTimer); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) pvStop(true); });
+
+  // ---- the dental logo loop: plays only while on screen and only when motion is allowed; the detail page has a pause button ----
+  const loops = [...document.querySelectorAll('video[data-loop]')];
+  const toggle = document.querySelector('[data-vtoggle]');
+  const setToggle = (playing) => { if (!toggle) return; toggle.classList.toggle('is-paused', !playing); toggle.setAttribute('aria-label', playing ? 'Pause video' : 'Play video'); toggle.setAttribute('aria-pressed', String(!playing)); };
+  let userPaused = reduce;   // with reduced motion the poster stays until someone presses play
+  if (loops.length) {
+    const io = new IntersectionObserver((ens) => ens.forEach((en) => {
+      const v = en.target;
+      if (en.isIntersecting && !userPaused) v.play().then(() => setToggle(true), () => {});
+      else if (!en.isIntersecting) { v.pause(); }
+    }), { threshold: 0.35 });
+    loops.forEach((v) => io.observe(v));
+    if (toggle) {
+      const v = toggle.parentElement.querySelector('video');
+      v.addEventListener('pause', () => setToggle(false)); v.addEventListener('play', () => setToggle(true));
+      toggle.addEventListener('click', () => { if (v.paused) { userPaused = false; v.play(); } else { userPaused = true; v.pause(); } });
+    }
+  }
+
+  // ---- bentos: the one tile marked data-flex gets the width that fills the bento's last row. The column count is the bento's own (--cols, set by a container query). ----
+  const spanOf = (v) => +(/span (\d+)/.exec(v)?.[1] ?? 1);
+  function fit(b) {
+    const flex = b.querySelector(':scope > [data-flex]');
+    if (!flex) return;
+    const cols = parseInt(getComputedStyle(b).getPropertyValue('--cols'), 10) || 2;
+    let cells = 0;
+    for (const t of b.children) { if (t === flex) continue; const cs = getComputedStyle(t); cells += Math.min(cols, spanOf(cs.gridColumnStart)) * spanOf(cs.gridRowStart); }
+    flex.style.gridColumn = `span ${cols - (cells % cols)}`;
+  }
+  const bentos = [...document.querySelectorAll('.bento')];
+  let refitQueued = false;
+  function refit() { if (refitQueued) return; refitQueued = true; requestAnimationFrame(() => { refitQueued = false; bentos.forEach(fit); }); }
+  if (bentos.length) { const ro = new ResizeObserver(refit); bentos.forEach((b) => ro.observe(b)); refit(); }
+
+  // ---- the Twitch tile: "Live now" comes from the same data-live the hero uses; the game name is copied from the hero's status text, no second fetch ----
+  const liveGame = document.querySelector('[data-live-game]'), heroGame = document.querySelector('[data-game-name]');
+  if (liveGame) {
+    const sync = () => { liveGame.textContent = heroGame?.textContent.trim() || 'halmictv'; };
+    if (heroGame) new MutationObserver(sync).observe(heroGame, { childList: true, characterData: true, subtree: true });
+    sync();
+  }
+
+  // ---- clips: the built stand-ins (scissors on a dark tile) are the fallback; /api/clips (top clips; thumbnails and box art proxied by the Worker) replaces them ----
+  const twitchTile = document.getElementById('twitch');
   const mmss = (n) => `${Math.floor(n / 60)}:${String(n % 60).padStart(2, '0')}`;
-  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
-  function clipCard(c, i) {
-    const a = el('a', `card${i === 0 ? ' w4 h4 big' : ''}`);
+  const bdg = () => { const b = el('span', 'bdg bdg-tw'); b.setAttribute('role', 'img'); b.setAttribute('aria-label', 'Twitch'); b.title = 'Twitch'; b.appendChild(icon('b-twitch')); return b; };
+  function clipTile(c, i) {
+    const wide = i === 0;
+    const a = el('a', `tile tm${wide ? ' w2' : ''}`);
     a.href = c.url; a.rel = 'noopener'; a.dataset.clip = c.id; a.dataset.title = c.title; a.dataset.clipcard = '';
-    const m = el('div', 'cm'), img = el('img');
-    img.src = c.thumb; img.width = 640; img.height = 360; img.loading = 'lazy'; img.decoding = 'async'; img.alt = `Thumbnail of the clip ${c.title}`;
-    img.addEventListener('error', () => img.remove());   // no thumbnail: the card keeps its dark media block
-    const play = el('span', 'play'); play.setAttribute('aria-hidden', 'true'); play.append(el('i'), el('i'), el('i'));
-    m.append(img, play);
-    const b = el('div', 'cb');
-    b.append(el('p', 'ey', ['clip', c.game, mmss(c.duration)].filter(Boolean).join(' · ')), el('h3', 'ct', c.title));
-    a.append(m, b);
+    const bg = el('span', 'tbg'), img = el('img');
+    img.src = c.thumb; img.width = 640; img.height = 360; img.loading = 'lazy'; img.decoding = 'async'; img.alt = '';
+    img.addEventListener('error', () => { img.remove(); a.classList.add('tm-nopic'); bg.appendChild(icon('scissors', 'ghost')); });   // no thumbnail: the dark tile with the scissors
+    bg.appendChild(img);
+    const chip = el('span', 'chip'); chip.append(icon(wide ? 'clock' : 'play'), el('span', '', mmss(c.duration)));
+    a.append(bg, bdg(), chip);
+    if (wide) { const p = el('span', 'play'); p.setAttribute('aria-hidden', 'true'); p.appendChild(icon('play')); a.appendChild(p); }
+    const cap = el('span', 'tcap'), tx = el('span', 'tx');
+    if (c.gameArt) {   // the game as box art beside the title; its name stays as the title attribute and for screen readers
+      const art = el('img', 'gart'); art.src = c.gameArt; art.width = 188; art.height = 250; art.loading = 'lazy'; art.decoding = 'async'; art.alt = ''; art.title = c.game;
+      art.addEventListener('error', () => art.remove()); cap.appendChild(art);
+    }
+    tx.appendChild(el('h3', 'tt', c.title));
+    if (c.game) tx.appendChild(el('span', 'sr', `Game: ${c.game}`));
+    cap.appendChild(tx); a.appendChild(cap);
     return a;
   }
   function renderClips(clips) {
     closePlayer();
     document.querySelectorAll('[data-clipcard]').forEach((n) => n.remove());
-    clips.forEach((c, i) => clipAll.before(clipCard(c, i)));
+    clips.forEach((c, i) => { const at = document.querySelector(`[data-cs~="${i}"]`) ?? twitchTile; at.before(clipTile(c, i)); });
+    refit();
   }
-  if (clipAll) {
-    if (params.get('clips') === 'demo') {
-      const demo = [['Demo clip with a rather long title to check how cards wrap on narrow screens', 'Minecraft', 40], ['4k clutch on Bind', 'VALORANT', 39], ['Hbox would be proud', '', 19], ['5 kills no win :<', '', 59], ['cross map tomahawk on miami', 'VALORANT', 24], ['run 6 dies after blaze rods...', 'Minecraft', 51]];
-      renderClips(demo.map(([title, game, duration], i) => ({ id: `DemoClip${i}`, title, game, duration, url: 'https://www.twitch.tv/halmictv/clips', thumb: '/clips/demo.svg' })));
+  if (twitchTile) {
+    const mode = params.get('clips');
+    if (mode === 'demo' || mode === 'none') {
+      // stand-in box art for the demo: a coloured spine with a letter, inlined as SVG data (the CSP allows data: images)
+      const art = (a, b, ch) => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 188 250"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="188" height="250" fill="url(#g)"/><text x="94" y="150" font-family="Arial,sans-serif" font-size="96" font-weight="900" fill="#fff" text-anchor="middle">${ch}</text></svg>`)}`;
+      const demo = [['Demo clip with a rather long title to check how tiles wrap on narrow screens', 'Minecraft', 40, art('#5b8c2a', '#2b4a12', 'M')], ['4k clutch on Bind', 'VALORANT', 39, art('#ff4655', '#7a1d28', 'V')], ['Hbox would be proud', '', 19, ''], ['5 kills no win :<', '', 59, art('#e63946', '#1d3557', 'S')], ['cross map tomahawk on miami', 'VALORANT', 24, art('#ff4655', '#7a1d28', 'V')], ['run 6 dies after blaze rods...', 'Minecraft', 51, art('#5b8c2a', '#2b4a12', 'M')]];
+      const n = mode === 'none' ? 0 : Math.min(6, +params.get('n') || 6);
+      renderClips(demo.slice(0, n).map(([title, game, duration, gameArt], i) => ({ id: ['GlamorousFrozenStorkBloodTrail', 'TsundereOutstandingChipmunkOSkomodo', 'LachrymoseLazyTubersTTours-0pFkdn50gXLMyqh1', 'MistySleepyNuggetsWOOP', 'DemoClip4', 'DemoClip5'][i], title, game, duration, gameArt, url: 'https://www.twitch.tv/halmictv/clips', thumb: `/videos/${['2DPVz25OXSM', '3-fIoRP40_A', '8oJoEXIenfU', 'Bo3wJLjhHhk', 'EngAOffWsa4', 'GdsFqsdzX9M'][i]}.jpg` })));
     } else (async () => {
       try {
         const r = await fetch('/api/clips', { cache: 'no-store', headers: { accept: 'application/json' } });
         if (!r.ok) return;
         const d = await r.json();
-        const ok = Array.isArray(d.clips) ? d.clips.filter((c) => c && /^[A-Za-z0-9_-]+$/.test(c.id) && typeof c.title === 'string' && typeof c.url === 'string' && c.url.startsWith('https://') && Number.isFinite(c.duration) && c.thumb === `/api/clip-thumb/${c.id}`) : [];
-        if (ok.length) renderClips(ok);
-      } catch { /* keep the built cards */ }
+        const ok = Array.isArray(d.clips) ? d.clips.filter((c) => c && /^[A-Za-z0-9_-]+$/.test(c.id) && typeof c.title === 'string' && typeof c.url === 'string' && c.url.startsWith('https://') && Number.isFinite(c.duration) && c.thumb === `/api/clip-thumb/${c.id}`).map((c) => ({ ...c, game: typeof c.game === 'string' ? c.game : '', gameArt: typeof c.gameArt === 'string' && /^\/api\/game-art\/\d+$/.test(c.gameArt) ? c.gameArt : '' })) : [];
+        if (ok.length || (Array.isArray(d.clips) && d.unknown !== true)) renderClips(ok.slice(0, 6));   // an answer with no clips means no clips: Watch is videos only. A failure keeps the built stand-ins.
+      } catch { /* keep the built stand-ins */ }
     })();
   }
 })();
