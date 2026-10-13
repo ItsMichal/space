@@ -1,6 +1,6 @@
 # Migration plan: Next.js (OpenNext) to React Router 7 + Vite, prerendered, plain Worker
 
-Status: Phase 0 (inventory and plan). Branch `michal-rr7-migration`. Owner request: same site, same URLs, same look and behaviour,
+Status: written before coding (Phase 0); the migration is done, see `architecture.md` for the current shape and `rollback.md`. Branch `michal-rr7-migration`. Owner request: same site, same URLs, same look and behaviour,
 simpler stack. This file is written before any porting code and updated as decisions change.
 
 ## 0. Verdict on blockers
