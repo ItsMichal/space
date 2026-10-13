@@ -1,5 +1,7 @@
 # halmic.com: discovery
 
+> Historical research notes from the first rounds. Some directions here were dropped: the Discord links and the "calm" visual mode are gone, and the page structure has changed. Trust `apps/halmic/README.md` for the current site.
+
 Status: draft for the owner. Everything under "What I saw" was read from public pages on 2026-10-11 (no login). Anything uncertain is marked **(unverified)**.
 
 > INTERNAL: the owner has decided halmic is a persona and handle, not tied to his legal name. This document records the research trail and may mention the link in the "Internal notes" section only. Nothing in `halmic/site` or `halmic/brand` may contain the real name. Before moving this folder to its own repository, delete the "Internal notes" section.
