@@ -117,7 +117,7 @@ worst pixel, backdrop forced to a full-width block behind the bar, desktop 1280 
 | white | 16.04 | 15.25 | 6.73 | 5.11 |
 
 All worst cases are at least 5.1:1 (needs 4.5). Pure black behind the light bar and pure white behind the dark bar are the extremes the
-page can produce; real photos sit between. Shots: `docs/glass-shots/nav-*.jpg` (before above, after below). Not measured: Safari and
+page can produce; real photos sit between. Shots: `docs/glass-shots/nav-translucent-*.jpg` (before above, after below). Not measured: Safari and
 Firefox (same frost path, same CSS, but `backdrop-filter` with `brightness()` and `contrast()` is standard there), and a real device.
 
 ## Graph-paper backdrop and glass cards, round 2 (2026-10-11)
