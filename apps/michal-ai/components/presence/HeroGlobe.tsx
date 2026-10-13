@@ -186,7 +186,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
       height = Math.max(300, Math.min(760, bottom - 64))
       width = height * 0.75
       left = w.left + w.width * 0.54 - 0.44 * width
-      cellW = 3.2
+      cellW = 2.6
       edge = 70 * sc // the part below the card's right edge fades out in dots
     } else {
       const box = document.querySelector<HTMLElement>('h1[data-hero-text]')?.parentElement?.getBoundingClientRect()
@@ -203,13 +203,17 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     }
     // Glyphs where they resolve (desktop); density dots on a square grid in the small circle, where a glyph would be a smudge.
     const cellH = cellW / s.portrait.aspect
-    // Measured: at 1x the glyphs (5-6 px tall) smear into a texture and the face is lost; halftone dots on a square 2.4 px grid hold the likeness.
-    // From 1.5x device pixels the glyphs resolve, so desktop gets real monospace glyphs there. `?portrait=dots|glyphs` forces one.
+    // Measured at 1x and 2x: halftone dots on a square grid hold the likeness (glasses, eyes, mouth); monospace glyphs, even with a full
+    // tonal ramp and dithering, read as texture and lose it. Likeness wins, so dots are the default at every DPR and glyphs are opt-in
+    // (`?portrait=glyphs`, atlas from ui-monospace).
     const force = new URLSearchParams(window.location.search).get('portrait')
-    const dots = circle || force === 'dots' || (force !== 'glyphs' && sc < 1.4)
-    const sq = circle ? cellW : Math.min(cellW, 2.4)
-    // Thin glyph strokes carry less ink than dots at the same strength.
-    if (!dots) strength = Math.min(1, strength * 1.35)
+    const dots = circle || force !== 'glyphs'
+    const sq = circle ? cellW : sc >= 1.4 ? 2 : 2.4
+    // Glyphs: full tonal ramp (no dot-style compression), local contrast on the face, a little more strength for thin strokes.
+    if (!dots) {
+      boost = 1.35
+      strength = 0.78
+    }
     s.pspec = {
       rect: [(left - w.left) * sc, px - (bottom - w.top) * sc, width * sc, height * sc],
       crop,

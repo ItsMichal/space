@@ -219,13 +219,16 @@ void main(){
   float lum = s.r / max(s.a, .001);
   float d = clamp(pow(1. - clamp(lum, 0., 1.), .8) * 1.5 + .05, 0., 1.);
   d = clamp((d - .5) * uBoost + .5, 0., 1.);
-  d *= uCircle > .5 ? .85 : .6;                                   // darkest areas stay an open texture (coverage about 55-60%)
+  d *= uCircle > .5 ? .85 : (uDots > .5 ? .6 : .78);                                   // darkest areas stay an open texture (coverage about 55-60%)
   float cov;
   if (uDots > .5) {
     float r = min(uCell.x, uCell.y) * (.12 + .46 * d);
     cov = 1. - smoothstep(r - .5, r + .5, length(local - .5 * uCell));
   } else {
-    float gi = floor(d * (uGlyphs - 1.) + .5);
+    // ordered (4x4 Bayer) dither between adjacent ramp steps, so flat areas do not repeat a single character
+    ivec2 q = ivec2(mod(cell, 4.));
+    float th = (float((((q.x ^ q.y) & 1) << 3) | ((q.y & 1) << 2) | ((((q.x ^ q.y) >> 1) & 1) << 1) | ((q.y >> 1) & 1)) + .5) / 16.;
+    float gi = min(floor(d * (uGlyphs - 1.) + th), uGlyphs - 1.);
     cov = texture(uAtlas, vec2((gi + local.x / uCell.x) / uGlyphs, 1. - local.y / uCell.y)).a;
   }
   float dm = uCircle > .5 ? mix(1., dimAt(centre), .35) : dimAt(centre);
