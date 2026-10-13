@@ -22,6 +22,7 @@ const FEED_TYPES: [RegExp, string][] = [
   [/^\/feed\.json$/, 'application/feed+json; charset=utf-8'],
   [/^\/sitemap\.xml$/, 'application/xml'],
   [/^\/manifest\.webmanifest$/, 'application/manifest+json'],
+  [/^\/favicon\.ico$/, 'image/x-icon'],
   // Loader results written at build time. React Router refuses to decode them without this type.
   [/\.data$/, 'text/x-script; charset=utf-8'],
 ]

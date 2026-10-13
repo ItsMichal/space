@@ -11,8 +11,10 @@ const opt = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] : unde
 const out = opt('--out')
 const allowFile = opt('--allow')
 const allow = allowFile && fs.existsSync(allowFile) ? readJson(allowFile) : []
-const gold = readJson(path.join(goldDir, 'index.json')).index
-const cand = readJson(path.join(candDir, 'index.json')).index
+// Share-card URLs carry a content-hash query that differs by construction; key them without it (pixels are compared by shotdiff.mjs).
+const normKey = (idx) => Object.fromEntries(Object.entries(idx).map(([k, v]) => [k.replace(/(-image)\?[0-9a-f]{16}$/, '$1?<hash>'), v]))
+const gold = normKey(readJson(path.join(goldDir, 'index.json')).index)
+const cand = normKey(readJson(path.join(candDir, 'index.json')).index)
 
 const diffs = [] // { url, field, gold, cand }
 const add = (url, field, g, c) => diffs.push({ url, field, gold: g, cand: c })
@@ -48,8 +50,7 @@ for (const url of Object.keys(gold)) {
     if (g.headers[h] !== c.headers[h]) add(url, `header ${h}`, g.headers[h], c.headers[h])
   }
   if (g.kind === 'ref' || g.kind === 'redirect' || g.kind === 'missing' || g.kind === 'slash' || g.kind === 'worker') {
-    if (g.status === 200 && g.hash !== c.hash && !/\.(png|jpg|pdf)$/.test(url) && !url.includes('image')) add(url, 'body hash', g.hash, c.hash)
-    else if (g.status === 200 && g.hash !== c.hash) add(url, 'binary body hash', g.hash, c.hash)
+    if (g.status === 200 && g.hash !== c.hash && !url.includes('-image?')) add(url, url.match(/\.(png|jpg|pdf|ico|svg|webp|avif|woff2|bin)$/) ? 'binary body hash' : 'body hash', g.hash, c.hash)
   }
   if (g.facts && c.facts) {
     const a = g.facts, b = c.facts

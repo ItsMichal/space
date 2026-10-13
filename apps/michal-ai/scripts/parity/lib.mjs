@@ -114,7 +114,7 @@ export function extractFacts(html, pagePath) {
   }
   for (const s of sourceEls) for (const part of (attr(s, 'srcset') ?? '').split(',')) if (part.trim()) internal.add(part.trim().split(/\s+/)[0])
   for (const l of all(head, tag('link'))) if (['icon', 'apple-touch-icon', 'manifest', 'alternate'].includes(attr(l, 'rel'))) internal.add(attr(l, 'href'))
-  for (const m of all(head, tag('meta'))) if (['og:image', 'twitter:image'].includes(attr(m, 'property') ?? attr(m, 'name'))) internal.add(attr(m, 'content'))
+  for (const m of all(head, tag('meta'))) if (['og:image', 'twitter:image'].includes(attr(m, 'property') ?? attr(m, 'name'))) internal.add(attr(m, 'content').replace(/^https:\/\/michal\.ai/, '')) // served by the snapshot's own base
 
   return {
     path: pagePath,

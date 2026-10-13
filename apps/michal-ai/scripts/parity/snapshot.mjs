@@ -85,6 +85,11 @@ const refWorker = async () => {
     try {
       const r = await fetchOne(base, u)
       index[u] = { kind: 'ref', status: r.status, headers: r.headers, bytes: r.body.length, hash: sha(r.body) }
+      // Share cards are kept as files so scripts/parity/shotdiff.mjs can compare them pixel by pixel.
+      if (/-image\?/.test(u) && r.status === 200) {
+        fs.mkdirSync(path.join(outDir, 'cards'), { recursive: true })
+        fs.writeFileSync(path.join(outDir, 'cards', `${slugFile(u.split('?')[0])}.png`), r.body)
+      }
     } catch (e) {
       index[u] = { kind: 'ref', error: String(e) }
     }
