@@ -25,7 +25,7 @@ export function OtherSiteEnd({ postId }: { postId: string }) {
   const link = otherSiteFor(postId)
   if (!link) return null
   return (
-    <p className="mt-space-12 font-serif text-[16px] italic text-ink-muted">
+    <p className="mt-space-12 font-serif text-small italic text-ink-muted">
       Also on <OtherSiteAnchor href={link.href} title={link.title} className="link inline-flex min-h-[44px] items-center gap-[6px] not-italic" />
     </p>
   )

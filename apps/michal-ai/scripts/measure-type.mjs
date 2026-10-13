@@ -111,6 +111,11 @@ for (const [vname, w, h, dpr, mobile] of VIEWPORTS) {
     await sleep(900)
     const set = await ev(COLLECT)
     results[`${rname}@${vname}`] = set
+    if (rname === 'post') {
+      // reading measure: characters per full line of article paragraphs (all lines but each paragraph's last)
+      const m = await ev(`(() => { const lens = []; for (const p of document.querySelectorAll('.prose > p')) { const w = document.createTreeWalker(p, NodeFilter.SHOW_TEXT); const lines = new Map(); let n; while ((n = w.nextNode())) { const t = n.textContent; for (let i = 0; i < t.length; i++) { const r = document.createRange(); r.setStart(n, i); r.setEnd(n, i + 1); const b = r.getBoundingClientRect(); if (!b.height) continue; const k = Math.round(b.top); lines.set(k, (lines.get(k) ?? 0) + 1) } } const v = [...lines.values()]; v.pop(); lens.push(...v.filter((x) => x > 20)) } lens.sort((a, b) => a - b); return { lines: lens.length, median: lens[lens.length >> 1], p10: lens[Math.floor(lens.length * 0.1)], p90: lens[Math.floor(lens.length * 0.9)] } })()`)
+      console.log(`reading measure at ${vname}:`, JSON.stringify(m))
+    }
     if (mobile && rname === 'home') {
       // phone menu: open it and measure what it shows
       await ev(`window.scrollTo(0,0)`)

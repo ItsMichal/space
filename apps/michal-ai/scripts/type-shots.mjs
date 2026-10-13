@@ -49,14 +49,19 @@ for (const [vw, w, h, dpr, mobile] of [[1440, 1440, 900, 1, false], [375, 375, 8
     await sleep(800)
     await ev('window.scrollTo(0, 0)')
     await sleep(300)
-    let clip
+    // Make the viewport as tall as the region, scroll it into place and take a plain viewport shot (no beyond-viewport capture).
+    let top = 0
+    let height = Math.min(total, 3200)
     if (sel) {
-      const r = await ev(`(() => { const e = document.querySelector(${JSON.stringify(sel)}); if (!e) return null; const b = e.getBoundingClientRect(); return { x: 0, y: b.top + scrollY - 16, width: innerWidth, height: b.height + 32 } })()`)
-      if (r) clip = { ...r, scale: 1 }
-    } else {
-      clip = { x: 0, y: 0, width: w, height: Math.min(total, 3200), scale: 1 }
+      const r = await ev(`(() => { const e = document.querySelector(${JSON.stringify(sel)}); if (!e) return null; const b = e.getBoundingClientRect(); return { top: b.top + scrollY - 16, height: b.height + 32 } })()`)
+      if (r) ({ top, height } = r)
     }
-    const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true, clip })
+    await send('Emulation.setDeviceMetricsOverride', { width: w, height: Math.ceil(height), deviceScaleFactor: dpr, mobile })
+    await sleep(400)
+    await ev(`window.scrollTo(0, ${Math.max(0, top)})`)
+    await sleep(900)
+    const shot = await send('Page.captureScreenshot', { format: 'png' })
+    await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: dpr, mobile })
     fs.writeFileSync(path.join(out, `${name}-${vw}.png`), Buffer.from(shot.result.data, 'base64'))
     console.log('wrote', `${name}-${vw}.png`)
   }

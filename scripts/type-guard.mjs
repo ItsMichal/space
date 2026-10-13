@@ -55,13 +55,13 @@ export function findViolations(text, { ext = '.css' } = {}) {
     const add = (why) => hits.push({ line: i + 1, text: line.slice(0, 140), why })
 
     // font-size: X
-    for (const m of raw.matchAll(/(?:^|[;{\s'"`])font-size\s*:\s*([^;}'"`]+)/g)) {
+    for (const m of raw.matchAll(/(?:^|[;{\s'"`])font-size\s*:\s*['"`]?([^;}'"`]+)/g)) {
       const v = m[1].replace(/!important/, '').trim()
       if (TOKEN_SIZE.test(v) || KEYWORD.test(v) || isPt(v)) continue
       add(`font-size: ${v}`)
     }
     // font: shorthand (CSS and style strings), not custom properties
-    for (const m of raw.matchAll(/(?:^|[;{\s'"`])font\s*:\s*([^;}'"`]+)/g)) {
+    for (const m of raw.matchAll(/(?:^|[;{\s'"`])font\s*:\s*['"`]?([^;}'"`]+)/g)) {
       const v = m[1].replace(/!important/, '').trim()
       if (SYSTEM_FONT.test(v) || !v) continue
       const size = shorthandSize(v)
@@ -82,7 +82,7 @@ export function findViolations(text, { ext = '.css' } = {}) {
   return hits
 }
 
-const SKIP_DIRS = new Set(['node_modules', '.next', '.open-next', '.wrangler', '.cache', '.turbo', '.claude', 'dist', 'public', 'content'])
+const SKIP_DIRS = new Set(['node_modules', '.next', '.open-next', '.wrangler', '.cache', '.turbo', '.claude', 'dist'])
 const EXTS = new Set(['.css', '.ts', '.tsx', '.js', '.jsx', '.mjs'])
 
 /** Parses scripts/type-allowlist.txt: `<path or dir prefix, from repo root>` or `<path> :: <text that must appear on the line>`. */

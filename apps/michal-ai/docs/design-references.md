@@ -54,7 +54,7 @@ Measured 2026-10-11 (home pages of each site).
 | Tile hover | apple.com/newsroom | Image only: `transform: scale(1.03)`, `0.4s cubic-bezier(0.4, 0, 0.25, 1)`. The card does not lift. | Same: image scale 1.03, 400ms, same curve. No card lift, no shadow change |
 | Horizontal tile gallery on phones | apple.com/iphone (tile transitions `transform 0.3s cubic-bezier(0, 0, 0.5, 1)`), apple.com home tiles | Tiles in a swipeable row | Home page: native `overflow-x` snap row of the same tiles on phones; /projects stacks them |
 | Solid tile with a product name | apple.com (solid colour tiles with a name) | Name set large on a flat colour | Projects without a usable image (Starlink.com): the project name in the display serif on a pale palette tint, in the same media slot |
-| Type hierarchy | apple.com | One family carries nearly everything; few sizes; weights 400 and 600/700 | One text face (Newsreader) for text, meta and UI, one display face for titles; two weights (400, 500); roles in `app/styles/type.css` |
+| Type hierarchy | apple.com | One family carries nearly everything; few sizes; weights 400 and 600/700 | One text face (Newsreader) for text, meta and UI, one display face for titles; two weights (400, 500); four sizes (title, heading, body, small) as tokens, see "Type scale" below |
 
 Not measured: the App Store "Today" cards (not reachable from a headless browser without the app).
 
@@ -117,7 +117,7 @@ on the rendered text). Compare against the live sites before treating any of the
 
 | Element | Reference (not measured) | Ours |
 | --- | --- | --- |
-| One centred reading column with wider media | stripe.com/blog, vercel.com/blog, apple.com/newsroom articles, medium.com | Text column 35rem (about 67 characters at the 20px prose size, measured), wide track 900px for figures, tables, code, embeds and the timeline, both centred on the viewport axis. Phones: one track. Nothing full-bleed |
+| One centred reading column with wider media | stripe.com/blog, vercel.com/blog, apple.com/newsroom articles, medium.com | Text column 33rem (about 70 characters at the 18px body size, measured with `scripts/measure-type.mjs`), wide track 900px for figures, tables, code, embeds and the timeline, both centred on the viewport axis. Phones: one track. Nothing full-bleed |
 | Side contents list in the margin | stripe.com/docs, vercel.com/docs ("On this page") | Fixed in the margin outside the wide track from 1360px, so it never moves or overlaps the column |
 | Visible bullets, hanging indent, nested marker shapes | any long-form site (medium.com, github.com READMEs) | Native list markers (disc, circle, square; decimal, alpha, roman), 1.5em indent, markers in muted ink |
 | Boxed callout with an accent on one edge | vercel.com/docs, stripe.com/docs | Raised paper, hairline, 14px radius, 3px inset accent by type (note, tip, warning) |
@@ -182,3 +182,12 @@ Pages were fetched as text (WebFetch) on 2026-10-12, so structure is verified bu
 | Resume as a print-styled web page with a PDF download | brittanychiang.com (resume.pdf, fetched), read.cv profiles (memory) | | `/resume` renders the same data; `@media print` hides the chrome and sets 9.5pt type; the PDF is printed from that page by headless Chrome |
 
 Honest status: the inset status note has no verified precedent beyond a recollection of short availability lines on personal sites; if the owner wants a stricter standard it should be reduced to plain text in the intro paragraph.
+
+## Type scale: four sizes (michal-type-scale)
+
+The owner's request: no more than three or four font sizes across the page. A small fixed scale is how the reference sites work; none of these was re-measured in this pass (the sandbox could not reach them), so the numbers below are from memory and from the earlier measurement of the apple.com newsroom card in the table above.
+
+| Pattern | Precedent | What they do | What we do | Source of the numbers |
+| --- | --- | --- | --- | --- |
+| A handful of text sizes, hierarchy from weight and colour | apple.com newsroom (earlier measurement above: headline 21 to 32, category 12 to 14, date 14 to 17, all one family), linear.app (about four text sizes in the product UI: 13, 15, 16 and 20 to 24, plus a display size on the landing page), stripe.com/blog (title, dek, body, caption), vercel.com (heading, body, caption steps in Geist) | A few steps; a muted ink for tertiary text; one medium weight for emphasis; fluid or stepped headings on phones | Four tokens, title 44 / heading 24 / body 18 / small 15, stepped down together below 768px (34 / 21 / 17 / 15); item titles are body at weight 500; one display exception, the home name | From memory for linear.app, stripe.com and vercel.com; apple.com newsroom from the measurement above |
+| Body at 17 to 18px for long text | stripe.com/blog and vercel.com/blog (about 18px), medium.com (about 20px) | A text column of 65 to 75 characters | 18px body, column 33rem, about 70 characters (measured by `scripts/measure-type.mjs`) | Measured on our page; the references from memory |
