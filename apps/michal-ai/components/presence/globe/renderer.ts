@@ -195,7 +195,7 @@ void main(){
   if (uMode < .5) {
     // hard knockout by the real matte (anti-aliased at the edge only): inside the silhouette the globe and satellites are removed
     float a = smoothstep(.42, .58, texture(uPic, picUV(f)).a);
-    o = vec4(0., 0., 0., a * uStr);
+    o = vec4(0., 0., 0., a * edge * uStr);   // over the last rows the knockout follows the dot taper, so globe dots take over as the bust's dots shrink
     return;
   }
   vec2 src = f;

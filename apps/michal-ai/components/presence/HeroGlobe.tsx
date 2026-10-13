@@ -216,17 +216,22 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
       height = 0.57 * (4 / 3) * Wb
       bottom = top + height
       cellW = 1.1
-      edge = 4 * cellW * sc // dots shrink over the last three rows: a clean, quiet end to the bust
+      edge = 13 * sc // dots shrink to nothing over the last 13 CSS px, following the matte: no straight cut
     }
     // Halftone dots on a square grid are the default at every DPR (measured at 1x and 2x: glasses, eyes and mouth hold; monospace
     // glyphs read as texture). Glyphs (atlas from ui-monospace) are opt-in with `?portrait=glyphs`, desktop only.
     const force = new URLSearchParams(window.location.search).get('portrait')
     const dots = vw < FIGURE_MIN_WIDTH || force !== 'glyphs'
     const cellH = cellW / s.portrait.aspect
+    // Whole device pixels everywhere (rect origin and size, cell size, at least 3 px per cell): the dot grid then lands on the pixel
+    // grid at every DPR (1, 1.25, 1.5, 2, 3) and cannot beat against it into a moire.
+    const cellPx = Math.max(3, Math.round(cellW * sc))
+    const rx = Math.round((left - w.left) * sc)
+    const ry = Math.round(px - (bottom - w.top) * sc)
     s.pspec = {
-      rect: [(left - w.left) * sc, px - (bottom - w.top) * sc, width * sc, height * sc],
+      rect: [rx, ry, Math.round(width * sc), Math.round(height * sc)],
       crop,
-      cell: dots ? [cellW * sc, cellW * sc] : [2.6 * sc, (2.6 / s.portrait.aspect) * sc],
+      cell: dots ? [cellPx, cellPx] : [2.6 * sc, (2.6 / s.portrait.aspect) * sc],
       sideTaper,
       dots,
       strength: 1,

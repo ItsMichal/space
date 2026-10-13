@@ -42,6 +42,8 @@ const alpha = new Float32Array(n)
 // Broad shadows (eye sockets, under the chin, the smile's cheek) are what a blurred copy still sees as dark; thin dark lines (the
 // glasses frames, lashes) are not. Lifting by that signal opens the face without washing the frames out.
 const blurL = await sharp(L8, { raw: { width: W, height: H, channels: 1 } }).blur(7).raw().toBuffer()
+// fine blur: the difference to it is local detail (iris, pupil, lash line, glasses frames, catchlights), boosted in the eye band
+const blurF = await sharp(L8, { raw: { width: W, height: H, channels: 1 } }).blur(2.4).raw().toBuffer()
 for (let i = 0; i < n; i++) {
   const x = i % W
   const y = (i / W) | 0
@@ -50,7 +52,9 @@ for (let i = 0; i < n; i++) {
   const eyes = 1 - smooth(0.6, 1.2, Math.hypot((x - 228) / 108, (y - 205) / 40))
   const l0 = L8[i] / 255
   const broad = 1 - blurL[i] / 255
-  const l1 = l0 + (1 - l0) * (eyes * 0.3 * smooth(0.3, 0.6, broad) + face * 0.2 * smooth(0.25, 0.55, broad))
+  const lifted = l0 + (1 - l0) * (eyes * 0.3 * smooth(0.3, 0.6, broad) + face * 0.2 * smooth(0.25, 0.55, broad))
+  // eyes look at the viewer: small dark accents without darkening the sockets (the broad lift above keeps those open)
+  const l1 = lifted + Math.max(-0.3, Math.min(0.12, l0 - blurF[i] / 255)) * (eyes * 1.4 + face * 0.4)
   // face lighter than everything else (gamma 0.58 inside, 0.82 outside so hair, jacket and hoodie keep their own tones)
   const l = Math.pow(Math.max(0, l1), 0.82 - 0.14 * face)
   lum[i] = Math.max(0, Math.min(1, l * 0.45 + smooth(0, 1, l) * 0.55))
