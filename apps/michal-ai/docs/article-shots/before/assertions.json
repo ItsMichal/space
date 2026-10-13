@@ -1,0 +1,286 @@
+[
+  {
+    "file": "starlink-list-1440-light.png",
+    "vw": 1440,
+    "hOverflow": 0,
+    "col": {
+      "left": 192,
+      "right": 519.6,
+      "width": 728
+    },
+    "centered": false,
+    "ul": {
+      "items": 10,
+      "markers": 0
+    },
+    "measureCh": 84,
+    "tl": {
+      "left": 192,
+      "right": 650
+    },
+    "bad": [
+      "NOT CENTRED",
+      "MARKERS 0/10"
+    ]
+  },
+  {
+    "file": "starlink-list-1440-dark.png",
+    "vw": 1440,
+    "hOverflow": 0,
+    "col": {
+      "left": 192,
+      "right": 519.6,
+      "width": 728
+    },
+    "centered": false,
+    "ul": {
+      "items": 10,
+      "markers": 0
+    },
+    "measureCh": 84,
+    "tl": {
+      "left": 192,
+      "right": 650
+    },
+    "bad": [
+      "NOT CENTRED",
+      "MARKERS 0/10"
+    ]
+  },
+  {
+    "file": "starlink-list-1920-light.png",
+    "vw": 1920,
+    "hOverflow": 0,
+    "col": {
+      "left": 432,
+      "right": 759.6,
+      "width": 728
+    },
+    "centered": false,
+    "ul": {
+      "items": 10,
+      "markers": 0
+    },
+    "measureCh": 84,
+    "tl": {
+      "left": 432,
+      "right": 890
+    },
+    "bad": [
+      "NOT CENTRED",
+      "MARKERS 0/10"
+    ]
+  },
+  {
+    "file": "starlink-list-1920-dark.png",
+    "vw": 1920,
+    "hOverflow": 0,
+    "col": {
+      "left": 432,
+      "right": 759.6,
+      "width": 728
+    },
+    "centered": false,
+    "ul": {
+      "items": 10,
+      "markers": 0
+    },
+    "measureCh": 84,
+    "tl": {
+      "left": 432,
+      "right": 890
+    },
+    "bad": [
+      "NOT CENTRED",
+      "MARKERS 0/10"
+    ]
+  },
+  {
+    "file": "starlink-list-375-light.png",
+    "vw": 375,
+    "hOverflow": 0,
+    "col": {
+      "left": 16,
+      "right": 16,
+      "width": 343
+    },
+    "centered": true,
+    "ul": {
+      "items": 10,
+      "markers": 0
+    },
+    "measureCh": 38,
+    "tl": {
+      "left": 16,
+      "right": 16
+    },
+    "bad": [
+      "MARKERS 0/10"
+    ]
+  },
+  {
+    "file": "starlink-list-375-dark.png",
+    "vw": 375,
+    "hOverflow": 0,
+    "col": {
+      "left": 16,
+      "right": 16,
+      "width": 343
+    },
+    "centered": true,
+    "ul": {
+      "items": 10,
+      "markers": 0
+    },
+    "measureCh": 38,
+    "tl": {
+      "left": 16,
+      "right": 16
+    },
+    "bad": [
+      "MARKERS 0/10"
+    ]
+  },
+  {
+    "file": "starlink-timeline-1440-light.png",
+    "vw": 1440,
+    "hOverflow": 0,
+    "col": {
+      "left": 192,
+      "right": 519.6,
+      "width": 728
+    },
+    "centered": false,
+    "ul": {
+      "items": 10,
+      "markers": 0
+    },
+    "measureCh": 84,
+    "tl": {
+      "left": 192,
+      "right": 650
+    },
+    "bad": [
+      "NOT CENTRED",
+      "MARKERS 0/10"
+    ]
+  },
+  {
+    "file": "starlink-timeline-1440-dark.png",
+    "vw": 1440,
+    "hOverflow": 0,
+    "col": {
+      "left": 192,
+      "right": 519.6,
+      "width": 728
+    },
+    "centered": false,
+    "ul": {
+      "items": 10,
+      "markers": 0
+    },
+    "measureCh": 84,
+    "tl": {
+      "left": 192,
+      "right": 650
+    },
+    "bad": [
+      "NOT CENTRED",
+      "MARKERS 0/10"
+    ]
+  },
+  {
+    "file": "starlink-timeline-1920-light.png",
+    "vw": 1920,
+    "hOverflow": 0,
+    "col": {
+      "left": 432,
+      "right": 759.6,
+      "width": 728
+    },
+    "centered": false,
+    "ul": {
+      "items": 10,
+      "markers": 0
+    },
+    "measureCh": 84,
+    "tl": {
+      "left": 432,
+      "right": 890
+    },
+    "bad": [
+      "NOT CENTRED",
+      "MARKERS 0/10"
+    ]
+  },
+  {
+    "file": "starlink-timeline-1920-dark.png",
+    "vw": 1920,
+    "hOverflow": 0,
+    "col": {
+      "left": 432,
+      "right": 759.6,
+      "width": 728
+    },
+    "centered": false,
+    "ul": {
+      "items": 10,
+      "markers": 0
+    },
+    "measureCh": 84,
+    "tl": {
+      "left": 432,
+      "right": 890
+    },
+    "bad": [
+      "NOT CENTRED",
+      "MARKERS 0/10"
+    ]
+  },
+  {
+    "file": "starlink-timeline-375-light.png",
+    "vw": 375,
+    "hOverflow": 0,
+    "col": {
+      "left": 16,
+      "right": 16,
+      "width": 343
+    },
+    "centered": true,
+    "ul": {
+      "items": 10,
+      "markers": 0
+    },
+    "measureCh": 38,
+    "tl": {
+      "left": 16,
+      "right": 16
+    },
+    "bad": [
+      "MARKERS 0/10"
+    ]
+  },
+  {
+    "file": "starlink-timeline-375-dark.png",
+    "vw": 375,
+    "hOverflow": 0,
+    "col": {
+      "left": 16,
+      "right": 16,
+      "width": 343
+    },
+    "centered": true,
+    "ul": {
+      "items": 10,
+      "markers": 0
+    },
+    "measureCh": 38,
+    "tl": {
+      "left": 16,
+      "right": 16
+    },
+    "bad": [
+      "MARKERS 0/10"
+    ]
+  }
+]

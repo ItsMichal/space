@@ -47,6 +47,28 @@ export class MemoryReactionStore implements ReactionStore {
   }
 }
 
+/**
+ * View counting semantics, independent of storage (the Durable Object does the same on SQLite): one view per visitor id per
+ * UTC day, only the current day's visitors are remembered, and a per-day cap bounds memory.
+ */
+export class MemoryViewStore {
+  total = 0
+  private day = ''
+  private seen = new Set<string>()
+  constructor(private maxPerDay = 20_000) {}
+  /** True when this visit was counted. */
+  view(vid: string, day: string): boolean {
+    if (day !== this.day) {
+      this.day = day
+      this.seen = new Set()
+    }
+    if (this.seen.has(vid) || this.seen.size >= this.maxPerDay) return false
+    this.seen.add(vid)
+    this.total++
+    return true
+  }
+}
+
 /** The emoji with the highest count (ties keep preset order). */
 export function topReaction(counts: Record<string, number> | undefined): { id: string; n: number } | null {
   if (!counts) return null

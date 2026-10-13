@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import type { Post } from '@/lib/content/types'
 import { tintFor } from '@/lib/tints'
 import { getPublication } from '@/lib/publications'
@@ -19,6 +19,22 @@ const year = (p: Post) => p.years ?? p.date.slice(0, 4)
  * title and described by its description. Projects without a usable image get a designed media area in the same slot: the
  * project's name set large on a barely-there palette tint, the way Apple uses a solid tile with a product name.
  */
+/** Meta parts joined with a separator; each part stays on one line so a narrow card wraps at the separator. */
+function MetaParts({ parts }: { parts: ReactNode[] }) {
+  return (
+    <>
+      {parts.map((p, i) => (
+        <span key={i}>
+          {i > 0 ? ' · ' : ''}
+          <span className="t-meta__part">{p}</span>
+        </span>
+      ))}
+    </>
+  )
+}
+
+const monthYear = (iso: string) => new Date(iso + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
+
 export type CardVariant = 'newsroom' | 'fill' | 'cap'
 
 export function ProjectCard({
@@ -27,6 +43,8 @@ export function ProjectCard({
   feature = false,
   priority = false,
   variant = 'newsroom',
+  glass = false,
+  article = false,
 }: {
   post: Post
   href: string
@@ -34,14 +52,20 @@ export function ProjectCard({
   priority?: boolean
   /** newsroom: image on top, text below. fill: text above, image fills the rest. cap: full-bleed image with a glass caption over its foot. */
   variant?: CardVariant
+  /** Translucent glass surface (home page only: something sits behind it). Otherwise the same card, near-solid. */
+  glass?: boolean
+  /** A writing post: the date is the tertiary line instead of year and role. */
+  article?: boolean
 }) {
   const src = post.cardImage === 'none' ? undefined : (post.cardImage ?? post.cover)
   const alt = post.cardImage ? (post.cardImageAlt ?? '') : (post.coverAlt ?? '')
-  const meta = [year(post), post.role].filter(Boolean).join(' · ')
+  const metaParts: ReactNode[] = article
+    ? [<time key="d" dateTime={post.date}>{monthYear(post.date)}</time>, ...(post.series ? [post.series] : [])]
+    : ([year(post), post.role].filter(Boolean) as string[])
   const id = `pc-${post.slug}`
-  const pub = post.publications?.map(getPublication).find(Boolean)
+  const pub = article ? undefined : post.publications?.map(getPublication).find(Boolean)
   return (
-    <Link href={href} className={`tile${feature ? ' tile--feature' : ''}${variant !== 'newsroom' ? ` tile--${variant}` : ''}`} aria-labelledby={`${id}-t`} aria-describedby={`${id}-d`}>
+    <Link href={href} className={`tile surface surface--link${glass ? ' surface--glass' : ''}${feature ? ' tile--feature' : ''}${variant !== 'newsroom' ? ` tile--${variant}` : ''}`} aria-labelledby={`${id}-t`} aria-describedby={`${id}-d`}>
       {src ? (
         <div className="tile__media">
           <Picture
@@ -56,22 +80,26 @@ export function ProjectCard({
       ) : (
         <div className="tile__media tile__media--word" style={{ '--tile-tint': `var(--tint-${tintFor(post.slug).name})` } as CSSProperties}>
           {/* The large name is the card's heading; the text block below does not repeat it. */}
-          <h3 id={`${id}-t`} className="tile__word">
+          <h3 id={`${id}-t`} className="tile__word" data-card-title>
             {post.title}
           </h3>
         </div>
       )}
       <div className="tile__body">
-        <p className="tile__meta t-meta">{meta}</p>
-        {pub ? <p className="tile__pub t-meta">Published at {pub.venueShort}</p> : null}
         {src ? (
-          <h3 id={`${id}-t`} className="tile__title t-title">
+          <h3 id={`${id}-t`} className="tile__title t-title" data-card-title>
             {post.title}
           </h3>
         ) : null}
         <p id={`${id}-d`} className="tile__desc t-text">
           {post.description}
         </p>
+        <div className="tile__foot">
+          <p className="tile__meta t-meta">
+            <MetaParts parts={metaParts} />
+          </p>
+          {pub ? <p className="tile__meta tile__pub t-meta">Published at {pub.venueShort}</p> : null}
+        </div>
       </div>
     </Link>
   )
@@ -88,12 +116,14 @@ export function Showcase({
   limit,
   priority = false,
   variant = 'grid',
+  glass = false,
 }: {
   posts: Post[]
   base: string
   limit?: number
   priority?: boolean
   variant?: 'row' | 'grid'
+  glass?: boolean
 }) {
   const shown = limit ? posts.slice(0, limit) : posts
   return (
@@ -101,7 +131,7 @@ export function Showcase({
       <ul className={`tiles tiles--${variant}`}>
         {shown.map((p, i) => (
           <li key={p.slug} className={`reveal${i === 0 ? ' tiles__feature' : ''}`} data-buckets={buckets(p)}>
-            <ProjectCard post={p} href={`${base}/${p.slug}`} feature={i === 0} priority={priority && i === 0} />
+            <ProjectCard post={p} href={`${base}/${p.slug}`} feature={i === 0} priority={priority && i === 0} glass={glass} />
           </li>
         ))}
       </ul>

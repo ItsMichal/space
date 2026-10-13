@@ -1,6 +1,7 @@
 // RSS 2.0 builder shared by the site feed and per-project log feeds.
 import type { Post } from '@/lib/content/types'
 import { SITE_URL, absoluteUrl, postPath } from '@/lib/seo'
+import { feedIdPath } from '@/lib/slug-history'
 
 const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')
@@ -19,7 +20,7 @@ export function rssResponse(opts: { title: string; link: string; self: string; d
       return `    <item>
       <title>${esc(p.title)}</title>
       <link>${url}</link>
-      <guid isPermaLink="true">${url}</guid>
+      <guid isPermaLink="${feedIdPath(postPath(p)) === postPath(p)}">${absoluteUrl(feedIdPath(postPath(p)))}</guid>
       <pubDate>${new Date(p.date).toUTCString()}</pubDate>
       <description>${esc(p.description)}</description>
 ${p.tags.map((t) => `      <category>${esc(t)}</category>`).join('\n')}${p.cover ? `\n      <enclosure url="${esc(absoluteUrl(p.cover))}" type="image/${mime(p.cover)}" length="0" />` : ''}

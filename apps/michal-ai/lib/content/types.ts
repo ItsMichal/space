@@ -4,6 +4,8 @@ export type GalleryItem = { src: string; alt: string; caption?: string }
 export type PostFrontmatter = {
   title: string
   slug: string
+  /* Stable id for per-post state (views, reactions). Never changes, even when the slug is renamed. Falls back to the slug. */
+  id?: string
   kind: PostKind
   description: string
   date: string /* ISO yyyy-mm-dd */
@@ -29,7 +31,7 @@ export type PostFrontmatter = {
   /* Position among siblings (ascending); falls back to date. */
   order?: number
   role?: string
-  /* Display span for the spec line instead of the date's year, e.g. "2024 – present". */
+  /* Display span for the spec line instead of the date's year, e.g. "2024 to now". */
   years?: string
   /* Short noun phrase (<= 48 chars) for the home hero's rotating "Lately I've built ..." line. Posts that set it join the rotation, ordered by priority then date. */
   hook?: string

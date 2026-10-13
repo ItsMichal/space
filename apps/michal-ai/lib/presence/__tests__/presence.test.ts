@@ -6,7 +6,7 @@ import { cleanLabel, jitter, placeFromCf, publicPoint, snap } from '../geo'
 import { addVisit, markSeen, utcDay, type PastVisit } from '../history'
 import { createLimiter, ipKey } from '../ratelimit'
 import { MemoryReactionStore, topReaction } from '../reactions-core'
-import { LIVE_SLUGS } from '../slugs.generated'
+import { LIVE_IDS, LIVE_SLUGS } from '../slugs.generated'
 import { originAllowed, parseClientMsg, parseReactionBody } from '../validate'
 import { blockIds } from '../blocks'
 
@@ -67,14 +67,14 @@ describe('validation', () => {
     expect(parseClientMsg('x'.repeat(LIVE_LIMITS.maxMsgBytes + 1))).toBeNull()
   })
   it('reaction bodies', () => {
-    const ok = { slug: 'hello-paper', target: 'post', emoji: 'clap', sid: SID, on: true }
+    const ok = { id: 'hello-paper', target: 'post', emoji: 'clap', sid: SID, on: true }
     expect(parseReactionBody(ok)).toEqual(ok)
     expect(parseReactionBody({ ...ok, target: 'a1b2c' })).not.toBeNull()
     expect(parseReactionBody({ ...ok, target: 'a1b2c-2' })).not.toBeNull()
     expect(parseReactionBody({ ...ok, target: '../x' })).toBeNull()
     expect(parseReactionBody({ ...ok, emoji: 'poop' })).toBeNull()
     expect(parseReactionBody({ ...ok, on: 'yes' })).toBeNull()
-    expect(parseReactionBody({ ...ok, slug: 'Hello Paper' })).toBeNull()
+    expect(parseReactionBody({ ...ok, id: 'Hello Paper' })).toBeNull()
     expect(parseReactionBody({ ...ok, junk: 1 })).toBeNull()
     expect(parseReactionBody(ok, new Set(['other']))).toBeNull()
     expect(parseReactionBody(null)).toBeNull()
@@ -201,11 +201,17 @@ describe('generated slugs', () => {
     const matter = (await import('gray-matter')).default
     const dir = path.resolve(__dirname, '../../../content/posts')
     const slugs: string[] = []
+    const ids: string[] = []
     for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.md'))) {
       const { data } = matter(fs.readFileSync(path.join(dir, f), 'utf8'))
       if (data.draft) continue
-      slugs.push(String(data.slug ?? f.replace(/\.md$/, '')))
+      const slug = String(data.slug ?? f.replace(/\.md$/, ''))
+      slugs.push(slug)
+      ids.push(String(data.id ?? slug))
+      expect(data.id, `${f} needs an explicit id`).toBeTruthy()
     }
     expect([...LIVE_SLUGS]).toEqual(slugs.sort())
+    expect([...LIVE_IDS]).toEqual(ids.sort())
+    expect(new Set(ids).size).toBe(ids.length)
   })
 })

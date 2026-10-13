@@ -1,20 +1,23 @@
 /* End-of-page links: two columns on phones, three from tablet up. Hairline rows, display serif, a quiet arrow. */
 .nx {
+  padding-top: var(--space-2);
+  padding-bottom: 0;
+}
+.nx__list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   column-gap: var(--space-6);
-  margin: 0;
+  margin: 0 0 -1px;
   padding: 0;
   list-style: none;
-  border-top: 1px solid var(--hairline);
 }
 @media (min-width: 768px) {
-  .nx {
+  .nx__list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     column-gap: var(--space-8);
   }
 }
-.nx > li {
+.nx__list > li {
   border-bottom: 1px solid var(--hairline);
 }
 .nx__a {
@@ -23,7 +26,7 @@
   justify-content: space-between;
   gap: var(--space-2);
   min-height: 56px;
-  font: 400 clamp(22px, 6vw, 28px) / 1.1 var(--font-display);
+  font: 400 24px/1.15 var(--font-display);
   letter-spacing: -0.01em;
   color: var(--ink);
   text-decoration: none;
@@ -48,7 +51,7 @@
 }
 .nx__a:focus-visible {
   outline: 2px solid var(--focus);
-  outline-offset: 2px;
+  outline-offset: -2px;
   border-radius: var(--radius-sm);
 }
 

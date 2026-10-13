@@ -8,7 +8,7 @@ import './ui.css'
 
 export type { TimelineItem }
 
-const PAD = 96 // rail extends this far past the first and last item, so rubber-banding has something to stretch over
+const RULE_OVERSHOOT = 4000 // the rule runs far past both ends, so it always spans the whole strip edge to edge (the strip clips it and fades both ends)
 const RAIL_Y = 52
 
 type Props = {
@@ -54,7 +54,6 @@ export function Timeline({ items, label, pitch: basePitch = 120, fit = false, in
 
   const L = (n - 1) * pitch
   const marks = useMemo(() => yearMarks(items), [items])
-  const W = L + PAD * 2
   const cursorRef = useRef<HTMLSpanElement>(null)
   const ticks = useRef<(HTMLElement | null)[]>([])
 
@@ -154,7 +153,7 @@ export function Timeline({ items, label, pitch: basePitch = 120, fit = false, in
     <section className={`tl ${className}`} aria-label={label} style={{ ['--tl-pitch' as string]: `${pitch}px` }} data-fit={fits ? '' : undefined}>
       <div ref={vp} className={`tl-vp${fits ? ' tl-vp--fit' : ''}`} {...(fits ? {} : strip.bind)}>
         <div ref={track} className="tl-track" style={{ transform: `translate3d(${-(fits ? (n - 1) / 2 : start) * pitch}px,0,0)`, height: 132 }}>
-          <div className="tl-rule" aria-hidden style={{ left: -PAD, width: W, top: RAIL_Y }} />
+          <div className="tl-rule" aria-hidden style={{ left: -RULE_OVERSHOOT, width: L + RULE_OVERSHOOT * 2, top: RAIL_Y }} />
           <div className="tl-ticks" aria-hidden style={{ top: RAIL_Y }}>
             {items.map((it, i) => (
               <i
@@ -197,6 +196,10 @@ export function Timeline({ items, label, pitch: basePitch = 120, fit = false, in
           </div>
         </div>
       </div>
+      {/* The current value, announced politely as it changes (by drag, swipe, tap or arrow keys). */}
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {itemDate(items[active], withDay)} {items[active].title}
+      </p>
       <ol className="tl-panels">
         {items.map((it, i) => (
           <li

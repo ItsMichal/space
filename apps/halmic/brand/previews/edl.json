@@ -1,0 +1,168 @@
+{
+ "fps": 24,
+ "momentSeconds": 1.3,
+ "clipSeconds": 3,
+ "videos": [
+  {
+   "id": "qVEDjNc5Gmg",
+   "name": "Special Force: Origins",
+   "big": true,
+   "ranges": [
+    9.6,
+    47.8,
+    89.5
+   ],
+   "why": [
+    "hooded silhouette steps out of the dark (cinematic opener)",
+    "wall-run down the hallway (the film's action beat)",
+    "intense look at the dorm door"
+   ],
+   "crf": 34
+  },
+  {
+   "id": "IIJVKHEtawU",
+   "name": "Special Force 2: The Array",
+   "big": true,
+   "ranges": [
+    219.5,
+    250,
+    296
+   ],
+   "why": [
+    "sunglasses aiming the foam blaster",
+    "white-hoodie scuffle",
+    "crouched with the blaster"
+   ],
+   "excluded": "the opening credit/name cards (about 0:55 to 1:45) are never used; all moments are after 3:30; the film's letterbox bars are cropped (640x288) so previews fill the tile",
+   "crf": 34,
+   "crop": "640:288:0:36"
+  },
+  {
+   "id": "N7HKj1dYZjU",
+   "name": "FIFA With the Boys, episode 4",
+   "ranges": [
+    205,
+    452,
+    514
+   ],
+   "why": [
+    "orange-kit goal celebration",
+    "Arsenal goal celebration",
+    "campfire cinematic"
+   ],
+   "excluded": "the 0:05 interview caption with a name is not used"
+  },
+  {
+   "id": "2jM2QSTSte4",
+   "name": "FIFA With the Boys, episode 3",
+   "crop": "506:285:67:45",
+   "ranges": [
+    443,
+    571,
+    596
+   ],
+   "why": [
+    "player dives",
+    "SORRY LMAO caption gag",
+    "player flat on the pitch"
+   ],
+   "excluded": "top bar (HUD name card) and bottom strip cropped off the whole video"
+  },
+  {
+   "id": "mRIj1BeCJ_o",
+   "name": "FIFA With the Boys, episode 2",
+   "crop": "506:285:67:45",
+   "ranges": [
+    391,
+    300,
+    460
+   ],
+   "why": [
+    "keeper and ad boards",
+    "wide gameplay",
+    "wide gameplay late"
+   ],
+   "excluded": "top bar (HUD name card) and bottom strip cropped off; menu screens (gamertags) and cutscenes with legible jersey names are not used"
+  },
+  {
+   "id": "Nhs4iQcN7-w",
+   "name": "FIFA With the Boys, episode 1",
+   "crop": "506:285:67:45",
+   "ranges": [
+    30,
+    137,
+    190
+   ],
+   "why": [
+    "celebration, avatar close-ups",
+    "keeper kneeling",
+    "penalty shot"
+   ],
+   "excluded": "top bar (HUD name card) and bottom strip cropped off; menu screens and shots where a jersey name is legible are not used"
+  },
+  {
+   "id": "Et47QCJ3-3g",
+   "name": "Robomaster 2019 highlight reel",
+   "ranges": [
+    154,
+    302,
+    571
+   ],
+   "why": [
+    "red energy burst",
+    "arena robot close-up",
+    "second robot close-up"
+   ],
+   "excluded": "lower-third captions and the end music credit are avoided"
+  },
+  {
+   "id": "pl6lJAYPLgc",
+   "name": "CU Boulder racing onboard lap",
+   "ranges": [
+    26,
+    57,
+    75
+   ],
+   "why": [
+    "turn-in",
+    "mid-lap corner",
+    "late-lap run"
+   ],
+   "crf": 43
+  }
+ ],
+ "clips": [
+  {
+   "id": "TsundereOutstandingChipmunkOSkomodo",
+   "src": "clip-TsundereOutstandingChipmunkOSkomodo.mp4",
+   "crop": "662:372:190:0",
+   "start": 2,
+   "why": "muzzle flashes in the first gunfight; facecam and handle text cropped off"
+  },
+  {
+   "id": "LachrymoseLazyTubersTTours-0pFkdn50gXLMyqh1",
+   "src": "clip-LachrymoseLazyTubersTTours-0pFkdn50gXLMyqh1.mp4",
+   "start": 6,
+   "why": "checkered corridor and red balloon; bottom strip (follower alert text) cropped off",
+   "crop": "852:420:0:0"
+  },
+  {
+   "id": "GlamorousFrozenStorkBloodTrail",
+   "src": "clip-GlamorousFrozenStorkBloodTrail.mp4",
+   "crop": "662:372:190:0",
+   "start": 17.5,
+   "why": "ability explosion mid-round; facecam/handle cropped off"
+  },
+  {
+   "id": "MistySleepyNuggetsWOOP",
+   "src": "clip-MistySleepyNuggetsWOOP.mp4",
+   "crop": "631:355:0:0",
+   "start": 6.5,
+   "why": "big hit and pink streaks; facecam and handle bar cropped off"
+  }
+ ],
+ "excluded": {
+  "CarefulPerfectPeppermintM4xHeh": "Smash overlay clip: in-game name tags above the characters include a first-name handle at all times, and the facecam/handle bar cannot be cropped without losing the stage; no preview rendered (no hover preview for that clip)",
+  "TrustworthyEnergeticParrotFeelsBadMan-sBdtrhqnYAINMSQJ": "Minecraft clip: chat log with other players' names, facecam icons and name tags; cropping them out leaves nothing worth a preview"
+ }
+}

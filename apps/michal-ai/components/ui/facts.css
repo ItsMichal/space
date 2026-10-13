@@ -1,29 +1,21 @@
+/* Project facts: a card, one cell per fact (label over value), as many columns as fit. */
 .fr {
-  margin: 0 0 var(--space-12);
-  max-width: 760px;
-}
-.fr-row {
-  position: relative;
   display: grid;
-  grid-template-columns: minmax(76px, 112px) 1fr;
-  column-gap: var(--space-6);
-  align-items: baseline;
-  padding: var(--space-3) 0;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-4) var(--space-6);
+  margin-top: 0;
+  margin-bottom: var(--space-12);
 }
-/* 1px hairline rules, as on apple.com spec tables and stripe.com docs. */
 .fr-row {
-  border-top: 1px solid var(--hairline);
-}
-.fr-row:last-child {
-  border-bottom: 1px solid var(--hairline);
+  min-width: 0;
 }
 .fr dt {
-  font: 400 15px/24px var(--font-serif);
+  font: 400 15px/22px var(--font-serif);
   color: var(--ink-muted);
 }
 .fr dd {
   margin: 0;
-  font: 400 17px/24px var(--font-serif);
+  font: 400 17px/25px var(--font-serif);
   font-variant-numeric: tabular-nums lining-nums;
   color: var(--ink);
   overflow-wrap: anywhere;

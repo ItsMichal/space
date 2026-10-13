@@ -2,7 +2,8 @@
 title: "Taco Neko Development"
 slug: taco-neko-development
 kind: article
-description: "Hello! Welcome to my post about a short game I made for a Design class. This game was ideated and created in the span of 2–3 days. Here was my process."
+id: taco-neko-development
+description: "Hello! Welcome to my post about a short game I made for a Design class. This game was ideated and created in the span of 2-3 days. Here was my process."
 date: 2020-05-27
 updated: 2020-11-10
 tags: ["Game Dev", "Design", "GB Studio"]
@@ -13,7 +14,7 @@ coverAlt: "TacoNeko title screen with hand-drawn art, the TacoNeko logo with a p
 originalUrl: "https://halmic.medium.com/taco-neko-development-5c1fb9e6372c"
 ---
 
-Hello! Welcome to my post about a short game I made for a Design class. This game was ideated and created in the span of 2–3 days. Here was my process.
+Hello! Welcome to my post about a short game I made for a Design class. This game was ideated and created in the span of 2-3 days. Here was my process.
 
 ---
 
@@ -27,7 +28,7 @@ For ideation, we were required to use [a website](http://mouseandthebillionaire.
 
 In the end, I had the following ideas from the mind map:
 
-- The mystery of the Robotic Cat — Puzzle Game
+- The mystery of the Robotic Cat: Puzzle Game
 - Build Robotic Cats (Builder/LifeSim Game)
 - Collect Tacos (the Currency), vibe with Cats (LifeSim Game)
 - Take Care of Cute Robotic Cats on a Desert Island (Pet Game)
@@ -75,7 +76,7 @@ The first prototype sketches. The first one has a more bulkier, tin can man look
 
 ![Alternate sketch of the same four stages with the paw print indicator depleting the other way](/media/taco-neko-development/06-043139.png "Three simple role prototypes for how the cats will go through 4 -5 different stages throughout the game")
 
-I made two prototypes for how the cats will get “hungrier” throughout the games. The first one heavily relied on the original design and color we solidified earlier, and I realized pretty early on that color actually couldn’t be used as a visual indicator since GB Studio limits you to four colors. However, it solidified the idea for the role (i.e., what the cats would do), and so I went back to the drawing board for the second prototype. This time, I limited myself to two colors, and finally incorporated that taco cat logo from earlier. I also designed with a low final resolution in mind, which lead to designs I was happy with. I also added a stage for the depleting of the logo to make sense. A small tweak was to perhaps, swap the way the logo depletes (from white to black to black to white- since white is often associated with being empty in this case), so I created a third prototype to show to my girlfriend again — here’s her view:
+I made two prototypes for how the cats will get “hungrier” throughout the games. The first one heavily relied on the original design and color we solidified earlier, and I realized pretty early on that color actually couldn’t be used as a visual indicator since GB Studio limits you to four colors. However, it solidified the idea for the role (i.e., what the cats would do), and so I went back to the drawing board for the second prototype. This time, I limited myself to two colors, and finally incorporated that taco cat logo from earlier. I also designed with a low final resolution in mind, which lead to designs I was happy with. I also added a stage for the depleting of the logo to make sense. A small tweak was to perhaps, swap the way the logo depletes (from white to black to black to white- since white is often associated with being empty in this case), so I created a third prototype to show to my girlfriend again, here’s her view:
 
 > \[Third\] one bc it seems more like a health bar and warns the players with each paw nub disappearing rather than filling up which can be taken as a good sign rather than bad
 
@@ -129,7 +130,7 @@ Whew! At this point in development, I really just didn’t realize how limited G
 
 ### Early Development
 
-Before we can test, we need a game right? I took the prototype from early and decided on the following flow —
+Before we can test, we need a game right? I took the prototype from early and decided on the following flow:
 
 - Title Screen
 - Intro
@@ -152,15 +153,15 @@ Alright! So this is what I managed to get after a bit of time with GB studio. Ph
 
 ![Zoomed-in view of the debug level showing trees, a cat sprite and the row of ingredient bins](/media/taco-neko-development/21-ff7a7a.png "The first debug level! Thing work! Great!")
 
-You’ll also notice I made some more sprites! These were prototyped before, but I had to do some work and finicky pixel art to hopefully make them recognizable. We have bins for the cats to put ingredients into, for you to place the ingredients, for you to assemble the taco, and for you to deposit the taco. The bins were made 3D from the 2D prototypes, and actually came with a little bit of a struggle to decide what icons would be on the bins (letters? icons? names? — the end came with a mix of all three…perhaps due to my sprite art inability).
+You’ll also notice I made some more sprites! These were prototyped before, but I had to do some work and finicky pixel art to hopefully make them recognizable. We have bins for the cats to put ingredients into, for you to place the ingredients, for you to assemble the taco, and for you to deposit the taco. The bins were made 3D from the 2D prototypes, and actually came with a little bit of a struggle to decide what icons would be on the bins (letters? icons? names? The end came with a mix of all three…perhaps due to my sprite art inability).
 
 ### Problems
 
-So the biggest technical problem I had with this first prototype was getting the cat to chase you. There were two big roadblocks. One was getting player position. GB Studio, while it won’t tell you outright, only supports one single Timer event — any other Timer events will override the previous ones. Because of this, it was hard to get multiple cats to follow the player. However, I was able to solve this by making everything run on a global Timer. But the second problem, was that moving an Actor in GB Studio *pauses the entire game while the Actor is moving*. There’s no way it would be fun to play a game which freezes every so often.
+So the biggest technical problem I had with this first prototype was getting the cat to chase you. There were two big roadblocks. One was getting player position. GB Studio, while it won’t tell you outright, only supports one single Timer event. Any other Timer events will override the previous ones. Because of this, it was hard to get multiple cats to follow the player. However, I was able to solve this by making everything run on a global Timer. But the second problem, was that moving an Actor in GB Studio *pauses the entire game while the Actor is moving*. There’s no way it would be fun to play a game which freezes every so often.
 
 ![GB Studio level with four trees, a cat inside an orange trigger zone, a row of bins and an actor counter reading 9 of 9](/media/taco-neko-development/22-df4c4d.png "9 actors…is exceedingly sparse for this map.")
 
-Another problem was the map. Initially, I wanted it to be a wild landscape, with many, many trees. Well unfortunately, GB Studio doesn’t support more than 9 actors per scene. Considering the cat, pedestals, and 3 necessary trees — well that’s already 9 if you use 3 ingredients in a taco. Looking back now, I could have split the map up into different scenes to bypass this limit, but at the time I decided instead to radically pivot the game flow instead.
+Another problem was the map. Initially, I wanted it to be a wild landscape, with many, many trees. Well unfortunately, GB Studio doesn’t support more than 9 actors per scene. Considering the cat, pedestals, and 3 necessary trees, well that’s already 9 if you use 3 ingredients in a taco. Looking back now, I could have split the map up into different scenes to bypass this limit, but at the time I decided instead to radically pivot the game flow instead.
 
 ### Pivot to another Prototype
 
@@ -170,11 +171,11 @@ You may have noticed another small change from the last two screenshots. If you 
 
 ![GB Studio level with four trees, a cat inside an orange trigger zone, a row of bins and an actor counter reading 9 of 9](/media/taco-neko-development/22-df4c4d.png "Notice the orange little area? Also, not the point, but I added more trees that are visually distinct so you know your meat trees from your taco shell trees. Removed a cat too to stay underneath the limit :<")
 
-That orange area is a trigger in GB Studio. While pondering how I could make the cats an enemy without them running around, I remembered a fun little interaction I have in games like *Pokemon.* In *Pokemon*, when a trainer “sees” you — it means battle! And sometimes, trainers would spin around, trying to spot you. I remember trying to time myself just right so I could sneak past while they weren’t looking to escape a battle!
+That orange area is a trigger in GB Studio. While pondering how I could make the cats an enemy without them running around, I remembered a fun little interaction I have in games like *Pokemon.* In *Pokemon*, when a trainer “sees” you: it means battle! And sometimes, trainers would spin around, trying to spot you. I remember trying to time myself just right so I could sneak past while they weren’t looking to escape a battle!
 
 I decided this would be a prime mechanic for my game. The cats would spin around, and if they spotted you, you would drop everything and run all the way back to the start! It would change the strategy of the game a bit, but would work technically and still hopefully be fun. So I decided to prototype it out.
 
-Naturally, I also needed to design a new map. No way would the large, open area work anymore — I needed a designed map, one that would challenge the player. Rather than sketch some designs by hand, I chose to use *Tiled*, a map editor. It was basically just sketching — just with the actual tiles. Also, I made a tileset!
+Naturally, I also needed to design a new map. No way would the large, open area work anymore. I needed a designed map, one that would challenge the player. Rather than sketch some designs by hand, I chose to use *Tiled*, a map editor. It was basically just sketching, just with the actual tiles. Also, I made a tileset!
 
 ![Tiled map of the first starting layout: a pale green island shaped like a tall T on a dark background](/media/taco-neko-development/23-7eacca.png)
 
@@ -218,7 +219,7 @@ I also initially did not have separate sprites for carrying and not carrying for
 
 Similarly, adding a visual feedback to the pedestals seemed to enhance the interactivity of the game. It just felt more real. The way I did it was a small trick- by changing the way an actor is facing, you can change the sprite that GB studio draws. So I was able to save quite a bit on the actor limit by just doing that.
 
-![Enlarged pixel art of the Cat Box, a dark opening above the word CAT](/media/taco-neko-development/35-0cd775.png "R.I.P. CatBox. 2020–2020")
+![Enlarged pixel art of the Cat Box, a dark opening above the word CAT](/media/taco-neko-development/35-0cd775.png "R.I.P. CatBox. 2020-2020")
 
 Finally, I had to remove something from the game. The cats, while they retained their ability to move, could have been companions that retrieved ingredients for you. Until they can move again, the purpose of the Cat Box no longer exists, so, well, it no longer exists.
 

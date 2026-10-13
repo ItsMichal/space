@@ -12,6 +12,7 @@
 
 <main id="main">
 <section class="hero">
+  <div class="reel" data-reel aria-hidden="true"><canvas class="reel-cv"></canvas><video class="reel-vid" muted loop playsinline preload="none" tabindex="-1" data-poster="/hero/reel-poster.jpg"></video></div>
   <div class="field" data-meter data-count="fill" data-t="60" data-pitch="88" data-h="520" data-dot="off" aria-hidden="true"></div>
   <div class="wrap hero-in">
     <p class="status" role="status">
@@ -23,18 +24,19 @@
     <div class="hero-foot">
       <div class="topline"><p class="ttl">halmic productions</p><p class="lede">An assortment of various somewhat creative work I’ve done.</p></div>
       <p class="cta">
-        <a class="btn btn-blue" href="https://www.twitch.tv/halmictv" rel="me noopener">Watch on Twitch</a>
-        <a class="btn btn-ghost" href="#games">See what I’ve made</a>
+        <a class="btn btn-blue" href="https://www.twitch.tv/halmictv" rel="me noopener">{{ic_twitch}}<span>Watch on Twitch</span>{{ic_out}}</a>
+        <a class="btn btn-ghost" href="#games">{{ic_down}}<span>See what I’ve made</span></a>
       </p>
     </div>
   </div>
 </section>
 
 <section class="cards">
-  <div class="wrap grid">{{cards}}</div>
+  <div class="wrap">{{cards}}</div>
 </section>
 </main>
 {{foot}}
 <script src="{{appjs}}" defer></script>
+<script src="{{herojs}}" defer></script>
 </body>
 </html>

@@ -5,7 +5,7 @@ import { ProjectRow } from './ProjectRow'
 export function ProjectList({ posts, base, empty = 'Nothing here yet.' }: { posts: Post[]; base: string; empty?: string }) {
   if (posts.length === 0) return <p className="text-ink-muted">{empty}</p>
   return (
-    <ul className="plist m-0 list-none p-0">
+    <ul className="plist card surface card--list card__rows">
       {posts.map((p) => (
         <li key={p.slug}>
           <ProjectRow

@@ -104,14 +104,25 @@ for (const file of walk(SRC).sort()) {
   made++
 }
 
-// Share cards: WebP covers get a 1200x630 JPEG twin in public/media/_og/ (older LinkedIn/Slack unfurlers
-// handle WebP poorly), and the default card is the portrait on paper. lib/seo.ts points og:image at these.
+// Share-card covers: next/og cannot read WebP (and must not embed a multi-MB original), so every post that has a cover
+// gets a small JPEG crop in public/media/_og/<slug>.jpg (456x534, the right-hand panel of the card, honouring `coverFocus`).
+// app/**/opengraph-image.tsx (lib/og.tsx) reads these at build time and renders the 1200x630 PNG card from them.
 const OG = path.join(SRC, '_og')
 const PAPER = '#f4f1e8'
-const ogJobs = walk(SRC)
-  .filter((f) => /\/cover\.webp$/i.test(f))
-  .map((f) => ({ from: f, to: path.join(OG, path.relative(SRC, path.dirname(f)) + '.jpg') }))
-ogJobs.push({ from: path.join(ROOT, 'public', 'michal.png'), to: path.join(OG, 'default.jpg'), contain: true })
+const OG_W = 456
+const OG_H = 534
+const POSTS = path.join(ROOT, 'content', 'posts')
+const fm = (text, key) => text.match(new RegExp(`^${key}:\\s*(.+?)\\s*$`, 'm'))?.[1].replace(/^["']|["']$/g, '')
+const ogJobs = fs
+  .readdirSync(POSTS)
+  .filter((f) => f.endsWith('.md'))
+  .flatMap((f) => {
+    const text = fs.readFileSync(path.join(POSTS, f), 'utf8')
+    const slug = fm(text, 'slug')
+    const cover = fm(text, 'cover')
+    if (!slug || !cover || cover === 'none') return []
+    return [{ from: path.join(ROOT, 'public', cover), to: path.join(OG, `${slug}.jpg`), focus: fm(text, 'coverFocus') }]
+  })
 // Stamps (source hash + settings) live outside public/ so they are not shipped; mtimes are useless after a CI checkout.
 const STAMPS = path.join(ROOT, '.cache', 'build-images', 'og.json')
 const rk = (p) => path.relative(ROOT, p).split(path.sep).join('/')
@@ -119,18 +130,25 @@ const stamps = fs.existsSync(STAMPS) ? JSON.parse(fs.readFileSync(STAMPS, 'utf8'
 const nextStamps = {}
 const ogKeep = new Set()
 let ogMade = 0
-for (const { from, to, contain } of ogJobs) {
+for (const { from, to, focus } of ogJobs) {
   if (!fs.existsSync(from)) continue
   ogKeep.add(to)
-  const stamp = sha(fs.readFileSync(from), SETTINGS, PAPER, contain ? 'contain' : 'cover')
+  const stamp = sha(fs.readFileSync(from), SETTINGS, PAPER, `${OG_W}x${OG_H}`, focus ?? '', 'og2')
   nextStamps[rk(to)] = stamp
   if (fs.existsSync(to) && stamps[rk(to)] === stamp) continue
   fs.mkdirSync(path.dirname(to), { recursive: true })
-  const img = sharp(from).rotate()
-  const out = contain
-    ? img.resize(1200, 630, { fit: 'contain', background: PAPER })
-    : img.resize(1200, 630, { fit: 'cover', position: 'attention' })
-  await out.flatten({ background: PAPER }).jpeg({ quality: 82, mozjpeg: true }).toFile(to)
+  const img = sharp(from).rotate().flatten({ background: PAPER })
+  let out
+  if (focus && /^\d+%\s+\d+%$/.test(focus)) {
+    // CSS object-position: scale to fill, then take the window at that fraction of the overflow.
+    const [fx, fy] = focus.split(/\s+/).map((v) => parseFloat(v) / 100)
+    const { info } = await img.clone().resize(OG_W, OG_H, { fit: 'outside' }).toBuffer({ resolveWithObject: true })
+    const buf = await img.clone().resize(OG_W, OG_H, { fit: 'outside' }).toBuffer()
+    out = sharp(buf).extract({ left: Math.round((info.width - OG_W) * fx), top: Math.round((info.height - OG_H) * fy), width: OG_W, height: OG_H })
+  } else {
+    out = img.resize(OG_W, OG_H, { fit: 'cover', position: 'attention' })
+  }
+  await out.jpeg({ quality: 82, mozjpeg: true }).toFile(to)
   ogMade++
 }
 fs.mkdirSync(path.dirname(STAMPS), { recursive: true })

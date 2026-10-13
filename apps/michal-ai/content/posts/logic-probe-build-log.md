@@ -2,6 +2,7 @@
 title: "Logic Probe Build Log"
 slug: logic-probe-build-log
 kind: article
+id: logic-probe-build-log
 description: "This year I’m taking some cool courses as part of my Creative Technology & Design major at CU Boulder."
 date: 2021-08-28
 updated: 2021-09-10
@@ -15,7 +16,7 @@ originalUrl: "https://halmic.medium.com/logic-probe-build-log-part-1-2277172dad0
 
 ![Finished black logic probe box engraved Michal’s Logic Probe, with white L and red H LEDs and blue, red and mint cords, while a needle probe touches a Circuit Playground board](/media/logic-probe-build-log/01-66835b.webp)
 
-This year I’m taking some cool courses as part of my Creative Technology & Design major at CU Boulder. One of these classes is ATLS 3300 — Object. Object is a class where we learn and use microcontrollers and basic electronics, to build really cool things. Our first matter of business this semester is to build a logic probe device, that will help us debug HIGH/LOW signals from our microcontrollers.
+This year I’m taking some cool courses as part of my Creative Technology & Design major at CU Boulder. One of these classes is ATLS 3300: Object. Object is a class where we learn and use microcontrollers and basic electronics, to build really cool things. Our first matter of business this semester is to build a logic probe device, that will help us debug HIGH/LOW signals from our microcontrollers.
 
 We followed the following instructions from a TA in the course.
 
@@ -75,7 +76,7 @@ And with that done, part 1 is complete! Next steps include 3D printing the enclo
 
 ![Fusion 360 view of the housing top with the engraved name on a triangulated mesh surface](/media/logic-probe-build-log/22-aea956.webp "The customised housing top")
 
-Alright- It’s now time to finish this! First off, I 3D printed the enclosure for the probe. Now I could have just used a provided .stl file — but that’s boring. I customised it with my name instead in Fusion 360. This was relatively painless- but Fusion 360 probably isn’t the best for editing .stls. The final geometry is a good example of why. It would have been nice to have access to the original Fusion 360 files, but it turned out fine enough in any case.
+Alright- It’s now time to finish this! First off, I 3D printed the enclosure for the probe. Now I could have just used a provided .stl file, but that’s boring. I customised it with my name instead in Fusion 360. This was relatively painless- but Fusion 360 probably isn’t the best for editing .stls. The final geometry is a good example of why. It would have been nice to have access to the original Fusion 360 files, but it turned out fine enough in any case.
 
 ![Hand holding the first print of the housing top, with the engraved lettering distorted and rough](/media/logic-probe-build-log/23-f07888.jpg)
 

@@ -6,7 +6,8 @@ Two independent features, both dark by default (`lib/presence/flag.ts`):
 | --- | --- | --- | --- |
 | `HeroGlobe` (decorative background globe) | none; the component is simply not placed yet | not placed | no |
 | Globe dots (live visitors + Hawthorne) | `PRESENCE_PINS` | off | yes |
-| Article reactions (bar + paragraph reactions) | `LIVE_REACTIONS_ENABLED` | off | yes |
+| Article reactions row + view count | `LIVE_REACTIONS_ENABLED` | **on** (see `docs/live-reactions-views.md`) | yes |
+| Paragraph reactions | `LIVE_BLOCK_REACTIONS` (+ Worker var) | off | yes |
 
 Kill switch for all `/api/live/*` routes: set the Worker var `LIVE_KILL=1` (every route answers 204, the client treats that as "off" and renders nothing).
 

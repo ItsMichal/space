@@ -162,6 +162,7 @@ export function createPost(input: { title?: string; kind?: PostKind }): PostFile
   const frontmatter: PostFrontmatter = {
     title,
     slug,
+    id: slug,
     kind: input.kind === 'project' ? 'project' : 'article',
     description: '',
     date: today(),

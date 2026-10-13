@@ -9,11 +9,9 @@ export const SITE_URL = siteConfig.url.replace(/\/$/, '')
 export const SITE_NAME = siteConfig.title
 export const AUTHOR_NAME = profile.name
 export const DEFAULT_OG_IMAGE = '/michal.png'
-/** 1200x630 JPEG share card (built by scripts/build-images.mjs); the portrait stays DEFAULT_OG_IMAGE for JSON-LD. */
-export const DEFAULT_SHARE_IMAGE = '/media/_og/default.jpg'
-
-/** WebP covers have a JPEG twin under /media/_og/ for share cards; other formats are used as they are. */
-export const shareImagePath = (cover: string) => cover.replace(/^\/media\/(.+)\/cover\.webp$/i, '/media/_og/$1.jpg')
+// Share cards (og:image / twitter:image) are generated: app/**/opengraph-image.tsx renders a 1200x630 PNG per page with
+// lib/og.tsx at build time, and Next adds the absolute og:image/width/height/type/alt tags itself. Pages therefore set
+// no `images` in their metadata (an explicit `images` would replace the generated card).
 
 /** Pass to `metadata.metadataBase` in the root layout so relative URLs resolve to https://michal.ai. */
 export const metadataBase = new URL(SITE_URL)
@@ -29,15 +27,15 @@ export const SECTION: Record<PostKind, { base: string; label: string; kindLabel:
 /** Canonical path of a post: children live under their parent project. */
 export const postPath = (post: Pick<Post, 'kind' | 'slug' | 'parent'>) =>
   post.parent ? `/projects/${post.parent}/${post.slug}` : `${SECTION[post.kind].base}/${post.slug}`
-export const postTitle = (title: string) => `${title} — ${AUTHOR_NAME}`
+export const postTitle = (title: string) => `${title} · ${AUTHOR_NAME}`
 
 /** Defaults the root layout can spread into its `metadata` export (RSS discovery, metadataBase, site-wide OG). */
 export const siteMetadata: Metadata = {
   metadataBase,
   alternates: {
     types: {
-      'application/rss+xml': [{ url: '/feed.xml', title: `${SITE_NAME} — RSS` }],
-      'application/feed+json': [{ url: '/feed.json', title: `${SITE_NAME} — JSON Feed` }],
+      'application/rss+xml': [{ url: '/feed.xml', title: `${SITE_NAME} · RSS` }],
+      'application/feed+json': [{ url: '/feed.json', title: `${SITE_NAME} · JSON Feed` }],
     },
   },
   openGraph: { siteName: SITE_NAME, locale: 'en_US', type: 'website' },
@@ -71,7 +69,7 @@ export const profilePageJsonLd = {
   '@type': 'ProfilePage',
   '@id': `${SITE_URL}/#profilepage`,
   url: SITE_URL,
-  name: `${AUTHOR_NAME} — ${profile.titleTagline}`,
+  name: `${AUTHOR_NAME} · ${profile.titleTagline}`,
   inLanguage: 'en-US',
   isPartOf: { '@id': `${SITE_URL}/#website` },
   mainEntity: { ...personJsonLd, '@context': undefined },
@@ -88,7 +86,7 @@ export const websiteJsonLd = {
   publisher: { '@id': `${SITE_URL}/#person` },
 }
 
-const HOME_TITLE = `${profile.name} — ${profile.titleTagline}`
+const HOME_TITLE = `${profile.name} · ${profile.titleTagline}`
 
 /** Metadata fragment for the home page: canonical + profile OG. Spread into the page's `metadata`. */
 export function homeMetadata(): Metadata {
@@ -102,11 +100,10 @@ export function homeMetadata(): Metadata {
       locale: 'en_US',
       title: HOME_TITLE,
       description: profile.description,
-      images: [{ url: absoluteUrl(DEFAULT_SHARE_IMAGE) }],
       firstName: profile.firstName,
       lastName: profile.lastName,
     },
-    twitter: { ...siteMetadata.twitter, title: HOME_TITLE, description: profile.description, images: [absoluteUrl(DEFAULT_SHARE_IMAGE)] },
+    twitter: { ...siteMetadata.twitter, title: HOME_TITLE, description: profile.description },
   }
 }
 
@@ -134,10 +131,6 @@ export function originalSite(url: string): string | undefined {
   }
 }
 
-export function postImage(post: Post) {
-  return absoluteUrl(post.cover ? shareImagePath(post.cover) : DEFAULT_SHARE_IMAGE)
-}
-
 export function postMetadata(post: Post): Metadata {
   const url = absoluteUrl(postPath(post))
   const title = postTitle(post.title)
@@ -159,8 +152,6 @@ export function postMetadata(post: Post): Metadata {
       modifiedTime: post.updated ?? post.date,
       authors: [AUTHOR_NAME],
       tags: post.tags,
-      // With no cover we omit images so the generated opengraph-image card is used.
-      ...(post.cover ? { images: [{ url: postImage(post), alt: post.coverAlt ?? post.title }] } : {}),
     },
     twitter: {
       card: 'summary_large_image',
@@ -168,7 +159,6 @@ export function postMetadata(post: Post): Metadata {
       description: post.description,
       site: siteConfig.twitter,
       creator: siteConfig.twitter,
-      ...(post.cover ? { images: [postImage(post)] } : {}),
     },
   }
 }
@@ -184,8 +174,8 @@ export function postJsonLd(post: Post, parent?: Pick<Post, 'title' | 'slug' | 'p
     description: post.description,
     datePublished: post.date,
     dateModified: post.updated ?? post.date,
-    // No cover: omit the image so crawlers use the generated opengraph-image card.
-    ...(post.cover ? { image: postImage(post) } : {}),
+    // The cover itself (not the share card): structured data wants the picture, the card is for link previews.
+    ...(post.cover ? { image: absoluteUrl(post.cover) } : {}),
     keywords: post.tags.join(', '),
     inLanguage: 'en-US',
     isPartOf: parent ? { '@type': 'CreativeWork', '@id': `${parentUrl}#work`, name: parent.title, url: parentUrl } : { '@id': `${SITE_URL}/#website` },
@@ -232,9 +222,9 @@ export function listMetadata(kind: PostKind, title: string, description: string)
       title,
       description,
       siteName: SITE_NAME,
-      images: [{ url: absoluteUrl(DEFAULT_SHARE_IMAGE) }],
+      locale: 'en_US',
     },
-    twitter: { card: 'summary_large_image', title, description, images: [absoluteUrl(DEFAULT_SHARE_IMAGE)] },
+    twitter: { card: 'summary_large_image', title, description, site: siteConfig.twitter, creator: siteConfig.twitter },
   }
 }
 
