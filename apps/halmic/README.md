@@ -21,9 +21,12 @@ The home page body is bentos (`.bento`): Watch (Twitch clips and YouTube videos 
 ## Icons
 Icons live in `brand/icons/` and are built into one same-origin sprite, `public/icons.svg`, by `build.mjs` (linked as `/icons.svg?v=<hash>`, immutable cache). In templates, `icon('play')` returns `<svg class="ic" aria-hidden="true"><use href="/icons.svg?v=…#play"/></svg>`; icons are sized in `em` and take the surrounding text colour. Decorative icons are `aria-hidden`; an icon-only control must carry an `aria-label`.
 - UI icons: [Phosphor Icons](https://phosphoricons.com) 2.1.1, **Fill** weight (sits best next to the heavy display face; `x` is the Bold glyph because Fill's is a boxed X), MIT. Files in `brand/icons/phosphor/` with the licence (`LICENSE`). Name = file name, for example `arrow-up-right`.
-- Brand marks (Twitch, YouTube, Discord, X, itch.io, Medium): [Simple Icons](https://simpleicons.org) 16.35.0, CC0, used unmodified in one colour. Files in `brand/icons/brands/` with `LICENSE.md` and `DISCLAIMER.md` (the marks are their owners' trademarks). Name = `b-` plus the file name, for example `b-twitch`, `b-itchdotio`.
+- Brand marks (Twitch, YouTube, Reddit, X, itch.io, Medium): [Simple Icons](https://simpleicons.org) 16.35.0, CC0, used unmodified in one colour. Files in `brand/icons/brands/` with `LICENSE.md` and `DISCLAIMER.md` (the marks are their owners' trademarks). Name = `b-` plus the file name, for example `b-twitch`, `b-itchdotio`.
 - The Noun Project is a style reference only; nothing is copied from it.
 - To add one: fetch the SVG from the npm package (`npm pack @phosphor-icons/core` or `simple-icons` into a temp dir, never as a dependency), copy only that file into the matching folder, rebuild, and use `icon('name')`. An unknown name throws at build time, and `scripts/check-links.mjs` fails on any `<use>` whose symbol is missing from the sprite.
+
+## Posts (X highlights)
+`content/posts.json` feeds an optional `Posts` bento on the home page (anchor `#posts`): static tiles, no widget or third-party request, media copied into `public/posts/` (neutral names, 1200px, 200 KB at most) with alt text written by hand, the post text trimmed to the title. While the list is empty the section is not rendered.
 
 ## Test
 `npm test -w @space/halmic`: unit tests for the Worker (`node --test`, mocked `fetch`) and `scripts/check-links.mjs` (every internal link/asset/og:image in `public/` resolves, no placeholders, one h1, images have alt and size). Also run `npm run check:identity` from the root.
