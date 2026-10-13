@@ -315,9 +315,32 @@
   font: 400 14px/20px var(--font-serif);
   color: var(--ink-muted);
 }
+.st-eta {
+  font-variant-numeric: tabular-nums;
+}
+/* In the slot the title gives way (ellipsis) before the count and the minutes do. */
+.st-text--out {
+  display: inline-flex;
+}
+.st-text--in .st-title,
+.st-text--out .st-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.st-text--in .st-sub,
+.st-text--out .st-sub {
+  flex: none;
+}
+@media (max-width: 639px) {
+  /* the slot is the free space between mark and menu button: keep the minutes, drop "2 of 5" */
+  .st-count:has(+ .st-eta) {
+    display: none;
+  }
+}
 .st-text--in {
   animation: st-in 640ms var(--ui-settle) 120ms both;
-  display: inline-block;
+  display: inline-flex;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;

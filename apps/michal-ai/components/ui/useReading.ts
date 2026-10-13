@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { readingProgress, sectionAt } from './status'
+import { countWords, leftLabel, readLine, secondsLeft, type ReadBlock } from './readingTime'
 
 export type Reading = {
   /** 0..1 through the article body. */
@@ -13,6 +14,26 @@ export type Reading = {
   scrolling: boolean
   /** Scrolled past the title block, so the progress is meaningful. */
   started: boolean
+  /** "8 min left", "under a minute" or "done"; null when the body has nothing to estimate from. */
+  eta: string | null
+}
+
+// Leaf text blocks of an article body; a block that contains another one is skipped so words are counted once.
+const BLOCKS = 'p, li, h2, h3, h4, h5, h6, pre, figcaption, dt, dd, th, td'
+
+function measureBlocks(body: HTMLElement, base: number): ReadBlock[] {
+  const out: ReadBlock[] = []
+  body.querySelectorAll<HTMLElement>(`${BLOCKS}, img`).forEach((el) => {
+    const r = el.getBoundingClientRect()
+    if (el.tagName === 'IMG') {
+      if (r.height > 0) out.push({ top: r.top + base, height: r.height, words: 0, images: 1 })
+      return
+    }
+    if (el.querySelector(BLOCKS) || el.closest('pre') !== (el.tagName === 'PRE' ? el : null)) return
+    const words = countWords(el.textContent ?? '')
+    if (words > 0) out.push({ top: r.top + base, height: r.height, words, images: 0 })
+  })
+  return out
 }
 
 /**
@@ -33,6 +54,8 @@ export function useReading(routeKey = '', restMs = 2200): Reading | null {
     let start = 0
     let end = 0
     let hs: HTMLElement[] = []
+    let blocks: ReadBlock[] = []
+    const anchor = Number(article.dataset.readingMinutes) || undefined
     let raf = 0
     let timer: ReturnType<typeof setTimeout> | undefined
     let scrolling = false
@@ -45,16 +68,19 @@ export function useReading(routeKey = '', restMs = 2200): Reading | null {
       const r = body.getBoundingClientRect()
       start = r.top + base - 220
       end = r.bottom + base
+      blocks = measureBlocks(body, base)
     }
     const compute = () => {
       raf = 0
       const y = window.scrollY
+      const progress = readingProgress(y, start, end, window.innerHeight)
       const next: Reading = {
-        progress: readingProgress(y, start, end, window.innerHeight),
+        progress,
         section: sectionAt(tops, y),
         headings: hs.map((h) => ({ id: h.id, text: h.textContent?.replace(/#$/, '').trim() ?? '' })),
         scrolling,
         started: y > start + 40,
+        eta: blocks.length ? leftLabel(progress >= 0.995 ? 0 : secondsLeft(blocks, readLine(y, window.innerHeight, progress), { anchorMinutes: anchor })) : null,
       }
       setState((prev) =>
         prev &&
@@ -62,6 +88,7 @@ export function useReading(routeKey = '', restMs = 2200): Reading | null {
         prev.section === next.section &&
         prev.scrolling === next.scrolling &&
         prev.started === next.started &&
+        prev.eta === next.eta &&
         prev.headings.length === next.headings.length
           ? prev
           : next

@@ -63,7 +63,7 @@ export function ArticleLayout({
   // "Web" is a category, not a stack item: it never leads a spec line.
   const stack = tags.filter((t) => t !== 'Web')
   return (
-    <article data-post className="reading">
+    <article data-post data-reading-minutes={readingMinutes} className="reading">
       <header className="reading__head">
         {back ? (
           <p className="mb-space-4 font-serif text-[16px] text-ink-muted">
