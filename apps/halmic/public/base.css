@@ -90,7 +90,7 @@ img { max-width: 100%; height: auto; display: block; }
 
 /* videos: the featured player on a video's own page */
 .vid { display: block; position: relative; }
-.vid .thumb { display: block; position: relative; aspect-ratio: 16 / 9; border-radius: 18px; overflow: hidden; background: var(--ink-3); }
+.vid .thumb { display: block; position: relative; aspect-ratio: 16 / 9; border-radius: var(--r); overflow: hidden; background: var(--ink-3); }
 .vid .thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s cubic-bezier(.4, 0, .25, 1); }
 .vid:hover .thumb img { transform: scale(1.03); }
 .vid .vt { display: block; margin-top: 12px; font-weight: 600; line-height: 1.25; text-wrap: balance; }
@@ -102,10 +102,10 @@ img { max-width: 100%; height: auto; display: block; }
 
 /* cards: one system for the home page and the inner index pages. A 4/3/2/1 column grid of whole-card links (one link per card),
    image flush to the card's edge, text below or over a gradient, no borders or shadows. Hover scales the image inside the clipped card. */
-.grid { --r: 20px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; grid-auto-flow: dense; }
-@media (min-width: 600px) { .grid { --r: 28px; grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 900px) { .grid { gap: 20px; grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (min-width: 1280px) { .grid { --r: 32px; grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap); grid-auto-flow: dense; }
+@media (min-width: 600px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 900px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1280px) { .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (min-width: 900px) { .grid.g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .gh { position: relative; grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 20px; margin-top: 40px; padding-inline: 4px; scroll-margin-top: 24px; }
 .gh .anc { position: absolute; top: -24px; left: 0; width: 1px; height: 1px; }
@@ -113,7 +113,7 @@ img { max-width: 100%; height: auto; display: block; }
 .gh h2 { margin: 0; display: inline-flex; align-items: center; gap: 12px; font: 750 clamp(24px, 2.4vw, 32px)/1.1 var(--display); letter-spacing: var(--dtrack); }
 .gh h2 .ic { font-size: .8em; color: var(--blue-live); }
 .gh p { margin: 0; color: var(--mute); font-size: 16px; }
-.card { position: relative; display: flex; flex-direction: column; min-width: 0; border-radius: var(--r); overflow: hidden; isolation: isolate; background: var(--ink-2); color: var(--text); scroll-margin-top: 24px; }
+.card { --pad: clamp(16px, 6.5cqi, 28px); container-type: inline-size; position: relative; display: flex; flex-direction: column; min-width: 0; border-radius: var(--r); overflow: hidden; isolation: isolate; background: var(--ink-2); color: var(--text); scroll-margin-top: 24px; }
 .card:focus-visible { outline: 3px solid var(--blue-live); outline-offset: 3px; }
 .c-3 { background: var(--ink-3); }
 .c-paper { background: var(--paper); color: var(--paper-ink); }
@@ -127,7 +127,7 @@ a.card:hover .cm img, a.card:hover .cm video { transform: scale(1.03); }
 .px .cm { aspect-ratio: 16 / 9; background: var(--ink); } .px .cm img { image-rendering: pixelated; object-fit: contain; }
 .gf .cm { aspect-ratio: 640 / 508; }
 /* every card: 20/22 padding, eyebrow, title, line. Big cards step up one size. */
-.cb { flex: 1 0 auto; display: flex; flex-direction: column; padding: 18px 22px 22px; }
+.cb { flex: 1 0 auto; display: flex; flex-direction: column; padding: var(--pad); }
 .bt { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .ey { margin: 0; display: flex; align-items: center; gap: 6px; font: 700 12px/1.3 var(--sans); letter-spacing: .07em; text-transform: uppercase; font-variant-numeric: tabular-nums; color: var(--mute); }
 .ey .ic { font-size: 15px; }
@@ -138,16 +138,16 @@ a.card:hover .cm img, a.card:hover .cm video { transform: scale(1.03); }
 .c-paper .cx { color: var(--paper-mute); } .c-blue .cx { color: var(--ink); }
 .big .ct { font-size: clamp(24px, 2.6vw, 38px); } .big .cb { padding: 22px 26px 26px; }
 /* text-only cards: an icon tile top left, the title is the picture */
-.txt .cb { justify-content: flex-end; gap: 18px; min-height: 200px; padding: 22px; }
+.txt .cb { justify-content: flex-end; gap: 18px; min-height: 200px; padding: var(--pad); }
 .txt .ct { font-size: clamp(24px, 2.2vw, 34px); }
 .txt.big .ct { font-size: clamp(28px, 3vw, 44px); }
 .txt .tico { margin-bottom: auto; padding-bottom: 0; }
-.tico { display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 18px; border-radius: 16px; background: #ffffff14; color: var(--paper); font-size: 26px; }
+.tico { display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 18px; border-radius: var(--r-in); background: #ffffff14; color: var(--paper); font-size: 26px; }
 .c-paper .tico { background: #0f0e1312; color: var(--paper-ink); } .c-blue .tico { background: var(--ink); color: var(--blue-live); }
 .txt.big .tico { width: 64px; height: 64px; font-size: 32px; border-radius: 20px; }
 .note .ct { font: 600 18px/1.35 var(--sans); } .note .cb { min-height: 0; justify-content: center; }
 /* link-out cards: a circular arrow button in the corner (the whole card is the link, so this is the visible affordance, not a second target) */
-.goi { position: absolute; z-index: 2; top: 16px; right: 16px; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #ffffff1c; color: var(--paper); font-size: 19px; transition: background .3s var(--ease), color .3s var(--ease), transform .3s var(--ease); }
+.goi { position: absolute; z-index: 2; top: var(--pad, 16px); right: var(--pad, 16px); display: grid; place-items: center; width: var(--ctl, 40px); height: var(--ctl, 40px); border-radius: 50%; background: #ffffff1c; color: var(--paper); font-size: 19px; transition: background .3s var(--ease), color .3s var(--ease), transform .3s var(--ease); }
 .c-paper .goi { background: #0f0e1314; color: var(--paper-ink); } .c-blue .goi { background: var(--ink); color: var(--paper); }
 a.card:hover .goi, a.card:focus-visible .goi { background: var(--paper); color: var(--ink); transform: rotate(45deg); }
 .c-paper:hover .goi, .c-paper:focus-visible .goi { background: var(--ink); color: var(--paper); } .c-blue:hover .goi, .c-blue:focus-visible .goi { background: var(--paper); color: var(--ink); }
@@ -159,10 +159,10 @@ a.card:hover .goi, a.card:focus-visible .goi { background: var(--paper); color: 
 .compact .goi { top: 50%; margin-top: -20px; }
 .compact .ct { font-size: clamp(22px, 2vw, 30px); }
 /* chips over thumbnails: blurred dark pill, bottom right (duration, engine, kind) */
-.chip { position: absolute; z-index: 1; right: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px 0 8px; border-radius: 999px; background: #0f0e13c4; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); color: var(--paper); font: 700 12.5px/1 var(--sans); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+.chip { position: absolute; z-index: 1; right: var(--pad, 12px); bottom: var(--pad, 12px); display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px 0 8px; border-radius: 999px; background: #0f0e13c4; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); color: var(--paper); font: 700 12.5px/1 var(--sans); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
 .chip .ic { font-size: 14px; opacity: .85; }
 /* play button: a blurred, tinted disc with the play glyph; the same on clips, videos and the featured player */
-.play { position: absolute; z-index: 1; left: 14px; bottom: 14px; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: #0f0e13a8; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: inset 0 0 0 1.5px #ffffff30; color: var(--paper); font-size: 22px; transition: background .3s var(--ease), color .3s var(--ease), transform .3s var(--ease), box-shadow .3s var(--ease); }
+.play { position: absolute; z-index: 1; left: var(--pad, 14px); bottom: var(--pad, 14px); display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: #0f0e13a8; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: inset 0 0 0 1.5px #ffffff30; color: var(--paper); font-size: 22px; transition: background .3s var(--ease), color .3s var(--ease), transform .3s var(--ease), box-shadow .3s var(--ease); }
 .play .ic { margin-left: 2px; }
 :is(.card, .vid):is(:hover, :focus-visible) .play { background: var(--blue); color: var(--ink); transform: scale(1.08); box-shadow: none; }
 .vid .play { width: 68px; height: 68px; font-size: 28px; left: 18px; bottom: 18px; }
@@ -195,7 +195,7 @@ a.card:hover .goi, a.card:focus-visible .goi { background: var(--paper); color: 
 .crow { margin: 14px 0 0; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; max-width: none; }
 .cb .crow { margin-top: 18px; }
 @media (max-width: 430px) { .crow .btn-sm { padding: 0 14px; gap: 7px; } .crow { gap: 8px; } }
-.pclose { position: absolute; z-index: 3; top: 12px; right: 12px; opacity: 0; }
+.pclose { position: absolute; z-index: 3; top: var(--pad, 12px); right: var(--pad, 12px); opacity: 0; }
 .playing :is(.cm, .thumb):is(:hover, :focus-within) .pclose, .pclose:focus-visible { opacity: 1; }
 @media (hover: none) { .pclose { opacity: 1; } }
 .playing .vm { display: none; }
@@ -205,26 +205,35 @@ a.card:hover .goi, a.card:focus-visible .goi { background: var(--paper); color: 
 @media (prefers-reduced-motion: reduce) { * { transition-duration: .01s !important; animation-duration: .01s !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; } }
 
 /* ===== bento: the home page and the inner index pages =====
-   One dark canvas, tiles of three sizes (1x1, 2x1, 2x2) packed on a square unit grid with small even gaps. Every tile is one idea: a picture, a big word or
-   number, or a brand mark, plus a short title bottom left. The column count follows the width of the bento itself (container query), not the window:
-   4 from 880px, 3 from 640px, else 2. app.js sets the width of the one data-flex tile so the last row is always full. */
+   One dark canvas, tiles of three sizes (1x1, 2x1, 2x2) packed on a square unit grid. Every tile is one idea: a picture, a big word or number, or a brand mark, plus a short title bottom left.
+   ONE SPACING SYSTEM. Everything below is derived from a few tokens, never per component:
+   - :root --gap is the space between tiles; --cgap (2x) between the clusters of a bento; --sgap (5x) between bentos; --r the radius of every tile, card and player; --r-in (0.6x) for small inner surfaces.
+   - each .tile (and .card) defines, from its OWN short side (cqmin): --pad (every inset: text left and bottom, numerals and brand marks left and top, badges and corner buttons top, chips and the arrow top right,
+     the play disc bottom right), --ctl (height of a badge, chip or corner button), --tt-fs / --ts-fs (title and caption). A 2x1 tile has the short side of a 1x1, so its insets and type match; a 2x2 doubles them.
+   - the column count follows the bento's own width (container query): 4 from 880px, 3 from 640px, else 2. app.js sets the width of the one data-flex tile so the last row is always full.
+   Custom properties holding cq units are substituted where they are used, so they resolve against the tile (the nearest container) when used by its children, which is the only place they are used. */
+:root { --gap: 12px; --r: 20px; }
+@media (min-width: 640px) { :root { --gap: 14px; --r: 26px; } }
+@media (min-width: 900px) { :root { --gap: 16px; --r: 28px; } }
+:root { --cgap: calc(var(--gap) * 2); --sgap: calc(var(--gap) * 5); --r-in: calc(var(--r) * .6); }
 .bsec { position: relative; scroll-margin-top: 24px; }
 .anc { position: absolute; top: -24px; left: 0; width: 1px; height: 1px; }
-.cards .bsec + .bsec, .cards .bsec + .duo, .cards .duo + .bsec { margin-top: clamp(40px, 6vw, 72px); }
-.pgw .bsec + .bsec { margin-top: var(--s6); }
-.duo { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(40px, 6vw, 72px) 16px; margin-top: clamp(40px, 6vw, 72px); }
+.cards .bsec + .bsec, .cards .bsec + .duo, .cards .duo + .bsec { margin-top: var(--sgap); }
+.pgw .bsec + .bsec { margin-top: var(--sgap); }
+.duo { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sgap) var(--gap); margin-top: var(--sgap); }
 .cards .bsec:first-child { margin-top: 0; }
 .cards .duo .bsec + .bsec { margin-top: 0; }
-@media (min-width: 1100px) { .duo { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; } }
-.sh { display: flex; align-items: baseline; justify-content: space-between; gap: 6px 20px; flex-wrap: wrap; margin: 0 4px 14px; }
-.sh h2 { margin: 0; font: 800 14px/1.2 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+@media (min-width: 1100px) { .duo { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); } }
+/* section label: its left edge is the grid's left edge (optical: the capital's side bearing is pulled back) and its link ends on the grid's right edge */
+.sh { display: flex; align-items: baseline; justify-content: space-between; gap: 6px 20px; flex-wrap: wrap; margin: 0 0 var(--gap); }
+.sh h2 { margin: 0 0 0 -.07em; font: 800 14px/1.2 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
 .sl { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: -14px -8px -14px 0; padding: 0 8px; border-radius: 999px; font: 700 14px/1 var(--sans); color: var(--mute); transition: color .25s var(--ease); }
 .sl:hover { color: var(--text); } .sl:hover .ic-end { transform: translateX(2px); } .sl .ic-end { width: 1em; height: 1em; }
 .sl-note { display: block; min-height: 0; margin: 0; padding: 0; font-weight: 500; max-width: 70ch; }
 .bq { container-type: inline-size; }
-.bento { --gap: 12px; --cols: 2; --r: 20px; --cgap: 36px; display: flex; flex-direction: column; gap: var(--cgap); }
-@container (min-width: 640px) { .bento { --cols: 3; --gap: 14px; --r: 26px; --cgap: 44px; } }
-@container (min-width: 880px) { .bento { --cols: 4; --gap: 16px; --r: 28px; --cgap: 52px; } }
+.bento { --cols: 2; display: flex; flex-direction: column; gap: var(--cgap); }
+@container (min-width: 640px) { .bento { --cols: 3; } }
+@container (min-width: 880px) { .bento { --cols: 4; } }
 /* a cluster is one project: its own packed grid. The bento only stacks clusters, so a tile can never end up inside another project's group, whatever the column count. */
 .cl { display: grid; gap: var(--gap); grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); grid-auto-rows: calc((100cqw - var(--gap) * (var(--cols) - 1)) / var(--cols)); grid-auto-flow: dense; }
 /* spans by column count: x4 is two wide only while the bento has four columns; fxC-N is the default width of the cluster's flex tile at C columns (what app.js computes, so the first paint is already whole) */
@@ -232,7 +241,8 @@ a.card:hover .goi, a.card:focus-visible .goi { background: var(--paper); color: 
 @container (min-width: 640px) { .fx3-1 { grid-column: span 1; } .fx3-2 { grid-column: span 2; } .fx3-3 { grid-column: span 3; } }
 @container (min-width: 880px) { .x4 { grid-column: span 2; } .fx4-1 { grid-column: span 1; } .fx4-2 { grid-column: span 2; } .fx4-3 { grid-column: span 3; } .fx4-4 { grid-column: span 4; } }
 
-.tile { position: relative; display: block; min-width: 0; min-height: 0; border-radius: var(--r); overflow: hidden; isolation: isolate; background: var(--ink-2); color: var(--text); container-type: size; scroll-margin-top: 24px; }
+.tile { --pad: clamp(12px, 6.5cqmin, 44px); --ctl: clamp(28px, 11.5cqmin, 44px); --tt-fs: clamp(15px, 7cqmin, 48px); --ts-fs: clamp(13px, 3.4cqmin, 18px); --lsb-t: calc(var(--tt-fs) * .07);
+  position: relative; display: block; min-width: 0; min-height: 0; border-radius: var(--r); overflow: hidden; isolation: isolate; background: var(--ink-2); color: var(--text); container-type: size; scroll-margin-top: 24px; }
 .tile:focus-visible { outline: 3px solid var(--blue-live); outline-offset: 3px; }
 .w2 { grid-column: span 2; } .lead { grid-row: span 2; }
 /* picture tiles: the media fills the tile, a gradient under the title */
@@ -246,22 +256,24 @@ a.tile:hover .tbg img, a.tile:hover .tbg video { transform: scale(calc(var(--z, 
 .tpaper { background: var(--paper); }
 .tm-nopic .tbg { display: grid; place-items: center; background: linear-gradient(150deg, #2a2340, var(--ink-2)); }
 .tm-nopic .ghost { width: 34cqi; height: 34cqi; opacity: .22; }
-.tcap { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; display: flex; align-items: flex-end; gap: 10px; padding: max(12px, 6.5cqi); min-width: 0; }
-.w2 .tcap { padding-right: 88px; } .t-link .tcap, .t-stat .tcap { padding-right: max(12px, 6.5cqi); }
+/* the text block: left and bottom at --pad; a 2x1 picture tile keeps the play disc's room on the right */
+.tcap { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; display: flex; align-items: flex-end; gap: calc(var(--pad) * .5); padding: var(--pad); min-width: 0; }
+.w2 .tcap { padding-right: calc(var(--pad) * 2 + var(--ctl) * 1.5); } .t-link .tcap, .t-stat .tcap { padding-right: var(--pad); }
 .tx { min-width: 0; }
-.tt { margin: 0; font: 750 clamp(15px, 7.5cqi, 24px)/1.1 var(--display); letter-spacing: var(--dtrack); text-wrap: balance; overflow-wrap: break-word; color: var(--paper); }
-.w2 .tt { font-size: clamp(18px, 4.2cqi, 30px); } .lead .tt { font-size: clamp(22px, 6.4cqi, 46px); }
-.ts { margin: 5px 0 0; font: 600 clamp(13px, 4.2cqi, 16px)/1.3 var(--sans); color: #f1ece1d0; text-wrap: balance; }
-.gart { flex: none; width: clamp(30px, 13cqi, 52px); aspect-ratio: 3 / 4; object-fit: cover; border-radius: 7px; box-shadow: 0 0 0 1.5px #ffffff48, 0 4px 14px #0009; background: var(--ink-3); }
-.bdg { position: absolute; z-index: 2; top: max(10px, 3.6cqi); left: max(10px, 3.6cqi); display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; color: #fff; font-size: 18px; box-shadow: 0 2px 10px #0006; }
-.lead .bdg { width: 44px; height: 44px; font-size: 24px; }
+.tt { margin: 0 0 -.1em; padding: 0 .2em .1em 0; font: 750 var(--tt-fs)/1.1 var(--display); letter-spacing: var(--dtrack); text-wrap: balance; overflow-wrap: break-word; color: var(--paper); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
+.ts { margin: .32em 0 0; font: 600 var(--ts-fs)/1.3 var(--sans); color: #f1ece1d0; text-wrap: balance; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.ts, .tt { min-width: 0; }
+.gart { flex: none; width: clamp(30px, calc(var(--ctl) * 1.5), 52px); aspect-ratio: 3 / 4; object-fit: cover; border-radius: 7px; box-shadow: 0 0 0 1.5px #ffffff48, 0 4px 14px #0009; background: var(--ink-3); }
+/* top row: the platform badge (left), the chip or corner button (right), all one height and one inset */
+.bdg { position: absolute; z-index: 2; top: var(--pad); left: var(--pad); display: grid; place-items: center; width: var(--ctl); height: var(--ctl); border-radius: 50%; color: #fff; font-size: calc(var(--ctl) * .53); box-shadow: 0 2px 10px #0006; }
 .bdg-tw { background: #9146ff; } .bdg-yt { background: #f00; } .bdg-k { background: #0f0e13b8; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--paper); }
-.tile .chip { top: max(10px, 3.6cqi); right: max(10px, 3.6cqi); bottom: auto; }
-.tile .play { left: auto; right: max(12px, 4cqi); bottom: max(12px, 4cqi); z-index: 2; }
+.tile .chip { top: var(--pad); right: var(--pad); bottom: auto; height: var(--ctl); padding: 0 calc(var(--ctl) * .3) 0 calc(var(--ctl) * .24); gap: calc(var(--ctl) * .15); font-size: clamp(12px, calc(var(--ctl) * .38), 15px); }
+.tile .chip .ic { font-size: calc(var(--ctl) * .42); }
+.tile .play { left: auto; right: var(--pad); bottom: var(--pad); z-index: 2; width: calc(var(--ctl) * 1.5); height: calc(var(--ctl) * 1.5); font-size: calc(var(--ctl) * .62); }
 a.tile:hover .chip { background: var(--blue); color: var(--ink); }
 /* kind chip ("Short film") sits beside the platform badge */
-.tile .kchip { right: auto; left: calc(max(10px, 3.6cqi) + 34px + 8px); } .lead .kchip { left: calc(max(10px, 3.6cqi) + 44px + 8px); }
-.tile .kchip .ic { opacity: 1; }
+.tile .kchip { right: auto; left: calc(var(--pad) + var(--ctl) + var(--ctl) * .25); } .tile .kchip .ic { opacity: 1; }
+@container (max-width: 239px) { .tile .kchip { display: none; } }   /* a narrow tile has no room for the kind chip beside the badge and the duration */
 /* hover preview (app.js): a muted loop over the thumbnail, absolutely placed inside the media box so nothing shifts; the badge, chips and play button stay above it */
 /* the lead films' wide title-card thumbnails: the picture whole on black instead of the centre of a square */
 .tbg.fit-contain { background: #000; } .tbg.fit-contain img:not(.pv) { object-fit: contain; object-position: 50% 24%; }
@@ -269,32 +281,34 @@ a.tile:hover .chip { background: var(--blue); color: var(--ink); }
 .tbg .pv.on { opacity: 1; }
 .pvbar { position: absolute; z-index: 3; left: 0; right: 0; bottom: 0; height: 2px; background: var(--blue); opacity: .8; transform-origin: 0 50%; transform: scaleX(0); pointer-events: none; }
 a.tile:is(:hover, :focus-visible) .play { background: var(--blue); color: var(--ink); transform: scale(1.08); box-shadow: none; }
-/* stat tiles: a big word or number in the display face, one caption */
-/* cq units on a container's own properties resolve against the container above it, so the padding lives on the children, not on the tile */
+/* stat tiles: a big word or number in the display face (its unit set small beside it), one caption. The numeral's INK starts where the caption's does: the glyph's side bearing (--lsb, em, by first glyph) and the
+   caption's own bearing are compensated, and the top of the digits sits on --pad like a badge. cq units on a container's own properties resolve against the container above it, so the insets live on the children. */
 .t-stat { display: flex; flex-direction: column; justify-content: flex-start; background: var(--ink-3); }
-.num { display: block; font: 900 min(54cqh, 80cqw)/.8 var(--display); letter-spacing: -.01em; margin: max(14px, 7cqi) 0 0 max(12px, 6.5cqi); }
+.num { --lsb: .07; --num-h: clamp(48px, calc(69cqh - 49px), 170px); display: flex; flex-wrap: wrap; align-items: baseline; column-gap: .16em; font: 900 min(var(--num-h), calc((100cqw - 2 * var(--pad)) / var(--nem, 2.7)))/.8 var(--display); letter-spacing: -.01em; margin: calc(var(--pad) - .014em) var(--pad) 0 var(--pad); }
+.num .nv { margin-left: calc(var(--lsb-t) * .5 - var(--lsb) * 1em); }
+.num small { font: 800 .27em/1 var(--sans); letter-spacing: .01em; white-space: nowrap; }
+.num[data-len="1"] { --nem: .8; } .num[data-len="2"] { --nem: 1.4; } .num[data-len="3"] { --nem: 2; } .num[data-len="4"] { --nem: 2.55; } .num[data-len="5"] { --nem: 2.75; } .num[data-len="6"] { --nem: 3.3; }
+.num[data-g="0"] { --lsb: .072; } .num[data-g="1"] { --lsb: .09; } .num[data-g="2"] { --lsb: .07; } .num[data-g="3"] { --lsb: .052; } .num[data-g="4"] { --lsb: .059; }
+.num[data-g="5"] { --lsb: .069; } .num[data-g="6"] { --lsb: .092; } .num[data-g="7"] { --lsb: .106; } .num[data-g="8"] { --lsb: .055; } .num[data-g="9"] { --lsb: .051; } .num[data-g="Q"] { --lsb: .102; }
 .num.word { font-size: min(50cqh, 44cqw); }
-.t-stat.w2 .num { font-size: min(58cqh, 40cqw); }
 .t-stat .tcap { position: static; margin-top: auto; z-index: 1; }   /* the caption sits under the number in the flow, so the two can never overlap */
-.t-stat.tpaper { background: var(--paper); color: var(--paper-ink); } .tpaper .tt { color: var(--paper-ink); }
-.t-stat.tblue { background: var(--blue); color: var(--ink); } .tblue .tt { color: var(--ink); }
+.t-stat.tpaper { background: var(--paper); color: var(--paper-ink); } .tpaper .tt { color: var(--paper-ink); } .tpaper .ts { color: var(--paper-mute); }
+.t-stat.tblue { background: var(--blue); color: var(--ink); } .tblue .tt, .tblue .ts { color: var(--ink); }
 .tdim .tbg { z-index: -1; } .tdim .tbg img { opacity: .5; } .tdim::after { content: ""; position: absolute; inset: 0; z-index: 0; background: linear-gradient(to top, #0f0e13f2 0, #0f0e1366 55%, #0f0e1333); pointer-events: none; }
 .t-stat .num, .t-stat .lg { position: relative; z-index: 1; }
-/* year tiles: the year is the picture. Four digits are about 2.5em wide, so the size follows the width first */
-.t-year .num { font-size: min(32cqw, 54cqh); line-height: .85; }
-.t-year.x4 .num, .t-year.fx4-2 .num { font-size: min(32cqw, 54cqh); }
 .tink { background: var(--ink-3); } .tink .num { color: var(--blue-live); }
-.t-stat .lg-s { position: absolute; top: max(12px, 6.5cqi); left: max(12px, 6.5cqi); margin: 0; font-size: 28px; }
-/* link-out tiles: the brand mark large on the brand colour; the whole tile is the link */
+.t-stat .lg-s { position: absolute; top: var(--pad); left: var(--pad); margin: 0; font-size: calc(var(--ctl) * .8); }
+/* link-out tiles: the brand mark large on the brand colour, ink-aligned on the same left and top as the numerals (--lg-l / --lg-t: the mark's own empty margin, in em); the whole tile is the link */
 .t-link { display: flex; flex-direction: column; justify-content: flex-start; color: #fff; }
-.lg { display: block; font-size: min(30cqh, 84px); line-height: 1; margin: max(12px, 6.5cqi) 0 0 max(12px, 6.5cqi); }
+.lg { --lg-l: 0; --lg-t: 0; display: block; font-size: clamp(40px, 29cqmin, 96px); line-height: 1; margin: calc(var(--pad) - var(--lg-t) * 1em) 0 0 calc(var(--pad) - var(--lg-l) * 1em); }
 .lg .ic { width: 1em; height: 1em; vertical-align: top; }
-.t-link .tt { color: inherit; font-size: clamp(19px, 8.2cqi, 30px); } .t-link .ts { color: inherit; opacity: .92; }
+.lg[data-ic="b-twitch"] { --lg-l: .071; } .lg[data-ic="b-x"] { --lg-l: .011; } .lg[data-ic="b-itchdotio"] { --lg-t: .05; } .lg[data-ic="b-youtube"] { --lg-t: .148; } .lg[data-ic="compass"] { --lg-l: .094; --lg-t: .094; }
+.t-link .tt { color: inherit; } .t-link .ts { color: inherit; opacity: .92; }
 .tl-tw { background: #9146ff; } .tl-yt { background: #f00; } .tl-rd { background: #ff4500; color: #fff; }
 .tl-itch { background: #fa5c5c; color: var(--ink); }
 .tl-x { background: #000; box-shadow: inset 0 0 0 1px #ffffff26; }
 .tl-md, .tl-site { background: var(--paper); color: var(--paper-ink); }
-.tile .goi { top: max(12px, 4cqi); right: max(12px, 4cqi); width: 40px; height: 40px; background: #0000003d; color: #fff; }
+.tile .goi { top: var(--pad); right: var(--pad); width: var(--ctl); height: var(--ctl); font-size: calc(var(--ctl) * .48); background: #0000003d; color: #fff; }
 .tl-itch .goi, .tl-md .goi, .tl-site .goi, .tpaper .goi { background: #0f0e1320; color: var(--ink); }
 .tblue .goi { background: #0f0e1326; color: var(--ink); }
 a.tile:is(:hover, :focus-visible) .goi { background: var(--paper); color: var(--ink); transform: rotate(45deg); }
@@ -304,19 +318,19 @@ a.tile:hover .goi .ic { transform: rotate(-45deg); }
 .ldot { display: inline-block; width: .42em; height: .42em; margin-right: .35em; border-radius: 50%; background: #fff; vertical-align: .12em; animation: onair 2.8s var(--ease) infinite; }
 .ton { display: none; } [data-live="1"] .toff { display: none; } [data-live="1"] .ton { display: inline; }
 .t-note { display: grid; place-items: end start; background: transparent; box-shadow: inset 0 0 0 1.5px var(--line); }
-.t-note p { margin: max(14px, 6cqi); color: var(--mute); font: 500 clamp(13px, 4cqi, 16px)/1.4 var(--sans); }
-/* a playing tile grows to 2x2: the player on top, the title and the Close / Open buttons beneath */
-.tile.playing { grid-column: span 2; grid-row: span 2; display: flex; flex-direction: column; background: var(--ink-2); container-type: normal; }
+.t-note p { margin: var(--pad); color: var(--mute); font: 500 var(--ts-fs)/1.4 var(--sans); }
+/* a playing tile grows to 2x2: the player on top, the title and the Close / Open buttons beneath, on the same insets as a lead tile */
+.tile.playing { grid-column: span 2; grid-row: span 2; display: flex; flex-direction: column; background: var(--ink-2); }
 .playing .tp { position: relative; flex: none; aspect-ratio: 16 / 9; background: #000; animation: pin .18s var(--ease) both; }
 .playing .tp .vframe { animation: pin .18s var(--ease) both; }
-.playing .pb { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 16px 20px 18px; }
-.playing .pb .tt { font-size: clamp(18px, 2.2vw, 28px); } .playing .pb .crow { margin-top: 10px; }
-.playing .tp .pclose { opacity: 1; }
+.playing .pb { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: var(--pad); }
+.playing .pb .tt { -webkit-line-clamp: 2; line-clamp: 2; } .playing .pb .crow { margin-top: calc(var(--pad) * .4); }
+.playing .tp .pclose { opacity: 1; top: var(--pad); right: var(--pad); }
 @media (prefers-reduced-motion: reduce) { .tbg img, .tbg video, a.tile .goi, a.tile .play, .ic-end { transform: none !important; } .playing .tp, .playing .tp .vframe { animation: none; } .ldot { animation: none; } }
 /* X post tiles: the post text is the title (his words, trimmed); a text-only post is a typographic tile */
-.t-post .tt { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.t-post .play { left: calc(50% - 22px); right: auto; top: 26%; bottom: auto; width: 44px; height: 44px; font-size: 18px; } .t-post.lead .play { top: 38%; width: 60px; height: 60px; left: calc(50% - 30px); font-size: 24px; }
-.tp-text { background: var(--ink-3); } .tp-text .tcap { top: 0; align-items: flex-end; } .tp-text .tt { font-size: clamp(18px, 7cqi, 30px); line-height: 1.15; -webkit-line-clamp: 5; }
+.t-post .tt { -webkit-line-clamp: 3; line-clamp: 3; }
+.t-post .play { left: calc(50% - var(--ctl)); right: auto; top: 26%; bottom: auto; width: calc(var(--ctl) * 1.3); height: calc(var(--ctl) * 1.3); font-size: calc(var(--ctl) * .53); left: calc(50% - var(--ctl) * .65); } .t-post.lead .play { top: 38%; width: calc(var(--ctl) * 1.4); height: calc(var(--ctl) * 1.4); left: calc(50% - var(--ctl) * .7); font-size: calc(var(--ctl) * .56); }
+.tp-text { background: var(--ink-3); } .tp-text .tcap { top: 0; align-items: flex-end; } .tp-text .tt { -webkit-line-clamp: 5; line-clamp: 5; }
 
 /* ===== page transitions (cross-document View Transitions; vt.js names the tile being left or returned to) =====
    A tile's picture and title morph into the destination's hero picture ([data-hero]) and h1; the rest of the page cross-fades with a small rise. None under reduced motion. */
@@ -326,7 +340,7 @@ a.tile:hover .goi .ic { transform: rotate(-45deg); }
   .pg h1 { view-transition-name: hero-title; }
   .pg h1 { width: fit-content; max-width: 100%; }
   ::view-transition-group(hero-media), ::view-transition-group(hero-title) { animation-duration: 360ms; animation-timing-function: var(--ease); }
-  ::view-transition-group(hero-media) { overflow: clip; border-radius: 22px; }
+  ::view-transition-group(hero-media) { overflow: clip; border-radius: var(--r); }
   ::view-transition-old(hero-media), ::view-transition-new(hero-media) { height: 100%; object-fit: cover; }
   ::view-transition-old(root) { animation: vt-out 180ms ease both; }
   ::view-transition-new(root) { animation: vt-in 340ms var(--ease) 60ms both; }

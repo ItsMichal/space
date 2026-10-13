@@ -42,8 +42,14 @@ local static server (port 4310, `PORT=` to change). The package depends on `@spa
   `published`, dev-log `date`); never type a year, and no dated source means no year tile. Clips are inserted before the Twitch tile in the Twitch cluster.
 - Tile system: square-unit grid, sizes 1x1, 2x1, 2x2. Column count comes from the bento's own width (container query:
   4 from 880px, 3 from 640px, else 2). The single `data-flex` tile gets the width that fills the last row (`app.js`); a playing
-  tile grows to 2x2. Stat tiles take their numbers from content, never typed in. Link tiles use brand colours; platform
+  tile grows to 2x2. Stat tiles take their numbers from content (`stats.mjs`, re-derived by `check-links.mjs`), never typed in; a lone number gets a 1x1 or 2x1 tile (`x4`), never a stretched flex tile, and a cluster is balanced with sizes, not filler. Link tiles use brand colours; platform
   colours appear only on badges and link tiles. Click-to-play happens in place. Hover previews come from `public/previews/`.
+- Spacing system (`base.css`, bento section): ONE rule set, no per-component insets. `:root` has `--gap` (tiles, 12/14/16px at 640/900), `--cgap` (2x, between clusters), `--sgap` (5x, between bentos), `--r` (radius of
+  every tile, card and player) and `--r-in` (0.6x, small inner surfaces). Each `.tile` (and `.card`) derives from its OWN short side with `cqmin`: `--pad` (every inset: text left and bottom, numeral and brand mark ink left and top,
+  badge top and left, chip, corner arrow and close button top and right, play disc bottom right), `--ctl` (height of badge, chip, corner button), `--tt-fs` / `--ts-fs`. A 2x1 tile has the short side of a 1x1, so they match; a 2x2 doubles. Never
+  use `max(12px, 6.5cqi)` style insets on a component; use the tokens. Custom properties holding cq units are substituted where used, so use them only in a tile's children (they resolve against the tile). Optical alignment lives in
+  tables: `.num[data-g]` (side bearing of the display face's first glyph, em) and `.lg[data-ic]` (empty margin of the brand mark, em); a new leading glyph or icon needs a row. `scripts/check-spacing.mjs` asserts all of it
+  (box and ink positions, gaps, radius, one title size per tile size); run it with a server after any CSS change to tiles.
 - Icons: `icon('name')` returns an inline `<use>` into the generated sprite. Sources are Phosphor Fill (MIT) and Simple Icons
   (CC0) under `brand/icons/`, with their licences. To add one, copy only that SVG from the npm package (fetched into a temp
   dir, never added as a dependency) into the matching folder, rebuild, use `icon('name')`. Unknown names throw at build time.
@@ -118,6 +124,7 @@ node apps/halmic/scripts/check-social.mjs https://halmic.com --ua=Twitterbot/1.0
 npm run og -w @space/halmic      # rebuild public/og/*.jpg share cards (needs Chrome and sharp)
 PORT=4563 node apps/halmic/serve.mjs &
 node apps/halmic/scripts/check-holes.mjs http://localhost:4563   # bento packing; needs Chrome and a running server; NOT in npm test
+node apps/halmic/scripts/check-spacing.mjs http://localhost:4563  # one spacing system, at 1440/1024/768/390; same needs; NOT in npm test
 ```
 
 - `scripts/shot.mjs <url> <out> <w> <h> [flags]` takes headless Chrome screenshots over CDP. Flags: `full`, `mobile`, `jpg`,

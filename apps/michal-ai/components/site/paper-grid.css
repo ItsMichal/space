@@ -8,7 +8,13 @@
    Light is the primary theme; the dark variant applies only where the tokens go dark (`:root[data-reading]` on dark systems). */
 .paper-grid {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  /* The LARGE viewport: on iOS Safari the toolbar collapsing while the page scrolls changes the dynamic viewport (what
+     `inset: 0` follows) and would resize this layer and its canvas mid-scroll. vh is the large viewport there, lvh is exact. */
+  height: 100vh;
+  height: 100lvh;
   z-index: -2;
   pointer-events: none;
   contain: strict;
@@ -40,6 +46,15 @@
   height: 100%;
   opacity: 0;
   transition: opacity 1100ms ease;
+}
+.paper-grid__gl[data-still] {
+  /* iOS WebKit: taller than the layer by 480px (240 each side, see config.ts stillPad) so the parallax can be a compositor
+     transform instead of a redraw; the layer's `contain` clips the excess. */
+  inset: auto;
+  top: -240px;
+  left: 0;
+  height: calc(100% + 480px);
+  will-change: transform;
 }
 .paper-grid__gl[data-ready] {
   opacity: 1;

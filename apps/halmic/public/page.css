@@ -8,13 +8,13 @@
 .pg .crow { margin-top: var(--s3); }
 .gpage { display: grid; gap: var(--s4); grid-template-columns: 1fr; margin-bottom: var(--s6); }
 @media (min-width: 800px) { .gpage { grid-template-columns: 1fr 1fr; align-items: start; } }
-.gcover { width: 100%; border-radius: 18px; image-rendering: pixelated; }
-.pg .shots { display: flex; flex-wrap: wrap; gap: 16px; margin: var(--s4) 0; } .pg .shot { margin: 0; background: #fff; border-radius: 14px; overflow: hidden; } .pg .shot img { height: 120px; width: auto; max-width: none; }
+.gcover { width: 100%; border-radius: var(--r); image-rendering: pixelated; }
+.pg .shots { display: flex; flex-wrap: wrap; gap: 16px; margin: var(--s4) 0; } .pg .shot { margin: 0; background: #fff; border-radius: var(--r-in); overflow: hidden; } .pg .shot img { height: 120px; width: auto; max-width: none; }
 .lede2 { font: 600 clamp(20px, 2.4vw, 28px)/1.25 var(--display); letter-spacing: var(--dtrack); margin: 0 0 var(--s3); max-width: 36ch; }
 .pgw .grid + .gmeta { margin-top: var(--s3); }
 /* the dental logo in use: short silent loop with a pause button */
 .inuse-fig { margin: 0 0 var(--s4); max-width: 960px; }
-.inuse-wrap { position: relative; border-radius: 20px; overflow: hidden; background: var(--ink-3); }
+.inuse-wrap { position: relative; border-radius: var(--r); overflow: hidden; background: var(--ink-3); }
 .inuse-wrap video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; }
 .vtoggle { position: absolute; right: 14px; bottom: 14px; }
 .vtoggle .ic-play, .vtoggle.is-paused .ic-pause { display: none; } .vtoggle.is-paused .ic-play { display: inline-block; }
@@ -27,9 +27,9 @@
 .log ul, .log ol { padding-left: 1.3em; } .log li + li { margin-top: 6px; } .log li > ul, .log li > ol { margin-top: 6px; }
 .log hr { border: 0; border-top: 1px solid var(--line); margin: var(--s6) 0; }
 .log code { font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--ink-3); border-radius: 6px; padding: 1px 6px; }
-.log pre { overflow-x: auto; background: var(--ink-2); border-radius: 14px; padding: 16px 20px; max-width: 100%; } .log pre code { background: none; padding: 0; white-space: pre; font-size: 13.5px; }
-.log .fig { margin-inline: 0; } .log .fig img { width: 100%; height: auto; border-radius: 16px; display: block; } .log figcaption { margin-top: 8px; color: var(--mute); font-size: 14px; line-height: 1.4; }
-.log .callout { background: var(--ink-2); border-radius: 16px; padding: 16px 20px; border-left: 4px solid var(--blue-live); } .log .callout-tip { border-left-color: var(--paper); } .log .callout-warning { border-left-color: #e6a23c; }
+.log pre { overflow-x: auto; background: var(--ink-2); border-radius: var(--r-in); padding: 16px 20px; max-width: 100%; } .log pre code { background: none; padding: 0; white-space: pre; font-size: 13.5px; }
+.log .fig { margin-inline: 0; } .log .fig img { width: 100%; height: auto; border-radius: var(--r-in); display: block; } .log figcaption { margin-top: 8px; color: var(--mute); font-size: 14px; line-height: 1.4; }
+.log .callout { background: var(--ink-2); border-radius: var(--r-in); padding: 16px 20px; border-left: 4px solid var(--blue-live); } .log .callout-tip { border-left-color: var(--paper); } .log .callout-warning { border-left-color: #e6a23c; }
 .log .callout > * + * { margin-top: 10px; } .log .callout p, .log .callout li { font-size: 15px; line-height: 1.5; }
 .log .vfeat { max-width: 100%; margin-block: var(--s4); }
 .mtintro { display: grid; gap: var(--s6); margin: var(--s4) 0 var(--s6); } .mtintro .vfeat { margin: 0; }

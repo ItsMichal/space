@@ -81,7 +81,7 @@ for (const s of shots) {
     await sleep(2500)
     p = (await evalJs(`(document.querySelector('a[href^="/writing/"]')||{}).getAttribute?.('href') || '/writing'`)) ?? '/writing'
   }
-  await send('Page.navigate', { url: base + p })
+  await send('Page.navigate', { url: base + p + (process.env.Q ?? '') })
   for (let i = 0; i < 240; i++) { await sleep(500); if (await evalJs(`!!document.querySelector('.paper-grid__gl[data-ready]') || document.querySelector('.paper-grid')?.hasAttribute('data-fallback')`)) break }
   await sleep(1800)
   if (s.forceReading) await evalJs(`document.documentElement.setAttribute('data-reading','')`)
