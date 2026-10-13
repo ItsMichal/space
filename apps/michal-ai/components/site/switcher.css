@@ -113,3 +113,12 @@
     display: none;
   }
 }
+
+/* the paired-piece link inside a project facts card: its text can wrap in the narrow Links column, so the marks follow the first line */
+.fr dd a[rel="me"] {
+  align-items: baseline;
+}
+.fr dd a[rel="me"] > svg:first-child {
+  position: relative;
+  top: 2px;
+}
