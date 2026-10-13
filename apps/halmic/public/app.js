@@ -1,6 +1,7 @@
 // halmic behaviour: live/offline state from /api/live, bar meters (the logotype's bars as a level meter),
 // click-to-load video (youtube-nocookie only after interaction) and Twitch clips, played in place inside their card. No dependencies.
 // Testing override: ?live=1 (or ?live=0) forces the state and skips the fetch; with ?live=1 you can add &game=Name.
+// Clips are inserted before the Twitch tile, inside the Twitch cluster.
 // ?clips=demo swaps in six fake clips (local video thumbnails, stand-in game art) and skips the fetch (layout testing; the embed will not load a real clip);
 // the first four demo clips use real clip ids, so their hover previews (public/previews/clip-<id>) play; &n=3 shows only three, ?clips=none none (the Watch bento then holds videos only).
 (() => {
@@ -237,7 +238,7 @@
     }
   }
 
-  // ---- bentos: the one tile marked data-flex gets the width that fills the bento's last row. The column count is the bento's own (--cols, set by a container query). ----
+  // ---- clusters: the one tile marked data-flex gets the width that fills its cluster's last row. The column count is the bento's own (--cols, set by a container query). ----
   const spanOf = (v) => +(/span (\d+)/.exec(v)?.[1] ?? 1);
   function fit(b) {
     const flex = b.querySelector(':scope > [data-flex]');
@@ -249,7 +250,7 @@
   }
   const bentos = [...document.querySelectorAll('.bento')];
   let refitQueued = false;
-  function refit() { if (refitQueued) return; refitQueued = true; requestAnimationFrame(() => { refitQueued = false; bentos.forEach(fit); }); }
+  function refit() { if (refitQueued) return; refitQueued = true; requestAnimationFrame(() => { refitQueued = false; document.querySelectorAll('.cl').forEach(fit); }); }
   if (bentos.length) { const ro = new ResizeObserver(refit); bentos.forEach((b) => ro.observe(b)); refit(); }
 
   // ---- the Twitch tile: "Live now" comes from the same data-live the hero uses; the game name is copied from the hero's status text, no second fetch ----
@@ -288,7 +289,7 @@
   function renderClips(clips) {
     closePlayer();
     document.querySelectorAll('[data-clipcard]').forEach((n) => n.remove());
-    clips.forEach((c, i) => { const at = document.querySelector(`[data-cs~="${i}"]`) ?? twitchTile; at.before(clipTile(c, i)); });
+    clips.forEach((c, i) => twitchTile.before(clipTile(c, i)));
     refit();
   }
   if (twitchTile) {
