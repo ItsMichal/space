@@ -28,7 +28,7 @@
 .hero-globe--slot {
   /* The canvas is --hg-k times the visible globe box (room for the satellite shell, which is drawn far outside the globe); the
      box keeps its centre and the sphere keeps its size (SPHERE_FRACTION = 0.94 / SHELL_SCALE in globe/renderer.ts). */
-  --hg-k: 1.55;
+  --hg-k: 2.2;
   --hg-w: 118vw;
   display: block;
   position: absolute;
@@ -154,7 +154,7 @@
 /* Quiet tertiary line beside the reactions, like the view count under a post on medium.com and the counts on github.com. */
 .reactionbar__views {
   margin: 0 0 0 auto;
-  font: 400 15px/22px var(--font-serif);
+  font: 400 var(--type-small-size)/22px var(--font-serif);
   color: var(--ink-muted);
   font-variant-numeric: tabular-nums lining-nums;
 }
@@ -169,7 +169,7 @@
   background: var(--paper-raised);
   color: var(--ink-muted);
   font-family: var(--font-serif);
-  font-size: 16px;
+  font-size: var(--type-small-size);
   cursor: pointer;
   transition: border-color 80ms cubic-bezier(0.65, 0, 0.35, 1), background-color 80ms cubic-bezier(0.65, 0, 0.35, 1), color 80ms cubic-bezier(0.65, 0, 0.35, 1);
   -webkit-tap-highlight-color: transparent;
@@ -188,7 +188,7 @@
 }
 .reactionbar__glyph {
   display: inline-block;
-  font-size: 19px;
+  font-size: var(--type-body-size);
   line-height: 1;
   transform: scale(var(--pop, 1));
 }
@@ -221,14 +221,14 @@
   background: color-mix(in srgb, var(--paper-raised) 92%, transparent);
   color: var(--ink-muted);
   font-family: var(--font-serif);
-  font-size: 13px;
+  font-size: var(--type-small-size);
   line-height: 1;
   cursor: pointer;
   transition: opacity 160ms ease, border-color 160ms ease;
   -webkit-tap-highlight-color: transparent;
 }
 .hl-mark span:first-child {
-  font-size: 13px;
+  font-size: var(--type-small-size);
 }
 .hl-mark:hover,
 .hl-add:hover {
@@ -271,7 +271,7 @@
   background: transparent;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 20px;
+  font-size: var(--type-body-size);
   line-height: 1;
   -webkit-tap-highlight-color: transparent;
 }
@@ -286,7 +286,7 @@
   position: absolute;
   right: 4px;
   bottom: 1px;
-  font-size: 10px;
+  font-size: var(--type-small-size);
   font-family: var(--font-serif);
   color: var(--ink-muted);
 }

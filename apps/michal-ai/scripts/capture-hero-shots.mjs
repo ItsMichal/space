@@ -41,11 +41,12 @@ ws.on('message', (d) => {
   const m = JSON.parse(String(d))
   if (m.id && pending.has(m.id)) pending.get(m.id)(m)
   if (m.method === 'Runtime.exceptionThrown') console.log('page error:', m.params.exceptionDetails.exception?.description ?? m.params.exceptionDetails.text)
-  if (m.method === 'Runtime.consoleAPICalled' && m.params.type === 'error') console.log('console.error:', m.params.args.map((a) => a.value ?? a.description).join(' ').slice(0, 300))
+  if (m.method === 'Runtime.consoleAPICalled' && (m.params.type === 'error' || m.params.type === 'warning')) console.log('console.error:', m.params.args.map((a) => a.value ?? a.description).join(' ').slice(0, 300))
 })
 const send = (method, params = {}) => new Promise((res) => { const i = ++id; pending.set(i, res); ws.send(JSON.stringify({ id: i, method, params })) })
 const ev = async (expression) => (await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true })).result?.result?.value
 await send('Page.enable')
+await send('Runtime.enable')
 
 await send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: Number(opt('dpr', 1)), mobile: W < 500 })
 const features = [{ name: 'prefers-color-scheme', value: flag('dark') ? 'dark' : 'light' }]
@@ -65,7 +66,18 @@ const shot = async (file) => {
   console.log('wrote', file)
 }
 if (opt('eval')) console.log(JSON.stringify(await ev(opt('eval'))))
-if (args.includes('--seq')) {
+if (args.includes('--sweep')) {
+  // --sweep N MS x0,y0,x1,y1: the mouse moves from (x0,y0) to (x1,y1) over N frames, a screenshot after each (out-1.png ...)
+  const i = args.indexOf('--sweep')
+  const N = Number(args[i + 1])
+  const [x0, y0, x1, y1] = args[i + 3].split(',').map(Number)
+  for (let k = 0; k < N; k++) {
+    const t = N === 1 ? 1 : k / (N - 1)
+    await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: x0 + (x1 - x0) * t, y: y0 + (y1 - y0) * t, pointerType: 'mouse' })
+    await sleep(Number(args[i + 2]))
+    await shot(out.replace(/\.png$/, `-${k + 1}.png`))
+  }
+} else if (args.includes('--seq')) {
   // --seq N MS: N screenshots MS apart (out-1.png, out-2.png, ...), e.g. a mesh ping travelling
   const i = args.indexOf('--seq')
   for (let k = 1; k <= Number(args[i + 1]); k++) {
