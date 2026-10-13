@@ -1,0 +1,4 @@
+{
+  "_note": "Showcase posts from the persona's X account, shown as the Posts bento on the home page (hidden while this list is empty). Fields: id, url, date (ISO), text (verbatim), media (file in public/posts/, optional), w, h, alt (what the image shows). Research on 2026-10-12 found no technical or creative showcase posts on the account (it has about a dozen posts, all 2019 Smash results and 2024 stream notes), so the list is empty on purpose.",
+  "posts": []
+}

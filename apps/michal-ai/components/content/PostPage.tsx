@@ -40,7 +40,7 @@ export function postMetadata(kind: PostKind, slug: string, parent?: string): Met
   if (!post.parent && getChildren(post.slug).length) {
     meta.alternates = {
       ...meta.alternates,
-      types: { 'application/rss+xml': [{ url: `/projects/${post.slug}/feed.xml`, title: `${post.title} — updates` }] },
+      types: { 'application/rss+xml': [{ url: `/projects/${post.slug}/feed.xml`, title: `${post.title} · updates` }] },
     }
   }
   return meta

@@ -9,7 +9,7 @@ import { ReactionBar } from './ReactionBar'
 export function LiveReactions({ postId }: { postId: string }) {
   return (
     <>
-      <div className="mt-space-12">
+      <div className="live-reactions reading__wide card surface mt-space-12" style={{ padding: 'var(--space-2) var(--card-pad)' }}>
         <ReactionBar postId={postId} />
       </div>
       {LIVE_BLOCK_REACTIONS ? <HighlightReactions postId={postId} /> : null}

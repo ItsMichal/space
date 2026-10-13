@@ -108,7 +108,7 @@ Week 5 Goals
 - Menus, UI, core game systems
   - No menus, yet, but yes UI and core
 - Make the Tutorial song in Ableton (potentially)
-  - Just not that high priority as making menus. Using existing music saves a lot of time for game dev— and can always come later
+  - Just not that high priority as making menus. Using existing music saves a lot of time for game dev, and can always come later
 :::
 
 Overall a much better week, and the game is really starting to take shape. Next week will most likely be continued polish, and looking to establish a strong feedback development cycle with testers. As we push into Week 6 and the halfway point, its going to be important to time the pivot from feature development to polish and experience-enhancing development with precision. The current target is Week 8, so that means planning out getting every single feature done in 2.5 weeks.

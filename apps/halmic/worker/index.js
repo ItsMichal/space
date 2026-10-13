@@ -1,4 +1,4 @@
-// halmic Worker: static assets plus GET /api/live (is halmictv live on Twitch?), GET /api/clips (top clips) and GET /api/clip-thumb/<id> (a clip's thumbnail, proxied so the page makes no third-party image requests). Plain module, no dependencies.
+// halmic Worker: static assets plus GET /api/live (is halmictv live on Twitch?), GET /api/clips (top clips) and GET /api/clip-thumb/<id> and GET /api/game-art/<id> (a clip's thumbnail and its game's box art, proxied so the page makes no third-party image requests). Plain module, no dependencies.
 // Secrets (wrangler secret put): TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET. Without them the endpoint answers "unknown" (never an error).
 // Only /api/* reaches this Worker (assets.run_worker_first); everything else is served straight from ./public.
 const CHANNEL = 'halmictv';
@@ -7,7 +7,9 @@ const HELIX_URL = `https://api.twitch.tv/helix/streams?user_login=${CHANNEL}`;
 const TOKEN_KEY = 'https://halmic.internal/twitch-token';   // synthetic cache key, never fetched
 const ID_KEY = 'https://halmic.internal/twitch-broadcaster-id';
 const THUMBS_KEY = 'https://halmic.internal/clip-thumbs';   // id -> Twitch CDN thumbnail url; server-side only, never in a response body
+const ART_KEY = 'https://halmic.internal/game-art';   // game id -> Twitch CDN box art url; server-side only
 const THUMBS_TTL = 7200, THUMB_MAX_BYTES = 2e6;
+const GAME_ID = /^\d+$/;
 const CDN_URL = /^https:\/\/[a-z0-9.-]+\.(?:jtvnw\.net|twitch\.tv)\//i;   // only Twitch's own image hosts are ever fetched
 const FRESH = 45, STALE = 300, UNKNOWN_MISSING = 300, UNKNOWN_ERROR = 60, CLIPS_FRESH = 3600, CLIPS_STALE = 86400, DAY = 86400, MAX_CLIPS = 6;
 const CLIP_ID = /^[A-Za-z0-9_-]+$/;
@@ -15,6 +17,7 @@ const CLIP_ID = /^[A-Za-z0-9_-]+$/;
 const mem = { token: null, exp: 0 };   // module-level token cache (per isolate)
 const idMem = { id: null, exp: 0 };    // broadcaster id, same idea
 const thumbMem = { map: null, exp: 0 };   // clip thumbnail urls, same idea
+const artMem = { map: null, exp: 0 };     // game box art urls, same idea
 
 // Pure: Helix /streams payload -> the status the page needs. No viewer counts on purpose.
 export function mapStreams(payload) {
@@ -54,7 +57,7 @@ async function getToken(env, deps, force) {
 }
 
 const deps_ = (deps) => ({ fetchFn: deps.fetchFn ?? ((...a) => fetch(...a)),   // never call the global through an object: workerd throws "Illegal invocation"
-   cache: deps.cache ?? globalThis.caches?.default, now: deps.now ?? Date.now(), state: deps.state ?? mem, ids: deps.ids ?? idMem, thumbs: deps.thumbs ?? thumbMem });
+   cache: deps.cache ?? globalThis.caches?.default, now: deps.now ?? Date.now(), state: deps.state ?? mem, ids: deps.ids ?? idMem, thumbs: deps.thumbs ?? thumbMem, arts: deps.arts ?? artMem });
 const hasSecrets = (env) => !!(env?.TWITCH_CLIENT_ID && env?.TWITCH_CLIENT_SECRET);
 
 // One Helix GET with the app token; a 401 (token revoked or expired early) refreshes the token once and retries.
@@ -80,12 +83,23 @@ export async function getLive(env, deps = {}) {
 }
 
 // Pure: Helix /clips payload (+ game id -> name map) -> the top 6 clips. Only these fields leave the Worker: no views, creators or Twitch thumbnail urls (the page gets /api/clip-thumb/<id> instead).
-export function mapClips(payload, games = {}) {
+export function mapClips(payload, games = {}, arts = {}) {
   const out = [];
   for (const c of payload?.data ?? []) {
     if (typeof c?.id !== 'string' || !CLIP_ID.test(c.id)) continue;
-    out.push({ id: c.id, title: String(c.title ?? ''), game: games[c.game_id] ?? '', duration: Math.max(0, Math.round(Number(c.duration) || 0)), url: typeof c.url === 'string' && c.url.startsWith('https://') ? c.url : `https://clips.twitch.tv/${c.id}`, createdAt: c.created_at ?? undefined, thumb: `/api/clip-thumb/${c.id}` });
+    out.push({ id: c.id, title: String(c.title ?? ''), game: games[c.game_id] ?? '', duration: Math.max(0, Math.round(Number(c.duration) || 0)), url: typeof c.url === 'string' && c.url.startsWith('https://') ? c.url : `https://clips.twitch.tv/${c.id}`, createdAt: c.created_at ?? undefined, thumb: `/api/clip-thumb/${c.id}`, ...(GAME_ID.test(String(c.game_id)) && typeof arts[c.game_id] === 'string' ? { gameArt: `/api/game-art/${c.game_id}` } : {}) });
     if (out.length === MAX_CLIPS) break;
+  }
+  return out;
+}
+
+// Pure: Helix /games payload -> { game id: box art url } (Twitch's {width}x{height} template filled in; only Twitch's own image hosts are kept). Kept in the Worker only.
+export function gameArts(payload) {
+  const out = {};
+  for (const g of payload?.data ?? []) {
+    if (typeof g?.id !== 'string' || !GAME_ID.test(g.id) || typeof g.box_art_url !== 'string') continue;
+    const u = g.box_art_url.replace('{width}', '188').replace('{height}', '250');
+    if (CDN_URL.test(u)) out[g.id] = u;
   }
   return out;
 }
@@ -123,39 +137,36 @@ export async function getClips(env, deps = {}) {
     const payload = await r.json();
     const top = mapClips(payload);
     const gids = [...new Set((payload?.data ?? []).filter((c) => top.some((t) => t.id === c.id)).map((c) => c.game_id).filter((g) => typeof g === 'string' && /^\d+$/.test(g)))];
-    let games = {};
+    let games = {}, arts = {};
     if (gids.length) {
       try {   // names are a nicety: any failure here just leaves the game blank
         const gr = await helixGet(`https://api.twitch.tv/helix/games?${gids.map((g) => `id=${g}`).join('&')}`, env, d);
-        if (gr.ok) games = Object.fromEntries(((await gr.json())?.data ?? []).map((g) => [g.id, String(g.name ?? '')]));
+        if (gr.ok) { const gp = await gr.json(); games = Object.fromEntries((gp?.data ?? []).map((g) => [g.id, String(g.name ?? '')])); arts = gameArts(gp); }
       } catch { /* ignore */ }
     }
     const thumbs = clipThumbs(payload);
     d.thumbs.map = thumbs; d.thumbs.exp = d.now + THUMBS_TTL * 1000;
     if (d.cache) await d.cache.put(THUMBS_KEY, new Response(JSON.stringify(thumbs), { headers: { 'cache-control': `max-age=${THUMBS_TTL}` } })).catch(() => {});
-    return { body: { clips: mapClips(payload, games), checkedAt: new Date(d.now).toISOString() }, maxAge: CLIPS_FRESH };
+    d.arts.map = arts; d.arts.exp = d.now + THUMBS_TTL * 1000;
+    if (d.cache) await d.cache.put(ART_KEY, new Response(JSON.stringify(arts), { headers: { 'cache-control': `max-age=${THUMBS_TTL}` } })).catch(() => {});
+    return { body: { clips: mapClips(payload, games, arts), checkedAt: new Date(d.now).toISOString() }, maxAge: CLIPS_FRESH };
   } catch (e) {
     console.warn('clips: twitch failed:', e?.message);
     return clipsUnknown(d.now, UNKNOWN_ERROR);
   }
 }
 
-async function thumbMap(d) {
-  if (d.thumbs.map && d.thumbs.exp > d.now) return d.thumbs.map;
-  const hit = d.cache && (await d.cache.match(THUMBS_KEY).catch(() => null));
+// id -> Twitch CDN url maps (clip thumbnails, game box art): module memory, then the edge cache, else null
+async function urlMap(slot, key, d) {
+  if (slot.map && slot.exp > d.now) return slot.map;
+  const hit = d.cache && (await d.cache.match(key).catch(() => null));
   const m = hit && (await hit.json().catch(() => null));
-  if (m && typeof m === 'object') { d.thumbs.map = m; d.thumbs.exp = d.now + 600 * 1000; return m; }
+  if (m && typeof m === 'object') { slot.map = m; slot.exp = d.now + 600 * 1000; return m; }
   return null;
 }
 
-// GET /api/clip-thumb/<id>: null = unknown clip (404); a Response otherwise (the image, or 502 if Twitch's CDN misbehaves).
-export async function getClipThumb(id, env, deps = {}) {
-  const d = deps_(deps);
-  if (!CLIP_ID.test(id)) return null;
-  let map = await thumbMap(d);
-  if (!map) { await getClips(env, deps); map = d.thumbs.map && d.thumbs.exp > d.now ? d.thumbs.map : null; }
-  const src = map?.[id];
-  if (typeof src !== 'string' || !CDN_URL.test(src)) return null;
+// Fetch one Twitch CDN image for the page: only an image/* answer under the size cap is passed on (502 otherwise).
+async function proxyImage(src, d) {
   const bad = new Response('bad gateway', { status: 502, headers: { 'cache-control': 'no-store', ...SEC } });
   try {
     const r = await d.fetchFn(src, { signal: AbortSignal.timeout(5000) });
@@ -167,6 +178,28 @@ export async function getClipThumb(id, env, deps = {}) {
   } catch { return bad; }
 }
 
+// GET /api/clip-thumb/<id>: null = unknown clip (404); a Response otherwise (the image, or 502 if Twitch's CDN misbehaves).
+export async function getClipThumb(id, env, deps = {}) {
+  const d = deps_(deps);
+  if (!CLIP_ID.test(id)) return null;
+  let map = await urlMap(d.thumbs, THUMBS_KEY, d);
+  if (!map) { await getClips(env, deps); map = d.thumbs.map && d.thumbs.exp > d.now ? d.thumbs.map : null; }
+  const src = map?.[id];
+  if (typeof src !== 'string' || !CDN_URL.test(src)) return null;
+  return proxyImage(src, d);
+}
+
+// GET /api/game-art/<id>: the box art of a game that one of the cached clips is from (numeric ids only); null = 404.
+export async function getGameArt(id, env, deps = {}) {
+  const d = deps_(deps);
+  if (!GAME_ID.test(id)) return null;
+  let map = await urlMap(d.arts, ART_KEY, d);
+  if (!map) { await getClips(env, deps); map = d.arts.map && d.arts.exp > d.now ? d.arts.map : null; }
+  const src = map?.[id];
+  if (typeof src !== 'string' || !CDN_URL.test(src)) return null;
+  return proxyImage(src, d);
+}
+
 const SEC = { 'x-content-type-options': 'nosniff', 'referrer-policy': 'strict-origin-when-cross-origin' };
 const json = (body, status, cc, extra = {}) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': cc, ...SEC, ...extra } });
 
@@ -174,13 +207,13 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
-    const th = url.pathname.match(/^\/api\/clip-thumb\/([A-Za-z0-9_-]+)$/);
+    const th = url.pathname.match(/^\/api\/clip-thumb\/([A-Za-z0-9_-]+)$/) ?? url.pathname.match(/^\/api\/game-art\/(\d+)$/);
     if (th) {
       if (request.method !== 'GET') return json({ error: 'method not allowed' }, 405, 'no-store', { allow: 'GET' });
       const cache = globalThis.caches?.default, key = new Request(`${url.origin}${url.pathname}`);
       const hit = cache && (await cache.match(key).catch(() => null));
       if (hit) return hit;
-      const res = await getClipThumb(th[1], env, { cache });
+      const res = await (url.pathname.startsWith('/api/game-art/') ? getGameArt : getClipThumb)(th[1], env, { cache });
       if (!res) return json({ error: 'not found' }, 404, 'no-store');
       if (cache && res.status === 200) ctx?.waitUntil(cache.put(key, res.clone()).catch(() => {}));
       return res;

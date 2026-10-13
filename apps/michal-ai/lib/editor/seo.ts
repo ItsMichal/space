@@ -3,7 +3,7 @@ import type { PostFrontmatter, PostKind } from '@/lib/content/types'
 import type { JSONContent } from './types'
 
 export const SITE_URL = 'https://michal.ai'
-export const TITLE_SUFFIX = ' — Michał Bodzianowski' // lib/seo postTitle() appends this to <title>
+export const TITLE_SUFFIX = ' · Michał Bodzianowski' // lib/seo postTitle() appends this to <title>
 export const FALLBACK_OG_IMAGE = '/michal.png'
 export const BASE_PATH: Record<PostKind, string> = { project: '/projects', article: '/writing' }
 
