@@ -1,4 +1,4 @@
-import type { MetadataRoute } from 'next'
+import type { MetadataRoute } from '@/lib/meta-types'
 import { getAllPosts, getBlogPosts, getTopLevel } from '@/lib/content'
 import { SITE_URL, postPath } from '@/lib/seo'
 

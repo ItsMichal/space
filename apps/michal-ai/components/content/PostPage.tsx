@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { Metadata, Viewport } from 'next'
+import type { Metadata, Viewport } from '@/lib/meta-types'
 import { getChildren, getPost, getSeriesOf } from '@/lib/content'
 import { OriginalLink } from '@/components/content/OriginalLink'
 import { OtherSiteEnd, otherSiteFor } from '@/components/content/OtherSiteLink'

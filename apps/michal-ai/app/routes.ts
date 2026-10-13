@@ -1,6 +1,31 @@
-import { index, route, type RouteConfig } from '@react-router/dev/routes'
+import { index, layout, route, type RouteConfig } from '@react-router/dev/routes'
 
-// Route table. Dev-only tools (writing editor, design labs) are appended in development only, so production never contains them.
+// Dev-only tools (the writing editor and the design labs). Only `react-router dev` sets NODE_ENV to "development"; any build leaves
+// them out, so production output can never contain them (asserted by lib/rr/routes.test.ts).
+const dev: RouteConfig =
+  process.env.NODE_ENV === 'development'
+    ? [
+        layout('dev/write-layout.tsx', [
+          route('write', 'dev/write-index.tsx'),
+          route('write/:slug', 'dev/write-edit.tsx'),
+          route('write/:slug/preview', 'dev/write-preview.tsx'),
+        ]),
+        route('cards', 'cards/page.dev.tsx'),
+        route('glass', 'glass/page.dev.tsx'),
+        route('glass/matrix', 'glass/matrix/page.dev.tsx'),
+        route('kitchen-sink', 'dev/kitchen-sink.tsx'),
+        route('micro', 'micro/page.dev.tsx'),
+        route('mood', 'mood/page.dev.tsx'),
+        route('mood/a', 'mood/a/page.dev.tsx'),
+        route('mood/b', 'mood/b/page.dev.tsx'),
+        route('mood/c', 'mood/c/page.dev.tsx'),
+        route('motion', 'motion/page.dev.tsx'),
+        route('presence', 'dev/presence.tsx'),
+        route('shaders', 'shaders/page.dev.tsx'),
+        route('ui', 'ui/page.dev.tsx'),
+      ]
+    : []
+
 export default [
   index('routes/home.tsx'),
   route('projects', 'routes/projects.tsx'),
@@ -16,5 +41,6 @@ export default [
   route('feed.xml', 'routes/feed-xml.ts'),
   route('feed.json', 'routes/feed-json.ts'),
   route('projects/:slug/feed.xml', 'routes/project-feed.ts'),
+  ...dev,
   route('*', 'routes/not-found.tsx'),
 ] satisfies RouteConfig

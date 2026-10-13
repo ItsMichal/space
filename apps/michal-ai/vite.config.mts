@@ -1,6 +1,7 @@
 import path from 'node:path'
 import { reactRouter } from '@react-router/dev/vite'
 import { defineConfig, type Plugin } from 'vite'
+import { devWriteApi } from './vite/dev-api'
 
 const root = import.meta.dirname
 
@@ -37,7 +38,7 @@ function dropUseClient(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [clientTwins(), dropUseClient(), reactRouter()],
+  plugins: [clientTwins(), dropUseClient(), devWriteApi(), reactRouter()],
   resolve: { alias: { '@': root } },
   ssr: { noExternal: [/^@space\//] },
   server: { port: 3100 },

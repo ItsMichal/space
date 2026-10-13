@@ -1,6 +1,6 @@
 // Turns the site's Metadata objects (lib/seo.ts, unchanged) into React Router `meta` descriptors, reproducing the tags Next emitted.
 // Pure and browser-safe: loaders call it at prerender time and hand the result to the route's `meta` export.
-import type { Metadata, Viewport } from 'next'
+import type { Metadata, Viewport } from '@/lib/meta-types'
 
 export type Descriptor = Record<string, unknown>
 
@@ -45,7 +45,7 @@ export function buildMeta(root: Metadata, page: Metadata, viewport: Viewport, sh
   }
 
   out.push({ name: 'viewport', content: VIEWPORT })
-  for (const tc of toArray(viewport.themeColor as unknown as string | { media?: string; color: string }[] | undefined)) {
+  for (const tc of toArray<string | { media?: string; color: string }>(viewport.themeColor)) {
     if (typeof tc === 'string') out.push({ name: 'theme-color', content: tc })
     else out.push({ name: 'theme-color', content: tc.color, ...(tc.media ? { media: tc.media } : {}) })
   }

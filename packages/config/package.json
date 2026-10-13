@@ -7,12 +7,14 @@
   "exports": {
     "./tsconfig.base.json": "./tsconfig.base.json",
     "./tsconfig.next.json": "./tsconfig.next.json",
+    "./tsconfig.react.json": "./tsconfig.react.json",
     "./eslint": "./eslint.mjs",
     "./prettier": "./prettier.json"
   },
   "files": [
     "tsconfig.base.json",
     "tsconfig.next.json",
+    "tsconfig.react.json",
     "eslint.mjs",
     "prettier.json"
   ],

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata } from '@/lib/meta-types'
 import { getArticleSeries, getBlogPosts, getProjectLogs } from '@/lib/content'
 import { groupWriting } from '@/lib/content/writing'
 import { WritingIndex } from '@/components/writing/WritingIndex'

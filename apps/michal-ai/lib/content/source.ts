@@ -24,4 +24,5 @@ export function loadPosts(includeDrafts: boolean): Post[] {
 }
 
 /** Browser-only hook (see source.client.ts); nothing to do where posts are read straight from disk. */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function registerPosts(_list: Omit<Post, 'body'>[]) {}

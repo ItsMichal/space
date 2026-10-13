@@ -1,6 +1,6 @@
 // The one place components get routing from. Replaces next/link and next/navigation; implemented on React Router.
 import { forwardRef, type AnchorHTMLAttributes, type ReactNode } from 'react'
-import { Link as RRLink, useLocation, useNavigate } from 'react-router'
+import { Link as RRLink, useInRouterContext, useLocation, useNavigate } from 'react-router'
 
 type LinkProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
   href: string
@@ -13,8 +13,11 @@ type LinkProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
 
 const isInternal = (href: string) => href.startsWith('/') && !href.startsWith('//')
 
-export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link({ href, prefetch: _p, scroll, replace, children, ...rest }, ref) {
-  if (!isInternal(href)) {
+export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link({ href, prefetch: _prefetch, scroll, replace, children, ...rest }, ref) {
+  // Outside a router (unit tests that render markdown to static HTML) a plain anchor is exactly what the router would output.
+  void _prefetch
+  const inRouter = useInRouterContext()
+  if (!inRouter || !isInternal(href)) {
     return (
       <a ref={ref} href={href} {...rest}>
         {children}
@@ -39,7 +42,7 @@ export function useRouter() {
     replace: (to: string) => void navigate(to, { replace: true }),
     back: () => void navigate(-1),
     refresh: () => window.location.reload(),
-    prefetch: (_to: string) => {},
+    prefetch: () => {},
   }
 }
 

@@ -10,6 +10,7 @@ export function registerPosts(list: Omit<Post, 'body'>[]) {
   posts = list.map((p) => ({ ...p, body: '' }) as Post)
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function loadPosts(_includeDrafts: boolean): Post[] {
   return posts
 }

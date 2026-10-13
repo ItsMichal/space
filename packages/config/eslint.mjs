@@ -7,7 +7,7 @@ import { FlatCompat } from '@eslint/eslintrc'
 export function nextConfig(baseDirectory) {
   const compat = new FlatCompat({ baseDirectory })
   return [
-    { ignores: ['.next/**', '.open-next/**', '.wrangler/**', 'node_modules/**', 'cloudflare-env.d.ts'] },
+    { ignores: ['.next/**', '.open-next/**', 'build/**', '.react-router/**', '.parity/**', '.cache/**', '.wrangler/**', 'node_modules/**', 'cloudflare-env.d.ts'] },
     ...compat.extends('next/core-web-vitals', 'next/typescript'),
     {
       rules: {

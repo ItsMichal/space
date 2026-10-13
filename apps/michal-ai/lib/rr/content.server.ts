@@ -1,7 +1,7 @@
 // Build-time helpers for route loaders (Node only: `.server` keeps this out of the browser bundle).
 import fs from 'node:fs'
 import path from 'node:path'
-import type { Metadata, Viewport } from 'next'
+import type { Metadata, Viewport } from '@/lib/meta-types'
 import { getImageInfo, type ImageInfo } from '@/lib/media/index'
 import type { Post } from '@/lib/content/types'
 import { buildMeta, type Descriptor, type ShareImage } from './head'
@@ -11,8 +11,9 @@ export type SlimPost = Omit<Post, 'body'>
 
 /** Posts go over the wire without their markdown body (pages that need prose get rendered output instead). */
 export const slim = <T extends Post>(p: T): SlimPost => {
-  const { body: _body, ...rest } = p
-  return rest
+  const rest: Partial<Post> = { ...p }
+  delete rest.body
+  return rest as SlimPost
 }
 export const slimAll = (ps: Post[]) => ps.map(slim)
 

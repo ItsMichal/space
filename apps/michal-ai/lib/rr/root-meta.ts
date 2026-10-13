@@ -1,5 +1,5 @@
 // The root layout's metadata and viewport (what app/layout.tsx exports for Next), without the Next font imports.
-import type { Metadata, Viewport } from 'next'
+import type { Metadata, Viewport } from '@/lib/meta-types'
 import { siteMetadata } from '@/lib/seo'
 import { profile } from '@/content/profile'
 

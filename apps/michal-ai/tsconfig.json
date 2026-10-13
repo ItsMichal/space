@@ -1,10 +1,12 @@
 {
-  "extends": "@space/config/tsconfig.next.json",
+  "extends": "@space/config/tsconfig.react.json",
   "compilerOptions": {
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "rootDirs": [".", "./.react-router/types"],
+    "types": ["vite/client"]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "worker"]
+  "include": ["**/*.ts", "**/*.tsx", "**/*.mts", ".react-router/types/**/*"],
+  "exclude": ["node_modules", "worker", "build", ".react-router", "scripts/parity"]
 }

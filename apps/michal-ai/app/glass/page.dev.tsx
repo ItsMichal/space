@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata } from '@/lib/meta-types'
 import { GlassDemo } from '@/components/glass/demo/GlassDemo'
 
 export const metadata: Metadata = { title: 'Glass', robots: { index: false, follow: false } }

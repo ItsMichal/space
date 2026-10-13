@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata } from '@/lib/meta-types'
 import Link from '@/lib/nav'
 import { ArrowRight } from 'lucide-react'
 
