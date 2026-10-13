@@ -106,6 +106,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     links: null as null | { a: Int32Array; b: Int32Array },
     pg: null as null | { a: Float32Array; ad: Float32Array; b: Float32Array; bd: Float32Array; t: Float32Array; next: Float32Array; hops: Int8Array; lastA: Int32Array; lastB: Int32Array },
     adj: null as null | Int32Array[],
+    stats: { frames: 0, satsDrawn: 0, portraitReveal: 0, pings: 0, firstFrameMs: 0, readyMs: 0 },
     freeze: false, fine: false, pin: null as null | [number, number],
     px: { x: 0, v: 0 }, py: { x: 0, v: 0 }, pk: { x: 0, v: 0 }, tx: 0, ty: 0, over: false, lastMove: 0,
   })
@@ -428,6 +429,13 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
         push: { radius: PUSH_RADIUS * s.sdpr, max: PUSH_MAX * s.sdpr },
       })
     }
+    const stt = s.stats
+    stt.frames++
+    stt.satsDrawn = s.sr && sat && satAlpha > 0.05 ? Math.ceil(sat.count / thinFor(base)) : 0
+    stt.portraitReveal = pspec ? reveal : 0
+    stt.pings = pings ? pings.count : 0
+    if (!stt.firstFrameMs) stt.firstFrameMs = Math.round(now)
+    if (!stt.readyMs && stt.satsDrawn > 0 && stt.portraitReveal >= 1 && satAlpha >= SAT_ALPHA * 0.99) stt.readyMs = Math.round(now)
     const L = layer.current
     if (L && s.size) {
       const rot = rotation(lat, lon)
@@ -575,6 +583,13 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     const s = st.current
     s.fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (process.env.NODE_ENV !== 'production') (window as unknown as { __globe?: unknown }).__globe = s
+    // A read-only, non-enumerable snapshot for scripts/hero-smoke.mjs (also in production builds): what has been drawn and whether the
+    // two contexts are alive.
+    Object.defineProperty(window, '__hero', {
+      configurable: true,
+      enumerable: false,
+      value: () => ({ ...s.stats, mode: s.mode, size: s.size, dpr: s.dpr, globe: s.r?.probe() ?? null, shell: s.sr?.probe() ?? null, hasShell: !!s.sr }),
+    })
     if (!s.fine) return
     if (process.env.NODE_ENV !== 'production') {
       // Dev only: ?ptr=fx,fy pins the pointer at that fraction of the globe box (y down), for screenshots.

@@ -390,6 +390,10 @@ void main(){
   o = vec4(uInk * a, a);
 }`
 
+// Programs a canvas never uses are compiled as empty stand-ins: shader compilation is the slow part of start-up on software GL.
+const DUMMY_VS = `#version 300 es\nvoid main(){ gl_Position = vec4(2.); }`
+const DUMMY_FS = `#version 300 es\nprecision lowp float; out vec4 o; void main(){ o = vec4(0.); }`
+
 function compile(gl: WebGL2RenderingContext, type: number, src: string): WebGLShader {
   const s = gl.createShader(type)!
   gl.shaderSource(s, src)
@@ -495,6 +499,8 @@ export interface GlobeRenderer {
   /** Text halo mask (single-channel in red, canvas px / 4). `fade` keeps the previous one for a cross-fade (draw `maskMix`). */
   setMask(mask: HTMLCanvasElement | null, fade: boolean): void
   destroy(): void
+  /** Debug probe: whether the context is alive and the last GL error (0 = none). Used by scripts/hero-smoke.mjs through window.__hero. */
+  probe(): { lost: boolean; error: number }
 }
 
 /** Returns null when WebGL2 is unavailable or setup fails (the caller shows the static image instead). */
@@ -515,13 +521,13 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[] | null, 
     const g = gl
     const prog = g.createProgram()!
     g.attachShader(prog, compile(g, g.VERTEX_SHADER, VS))
-    g.attachShader(prog, compile(g, g.FRAGMENT_SHADER, FS))
+    g.attachShader(prog, compile(g, g.FRAGMENT_SHADER, role === 'globe' ? FS : DUMMY_FS))
     g.linkProgram(prog)
     if (!g.getProgramParameter(prog, g.LINK_STATUS)) throw new Error(g.getProgramInfoLog(prog) ?? 'link')
 
     const sprog = g.createProgram()!
-    g.attachShader(sprog, compile(g, g.VERTEX_SHADER, SAT_VS))
-    g.attachShader(sprog, compile(g, g.FRAGMENT_SHADER, SAT_FS))
+    g.attachShader(sprog, compile(g, g.VERTEX_SHADER, role === 'shell' ? SAT_VS : DUMMY_VS))
+    g.attachShader(sprog, compile(g, g.FRAGMENT_SHADER, role === 'shell' ? SAT_FS : DUMMY_FS))
     g.bindAttribLocation(sprog, 0, 'aA')
     g.bindAttribLocation(sprog, 1, 'aB')
     g.linkProgram(sprog)
@@ -545,9 +551,9 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[] | null, 
       return o
     }
     const sl = uloc(sprog, ['uThin'])
-    const tprog = mk(TRAIL_VS, LINE_FS, true)
+    const tprog = role === 'shell' ? mk(TRAIL_VS, LINE_FS, true) : mk(DUMMY_VS, DUMMY_FS, true)
     const tl = uloc(tprog, ['uThin', 'uTrail'])
-    const qprog = mk(PING_VS, PING_FS, false)
+    const qprog = role === 'shell' ? mk(PING_VS, PING_FS, false) : mk(DUMMY_VS, DUMMY_FS, false)
     const ql = uloc(qprog, ['uPA[0]', 'uPAd[0]', 'uPB[0]', 'uPBd[0]', 'uPT[0]', 'uNowP', 'uHead'])
     const pprog = g.createProgram()!
     g.attachShader(pprog, compile(g, g.VERTEX_SHADER, VS))
@@ -798,6 +804,9 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[] | null, 
       },
       destroy() {
         g.getExtension('WEBGL_lose_context')?.loseContext()
+      },
+      probe() {
+        return { lost: g.isContextLost(), error: g.getError() }
       },
     }
   } catch (e) {
