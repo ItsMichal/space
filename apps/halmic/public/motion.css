@@ -130,7 +130,6 @@ html[data-motion="0"] *, html[data-motion="0"] *::before, html[data-motion="0"] 
     .mo body::before { content: ""; position: fixed; z-index: 30; top: 0; left: 0; right: 0; height: 2px; background: var(--blue); transform: scaleX(0); transform-origin: 0 50%; pointer-events: none; animation: prog linear both; animation-timeline: scroll(root); }
 
     /* brand marks on link tiles tilt and drift with the scroll */
-    .mo .t-link .lg .ic { transform-origin: 50% 50%; }
     .mo .t-link .lg { transform-origin: .5em .5em; animation: lg-tilt linear both; animation-timeline: view(); animation-range: cover; }
 
     /* dev logs: figures, callouts and videos rise in; headings get a marker that draws */

@@ -225,8 +225,8 @@ a:is(:hover, :focus-visible) > .goi .ic:not(.dup) { translate: 140% -140%; } a:i
 @media (min-width: 640px) { :root { --gap: 14px; --r: 26px; } }
 @media (min-width: 900px) { :root { --gap: 16px; --r: 28px; } }
 :root { --cgap: calc(var(--gap) * 2); --sgap: calc(var(--gap) * 5); --r-in: calc(var(--r) * .6); }
-.bsec { position: relative; scroll-margin-top: 24px; }
-.anc { position: absolute; top: -24px; left: 0; width: 1px; height: 1px; }
+.bsec { position: relative; scroll-margin-top: 16px; }   /* plus html scroll-padding-top: the fixed header */
+.anc { position: absolute; top: -16px; left: 0; width: 1px; height: 1px; }
 .cards .bsec + .bsec, .cards .bsec + .duo, .cards .duo + .bsec { margin-top: var(--sgap); }
 .pgw .bsec + .bsec { margin-top: var(--sgap); }
 .duo { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sgap) var(--gap); margin-top: var(--sgap); }
