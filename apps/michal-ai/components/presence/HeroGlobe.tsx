@@ -15,23 +15,33 @@ import './presence.css'
 
 const DEG_PER_S = 2.4
 const START = { lat: 18, lon: -100 } // must match GLOBE_FALLBACK_VIEW
-const FALLBACK_FRACTION = GLOBE_FALLBACK_VIEW.radius / (GLOBE_FALLBACK_VIEW.size / 2) / SHELL_SCALE
+const FALLBACK_FRACTION = GLOBE_FALLBACK_VIEW.radius / (GLOBE_FALLBACK_VIEW.size / 2)
 /** Constellation dot strength (of the ink alpha) and fade-in time. */
 const SAT_ALPHA = 0.7
 const SAT_FADE_MS = 1600
 /** Keep every n-th satellite (and trail): fewer on small canvases. `base` is the globe box in CSS px (the canvas is SHELL_SCALE larger). */
-const thinFor = (base: number) => (base < 520 ? 5 : 3)
+const thinFor = (base: number) => (base < 520 ? 4 : 2)
 /** Drawn orbit radius range, in globe radii. EXAGGERATED: the real shells are at 1.05 to 1.10 (docs/presence.md). */
-const SHELL: [number, number] = [1.34, 1.58]
-const trailFor = (base: number) => (base < 520 ? 45 : 90) // seconds of path
-const pingsFor = (base: number) => (base < 520 ? 8 : 20) // simultaneous mesh pings
+const SHELL: [number, number] = [1.9, 2.3]
+const trailFor = (base: number) => (base < 520 ? 180 : 300) // seconds of path (about 3 and 5 minutes)
+const pingsFor = (base: number) => (base < 520 ? 12 : 30) // simultaneous mesh pings (comets)
 /** The phrase's own enter animation: 160 ms delay + 320 ms, cubic-bezier(0.22, 1, 0.36, 1) (app/styles/craft.css, --ease-out-soft). */
 const CUT_MS = 480
-const PUSH_RADIUS = 100 // CSS px
-const PUSH_MAX = 12 // CSS px
+const PUSH_RADIUS = 130 // CSS px (gaussian field)
+const PUSH_MAX = 14 // CSS px
+const SPRING_W = 13 // rad/s, pointer field spring
+const SPRING_ZETA = 0.65 // under-damped: a little overshoot, a slow settle
+const WAKE_GAIN = 0.07 // px of drag per px/s of pointer velocity
+const PORTRAIT_REVEAL_MS = 900
+/** The shell canvas (satellites, trails, pings) is drawn at low resolution: at most this many pixels, at most 1.25 device pixels per CSS pixel. */
+const shellDprFor = (box: number, deviceDpr: number) => {
+  const cap = box < 520 ? 1.2e6 : 2.5e6
+  return Math.max(0.6, Math.min(1.25, deviceDpr, Math.sqrt(cap) / (box * SHELL_SCALE)))
+}
 const PTR_IDLE_MS = 1500
 
-const PORTRAIT_FADE_MS = 1400
+/** Portrait style shipped by default: 'dots' | 'glyphs' | 'mixed' (override with ?portrait=). */
+const PORTRAIT_DEFAULT: 'dots' | 'glyphs' | 'mixed' = 'dots'
 /** Hero layout switch: below this the portrait is a small bust beside the name, from here it stands over the globe. */
 const FIGURE_MIN_WIDTH = 768
 
@@ -84,16 +94,19 @@ interface Props {
 export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot', className = '' }: Props) {
   const wrap = useRef<HTMLDivElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
+  const shellCanvas = useRef<HTMLCanvasElement>(null)
   const layer = useRef<HTMLDivElement>(null)
   const [mode, setMode] = useState<'pending' | 'gl' | 'fallback'>('pending')
   const [active, setActive] = useState(false)
   const st = useRef({
-    lon: START.lon, size: 0, dpr: 1, raf: 0, last: 0, r: null as GlobeRenderer | null, reduced: false, active: false, mode: 'pending' as string,
+    lon: START.lon, size: 0, dpr: 1, raf: 0, last: 0, r: null as GlobeRenderer | null, sr: null as GlobeRenderer | null, sdpr: 1, devT: null as number | null, pingDemo: false, demoLink: -1, reduced: false, active: false, mode: 'pending' as string,
     sat: null as Packed | null, satFrom: 0,
     portrait: null as null | { aspect: number; from: number }, pspec: null as PortraitSpec | null, pstr: 0, globeA: 0.4,
     maskT0: -1e9,
     links: null as null | { a: Int32Array; b: Int32Array },
-    pg: null as null | { a: Float32Array; ad: Float32Array; b: Float32Array; bd: Float32Array; t: Float32Array; next: Float32Array },
+    pg: null as null | { a: Float32Array; ad: Float32Array; b: Float32Array; bd: Float32Array; t: Float32Array; next: Float32Array; hops: Int8Array; lastA: Int32Array; lastB: Int32Array },
+    adj: null as null | Int32Array[],
+    stats: { frames: 0, satsDrawn: 0, portraitReveal: 0, pings: 0, firstFrameMs: 0, readyMs: 0 },
     freeze: false, fine: false, pin: null as null | [number, number],
     px: { x: 0, v: 0 }, py: { x: 0, v: 0 }, pk: { x: 0, v: 0 }, tx: 0, ty: 0, over: false, lastMove: 0,
   })
@@ -169,6 +182,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     drawIn(document.getElementById('work-h'))
     const fade = animate && !s.reduced && s.active
     s.r.setMask(c, fade)
+    s.sr?.setMask(c, fade)
     s.maskT0 = fade ? performance.now() : -1e9
     kick()
   }
@@ -187,17 +201,19 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     let crop: PortraitSpec['crop'] = [0, 0, 1, 1]
     let edge = 0
     let sideTaper = false
+    let glyphH = 5
     if (vw >= FIGURE_MIN_WIDTH) {
       const hb = document.getElementById('work-h')?.getBoundingClientRect()
       // He runs down behind the first card (the card is on top and crops him): bottom is 150px below the heading.
       const anchor = hb ? hb.bottom + 10 : w.top + w.height * 0.7
-      bottom = anchor + 150
+      bottom = anchor + 230
       height = Math.max(300, Math.min(760, bottom - 64))
       width = height * 0.75
-      left = w.left + w.width / 2 + 0.04 * (w.width / SHELL_SCALE) - 0.44 * width
+      left = w.left + w.width / 2 + 0.04 * w.width - 0.44 * width
       cellW = sc >= 1.4 ? 2 : 2.4
+      glyphH = 5
       sideTaper = true
-      edge = 18 * sc // a short dot taper where the figure passes the right edge of the card
+      edge = 160 * sc // the figure dissolves over its last 160 CSS px (noise-broken), the card covers its upper part
     } else {
       // A small bust (head, neck, shoulders, upper jacket) at the top right. The picture is 3:4 and the head is about 0.56 of its
       // width tall, so a bust Wb wide has a head about 0.56 Wb tall (about 95 px at 375). The head must clear the name's last
@@ -223,29 +239,34 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
       height = 0.57 * (4 / 3) * Wb
       bottom = top + height
       cellW = 1.1
-      edge = 13 * sc // dots shrink to nothing over the last 13 CSS px, following the matte: no straight cut
+      glyphH = 3.5
+      edge = 38 * sc // the bust dissolves over its last 38 CSS px (noise-broken), no straight cut
     }
-    // Halftone dots on a square grid are the default at every DPR (measured at 1x and 2x: glasses, eyes and mouth hold; monospace
-    // glyphs read as texture). Glyphs (atlas from ui-monospace) are opt-in with `?portrait=glyphs`, desktop only.
+    // Style: halftone dots, characters sized by tone ("glyphs"), or fine dots in the face with characters elsewhere ("mixed"). Characters need
+    // device pixels to resolve (about 1.5x and up); at 1x the dots stand in. Whole device pixels everywhere (rect, cell): the grid lands on the
+    // pixel grid at every DPR and cannot beat against it into a moire.
     const force = new URLSearchParams(window.location.search).get('portrait')
-    const dots = vw < FIGURE_MIN_WIDTH || force !== 'glyphs'
-    const cellH = cellW / s.portrait.aspect
-    // Whole device pixels everywhere (rect origin and size, cell size, at least 3 px per cell): the dot grid then lands on the pixel
-    // grid at every DPR (1, 1.25, 1.5, 2, 3) and cannot beat against it into a moire.
+    const want = force === 'dots' || force === 'glyphs' || force === 'mixed' ? force : PORTRAIT_DEFAULT
+    const canGlyph = (sc >= 1.4 && vw >= FIGURE_MIN_WIDTH) || (force !== null && force !== "dots")
+    const style: 0 | 1 | 2 = want === 'dots' || !canGlyph ? 0 : want === 'glyphs' ? 1 : 2
     const cellPx = Math.max(3, Math.round(cellW * sc))
+    const gh = Math.max(6, Math.round(glyphH * sc))
+    const gw = Math.max(4, Math.round(gh * s.portrait.aspect))
     const rx = Math.round((left - w.left) * sc)
     const ry = Math.round(px - (bottom - w.top) * sc)
     s.pspec = {
       rect: [rx, ry, Math.round(width * sc), Math.round(height * sc)],
       crop,
-      cell: dots ? [cellPx, cellPx] : [2.6 * sc, (2.6 / s.portrait.aspect) * sc],
+      cell: style === 0 ? [cellPx, cellPx] : [gw, gh],
       sideTaper,
-      dots,
+      style,
+      time: 0,
+      reveal: 1,
+      anim: 0,
       strength: 1,
       edge,
       push: { radius: 90 * s.dpr, max: 5 * s.dpr },
     }
-    void cellH
   }
 
   const draw = () => {
@@ -258,16 +279,28 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     if (!s.reduced && s.active && !s.freeze) s.lon += DEG_PER_S * dt
     const lat = gl ? START.lat : GLOBE_FALLBACK_VIEW.lat
     const lon = gl ? s.lon : GLOBE_FALLBACK_VIEW.lon
-    // Pointer: critically damped follow, strength eases to 0 when idle or away (spring back). Nothing runs for k == 0.
+    // Pointer: an under-damped spring follows the mouse (a little overshoot, a slow settle) and its velocity becomes a wake, so dots flow
+    // around the cursor and close up behind it. Strength eases to 0 when idle or away. Nothing runs for k == 0.
     let ptr: { x: number; y: number; k: number } | undefined
+    let wake: [number, number] = [0, 0]
     if (s.fine && !s.reduced && s.r) {
       const wantK = s.pin || (s.over && now - s.lastMove < PTR_IDLE_MS) ? 1 : 0
       if (wantK > 0 && s.pk.x < 0.01) {
         s.px.x = s.tx; s.py.x = s.ty; s.px.v = s.py.v = 0
       }
       if (wantK > 0 || s.pk.x > 0.002) {
-        damp(s.px, s.tx, 16, dt); damp(s.py, s.ty, 16, dt); damp(s.pk, wantK, 9, dt)
+        const steps = 2
+        for (let i = 0; i < steps; i++) {
+          const h = dt / steps
+          s.px.v += (SPRING_W * SPRING_W * (s.tx - s.px.x) - 2 * SPRING_ZETA * SPRING_W * s.px.v) * h
+          s.py.v += (SPRING_W * SPRING_W * (s.ty - s.py.x) - 2 * SPRING_ZETA * SPRING_W * s.py.v) * h
+          s.px.x += s.px.v * h
+          s.py.x += s.py.v * h
+        }
+        damp(s.pk, wantK, 10, dt)
         s.pk.x = Math.max(0, Math.min(1, s.pk.x))
+        const cap = 20 * s.dpr
+        wake = [Math.max(-cap, Math.min(cap, s.px.v * WAKE_GAIN)), Math.max(-cap, Math.min(cap, s.py.v * WAKE_GAIN))]
         if (s.pk.x > 0.002) ptr = { x: s.px.x, y: s.py.x, k: s.pk.x }
       }
     }
@@ -275,56 +308,134 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     const nowS = Date.now() / 1000
     const satAlpha = sat ? SAT_ALPHA * (s.reduced ? 1 : Math.min(1, (now - s.satFrom) / SAT_FADE_MS)) : 0
     // Mesh pings: a few new ones per second, chosen from the precomputed neighbour table among links on the visible hemisphere.
-    const base = s.size / SHELL_SCALE
+    const base = s.size
+    const tClock = s.devT ?? now / 1000
     let pings: PingSet | undefined
     if (sat && s.links && s.links.a.length && !s.reduced && gl) {
-      const P = (s.pg ??= { a: new Float32Array(PING_CAP * 4), ad: new Float32Array(PING_CAP), b: new Float32Array(PING_CAP * 4), bd: new Float32Array(PING_CAP), t: new Float32Array(PING_CAP * 2), next: new Float32Array(PING_CAP) })
+      const P = (s.pg ??= { a: new Float32Array(PING_CAP * 4), ad: new Float32Array(PING_CAP), b: new Float32Array(PING_CAP * 4), bd: new Float32Array(PING_CAP), t: new Float32Array(PING_CAP * 2), next: new Float32Array(PING_CAP), hops: new Int8Array(PING_CAP), lastA: new Int32Array(PING_CAP), lastB: new Int32Array(PING_CAP) })
       const K = Math.min(PING_CAP, pingsFor(base))
-      const tNow = now / 1000
+      const tNow = tClock
       const rot = rotation(lat, lon)
       const zOf = (i: number) => {
         const [x, y, z] = positionEcef(sat.data, i, sat.refEpoch, nowS)
         const r = Math.hypot(x, y, z)
         return (rot[2] * y + rot[5] * z + rot[8] * x) / r
       }
-      for (let i = 0; i < K; i++) {
-        if (tNow < P.t[i * 2] + P.t[i * 2 + 1] || tNow < P.next[i]) continue
+      const launch = (i: number, ia: number, ib: number, dur: number) => {
+        for (let k = 0; k < 4; k++) {
+          P.a[i * 4 + k] = sat.data[ia * 5 + k]
+          P.b[i * 4 + k] = sat.data[ib * 5 + k]
+        }
+        P.ad[i] = sat.data[ia * 5 + 4]
+        P.bd[i] = sat.data[ib * 5 + 4]
+        P.t[i * 2] = tNow
+        P.t[i * 2 + 1] = dur
+        P.lastA[i] = ia
+        P.lastB[i] = ib
+      }
+      if (s.pingDemo && s.devT !== null) {
+        // Dev only (?pingdemo=1 with ?t=): one fixed ping on the clock s.devT, to look at the comet frame by frame. The link is the first
+        // visible one whose ends are in the open hero (not behind the first card), and demoPos reports where they are on screen.
+        const wr = wrap.current?.getBoundingClientRect()
+        const Rc = (s.size / 2) * SPHERE_FRACTION
+        const at = (i: number) => {
+          const [x, y, z] = positionEcef(sat.data, i, sat.refEpoch, nowS)
+          const rr = Math.hypot(x, y, z)
+          const shellR = SHELL[0] + (SHELL[1] - SHELL[0]) * Math.max(0, Math.min(1, (rr - 1.045) / 0.05))
+          const q = rotation(lat, lon)
+          const wx = (q[0] * y + q[3] * z + q[6] * x) / rr
+          const wy = (q[1] * y + q[4] * z + q[7] * x) / rr
+          return wr ? [wr.left + wr.width / 2 + wx * shellR * Rc, wr.top + wr.height / 2 - wy * shellR * Rc] : [0, 0]
+        }
+        const open = (i: number) => {
+          const [x, y] = at(i)
+          return y > 150 && y < 520 && x > 150 && x < window.innerWidth - 150
+        }
+        if (s.demoLink < 0) {
+          for (let li = 0; li < s.links.a.length && s.demoLink < 0; li++) if (zOf(s.links.a[li]) > 0.35 && zOf(s.links.b[li]) > 0.35 && open(s.links.a[li]) && open(s.links.b[li])) s.demoLink = li
+        }
+        if (s.demoLink >= 0) {
+          launch(0, s.links.a[s.demoLink], s.links.b[s.demoLink], 1.2)
+          P.t[0] = 0
+          ;(s as unknown as { demoPos?: number[][] }).demoPos = [at(s.links.a[s.demoLink]), at(s.links.b[s.demoLink])]
+        }
+        pings = { count: s.demoLink >= 0 ? 1 : 0, a: P.a, ad: P.ad, b: P.b, bd: P.bd, t: P.t, now: tNow }
+      }
+      for (let i = 0; i < K && !(s.pingDemo && s.devT !== null); i++) {
+        // a slot is free once its comet and the bloom at the receiver are done (duration x 1.3)
+        if (tNow < P.t[i * 2] + P.t[i * 2 + 1] * 1.3 || tNow < P.next[i]) continue
+        const dur = 0.8 + Math.random() * 0.8
+        // chains: the message carries on from the receiver to one of its neighbours (2 to 4 hops in total)
+        if (P.hops[i] > 0 && s.adj) {
+          const nb = s.adj[P.lastB[i]]
+          let to = -1
+          for (let tries = 0; tries < 6 && to < 0 && nb && nb.length; tries++) {
+            const c = nb[(Math.random() * nb.length) | 0]
+            if (c !== P.lastA[i] && zOf(c) > 0.3) to = c
+          }
+          P.hops[i]--
+          if (to >= 0) {
+            launch(i, P.lastB[i], to, dur)
+            P.next[i] = tNow + dur * 0.55
+            continue
+          }
+        }
         let done = false
         for (let tries = 0; tries < 14 && !done; tries++) {
           const li = (Math.random() * s.links.a.length) | 0
-          const ia = s.links.a[li]
-          const ib = s.links.b[li]
+          const flip = Math.random() < 0.5
+          const ia = flip ? s.links.b[li] : s.links.a[li]
+          const ib = flip ? s.links.a[li] : s.links.b[li]
           if (zOf(ia) > 0.3 && zOf(ib) > 0.3) {
-            for (let k = 0; k < 4; k++) {
-              P.a[i * 4 + k] = sat.data[ia * 5 + k]
-              P.b[i * 4 + k] = sat.data[ib * 5 + k]
-            }
-            P.ad[i] = sat.data[ia * 5 + 4]
-            P.bd[i] = sat.data[ib * 5 + 4]
-            P.t[i * 2] = tNow
-            P.t[i * 2 + 1] = 0.6 + Math.random() * 0.6
-            P.next[i] = tNow + P.t[i * 2 + 1] + 0.15 + Math.random() * 1.4
+            launch(i, ia, ib, dur)
+            P.hops[i] = Math.random() < 0.6 ? 1 + ((Math.random() * 3) | 0) : 0
+            P.next[i] = tNow + dur * 1.3 + 0.1 + Math.random() * 1.8
             done = true
           }
         }
         if (!done) P.next[i] = tNow + 0.25
       }
-      pings = { count: K, a: P.a, ad: P.ad, b: P.b, bd: P.bd, t: P.t, now: tNow }
+      if (!(s.pingDemo && s.devT !== null)) pings = { count: K, a: P.a, ad: P.ad, b: P.b, bd: P.bd, t: P.t, now: tNow }
     }
-    s.r?.draw(lat, lon, {
-      shell: SHELL,
-      trailSeconds: sat ? trailFor(base) : 0,
-      pings,
-      satT: sat ? nowS - sat.refEpoch : 0,
-      gmst: sat ? gmst(nowS) : 0,
-      satAlpha,
-      satThin: thinFor(base),
-      globeA: s.globeA,
-      maskMix: s.reduced ? 1 : easeOutSoft(Math.min(1, (now - s.maskT0) / CUT_MS)),
-      portrait: s.pspec && s.portrait ? { ...s.pspec, strength: s.pspec.strength * (s.reduced ? 1 : Math.min(1, (now - s.portrait.from) / PORTRAIT_FADE_MS)) } : undefined,
-      ptr,
-      push: { radius: PUSH_RADIUS * s.dpr, max: PUSH_MAX * s.dpr },
-    })
+    const maskMix = s.reduced ? 1 : easeOutSoft(Math.min(1, (now - s.maskT0) / CUT_MS))
+    const reveal = s.reduced ? 1 : s.devT !== null ? Math.min(1, s.devT / (PORTRAIT_REVEAL_MS / 1000)) : Math.min(1, (now - (s.portrait?.from ?? now)) / PORTRAIT_REVEAL_MS)
+    const ptime = s.devT ?? (now / 1000) % 3600
+    const pspec = s.pspec && s.portrait ? { ...s.pspec, time: ptime, reveal, anim: s.reduced ? 0 : 1 } : undefined
+    // The globe canvas: the dot-matrix sphere and the portrait, at the device pixel ratio, the size of the globe box.
+    s.r?.draw(lat, lon, { globeA: s.globeA, maskMix, portrait: pspec, ptr, wake, push: { radius: PUSH_RADIUS * s.dpr, max: PUSH_MAX * s.dpr } })
+    // The shell canvas: satellites, trails and pings at low resolution on a box SHELL_SCALE times larger, same centre. Pointer, rect and
+    // edge are converted from globe pixels to shell pixels through CSS pixels; the figure is only cleared (satellites give way behind him).
+    if (s.sr) {
+      const k = s.sdpr / s.dpr
+      const off = (s.size * (SHELL_SCALE - 1)) / 2
+      const toShell = (v: number) => (v / s.dpr + off) * s.sdpr
+      const sptr = ptr ? { x: toShell(ptr.x), y: toShell(ptr.y), k: ptr.k } : undefined
+      const sp = pspec
+        ? { ...pspec, knockoutOnly: true, rect: [toShell(pspec.rect[0]), toShell(pspec.rect[1]), pspec.rect[2] * k, pspec.rect[3] * k] as [number, number, number, number], edge: pspec.edge * k }
+        : undefined
+      s.sr.draw(lat, lon, {
+        shell: SHELL,
+        trailSeconds: sat ? trailFor(base) : 0,
+        pings,
+        satT: sat ? nowS - sat.refEpoch : 0,
+        gmst: sat ? gmst(nowS) : 0,
+        satAlpha,
+        satThin: thinFor(base),
+        globeA: s.globeA,
+        maskMix,
+        portrait: sp,
+        ptr: sptr,
+        wake: [wake[0] * k, wake[1] * k],
+        push: { radius: PUSH_RADIUS * s.sdpr, max: PUSH_MAX * s.sdpr },
+      })
+    }
+    const stt = s.stats
+    stt.frames++
+    stt.satsDrawn = s.sr && sat && satAlpha > 0.05 ? Math.ceil(sat.count / thinFor(base)) : 0
+    stt.portraitReveal = pspec ? reveal : 0
+    stt.pings = pings ? pings.count : 0
+    if (!stt.firstFrameMs) stt.firstFrameMs = Math.round(now)
+    if (!stt.readyMs && stt.satsDrawn > 0 && stt.portraitReveal >= 1 && satAlpha >= SAT_ALPHA * 0.99) stt.readyMs = Math.round(now)
     const L = layer.current
     if (L && s.size) {
       const rot = rotation(lat, lon)
@@ -355,6 +466,9 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     if (process.env.NODE_ENV !== 'production') {
       const q = new URLSearchParams(window.location.search)
       st.current.freeze = q.get('spin') === '0'
+      // Dev only: ?t=<seconds> drives the portrait clock, the materialise sweep and the ping clock deterministically (set window.__globe.devT to step it).
+      if (q.get('t') !== null && Number.isFinite(Number(q.get('t')))) st.current.devT = Number(q.get('t'))
+      st.current.pingDemo = q.get('pingdemo') === '1'
       // Dev only: ?lon=-100 starts the globe at that longitude (with spin=0 it stays), to put dense land behind the text.
       if (q.get('lon') !== null && Number.isFinite(Number(q.get('lon')))) st.current.lon = Number(q.get('lon'))
     }
@@ -386,23 +500,38 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
         if (!r) return setMode('fallback')
         st.current.r = r
         r.resize(st.current.size || 300, st.current.dpr)
+        // The satellite shell gets its own larger canvas at low resolution (and its own context); without it the globe simply has no shell.
+        const sr = shellCanvas.current ? createRenderer(shellCanvas.current, null, { ink }, 'shell') : null
+        st.current.sr = sr
+        st.current.sdpr = shellDprFor(st.current.size || 300, window.devicePixelRatio || 1)
+        sr?.resize((st.current.size || 300) * SHELL_SCALE, st.current.sdpr)
         setMode('gl')
         void document.fonts?.ready.then(() => measureText())
         // The constellation arrives after the globe is up and fades in; without it (offline, stale elements) nothing is drawn.
         // The portrait: picture + a glyph atlas from the system monospace, after the globe is up and fonts are ready.
-        void Promise.all([loadPortrait(), document.fonts?.ready]).then(([pic]) => {
+        // Dev only: ?bare=1 draws the plain globe (no portrait, no satellites), which is how public/globe/fallback.png is regenerated.
+        const bare = process.env.NODE_ENV !== 'production' && new URLSearchParams(window.location.search).get('bare') === '1'
+        if (!bare) void Promise.all([loadPortrait(), document.fonts?.ready]).then(([pic]) => {
           const atlas = buildAtlas(st.current.dpr)
           if (!pic || !atlas || st.current.r !== r) return
-          r.setPortrait(pic, atlas.canvas, atlas.n)
+          r.setPortrait(pic, atlas.canvas, atlas.n, atlas.box)
+          st.current.sr?.setPortrait(pic, null, 0)
           st.current.portrait = { aspect: atlas.aspect, from: performance.now() }
           layoutPortrait()
           kick()
         })
-        void loadStarlink().then((p) => {
+        if (!bare) void loadStarlink().then((p) => {
           if (!p || st.current.r !== r) return
-          r.setSatellites(p.data)
+          st.current.sr?.setSatellites(p.data)
           st.current.sat = p
-          st.current.links = buildLinks(p.data, p.count)
+          const lk = buildLinks(p.data, p.count)
+          st.current.links = lk
+          const lists: number[][] = Array.from({ length: p.count }, () => [])
+          for (let i = 0; i < lk.a.length; i++) {
+            lists[lk.a[i]].push(lk.b[i])
+            lists[lk.b[i]].push(lk.a[i])
+          }
+          st.current.adj = lists.map((l) => Int32Array.from(l))
           if (wrap.current) wrap.current.dataset.sats = String(p.count)
           st.current.satFrom = performance.now()
           kick()
@@ -419,14 +548,26 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     if (!el) return
     const apply = () => {
       const s = st.current
-      s.size = el.clientWidth
-      s.dpr = Math.min(s.size / SHELL_SCALE < 600 ? 3 : 1.5, window.devicePixelRatio || 1)
+      const size = el.clientWidth
+      const dpr = Math.min(size < 600 ? 3 : 1.5, window.devicePixelRatio || 1)
+      // Height-only viewport changes (the iOS toolbar showing and hiding) do not change the globe box: nothing to redo, and the
+      // canvas is not touched, so it cannot flash blank during scroll.
+      if (size === s.size && dpr === s.dpr && s.r) return
+      s.size = size
+      s.dpr = dpr
       s.r?.resize(s.size, s.dpr)
+      s.sdpr = shellDprFor(s.size, window.devicePixelRatio || 1)
+      s.sr?.resize(s.size * SHELL_SCALE, s.sdpr)
       const ga = parseFloat(getComputedStyle(el).getPropertyValue('--hero-globe-opacity'))
       if (Number.isFinite(ga)) s.globeA = ga
       measureText()
       layoutPortrait()
-      kick()
+      // A real resize clears the drawing buffer: draw again in the same task instead of waiting for the next frame.
+      if (s.r && s.mode === 'gl') {
+        if (s.raf) cancelAnimationFrame(s.raf)
+        s.raf = 0
+        draw()
+      } else kick()
     }
     apply()
     const ro = new ResizeObserver(apply)
@@ -442,6 +583,13 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     const s = st.current
     s.fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (process.env.NODE_ENV !== 'production') (window as unknown as { __globe?: unknown }).__globe = s
+    // A read-only, non-enumerable snapshot for scripts/hero-smoke.mjs (also in production builds): what has been drawn and whether the
+    // two contexts are alive.
+    Object.defineProperty(window, '__hero', {
+      configurable: true,
+      enumerable: false,
+      value: () => ({ ...s.stats, mode: s.mode, size: s.size, dpr: s.dpr, globe: s.r?.probe() ?? null, shell: s.sr?.probe() ?? null, hasShell: !!s.sr }),
+    })
     if (!s.fine) return
     if (process.env.NODE_ENV !== 'production') {
       // Dev only: ?ptr=fx,fy pins the pointer at that fraction of the globe box (y down), for screenshots.
@@ -508,7 +656,9 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     () => () => {
       const s = st.current
       s.r?.destroy()
+      s.sr?.destroy()
       s.r = null
+      s.sr = null
     },
     [],
   )
@@ -519,6 +669,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="hero-globe__still" src="/globe/fallback.png" alt="" width={400} height={400} decoding="async" />
       <canvas ref={canvas} className="hero-globe__canvas" />
+      <canvas ref={shellCanvas} className="hero-globe__canvas hero-globe__shell" />
       <div ref={layer} className="hero-globe__pins">
         {dots.map((d) => (
           <i key={d.k} data-lat={d.lat} data-lon={d.lon} className={d.cls} />
