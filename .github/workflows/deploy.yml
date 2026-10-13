@@ -108,6 +108,8 @@ jobs:
           echo "michal.ai deployed, Worker version \`${v:-unknown}\` from ${GITHUB_SHA::7}" >> "$GITHUB_STEP_SUMMARY"
       - name: Smoke test
         run: scripts/smoke.sh https://michal.ai / /sitemap.xml /robots.txt /projects/isat-dashboard
+      - name: Live site matches the build (pages, feeds, 59 redirects, share card, 404)
+        run: node apps/michal-ai/scripts/parity/prod-smoke.mjs https://michal.ai
 
   deploy-halmic:
     # Dormant until launch: set repository variable DEPLOY_HALMIC=true (or run manually and choose halmic).

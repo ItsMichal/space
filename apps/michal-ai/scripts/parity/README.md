@@ -17,3 +17,8 @@ localhost (bind and connect). The golden reference is the Next build of `origin/
 `.parity/` is git-ignored. `snapshot` covers the sitemap pages, feeds, robots, manifest, icons, share images, the 59 redirect
 sources, trailing-slash and 404 probes, and status/type/hash of every same-origin reference the pages make. `allow.json` lists
 intentional differences (`{ "url": regex, "field": prefix, "why": text }`).
+
+Post-deploy: `node scripts/parity/prod-smoke.mjs https://michal.ai` (needs `build/client` from the same build; the Deploy workflow runs it after the
+smoke test) checks the live site is the build that was just deployed. `scripts/parity/edge-cases.mjs <golden> <candidate>` prints the Worker
+edge-case table (HEAD, Range, conditional requests, encoded and uppercase paths, `.html` paths, nested 404s). `hero-smoke.mjs` (one level up)
+checks the WebGL hero on a built site; `crop-diff.mjs` compares one region of two screenshots.

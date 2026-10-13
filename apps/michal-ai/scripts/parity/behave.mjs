@@ -18,7 +18,7 @@ const rec = (name, ok, detail) => {
 
 /** Poll an in-page expression until it is truthy (up to `ms`); machines under load make fixed sleeps flaky. */
 let pageRef
-const until = async (expr, ms = 10000) => {
+const until = async (expr, ms = 20000) => {
   for (let t = 0; t < ms; t += 200) {
     if (await pageRef.ev(expr)) return true
     await sleep(200)
@@ -59,7 +59,7 @@ try {
   await page.ev(`document.querySelector('a[href="/projects/starlink"]').click()`)
   await until(`location.pathname === '/projects/starlink'`)
   rec('card click navigates in place', (await page.ev('location.pathname')) === '/projects/starlink' && (await page.ev('window.__marker')) === 'alive')
-  rec('transition names cleared after settle', await page.ev(`!document.documentElement.hasAttribute('data-vt')`))
+  rec('transition names cleared after settle', await until(`location.pathname === '/projects/starlink' && !document.documentElement.hasAttribute('data-vt')`, 30000))
   await page.ev('history.back()')
   await until(`location.pathname === '/'`)
   rec('back returns home in place', (await page.ev('location.pathname')) === '/' && (await page.ev('window.__marker')) === 'alive')

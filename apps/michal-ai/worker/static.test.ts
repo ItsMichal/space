@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { buildRedirects } from '../lib/redirects.mjs'
 import { REDIRECTS } from './redirects.generated'
-import { contentTypeFor, isDataRequest, redirectFor, shareCardAsset } from './static'
+import { contentTypeFor, isDataRequest, isHtmlFilePath, parseRange, redirectFor, shareCardAsset } from './static'
 
 describe('legacy redirects', () => {
   it('the committed worker table matches content/redirects.json (run npm run build:redirects if this fails)', () => {
@@ -41,5 +41,28 @@ describe('share cards and content types', () => {
     expect(contentTypeFor('/about')).toBeUndefined()
     expect(contentTypeFor('/writing.data')).toContain('text/x-script')
     expect(isDataRequest('/_root.data')).toBe(true)
+  })
+})
+
+describe('edge cases', () => {
+  it('collapses repeated slashes in one hop', () => {
+    expect(redirectFor('//about', '')).toBe('/about')
+    expect(redirectFor('/about//', '?a=1')).toBe('/about?a=1')
+  })
+
+  it('treats .html file paths as not found', () => {
+    expect(isHtmlFilePath('/index.html')).toBe(true)
+    expect(isHtmlFilePath('/about/index.html')).toBe(true)
+    expect(isHtmlFilePath('/about')).toBe(false)
+  })
+
+  it('parses single byte ranges', () => {
+    expect(parseRange('bytes=0-99', 1000)).toEqual({ start: 0, end: 99 })
+    expect(parseRange('bytes=900-', 1000)).toEqual({ start: 900, end: 999 })
+    expect(parseRange('bytes=-100', 1000)).toEqual({ start: 900, end: 999 })
+    expect(parseRange('bytes=0-5000', 1000)).toEqual({ start: 0, end: 999 })
+    expect(parseRange('bytes=2000-3000', 1000)).toBeNull()
+    expect(parseRange('bytes=0-1,5-6', 1000)).toBeNull()
+    expect(parseRange(null, 1000)).toBeNull()
   })
 })
