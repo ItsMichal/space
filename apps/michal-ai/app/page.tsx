@@ -33,7 +33,7 @@ const experience: ExperienceItem[] = profile.experience.map((e) => ({
   href: ROLE_LINKS[e.company],
 }))
 
-const h2 = 'reveal mb-space-6 font-display text-[clamp(34px,9vw,40px)] font-normal leading-[1.05] tracking-[-0.015em] md:text-[48px]'
+const h2 = 'reveal mb-space-6 font-display text-title'
 
 export default function Home() {
   const projects = getTopLevel('project')
@@ -93,12 +93,12 @@ export default function Home() {
             <p className="t-text">{profile.about[1]}</p>
           </div>
           <div className="about__xp card surface card--list">
-            <h3 className="card__h t-title">Experience</h3>
+            <h3 className="card__h t-heading">Experience</h3>
             <ExperienceList items={experience} label="Experience" />
           </div>
           {profile.publications.length ? (
             <div id="publications" className="about__pubs card surface card--list">
-              <h3 className="card__h t-title">Publications</h3>
+              <h3 className="card__h t-heading">Publications</h3>
               <ul className="card__rows">
                 {profile.publications.map((p) => (
                   <li key={p.id} className="pub">
@@ -123,7 +123,7 @@ export default function Home() {
           ) : null}
           <Link href="/about" className="about__more card surface surface--link" aria-labelledby="about-more-h">
             <span>
-              <span id="about-more-h" className="card__h t-title block">
+              <span id="about-more-h" className="card__h t-heading block">
                 More about me
               </span>
               <span className="t-text block">Full experience, education, hackathons and press, and how to get in touch.</span>

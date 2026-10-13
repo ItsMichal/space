@@ -29,7 +29,7 @@ function Ext({ href, children, me = false }: { href: string; children: ReactNode
 
 const Card = ({ id, title, className = '', children, list = false }: { id: string; title: string; className?: string; children: ReactNode; list?: boolean }) => (
   <section id={id} aria-labelledby={`${id}-h`} className={`ab-card card surface${list ? ' card--list' : ''} ${className}`}>
-    <h2 id={`${id}-h`} className="card__h t-title">
+    <h2 id={`${id}-h`} className="card__h t-heading">
       {title}
     </h2>
     {children}
@@ -44,7 +44,7 @@ export default function AboutPage() {
   return (
     <div className="mx-auto max-w-content px-space-4 pb-space-8 pt-[120px] md:px-space-8 md:pt-[160px]">
       <JsonLd data={[profilePageJsonLd, breadcrumbJsonLd([{ name: 'Home', path: '/' }, { name: 'About', path: '/about' }])]} />
-      <h1 className="mb-space-8 font-display text-[clamp(46px,13vw,60px)] font-normal leading-none tracking-[-0.02em] md:mb-space-12 md:text-display">About</h1>
+      <h1 className="mb-space-8 font-display text-title md:mb-space-12">About</h1>
 
       <div className="ab">
         {/* The owner's photograph, used plainly: real background, no filter, face framed with object-position */}
@@ -309,7 +309,7 @@ export default function AboutPage() {
       </div>
 
       <section id="projects" aria-labelledby="projects-h" className="ab-projects work">
-        <h2 id="projects-h" className="card__h t-title ab-projects__h">
+        <h2 id="projects-h" className="card__h t-heading ab-projects__h">
           Selected projects
         </h2>
         <ul className="tiles tiles--grid ab-tiles">

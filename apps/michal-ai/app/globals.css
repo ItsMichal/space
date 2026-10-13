@@ -206,7 +206,7 @@ body {
     border: 0;
     border-radius: var(--radius-pill);
     color: var(--ink);
-    font: 500 16px/24px var(--font-sans);
+    font: 500 var(--type-body-strong-size) / var(--type-body-strong-line) var(--font-sans);
     cursor: pointer;
     text-decoration: none;
     transition:
@@ -280,7 +280,7 @@ body {
   }
   .hero__cap {
     margin-top: var(--space-2);
-    font: 400 15px/22px var(--font-serif);
+    font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
     color: var(--ink-muted);
   }
   .facts {
@@ -293,14 +293,14 @@ body {
     border-bottom: 1px solid var(--hairline);
   }
   .facts dt {
-    font: 400 15px/22px var(--font-serif);
+    font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
     letter-spacing: 0.01em;
     color: var(--ink-muted);
     margin-bottom: 2px;
   }
   .facts dd {
     margin: 0;
-    font: 400 16px/24px var(--font-serif);
+    font: 400 var(--type-body-size) / var(--type-body-line) var(--font-serif);
     color: var(--ink);
     overflow-wrap: anywhere;
   }
@@ -358,7 +358,7 @@ body {
   }
   .gallery__item figcaption {
     margin-top: var(--space-2);
-    font: 400 14px/21px var(--font-serif);
+    font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
     color: var(--ink-muted);
   }
   @media (min-width: 768px) {
@@ -389,8 +389,10 @@ body {
   }
   .postnav__h {
     margin: 0 0 var(--space-4);
-    font: 400 24px/1.15 var(--font-display);
-    letter-spacing: -0.01em;
+    font-family: var(--font-display);
+    font-size: var(--type-heading-size);
+    line-height: var(--type-heading-line);
+    letter-spacing: var(--type-heading-tracking);
   }
   .postnav__list {
     margin: 0 calc(var(--card-pad) * -1);
@@ -420,11 +422,11 @@ body {
   }
   .postnav__n,
   .postnav__d {
-    font: 400 15px/22px var(--font-serif);
+    font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
     color: var(--ink-muted);
   }
   .postnav__t {
-    font: 500 16px/24px var(--font-serif);
+    font: 500 var(--type-body-strong-size) / var(--type-body-strong-line) var(--font-serif);
     transition: color var(--motion-fast) var(--ease-out-soft);
   }
   .postnav__row:hover .postnav__t,
@@ -438,7 +440,7 @@ body {
   .postnav__pos {
     margin: 0;
     padding: var(--space-3) var(--card-pad);
-    font: 400 15px/22px var(--font-serif);
+    font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
     color: var(--ink-muted);
     border-bottom: 1px solid var(--hairline);
   }
@@ -487,11 +489,11 @@ body {
     display: inline-flex;
     align-items: center;
     gap: var(--space-1);
-    font: 400 15px/22px var(--font-serif);
+    font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
     color: var(--ink-muted);
   }
   .postnav__st {
-    font: 500 16px/24px var(--font-serif);
+    font: 500 var(--type-body-strong-size) / var(--type-body-strong-line) var(--font-serif);
     transition: color var(--motion-fast) var(--ease-out-soft);
   }
   .postnav__step:hover .postnav__st,
@@ -657,14 +659,14 @@ body {
     background: linear-gradient(to top, var(--paper) 55%, transparent);
   }
   .lb__count {
-    font: 400 14px/22px var(--font-serif);
+    font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
     font-style: italic;
     color: var(--ink-muted);
   }
   .lb__caption {
     margin-top: 2px;
     max-width: 64ch;
-    font: 400 14px/20px var(--font-sans);
+    font: 400 var(--type-small-size) / var(--type-small-line) var(--font-sans);
     color: var(--ink);
   }
 
@@ -673,8 +675,8 @@ body {
      Tailwind's preflight removes list markers, so lists get theirs back here for every content list. */
   .prose {
     font-family: var(--font-serif);
-    font-size: var(--type-prose-size);
-    line-height: var(--type-prose-line);
+    font-size: var(--type-body-size);
+    line-height: var(--type-body-line);
     font-optical-sizing: auto;
     color: var(--ink);
     overflow-wrap: break-word;
@@ -696,23 +698,24 @@ body {
     break-inside: avoid;
   }
   .prose h2 {
-    font-size: 44px;
-    line-height: 1.05;
+    font-size: var(--type-heading-size);
+    line-height: var(--type-heading-line);
     font-weight: 400;
-    letter-spacing: -0.015em;
+    letter-spacing: var(--type-heading-tracking);
     margin: var(--space-12) 0 var(--space-4);
   }
+  /* h3 is body size in the text face at 500: a run-in subhead, not a new size. h4 is the small size at 500. */
   .prose h3 {
-    font-size: 30px;
-    line-height: 1.15;
-    font-weight: 400;
-    letter-spacing: -0.005em;
+    font-family: var(--font-sans);
+    font-size: var(--type-body-strong-size);
+    line-height: var(--type-body-strong-line);
+    font-weight: var(--type-body-strong-weight);
     margin: var(--space-8) 0 var(--space-2);
   }
   .prose h4 {
     font-family: var(--font-sans);
-    font-size: 16px;
-    line-height: 24px;
+    font-size: var(--type-small-size);
+    line-height: var(--type-small-line);
     font-weight: 500;
     margin: var(--space-6) 0 var(--space-2);
   }
@@ -762,9 +765,9 @@ body {
     content: '\2197';
     display: inline-block;
     margin-left: 0.15em;
-    font-size: 0.7em;
+    font-size: inherit;
     line-height: 1;
-    vertical-align: 0.35em;
+    vertical-align: 0.05em;
     color: var(--ink-muted);
   }
   .prose strong {
@@ -848,7 +851,10 @@ body {
     margin: var(--space-12) 0;
   }
   .prose code {
-    font: 400 0.8em/1 var(--font-mono);
+    font-family: var(--font-mono);
+    font-size: var(--type-code-size);
+    font-weight: 400;
+    line-height: 1;
     background: var(--paper-sunk);
     padding: 2px 5px;
     border-radius: var(--radius-sm);
@@ -886,7 +892,7 @@ body {
     color: var(--ink);
   }
   .prose [data-rehype-pretty-code-title] {
-    font: 400 15px/22px var(--font-serif);
+    font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
     color: var(--ink-muted);
     margin-bottom: var(--space-2);
   }
@@ -918,7 +924,7 @@ body {
   .prose figcaption {
     max-width: var(--text);
     margin: var(--space-2) auto 0;
-    font: 400 15px/22px var(--font-serif);
+    font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
     color: var(--ink-muted);
     text-wrap: pretty;
   }
@@ -938,7 +944,7 @@ body {
   .prose table {
     min-width: 100%;
     border-collapse: collapse;
-    font: 400 16px/24px var(--font-sans);
+    font: 400 var(--type-body-size) / var(--type-body-line) var(--font-sans);
     font-variant-numeric: tabular-nums lining-nums;
   }
   .prose th,
@@ -949,7 +955,7 @@ body {
     vertical-align: top;
   }
   .prose th {
-    font: 500 15px/22px var(--font-serif);
+    font: 500 var(--type-small-size) / var(--type-small-line) var(--font-serif);
     color: var(--ink-muted);
     white-space: nowrap;
   }
@@ -965,8 +971,8 @@ body {
     border: 1px solid var(--hairline);
     box-shadow: inset 3px 0 0 var(--callout-accent);
     font-family: var(--font-sans);
-    font-size: 17px;
-    line-height: 26px;
+    font-size: var(--type-body-size);
+    line-height: var(--type-body-line);
     break-inside: avoid;
   }
   .prose .callout--tip {
@@ -997,24 +1003,11 @@ body {
   .prose .lede,
   .lede {
     font-family: var(--font-serif);
-    font-size: var(--type-prose-lede-size);
-    line-height: var(--type-prose-lede-line);
+    font-size: var(--type-heading-size);
+    line-height: var(--type-heading-line);
     font-style: italic;
     font-variation-settings: 'opsz' 36;
     color: var(--ink-muted);
-  }
-  @media (max-width: 767px) {
-    .prose {
-      font-size: 18px;
-      line-height: 29px;
-    }
-    .prose h2 {
-      font-size: 26px;
-    }
-    .lede {
-      font-size: 21px;
-      line-height: 30px;
-    }
   }
 }
 
@@ -1204,7 +1197,7 @@ html[data-backdrop-gl] .backdrop-css {
   margin: var(--space-2) 0 0;
   padding: 0 var(--space-3);
   min-height: 44px;
-  font: 500 15px/1 var(--font-sans);
+  font: 500 var(--type-small-size) / 1 var(--font-sans);
   color: var(--ink);
   background: color-mix(in srgb, var(--paper-raised) 70%, transparent);
   border: 1px solid var(--hairline);

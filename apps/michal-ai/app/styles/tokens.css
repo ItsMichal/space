@@ -5,45 +5,29 @@
   --font-display: "Michelangelus", "Iowan Old Style", Georgia, serif;
   --font-serif: "Newsreader", "Iowan Old Style", Georgia, serif;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
-  --type-display-name-size: 168px;
-  --type-display-name-line: 0.9;
+  --type-display-name-size: clamp(96px, calc((100vw - 64px) / 6.2), 136px);
+  --type-display-name-line: 0.88;
   --type-display-name-weight: 400;
   --type-display-name-tracking: -0.025em;
-  --type-display-size: 72px;
-  --type-display-line: 1;
-  --type-display-weight: 400;
-  --type-display-tracking: -0.015em;
-  --type-heading-size: 44px;
-  --type-heading-line: 1.1;
-  --type-heading-weight: 400;
-  --type-heading-tracking: -0.015em;
-  --type-title-size: 30px;
-  --type-title-line: 1.25;
+  --type-title-size: 44px;
+  --type-title-line: 1.1;
   --type-title-weight: 400;
-  --type-title-tracking: -0.005em;
-  --type-body-size: 16px;
-  --type-body-line: 24px;
+  --type-title-tracking: -0.015em;
+  --type-heading-size: 24px;
+  --type-heading-line: 1.25;
+  --type-heading-weight: 400;
+  --type-heading-tracking: -0.01em;
+  --type-body-size: 18px;
+  --type-body-line: 1.55;
   --type-body-weight: 400;
-  --type-body-strong-size: 16px;
-  --type-body-strong-line: 24px;
+  --type-body-strong-size: 18px;
+  --type-body-strong-line: 1.55;
   --type-body-strong-weight: 500;
-  --type-prose-size: 20px;
-  --type-prose-line: 32px;
-  --type-prose-weight: 400;
-  --type-prose-lede-size: 26px;
-  --type-prose-lede-line: 36px;
-  --type-prose-lede-weight: 400;
-  --type-meta-size: 15px;
-  --type-meta-line: 22px;
-  --type-meta-weight: 400;
-  --type-spec-size: 15px;
-  --type-spec-line: 22px;
-  --type-spec-weight: 400;
-  --type-intro-size: 24px;
-  --type-intro-line: 34px;
-  --type-intro-weight: 400;
-  --type-code-size: 15px;
-  --type-code-line: 24px;
+  --type-small-size: 15px;
+  --type-small-line: 1.45;
+  --type-small-weight: 400;
+  --type-code-size: var(--type-small-size);
+  --type-code-line: 1.6;
   --type-code-weight: 400;
   --space-1: 4px;
   --space-2: 8px;
@@ -90,6 +74,17 @@
   --tint-birch: #e5e1d3;
   --shadow-glass: 0 1px 1px rgba(24,33,27,0.04), 0 8px 24px -6px rgba(24,33,27,0.14), 0 24px 48px -24px rgba(24,33,27,0.18);
   --shadow-none: none;
+}
+
+/* Phones: the same tokens, stepped down. */
+@media (max-width: 767px) {
+  :root {
+    --type-display-name-size: clamp(44px, calc((100vw - 32px) / 6.4), 64px);
+    --type-title-size: 34px;
+    --type-heading-size: 21px;
+    --type-body-size: 17px;
+    --type-body-strong-size: 17px;
+  }
 }
 
 /* Basalt (dark) only applies in reading contexts, which opt in with <html data-reading>.

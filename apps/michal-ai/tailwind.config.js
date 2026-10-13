@@ -63,17 +63,15 @@ module.exports = {
         serif: [v('font-serif')],
         mono: [v('font-mono')],
       },
+      // The four-step scale (title, heading, body, small) plus the home name. Values live in tokens.json (docs/design-system/type-scale.md).
+      // body-strong is body at weight 500, not a fifth size; code is the small size in mono.
       fontSize: {
         'display-name': style('display-name'),
-        display: style('display'),
-        heading: style('heading'),
         title: style('title'),
+        heading: style('heading'),
         body: style('body'),
         'body-strong': style('body-strong'),
-        prose: style('prose'),
-        'prose-lede': style('prose-lede'),
-        meta: style('meta'),
-        label: style('label'),
+        small: style('small'),
         code: style('code'),
       },
       maxWidth: {

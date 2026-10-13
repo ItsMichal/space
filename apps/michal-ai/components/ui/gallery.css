@@ -60,7 +60,7 @@
 }
 .gal-cap {
   margin: var(--space-2) 0 0;
-  font: 400 14px/21px var(--font-serif);
+  font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
   color: var(--ink-muted);
 }
 .gal-ctl {

@@ -13,7 +13,7 @@ export function Footer() {
           <Link href="/" aria-label="Home" className="rounded-sm">
             <SiteMark height={24} />
           </Link>
-          <span className="font-serif text-meta text-ink-muted">
+          <span className="font-serif text-small text-ink-muted">
             © {new Date().getFullYear()} {profile.name}
           </span>
         </div>

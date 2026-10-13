@@ -87,7 +87,7 @@ export function ProjectCard({
       )}
       <div className="tile__body">
         {src ? (
-          <h3 id={`${id}-t`} className="tile__title t-title" data-card-title>
+          <h3 id={`${id}-t`} className="tile__title t-heading" data-card-title>
             {post.title}
           </h3>
         ) : null}

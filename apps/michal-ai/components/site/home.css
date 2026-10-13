@@ -26,8 +26,7 @@
   justify-content: space-between;
   gap: var(--space-2);
   min-height: 56px;
-  font: 400 24px/1.15 var(--font-display);
-  letter-spacing: -0.01em;
+  font: 500 var(--type-body-strong-size) / var(--type-body-strong-line) var(--font-serif);
   color: var(--ink);
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
