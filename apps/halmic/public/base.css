@@ -273,6 +273,7 @@ a.tile:hover .tbg img, a.tile:hover .tbg video { transform: scale(calc(var(--z, 
 a.tile:hover .chip { background: var(--blue); color: var(--ink); }
 /* kind chip ("Short film") sits beside the platform badge */
 .tile .kchip { right: auto; left: calc(var(--pad) + var(--ctl) + var(--ctl) * .25); } .tile .kchip .ic { opacity: 1; }
+@container (max-width: 239px) { .tile .kchip { display: none; } }   /* a narrow tile has no room for the kind chip beside the badge and the duration */
 /* hover preview (app.js): a muted loop over the thumbnail, absolutely placed inside the media box so nothing shifts; the badge, chips and play button stay above it */
 /* the lead films' wide title-card thumbnails: the picture whole on black instead of the centre of a square */
 .tbg.fit-contain { background: #000; } .tbg.fit-contain img:not(.pv) { object-fit: contain; object-position: 50% 24%; }
@@ -283,7 +284,8 @@ a.tile:is(:hover, :focus-visible) .play { background: var(--blue); color: var(--
 /* stat tiles: a big word or number in the display face (its unit set small beside it), one caption. The numeral's INK starts where the caption's does: the glyph's side bearing (--lsb, em, by first glyph) and the
    caption's own bearing are compensated, and the top of the digits sits on --pad like a badge. cq units on a container's own properties resolve against the container above it, so the insets live on the children. */
 .t-stat { display: flex; flex-direction: column; justify-content: flex-start; background: var(--ink-3); }
-.num { --lsb: .07; --num-h: clamp(48px, calc(69cqh - 49px), 170px); display: flex; flex-wrap: wrap; align-items: baseline; column-gap: .16em; font: 900 min(var(--num-h), calc((100cqw - 2 * var(--pad)) / var(--nem, 2.7)))/.8 var(--display); letter-spacing: -.01em; margin: calc(var(--pad) - .014em) var(--pad) 0 calc(var(--pad) + var(--lsb-t) * .5 - var(--lsb) * 1em); }
+.num { --lsb: .07; --num-h: clamp(48px, calc(69cqh - 49px), 170px); display: flex; flex-wrap: wrap; align-items: baseline; column-gap: .16em; font: 900 min(var(--num-h), calc((100cqw - 2 * var(--pad)) / var(--nem, 2.7)))/.8 var(--display); letter-spacing: -.01em; margin: calc(var(--pad) - .014em) var(--pad) 0 var(--pad); }
+.num .nv { margin-left: calc(var(--lsb-t) * .5 - var(--lsb) * 1em); }
 .num small { font: 800 .27em/1 var(--sans); letter-spacing: .01em; white-space: nowrap; }
 .num[data-len="1"] { --nem: .8; } .num[data-len="2"] { --nem: 1.4; } .num[data-len="3"] { --nem: 2; } .num[data-len="4"] { --nem: 2.55; } .num[data-len="5"] { --nem: 2.75; } .num[data-len="6"] { --nem: 3.3; }
 .num[data-g="0"] { --lsb: .072; } .num[data-g="1"] { --lsb: .09; } .num[data-g="2"] { --lsb: .07; } .num[data-g="3"] { --lsb: .052; } .num[data-g="4"] { --lsb: .059; }

@@ -76,17 +76,14 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
 const ok = (cond, msg) => { checks++; if (!cond) { fails++; out.push('  FAIL ' + msg); } };
 const f = (n) => (Math.round(n * 10) / 10);
 
-for (const w of widths) {
-  const d = shot(`${base}/?clips=demo&n=6`, w, PROBE);
-  if (!d) { fails++; console.log(`FAIL width ${w}: probe returned nothing`); continue; }
-  out.length = 0;
+function checkPage(w, pg, d) {
   const { gap, r, cgap, sgap } = d;
-  ok(near(cgap, 2 * gap, .01) && near(sgap, 5 * gap, .01), `${w}: scale cgap=${cgap} sgap=${sgap} gap=${gap}`);
+  ok(near(cgap, 2 * gap, .01) && near(sgap, 5 * gap, .01), `${w} ${pg}: scale cgap=${cgap} sgap=${sgap} gap=${gap}`);
   const tiles = d.tiles.filter((t) => t.cls), infos = d.tiles.filter((t) => t.bentoInfo);
   const bySide = new Map();
   for (const t of tiles) {
     if (t.playing) continue;
-    const id = `${w} ${t.bento}/${t.cl} ${t.cls.slice(0, 34)}`, p = t.pad, T = 1, T2 = 2;
+    const id = `${w} ${pg} ${t.bento}/${t.cl} ${t.cls.slice(0, 34)}`, p = t.pad, T = 1, T2 = 2;
     ok(near(t.radius, r, .6), `${id}: radius ${f(t.radius)} != --r ${f(r)}`);
     if (t.text) {
       ok(near(t.text.l, p, T), `${id}: text left ${f(t.text.l)} != pad ${f(p)}`);
@@ -112,16 +109,30 @@ for (const w of widths) {
     if (t.art) ok(near(t.art.l, p, T) && near(t.art.b, p, T), `${id}: box art inset ${f(t.art.l)},${f(t.art.b)} != pad ${f(p)}`);
     for (const [k, v] of t.ix) ok(near(v, gap, .6), `${id}: ${k === 'h' ? 'horizontal' : 'vertical'} gap to neighbour ${f(v)} != --gap ${f(gap)}`);
   }
-  for (const [side, s] of bySide) ok(s.tt.size <= 1 && s.ts.size <= 1, `${w}: tiles with short side ${side} use several title (${[...s.tt]}) or caption (${[...s.ts]}) sizes`);
+  for (const [side, s] of bySide) ok(s.tt.size <= 1 && s.ts.size <= 1, `${w} ${pg}: tiles with short side ${side} use several title (${[...s.tt]}) or caption (${[...s.ts]}) sizes`);
   let prev = null;
   for (const b of infos) {
-    for (const g of b.clGaps) ok(near(g, cgap, .6), `${w} ${b.bentoInfo}: gap between clusters ${f(g)} != 2 x --gap ${f(cgap)}`);
-    if (b.h2L != null) ok(near(b.h2L, 0, 2), `${w} ${b.bentoInfo}: section label ink is ${f(b.h2L)} from the grid's left edge`);
-    if (b.slR != null) ok(near(b.slR, 0, 2.5), `${w} ${b.bentoInfo}: section link ink ends ${f(b.slR)} from the grid's right edge`);
-    if (b.shGap != null) ok(near(b.shGap, gap, .6), `${w} ${b.bentoInfo}: label to grid ${f(b.shGap)} != --gap ${f(gap)}`);
-    if (prev) ok(near(b.top - prev.bottom, sgap, 1), `${w} ${b.bentoInfo}: gap to the previous bento ${f(b.top - prev.bottom)} != 5 x --gap ${f(sgap)}`);
+    for (const g of b.clGaps) ok(near(g, cgap, .6), `${w} ${pg} ${b.bentoInfo}: gap between clusters ${f(g)} != 2 x --gap ${f(cgap)}`);
+    if (b.h2L != null) ok(near(b.h2L, 0, 2), `${w} ${pg} ${b.bentoInfo}: section label ink is ${f(b.h2L)} from the grid's left edge`);
+    if (b.slR != null) ok(near(b.slR, 0, 2.5), `${w} ${pg} ${b.bentoInfo}: section link ink ends ${f(b.slR)} from the grid's right edge`);
+    if (b.shGap != null) ok(near(b.shGap, gap, .6), `${w} ${pg} ${b.bentoInfo}: label to grid ${f(b.shGap)} != --gap ${f(gap)}`);
+    if (prev) ok(near(b.top - prev.bottom, sgap, 1), `${w} ${pg} ${b.bentoInfo}: gap to the previous bento ${f(b.top - prev.bottom)} != 5 x --gap ${f(sgap)}`);
     prev = b;
   }
+  return { tiles: tiles.filter((t) => !t.playing).length, bentos: infos.length, gap, r, pads: tiles.map((t) => t.pad) };
+}
+
+for (const w of widths) {
+  out.length = 0;
+  let nt = 0, nb = 0;
+  for (const pg of ['/videos/', '/games/']) {   // the index pages use the same tiles: same checks, no playing probe
+    const dd = shot(`${base}${pg}`, w, PROBE);
+    if (!dd) { fails++; console.log(`FAIL width ${w} ${pg}: probe returned nothing`); continue; }
+    const sm = checkPage(w, pg, dd); nt += sm.tiles; nb += sm.bentos;
+  }
+  const d = shot(`${base}/?clips=demo&n=6`, w, PROBE);
+  if (!d) { fails++; console.log(`FAIL width ${w}: probe returned nothing`); continue; }
+  const home = checkPage(w, '/', d); nt += home.tiles; nb += home.bentos;
   const pl = shot(`${base}/?clips=demo&n=6`, w, PLAYING);
   if (pl && !pl.none) {
     const p = pl.pad;
@@ -130,7 +141,7 @@ for (const w of widths) {
     ok(near(pl.close.r, p, 1) && near(pl.close.t, p, 1), `${w} playing: close button inset ${f(pl.close.r)},${f(pl.close.t)} != pad ${f(p)}`);
     ok(pl.crow.b >= p - 1, `${w} playing: buttons come within ${f(pl.crow.b)} of the bottom edge (pad ${f(p)})`);
   } else if (!pl) { fails++; console.log(`FAIL ${w}: playing probe returned nothing`); }
-  console.log(`${out.length ? 'FAIL' : 'ok  '} width ${w}: ${tiles.filter((t) => !t.playing).length} tiles, ${infos.length} bentos, --gap ${f(gap)} --pad ${[...new Set(tiles.map((t) => f(t.pad)))].join('/')} --r ${f(r)}${pl && !pl.none ? ', playing row checked' : ''}`);
+  console.log(`${out.length ? 'FAIL' : 'ok  '} width ${w}: ${nt} tiles, ${nb} bentos on /, /videos/, /games/, --gap ${f(home.gap)} --pad ${[...new Set(home.pads.map(f))].join('/')} --r ${f(home.r)}${pl && !pl.none ? ', playing row checked' : ''}`);
   for (const l of out.slice(0, 40)) console.log(l);
   if (out.length > 40) console.log(`  ... and ${out.length - 40} more`);
 }
