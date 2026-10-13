@@ -9,7 +9,8 @@ import { authorLine, doiUrl, venueLine } from '@/lib/publications'
 import { aboutMetadata, profilePageJsonLd, postPath, breadcrumbJsonLd } from '@/lib/seo'
 import { siteConfig } from '@/site.config'
 import { xHighlights } from '@/content/x-highlights'
-import { postById, portraitAlt } from '@/lib/about'
+import { postById, portraitAlt, mentionAuthors } from '@/lib/about'
+import { paperMentions } from '@/content/mentions'
 import { Picture } from '@/components/media/Picture'
 import '@/components/site/about.css'
 import '@/components/about/about-page.css'
@@ -198,6 +199,40 @@ export default function AboutPage() {
               </li>
             ))}
           </ul>
+          {paperMentions.length ? (
+            <>
+              <h3 id="acknowledged-h" className="ab-subhead t-ui">
+                Acknowledged in
+              </h3>
+              <ul className="card__rows" aria-labelledby="acknowledged-h">
+                {paperMentions.map((m) => (
+                  <li key={m.id} className="pub">
+                    <p className="pub__title t-ui">{m.doi ? <Ext href={`https://doi.org/${m.doi}`}>{m.title}</Ext> : <Ext href={m.url}>{m.title}</Ext>}</p>
+                    <p className="pub__year t-meta">
+                      <time dateTime={m.year}>{m.year}</time>
+                    </p>
+                    <p className="pub__ref t-meta">
+                      {mentionAuthors(m).replace(/\.$/, '')}. {m.venueShort}.
+                    </p>
+                    <blockquote className="pub__quote t-meta">
+                      <p>
+                        <q>{m.quote}</q>
+                      </p>
+                      <footer>
+                        <cite>{m.section ?? 'Acknowledgements'}</cite>
+                        {m.openAccessUrl ? (
+                          <>
+                            {' · '}
+                            <Ext href={m.openAccessUrl}>Full text</Ext>
+                          </>
+                        ) : null}
+                      </footer>
+                    </blockquote>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
         </Card>
 
         <div className="ab-side">

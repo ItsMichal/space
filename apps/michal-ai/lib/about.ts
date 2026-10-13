@@ -48,3 +48,11 @@ export const featuredProjects = () => profile.featuredProjectIds.map(postById)
 
 /** Alt text for the owner's photograph: the name from the profile plus the neutral description. */
 export const portraitAlt = `${profile.name}, ${profile.portrait.description}`
+
+/** Short author line of a paper that acknowledges him: "Hirshfield et al." (first author's family name), or both names for two authors. */
+export function mentionAuthors(m: { authors: readonly string[] }) {
+  const family = (a: string) => a.trim().split(/\s+/).slice(-1)[0]
+  if (m.authors.length === 1) return family(m.authors[0])
+  if (m.authors.length === 2) return `${family(m.authors[0])} and ${family(m.authors[1])}`
+  return `${family(m.authors[0])} et al.`
+}
