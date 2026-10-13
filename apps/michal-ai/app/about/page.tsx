@@ -9,7 +9,8 @@ import { authorLine, doiUrl, venueLine } from '@/lib/publications'
 import { aboutMetadata, profilePageJsonLd, postPath, breadcrumbJsonLd } from '@/lib/seo'
 import { siteConfig } from '@/site.config'
 import { xHighlights } from '@/content/x-highlights'
-import { postById } from '@/lib/about'
+import { postById, portraitAlt } from '@/lib/about'
+import { Picture } from '@/components/media/Picture'
 import '@/components/site/about.css'
 import '@/components/about/about-page.css'
 
@@ -46,6 +47,17 @@ export default function AboutPage() {
       <h1 className="mb-space-8 font-display text-title md:mb-space-12">About</h1>
 
       <div className="ab">
+        {/* The owner's photograph, used plainly: real background, no filter, face framed with object-position */}
+        <figure className="ab-photo surface">
+          <Picture
+            src={profile.portrait.src}
+            alt={portraitAlt}
+            sizes="(min-width: 1100px) 360px, (min-width: 900px) 45vw, 94vw"
+            priority
+            className="ab-photo__img"
+            focus={profile.portrait.focus}
+          />
+        </figure>
         {/* Intro: bio, then the status in his words */}
         <section id="intro" aria-labelledby="intro-h" className="ab-card ab-intro card surface">
           <h2 id="intro-h" className="sr-only">

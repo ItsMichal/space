@@ -13,6 +13,8 @@ import { JsonLd } from '@/components/seo/JsonLd'
 import { profile } from '@/content/profile'
 import { doiUrl, venueLine } from '@/lib/publications'
 import { ExperienceList, type ExperienceItem } from '@/components/ui/ExperienceList'
+import { Picture } from '@/components/media/Picture'
+import { portraitAlt } from '@/lib/about'
 import '@/components/site/about.css'
 import { homeMetadata, personJsonLd, websiteJsonLd } from '@/lib/seo'
 
@@ -84,6 +86,9 @@ export default function Home() {
         </h2>
         <div className="about">
           <div className="about__intro card surface">
+            <div className="about__photo">
+              <Picture src={profile.portrait.src} alt={portraitAlt} sizes="96px" aspect="4 / 5" focus={profile.portrait.focus} />
+            </div>
             <p className="t-text">{profile.about[0]}</p>
             <p className="t-text">{profile.about[1]}</p>
           </div>

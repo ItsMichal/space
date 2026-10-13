@@ -5,21 +5,26 @@ import { createPresenceClient, EMPTY_PRESENCE, type PresenceClient } from '@/lib
 import { PRESENCE_PINS } from '@/lib/presence/flag'
 import { createMockPresence } from '@/lib/presence/mock'
 import { GLOBE_FALLBACK_VIEW } from '@/lib/presence/globe-fallback'
-import { gmst } from '@/lib/starlink/orbit.mjs'
+import { gmst, positionEcef } from '@/lib/starlink/orbit.mjs'
+import { buildLinks } from '@/lib/starlink/links.mjs'
 import { loadLand } from './globe/data'
 import { loadStarlink, type Packed } from './globe/starlink'
 import { buildAtlas, loadPortrait } from './globe/portrait'
-import { createRenderer, projectPoint, rotation, SPHERE_FRACTION, type GlobeRenderer, type PortraitSpec } from './globe/renderer'
+import { createRenderer, PING_CAP, projectPoint, rotation, SHELL_SCALE, SPHERE_FRACTION, type GlobeRenderer, type PingSet, type PortraitSpec } from './globe/renderer'
 import './presence.css'
 
 const DEG_PER_S = 2.4
 const START = { lat: 18, lon: -100 } // must match GLOBE_FALLBACK_VIEW
-const FALLBACK_FRACTION = GLOBE_FALLBACK_VIEW.radius / (GLOBE_FALLBACK_VIEW.size / 2)
+const FALLBACK_FRACTION = GLOBE_FALLBACK_VIEW.radius / (GLOBE_FALLBACK_VIEW.size / 2) / SHELL_SCALE
 /** Constellation dot strength (of the ink alpha) and fade-in time. */
 const SAT_ALPHA = 0.7
 const SAT_FADE_MS = 1600
-/** Keep every n-th satellite on small canvases. */
-const thinFor = (cssSize: number) => (cssSize < 520 ? 3 : 2)
+/** Keep every n-th satellite (and trail): fewer on small canvases. `base` is the globe box in CSS px (the canvas is SHELL_SCALE larger). */
+const thinFor = (base: number) => (base < 520 ? 5 : 3)
+/** Drawn orbit radius range, in globe radii. EXAGGERATED: the real shells are at 1.05 to 1.10 (docs/presence.md). */
+const SHELL: [number, number] = [1.34, 1.58]
+const trailFor = (base: number) => (base < 520 ? 45 : 90) // seconds of path
+const pingsFor = (base: number) => (base < 520 ? 8 : 20) // simultaneous mesh pings
 /** The phrase's own enter animation: 160 ms delay + 320 ms, cubic-bezier(0.22, 1, 0.36, 1) (app/styles/craft.css, --ease-out-soft). */
 const CUT_MS = 480
 const PUSH_RADIUS = 100 // CSS px
@@ -27,10 +32,8 @@ const PUSH_MAX = 12 // CSS px
 const PTR_IDLE_MS = 1500
 
 const PORTRAIT_FADE_MS = 1400
-/** Hero layout switch: below this the portrait is a small circle beside the name, from here it stands over the globe. */
+/** Hero layout switch: below this the portrait is a small bust beside the name, from here it stands over the globe. */
 const FIGURE_MIN_WIDTH = 768
-
-type Cut = { box: [number, number, number, number]; dim: number }
 
 /** cubic-bezier(x1,y1,x2,y2) as a function of progress (Newton on x, 5 steps is plenty for these curves). */
 function bezier(x1: number, y1: number, x2: number, y2: number) {
@@ -53,12 +56,6 @@ function bezier(x1: number, y1: number, x2: number, y2: number) {
 }
 const easeOutSoft = bezier(0.22, 1, 0.36, 1)
 
-function currentCut(s: { cut: Cut[]; anim: null | { from: Cut[]; to: Cut[]; t0: number } }, now: number): Cut[] {
-  const a = s.anim
-  if (!a) return s.cut
-  const e = easeOutSoft(Math.min(1, (now - a.t0) / CUT_MS))
-  return a.to.map((c, i) => ({ dim: c.dim, box: c.box.map((v, k) => a.from[i].box[k] + (v - a.from[i].box[k]) * e) as Cut['box'] }))
-}
 
 /** Critically damped follow: advances (x, v) towards target with angular frequency w. */
 function damp(o: { x: number; v: number }, target: number, w: number, dt: number) {
@@ -94,7 +91,9 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     lon: START.lon, size: 0, dpr: 1, raf: 0, last: 0, r: null as GlobeRenderer | null, reduced: false, active: false, mode: 'pending' as string,
     sat: null as Packed | null, satFrom: 0,
     portrait: null as null | { aspect: number; from: number }, pspec: null as PortraitSpec | null, pstr: 0, globeA: 0.4,
-    cut: [] as Cut[], cutFeather: 24, anim: null as null | { from: Cut[]; to: Cut[]; t0: number },
+    maskT0: -1e9,
+    links: null as null | { a: Int32Array; b: Int32Array },
+    pg: null as null | { a: Float32Array; ad: Float32Array; b: Float32Array; bd: Float32Array; t: Float32Array; next: Float32Array },
     freeze: false, fine: false, pin: null as null | [number, number],
     px: { x: 0, v: 0 }, py: { x: 0, v: 0 }, pk: { x: 0, v: 0 }, tx: 0, ty: 0, over: false, lastMove: 0,
   })
@@ -114,55 +113,67 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     return out
   }, [pins, presence])
 
-  // Where the hero text sits, in canvas pixels: the dots thin out behind it (see the shader). Measured on resize and when fonts
-  // arrive, never per frame. Elements opt in with data-hero-text; the value is how much of the dot alpha stays behind them.
+  // The hero text as a soft halo mask: every glyph of the name, tagline, "I've built" and the phrase on screen (and "Selected work") is
+  // drawn at its real position into a small offscreen canvas (1/4 of the canvas size) with a blurred shadow, and the shader shrinks and
+  // fades dots by it, so the clearing follows the letter shapes and has no straight edges. Rebuilt only when the phrase changes, on
+  // resize and when fonts arrive, never per frame; the old and new masks cross-fade over the phrase's own transition.
   const measureText = (animate = false) => {
     const s = st.current
     const el = wrap.current
     if (!s.r || !el || !s.size) return
     const w = el.getBoundingClientRect()
-    const sc = Math.round(s.size * s.dpr) / (w.width || 1)
     const px = Math.round(s.size * s.dpr)
-    const list: Cut[] = []
-    document.querySelectorAll<HTMLElement>('[data-hero-text]').forEach((t) => {
-      // The rotating line: the cutout follows the stem and the phrase on screen, not the union of every phrase.
-      const live = t.querySelector<HTMLElement>('[data-hook]')
-      const parts = live
-        ? [live.querySelector<HTMLElement>('.hook__stem'), live.querySelector<HTMLElement>('.hook__item[data-current] .hook__link')].filter((n): n is HTMLElement => !!n)
-        : [t]
-      let l = Infinity, tp = Infinity, rt = -Infinity, bt = -Infinity
-      // Union of the actual text runs, not the element boxes: block-level lines (the name's two spans) would otherwise
-      // report the full container width and dim everything to the right of the text.
-      for (const n of parts) {
-        const walker = document.createTreeWalker(n, NodeFilter.SHOW_TEXT)
-        for (let tn = walker.nextNode(); tn; tn = walker.nextNode()) {
-          if (!tn.textContent?.trim()) continue
-          const range = document.createRange()
-          range.selectNodeContents(tn)
-          const r = range.getBoundingClientRect()
-          if (!r.width || !r.height) continue
-          l = Math.min(l, r.left); tp = Math.min(tp, r.top); rt = Math.max(rt, r.right); bt = Math.max(bt, r.bottom)
-        }
+    const k = px / (w.width || 1) / 4 // CSS px -> mask px
+    const M = Math.max(8, Math.ceil(px / 4))
+    const c = document.createElement('canvas')
+    c.width = M
+    c.height = M
+    const g = c.getContext('2d')
+    if (!g) return
+    g.fillStyle = '#000'
+    g.fillRect(0, 0, M, M)
+    g.fillStyle = '#fff'
+    g.shadowColor = '#fff'
+    g.shadowBlur = 15 * k
+    g.textBaseline = 'alphabetic'
+    const range = document.createRange()
+    const drawNode = (tn: Text) => {
+      const parent = tn.parentElement
+      const text = tn.textContent
+      if (!parent || !text || !text.trim()) return
+      const cs = getComputedStyle(parent)
+      g.font = `${cs.fontStyle} ${cs.fontWeight} ${parseFloat(cs.fontSize) * k}px ${cs.fontFamily}`
+      const asc = g.measureText('M').fontBoundingBoxAscent ?? parseFloat(cs.fontSize) * k * 0.8
+      for (let i = 0; i < text.length; i++) {
+        if (!text[i].trim()) continue
+        range.setStart(tn, i)
+        range.setEnd(tn, i + 1)
+        const r = range.getBoundingClientRect()
+        if (!r.width || !r.height) continue
+        g.fillText(text[i], (r.left - w.left) * k, (r.top - w.top) * k + asc)
       }
-      if (!Number.isFinite(l)) return
-      const dim = Number(t.dataset.heroText) || 0.15
-      list.push({ box: [(l - w.left) * sc, px - (bt - w.top) * sc, (rt - w.left) * sc, px - (tp - w.top) * sc], dim })
-    })
-    const prev = s.anim ? currentCut(s, performance.now()) : s.cut
-    const same = prev.length === list.length && prev.every((c, i) => c.box.every((v, k) => Math.abs(v - list[i].box[k]) < 1))
-    if (same) return
-    s.cutFeather = 26 * sc
-    if (animate && !s.reduced && prev.length === list.length && s.active) {
-      s.anim = { from: prev.map((c) => ({ ...c, box: [...c.box] as Cut['box'] })), to: list, t0: performance.now() }
-    } else {
-      s.anim = null
-      s.cut = list
-      s.r.setBoxes(list, s.cutFeather)
-      kick()
     }
+    const drawIn = (root: Element | null) => {
+      if (!root) return
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+      for (let tn = walker.nextNode(); tn; tn = walker.nextNode()) drawNode(tn as Text)
+    }
+    document.querySelectorAll<HTMLElement>('[data-hero-text]').forEach((t) => {
+      // The rotating line: the stem and the phrase on screen, not every phrase stacked in the rotator.
+      const live = t.querySelector<HTMLElement>('[data-hook]')
+      if (live) {
+        drawIn(live.querySelector('.hook__stem'))
+        drawIn(live.querySelector('.hook__item[data-current] .hook__link'))
+      } else drawIn(t)
+    })
+    drawIn(document.getElementById('work-h'))
+    const fade = animate && !s.reduced && s.active
+    s.r.setMask(c, fade)
+    s.maskT0 = fade ? performance.now() : -1e9
+    kick()
   }
 
-  /** Where the portrait goes, in canvas px: a figure over the globe from 768px, a small circle beside the name below. */
+  /** Where the portrait goes, in canvas px: a figure over the globe from 768px, a small bust beside the name below. */
   const layoutPortrait = () => {
     const s = st.current
     const el = wrap.current
@@ -173,11 +184,9 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     const vw = window.innerWidth
     let left: number, bottom: number, width: number, height: number
     let cellW: number
-    let circle = false
     let crop: PortraitSpec['crop'] = [0, 0, 1, 1]
-    let strength = 0.72
     let edge = 0
-    let boost = 1
+    let sideTaper = false
     if (vw >= FIGURE_MIN_WIDTH) {
       const hb = document.getElementById('work-h')?.getBoundingClientRect()
       // He runs down behind the first card (the card is on top and crops him): bottom is 150px below the heading.
@@ -185,46 +194,58 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
       bottom = anchor + 150
       height = Math.max(300, Math.min(760, bottom - 64))
       width = height * 0.75
-      left = w.left + w.width * 0.54 - 0.44 * width
-      cellW = 2.6
-      edge = 70 * sc // the part below the card's right edge fades out in dots
+      left = w.left + w.width / 2 + 0.04 * (w.width / SHELL_SCALE) - 0.44 * width
+      cellW = sc >= 1.4 ? 2 : 2.4
+      sideTaper = true
+      edge = 18 * sc // a short dot taper where the figure passes the right edge of the card
     } else {
-      const box = document.querySelector<HTMLElement>('h1[data-hero-text]')?.parentElement?.getBoundingClientRect()
-      const D = Math.max(72, Math.min(104, Math.round(vw * 0.26)))
-      width = height = D
-      left = Math.min((box?.right ?? vw - 16) + 6, vw - 10) - D
-      bottom = 60 + D
-      cellW = 1.7
-      circle = true
-      boost = 1.9
-      // forehead to chin fills about 80% of the circle
-      crop = [0.083, 0.033, 0.709, 0.503]
-      strength = Math.min(1, s.globeA + 0.35)
+      // A small bust (head, neck, shoulders, upper jacket) at the top right. The picture is 3:4 and the head is about 0.56 of its
+      // width tall, so a bust Wb wide has a head about 0.56 Wb tall (about 95 px at 375). The head must clear the name's last
+      // glyph; whatever of the shoulders runs under text is dimmed by the same tight text cutout as the globe, and the bust bleeds
+      // off the right edge of the page instead of being squeezed.
+      let nameRight = 0
+      const h1 = document.querySelector<HTMLElement>('h1[data-hero-text]')
+      if (h1) {
+        const walker = document.createTreeWalker(h1, NodeFilter.SHOW_TEXT)
+        for (let tn = walker.nextNode(); tn; tn = walker.nextNode()) {
+          if (!tn.textContent?.trim()) continue
+          const range = document.createRange()
+          range.selectNodeContents(tn)
+          nameRight = Math.max(nameRight, range.getBoundingClientRect().right)
+        }
+      }
+      const Wb = Math.max(140, Math.min(200, vw * 0.5))
+      const headCentre = Math.max(nameRight + 6, vw * 0.7) + 0.18 * Wb
+      left = headCentre - 0.4 * Wb
+      const top = 62
+      crop = [0, 0, 1, 0.57]
+      width = Wb
+      height = 0.57 * (4 / 3) * Wb
+      bottom = top + height
+      cellW = 1.1
+      edge = 13 * sc // dots shrink to nothing over the last 13 CSS px, following the matte: no straight cut
     }
-    // Glyphs where they resolve (desktop); density dots on a square grid in the small circle, where a glyph would be a smudge.
-    const cellH = cellW / s.portrait.aspect
-    // Measured at 1x and 2x: halftone dots on a square grid hold the likeness (glasses, eyes, mouth); monospace glyphs, even with a full
-    // tonal ramp and dithering, read as texture and lose it. Likeness wins, so dots are the default at every DPR and glyphs are opt-in
-    // (`?portrait=glyphs`, atlas from ui-monospace).
+    // Halftone dots on a square grid are the default at every DPR (measured at 1x and 2x: glasses, eyes and mouth hold; monospace
+    // glyphs read as texture). Glyphs (atlas from ui-monospace) are opt-in with `?portrait=glyphs`, desktop only.
     const force = new URLSearchParams(window.location.search).get('portrait')
-    const dots = circle || force !== 'glyphs'
-    const sq = circle ? cellW : sc >= 1.4 ? 2 : 2.4
-    // Glyphs: full tonal ramp (no dot-style compression), local contrast on the face, a little more strength for thin strokes.
-    if (!dots) {
-      boost = 1.35
-      strength = 0.78
-    }
+    const dots = vw < FIGURE_MIN_WIDTH || force !== 'glyphs'
+    const cellH = cellW / s.portrait.aspect
+    // Whole device pixels everywhere (rect origin and size, cell size, at least 3 px per cell): the dot grid then lands on the pixel
+    // grid at every DPR (1, 1.25, 1.5, 2, 3) and cannot beat against it into a moire.
+    const cellPx = Math.max(3, Math.round(cellW * sc))
+    const rx = Math.round((left - w.left) * sc)
+    const ry = Math.round(px - (bottom - w.top) * sc)
     s.pspec = {
-      rect: [(left - w.left) * sc, px - (bottom - w.top) * sc, width * sc, height * sc],
+      rect: [rx, ry, Math.round(width * sc), Math.round(height * sc)],
       crop,
-      cell: dots ? [sq * sc, sq * sc] : [cellW * sc, cellH * sc],
-      circle,
+      cell: dots ? [cellPx, cellPx] : [2.6 * sc, (2.6 / s.portrait.aspect) * sc],
+      sideTaper,
       dots,
-      strength,
+      strength: 1,
       edge,
-      boost,
       push: { radius: 90 * s.dpr, max: 5 * s.dpr },
     }
+    void cellH
   }
 
   const draw = () => {
@@ -237,13 +258,6 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     if (!s.reduced && s.active && !s.freeze) s.lon += DEG_PER_S * dt
     const lat = gl ? START.lat : GLOBE_FALLBACK_VIEW.lat
     const lon = gl ? s.lon : GLOBE_FALLBACK_VIEW.lon
-    if (s.r && s.anim) {
-      s.r.setBoxes(currentCut(s, now), s.cutFeather)
-      if (now - s.anim.t0 >= CUT_MS) {
-        s.cut = s.anim.to
-        s.anim = null
-      }
-    }
     // Pointer: critically damped follow, strength eases to 0 when idle or away (spring back). Nothing runs for k == 0.
     let ptr: { x: number; y: number; k: number } | undefined
     if (s.fine && !s.reduced && s.r) {
@@ -260,12 +274,53 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     const sat = s.sat
     const nowS = Date.now() / 1000
     const satAlpha = sat ? SAT_ALPHA * (s.reduced ? 1 : Math.min(1, (now - s.satFrom) / SAT_FADE_MS)) : 0
+    // Mesh pings: a few new ones per second, chosen from the precomputed neighbour table among links on the visible hemisphere.
+    const base = s.size / SHELL_SCALE
+    let pings: PingSet | undefined
+    if (sat && s.links && s.links.a.length && !s.reduced && gl) {
+      const P = (s.pg ??= { a: new Float32Array(PING_CAP * 4), ad: new Float32Array(PING_CAP), b: new Float32Array(PING_CAP * 4), bd: new Float32Array(PING_CAP), t: new Float32Array(PING_CAP * 2), next: new Float32Array(PING_CAP) })
+      const K = Math.min(PING_CAP, pingsFor(base))
+      const tNow = now / 1000
+      const rot = rotation(lat, lon)
+      const zOf = (i: number) => {
+        const [x, y, z] = positionEcef(sat.data, i, sat.refEpoch, nowS)
+        const r = Math.hypot(x, y, z)
+        return (rot[2] * y + rot[5] * z + rot[8] * x) / r
+      }
+      for (let i = 0; i < K; i++) {
+        if (tNow < P.t[i * 2] + P.t[i * 2 + 1] || tNow < P.next[i]) continue
+        let done = false
+        for (let tries = 0; tries < 14 && !done; tries++) {
+          const li = (Math.random() * s.links.a.length) | 0
+          const ia = s.links.a[li]
+          const ib = s.links.b[li]
+          if (zOf(ia) > 0.3 && zOf(ib) > 0.3) {
+            for (let k = 0; k < 4; k++) {
+              P.a[i * 4 + k] = sat.data[ia * 5 + k]
+              P.b[i * 4 + k] = sat.data[ib * 5 + k]
+            }
+            P.ad[i] = sat.data[ia * 5 + 4]
+            P.bd[i] = sat.data[ib * 5 + 4]
+            P.t[i * 2] = tNow
+            P.t[i * 2 + 1] = 0.6 + Math.random() * 0.6
+            P.next[i] = tNow + P.t[i * 2 + 1] + 0.15 + Math.random() * 1.4
+            done = true
+          }
+        }
+        if (!done) P.next[i] = tNow + 0.25
+      }
+      pings = { count: K, a: P.a, ad: P.ad, b: P.b, bd: P.bd, t: P.t, now: tNow }
+    }
     s.r?.draw(lat, lon, {
+      shell: SHELL,
+      trailSeconds: sat ? trailFor(base) : 0,
+      pings,
       satT: sat ? nowS - sat.refEpoch : 0,
       gmst: sat ? gmst(nowS) : 0,
       satAlpha,
-      satThin: thinFor(s.size),
+      satThin: thinFor(base),
       globeA: s.globeA,
+      maskMix: s.reduced ? 1 : easeOutSoft(Math.min(1, (now - s.maskT0) / CUT_MS)),
       portrait: s.pspec && s.portrait ? { ...s.pspec, strength: s.pspec.strength * (s.reduced ? 1 : Math.min(1, (now - s.portrait.from) / PORTRAIT_FADE_MS)) } : undefined,
       ptr,
       push: { radius: PUSH_RADIUS * s.dpr, max: PUSH_MAX * s.dpr },
@@ -297,7 +352,12 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     if (!el) return
     st.current.reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     // Dev only: ?spin=0 freezes the decorative spin (satellites keep moving in real time), for motion screenshots.
-    if (process.env.NODE_ENV !== 'production') st.current.freeze = new URLSearchParams(window.location.search).get('spin') === '0'
+    if (process.env.NODE_ENV !== 'production') {
+      const q = new URLSearchParams(window.location.search)
+      st.current.freeze = q.get('spin') === '0'
+      // Dev only: ?lon=-100 starts the globe at that longitude (with spin=0 it stays), to put dense land behind the text.
+      if (q.get('lon') !== null && Number.isFinite(Number(q.get('lon')))) st.current.lon = Number(q.get('lon'))
+    }
     let near = false
     const update = () => setActive(near && document.visibilityState === 'visible')
     const io = new IntersectionObserver(([e]) => {
@@ -342,6 +402,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
           if (!p || st.current.r !== r) return
           r.setSatellites(p.data)
           st.current.sat = p
+          st.current.links = buildLinks(p.data, p.count)
           if (wrap.current) wrap.current.dataset.sats = String(p.count)
           st.current.satFrom = performance.now()
           kick()
@@ -359,7 +420,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     const apply = () => {
       const s = st.current
       s.size = el.clientWidth
-      s.dpr = Math.min(s.size < 600 ? 2 : 1.5, window.devicePixelRatio || 1)
+      s.dpr = Math.min(s.size / SHELL_SCALE < 600 ? 3 : 1.5, window.devicePixelRatio || 1)
       s.r?.resize(s.size, s.dpr)
       const ga = parseFloat(getComputedStyle(el).getPropertyValue('--hero-globe-opacity'))
       if (Number.isFinite(ga)) s.globeA = ga
