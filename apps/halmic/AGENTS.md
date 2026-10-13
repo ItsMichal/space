@@ -108,10 +108,10 @@ node apps/halmic/scripts/check-holes.mjs http://localhost:4563   # bento packing
 
 - `scripts/shot.mjs <url> <out> <w> <h> [flags]` takes headless Chrome screenshots over CDP. Flags: `full`, `mobile`, `jpg`,
   `gl` (software WebGL, needed to see the reel), `nogl`, `rm` (reduced motion), `eval=<js>`, `click=<css>`, `hover=<css>`,
-  `netlog`, `clip=x,y,w,h`, `sel=<css>`, a bare number for wait in ms. Chrome comes from `CHROME_PATH` or the macOS default;
+  `netlog`, `console`, `tap=x,y` + `strip=ms,ms,...` (touch the hero and save timed shots), `clip=x,y,w,h`, `sel=<css>`, a bare number for wait in ms. Chrome comes from `CHROME_PATH` or the macOS default;
   `ws` and `sharp` resolve from the root `node_modules`.
 - Test overrides (not linked from the UI): `?live=1&game=<name>` forces the on-air look, `?live=0` offline;
-  `?clips=demo&n=0..6` fake clips, `?clips=none` none; `?reelq=0..3` pins the reel quality.
+  `?clips=demo&n=0..6` fake clips, `?clips=none` none; `?reelq=0..3` pins the reel quality; `?reelfx=0` turns off the hero's wave field, idle flow and touch/pointer input (A/B against the plain glyph screen); `?reelhf=0` forces the RGBA8 (no half-float) field path; `?reelclock=frame` (with `reelq`) advances effect time one tick per rendered frame, which `shot.mjs tap=x,y strip=0,150,500` uses to photograph a ripple on slow software GL.
 - `.claude/launch.json` (local, gitignored) can run `halmic` (`npm run dev:halmic`, port 4310) and `halmic-worker`
   (`wrangler dev --cwd apps/halmic --port 8788`, the real `_headers` and Worker).
 - Social cards: `scripts/build-og.mjs` writes `public/og/*.jpg`; `check-social.mjs` audits OG/Twitter tags and images for every
