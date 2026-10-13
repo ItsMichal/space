@@ -222,13 +222,15 @@ a.card:hover .goi, a.card:focus-visible .goi { background: var(--paper); color: 
 .sl:hover { color: var(--text); } .sl:hover .ic-end { transform: translateX(2px); } .sl .ic-end { width: 1em; height: 1em; }
 .sl-note { display: block; min-height: 0; margin: 0; padding: 0; font-weight: 500; max-width: 70ch; }
 .bq { container-type: inline-size; }
-.bento { --gap: 12px; --cols: 2; --r: 20px; display: grid; gap: var(--gap); grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); grid-auto-rows: calc((100cqw - var(--gap) * (var(--cols) - 1)) / var(--cols)); grid-auto-flow: dense; }
-@container (min-width: 640px) { .bento { --cols: 3; --gap: 14px; --r: 26px; } }
-@container (min-width: 880px) { .bento { --cols: 4; --gap: 16px; --r: 28px; } }
-/* default width of the flex tile (what app.js computes: it fills the last row); keeps the layout whole before the script runs */
-.b-watch [data-flex], .b-work [data-flex], .b-posts [data-flex] { grid-column: span 2; } .b-play [data-flex], .b-else [data-flex] { grid-column: span 1; }
-@container (min-width: 640px) { .b-watch [data-flex], .b-work [data-flex], .b-posts [data-flex] { grid-column: span 3; } .b-play [data-flex] { grid-column: span 2; } .b-else [data-flex] { grid-column: span 3; } }
-@container (min-width: 880px) { .b-watch [data-flex], .b-work [data-flex], .b-posts [data-flex] { grid-column: span 2; } .b-play [data-flex], .b-else [data-flex] { grid-column: span 1; } }
+.bento { --gap: 12px; --cols: 2; --r: 20px; --cgap: 36px; display: flex; flex-direction: column; gap: var(--cgap); }
+@container (min-width: 640px) { .bento { --cols: 3; --gap: 14px; --r: 26px; --cgap: 44px; } }
+@container (min-width: 880px) { .bento { --cols: 4; --gap: 16px; --r: 28px; --cgap: 52px; } }
+/* a cluster is one project: its own packed grid. The bento only stacks clusters, so a tile can never end up inside another project's group, whatever the column count. */
+.cl { display: grid; gap: var(--gap); grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); grid-auto-rows: calc((100cqw - var(--gap) * (var(--cols) - 1)) / var(--cols)); grid-auto-flow: dense; }
+/* spans by column count: x4 is two wide only while the bento has four columns; fxC-N is the default width of the cluster's flex tile at C columns (what app.js computes, so the first paint is already whole) */
+.fx2-1 { grid-column: span 1; } .fx2-2 { grid-column: span 2; }
+@container (min-width: 640px) { .fx3-1 { grid-column: span 1; } .fx3-2 { grid-column: span 2; } .fx3-3 { grid-column: span 3; } }
+@container (min-width: 880px) { .x4 { grid-column: span 2; } .fx4-1 { grid-column: span 1; } .fx4-2 { grid-column: span 2; } .fx4-3 { grid-column: span 3; } .fx4-4 { grid-column: span 4; } }
 
 .tile { position: relative; display: block; min-width: 0; min-height: 0; border-radius: var(--r); overflow: hidden; isolation: isolate; background: var(--ink-2); color: var(--text); container-type: size; scroll-margin-top: 24px; }
 .tile:focus-visible { outline: 3px solid var(--blue-live); outline-offset: 3px; }
@@ -278,6 +280,10 @@ a.tile:is(:hover, :focus-visible) .play { background: var(--blue); color: var(--
 .t-stat.tblue { background: var(--blue); color: var(--ink); } .tblue .tt { color: var(--ink); }
 .tdim .tbg { z-index: -1; } .tdim .tbg img { opacity: .5; } .tdim::after { content: ""; position: absolute; inset: 0; z-index: 0; background: linear-gradient(to top, #0f0e13f2 0, #0f0e1366 55%, #0f0e1333); pointer-events: none; }
 .t-stat .num, .t-stat .lg { position: relative; z-index: 1; }
+/* year tiles: the year is the picture. Four digits are about 2.5em wide, so the size follows the width first */
+.t-year .num { font-size: min(32cqw, 54cqh); line-height: .85; }
+.t-year.x4 .num, .t-year.fx4-2 .num { font-size: min(32cqw, 54cqh); }
+.tink { background: var(--ink-3); } .tink .num { color: var(--blue-live); }
 .t-stat .lg-s { position: absolute; top: max(12px, 6.5cqi); left: max(12px, 6.5cqi); margin: 0; font-size: 28px; }
 /* link-out tiles: the brand mark large on the brand colour; the whole tile is the link */
 .t-link { display: flex; flex-direction: column; justify-content: flex-start; color: #fff; }
@@ -287,12 +293,12 @@ a.tile:is(:hover, :focus-visible) .play { background: var(--blue); color: var(--
 .tl-tw { background: #9146ff; } .tl-yt { background: #f00; } .tl-rd { background: #ff4500; color: #fff; }
 .tl-itch { background: #fa5c5c; color: var(--ink); }
 .tl-x { background: #000; box-shadow: inset 0 0 0 1px #ffffff26; }
-.tl-md { background: var(--paper); color: var(--paper-ink); }
+.tl-md, .tl-site { background: var(--paper); color: var(--paper-ink); }
 .tile .goi { top: max(12px, 4cqi); right: max(12px, 4cqi); width: 40px; height: 40px; background: #0000003d; color: #fff; }
-.tl-itch .goi, .tl-md .goi, .tpaper .goi { background: #0f0e1320; color: var(--ink); }
+.tl-itch .goi, .tl-md .goi, .tl-site .goi, .tpaper .goi { background: #0f0e1320; color: var(--ink); }
 .tblue .goi { background: #0f0e1326; color: var(--ink); }
 a.tile:is(:hover, :focus-visible) .goi { background: var(--paper); color: var(--ink); transform: rotate(45deg); }
-.tl-md:is(:hover, :focus-visible) .goi, .tpaper:is(:hover, :focus-visible) .goi, .tl-itch:is(:hover, :focus-visible) .goi { background: var(--ink); color: var(--paper); }
+.tl-md:is(:hover, :focus-visible) .goi, .tl-site:is(:hover, :focus-visible) .goi, .tpaper:is(:hover, :focus-visible) .goi, .tl-itch:is(:hover, :focus-visible) .goi { background: var(--ink); color: var(--paper); }
 a.tile:hover .goi .ic { transform: rotate(-45deg); }
 /* the Twitch tile follows the live state the hero already sets on <html data-live> */
 .ldot { display: inline-block; width: .42em; height: .42em; margin-right: .35em; border-radius: 50%; background: #fff; vertical-align: .12em; animation: onair 2.8s var(--ease) infinite; }
@@ -311,3 +317,19 @@ a.tile:hover .goi .ic { transform: rotate(-45deg); }
 .t-post .tt { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .t-post .play { left: calc(50% - 22px); right: auto; top: 26%; bottom: auto; width: 44px; height: 44px; font-size: 18px; } .t-post.lead .play { top: 38%; width: 60px; height: 60px; left: calc(50% - 30px); font-size: 24px; }
 .tp-text { background: var(--ink-3); } .tp-text .tcap { top: 0; align-items: flex-end; } .tp-text .tt { font-size: clamp(18px, 7cqi, 30px); line-height: 1.15; -webkit-line-clamp: 5; }
+
+/* ===== page transitions (cross-document View Transitions; vt.js names the tile being left or returned to) =====
+   A tile's picture and title morph into the destination's hero picture ([data-hero]) and h1; the rest of the page cross-fades with a small rise. None under reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+  [data-hero] { view-transition-name: hero-media; }
+  .pg h1 { view-transition-name: hero-title; }
+  .pg h1 { width: fit-content; max-width: 100%; }
+  ::view-transition-group(hero-media), ::view-transition-group(hero-title) { animation-duration: 360ms; animation-timing-function: var(--ease); }
+  ::view-transition-group(hero-media) { overflow: clip; border-radius: 22px; }
+  ::view-transition-old(hero-media), ::view-transition-new(hero-media) { height: 100%; object-fit: cover; }
+  ::view-transition-old(root) { animation: vt-out 180ms ease both; }
+  ::view-transition-new(root) { animation: vt-in 340ms var(--ease) 60ms both; }
+}
+@keyframes vt-out { to { opacity: 0; } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(14px); } }
