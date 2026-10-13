@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { md, inline, frontMatter } from './md.mjs';
 import { FOR_HALMIC as SIB, markSvg } from '@space/crosslinks';
 import { readSiblingPosts } from '@space/crosslinks/node';
+import { homeStats, fmt } from './stats.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const SITE = 'https://halmic.com';
@@ -124,18 +125,20 @@ const gtile = (g, cls = '') => tile({ href: `/games/${g.slug}/`, cls: `tm tg ${c
 const seddTile = (cls = '') => tile({ href: '/design/southeast-denver-dental/', cls: `tm ${cls}`, attrs: ' data-vt="m t"', inner: `<span class="tbg">${seddVideo(' aria-hidden="true"')}</span>${kbadge('pen-nib', 'Logo design')}${tcap({ title: 'Southeast Denver Dental', cap: 'Logo design' })}` });
 const mtTile = (cls = '') => tile({ href: mtBase, cls: `tm ${cls}`, attrs: ' data-vt="t"', inner: `<span class="tbg"><img src="/work/mountaintop/${mt.cover}" width="${mt.images[mt.cover].w}" height="${mt.images[mt.cover].h}" loading="lazy" decoding="async" alt=""></span>${tchip('Unity', 'cpu')}${tcap({ title: mt.title, cap: mt.hook })}` });
 // stat tile: a big word or number in the display face and one caption line. Numbers come from the content files, never typed in.
-const stat = ({ href, cls = '', attrs = '', num, word = false, title, cap = '', tone = '', img = '', ic = '', go = true, rel = '' }) => tile({ href, rel, cls: `t-stat ${tone} ${cls}`, attrs, inner: `${img ? `<span class="tbg">${img}</span>` : ''}${ic ? `<span class="lg lg-s">${icon(ic)}</span>` : ''}${go ? GO : ''}<span class="num${word ? ' word' : ''}" aria-hidden="true">${esc(num)}</span>${tcap({ title, cap })}` });
+// data-len (characters shown) sizes it to the tile's width; data-g (first glyph) lets the CSS pull the numeral's ink onto the caption's left edge
+const numEl = (num, { unit = '', word = false } = {}) => { const t = String(num); return `<span class="num${word ? ' word' : ''}" data-len="${Math.min(t.length, 6)}" data-g="${esc(t[0])}"><span class="nv">${esc(t)}</span>${unit ? `<small>${esc(unit)}</small>` : ''}</span>`; };
+const stat = ({ href, cls = '', attrs = '', num, unit = '', word = false, title, cap = '', tone = '', img = '', ic = '', go = true, rel = '' }) => tile({ href, rel, cls: `t-stat ${tone} ${cls}`, attrs, inner: `${img ? `<span class="tbg">${img}</span>` : ''}${ic ? `<span class="lg lg-s">${icon(ic)}</span>` : ''}${go ? GO : ''}${numEl(num, { unit, word })}${tcap({ title, cap })}` });
 // year tile: the year in the display face and one line on what happened that year in this work. Years are read from the content's own dates, never typed in.
 const yr = (iso) => +String(iso).slice(0, 4);
 const WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six'];
-const yearTile = ({ year, title, cap = '', tone = 'tink', cls = '', attrs = '' }) => `<div class="tile t-stat t-year ${tone} ${cls}"${attrs}><span class="num">${year}</span>${tcap({ title, cap })}</div>`;
+const yearTile = ({ year, title, cap = '', tone = 'tink', cls = '', attrs = '' }) => `<div class="tile t-stat t-year ${tone} ${cls}"${attrs}>${numEl(year)}${tcap({ title, cap })}</div>`;
 const phoenixTile = (cls = '') => stat({ href: '/work/pokemon-phoenix-rising/', cls, attrs: ' data-vt="t"', num: 'QA', word: true, tone: 'tdim', img: timg(`/videos/${pr.thumb}.jpg`, 'yt-img'), title: pr.title, cap: pr.role, go: false });
 // one of the game's official videos (the game's own channel): plays in place like every other video tile
 const prVideoTile = (v, cls = '') => tile({ href: `https://www.youtube.com/watch?v=${v.id}`, cls: `tm ${cls}`, attrs: ` data-vid="${v.id}" data-title="${esc(v.title)}"`, inner: `<span class="tbg">${timg(`/videos/${v.id}.jpg`, 'yt-img')}</span>${badge('yt')}${tchip(v.length, 'play')}${tcap({ title: v.title.replace(/^Phoenix Rising - /, ''), cap: String(v.published.slice(0, 4)) })}` });
 const prRedditTile = (cls = '', attrs = '') => ltile({ href: pr.reddit.url, kind: 'rd', glyph: 'b-reddit', title: pr.reddit.title, cap: 'The game’s community', cls, attrs, rel: 'me noopener' });
 const prChannelTile = (cls = '') => ltile({ href: pr.channel.url, kind: 'yt', glyph: 'b-youtube', title: 'The game on YouTube', cap: 'Its official channel', cls, rel: 'noopener' });
 // link-out tile: the brand mark large on the brand colour, a short label, the corner arrow (the whole tile is the link)
-const ltile = ({ href, kind, glyph, title, cap = '', cls = '', attrs = '', rel = '', inner = '' }) => tile({ href, rel, cls: `t-link tl-${kind} ${cls}`, attrs, inner: `<span class="lg">${icon(glyph)}</span>${GO}${inner || tcap({ title, cap })}` });
+const ltile = ({ href, kind, glyph, title, cap = '', cls = '', attrs = '', rel = '', inner = '' }) => tile({ href, rel, cls: `t-link tl-${kind} ${cls}`, attrs, inner: `<span class="lg" data-ic="${glyph}">${icon(glyph)}</span>${GO}${inner || tcap({ title, cap })}` });
 const twitchTile = (cls = '') => ltile({ href: 'https://www.twitch.tv/halmictv', kind: 'tw', glyph: 'b-twitch', cls: `${cls}`, rel: 'me noopener', attrs: ' id="twitch" data-flex', inner: `<span class="tcap"><span class="tx"><h3 class="tt"><span class="toff">Watch live on Twitch</span><span class="ton"><i class="ldot" aria-hidden="true"></i>Live now</span></h3><p class="ts"><span class="toff">No set schedule</span><span class="ton" data-live-game>halmictv</span></p></span></span>` });
 const ytTile = (cls = '', title = 'All videos on YouTube', href = 'https://www.youtube.com/@halmic', attrs = '') => ltile({ href, kind: 'yt', glyph: 'b-youtube', title, cls, attrs, rel: 'me noopener' });
 const itchTile = (cls = '', attrs = '') => ltile({ href: 'https://halmic.itch.io/', kind: 'itch', glyph: 'b-itchdotio', title: 'Play the games on itch.io', cls, attrs, rel: 'me noopener' });
@@ -144,6 +147,8 @@ const mediumTile = (cls = '') => ltile({ href: 'https://halmic.medium.com/', kin
 // A bento is a stack of clusters; a cluster is one project (or one kind of thing) and is its own packed grid, so another project's tile can never land between its tiles.
 // Each tile has a size in grid cells at 4 / 3 / 2 columns; the one tile marked data-flex gets the width that fills the cluster's last row (the fx classes give it that width
 // before app.js runs, app.js recomputes it when the cells change: a clip arrives, a tile plays).
+const S = homeStats();
+const cap1 = (t) => t[0].toUpperCase() + t.slice(1);
 const SZ = { one: [1, 1, 1], w2: [2, 2, 2], x4: [2, 1, 1], lead: [4, 4, 4] };
 const cluster = ({ name, items, flex }) => {
   const fx = [4, 3, 2].map((k, i) => { const c = items.reduce((n, [z]) => n + SZ[z][i], 0); return `fx${k}-${k - (c % k)}`; }).join(' ');
@@ -165,9 +170,9 @@ const clips = [['CREEPER, AW MAN', 'Minecraft'], ['4k clutch on Bind', 'VALORANT
 // ---- clusters: one project each, years from the content's own dates ----
 // Watch. Special Force (the lead film, the year it came out, the sequel), FIFA With the Boys (its year, the four episodes, the playlist), the other edits with the channel link, then the Twitch clips with the Twitch tile.
 const filmGroup = films[0].group;
-const clFilms = () => cluster({ name: filmGroup, items: [['lead', filmTile(films[0])], ['x4', filmTile(films[1], 'x4')]], flex: (fx) => yearTile({ year: Math.min(...films.map((f) => yr(f.published))), title: `${filmGroup}, ${WORDS[films.length]} short films`, tone: 'tink', cls: fx, attrs: ' data-flex' }) });
+const clFilms = () => cluster({ name: filmGroup, items: [['lead', filmTile(films[0])], ['x4', filmTile(films[1], 'x4')]], flex: (fx) => yearTile({ year: Math.min(...films.map((f) => yr(f.published))), title: `${filmGroup}, ${WORDS[films.length]} short films`, cap: `${S.filmMinutes} minutes in all`, tone: 'tink', cls: fx, attrs: ' data-flex data-stat="film-minutes"' }) });
 const epYears = episodes.map((e) => yr(e.published));
-const clFifa = () => cluster({ name: vc.series.title, items: [['one', yearTile({ year: Math.min(...epYears), title: `First episode of ${vc.series.title}`, cap: Math.max(...epYears) > Math.min(...epYears) ? `Latest in ${Math.max(...epYears)}` : '', tone: 'tblue' })], ...episodes.slice().reverse().map((v) => ['one', epTile(v)])], flex: (fx) => stat({ href: `https://www.youtube.com/playlist?list=${vc.series.playlist}`, num: String(episodes.length), title: `episodes of ${vc.series.title}`, tone: 'tpaper', cls: fx, attrs: ' data-flex' }) });
+const clFifa = () => cluster({ name: vc.series.title, items: [['x4', yearTile({ year: Math.min(...epYears), title: `First episode of ${vc.series.title}`, cap: Math.max(...epYears) > Math.min(...epYears) ? `Latest in ${Math.max(...epYears)}` : '', tone: 'tblue', cls: 'x4' })], ...episodes.slice().reverse().map((v) => ['one', epTile(v)]), ['x4', stat({ href: `https://www.youtube.com/playlist?list=${vc.series.playlist}`, num: S.fifaMinutes, unit: 'min', title: 'of bad shots', cap: `${cap1(WORDS[episodes.length])} episodes of ${vc.series.title}`, tone: 'tpaper', cls: 'x4', attrs: ' data-stat="fifa-minutes"' })]] });
 const edits = others.filter((o) => !films.includes(o));
 const clEdits = (title, href, attrs = '') => cluster({ name: 'More from the channel', items: edits.map((v) => ['one', vtile(v)]), flex: (fx) => ytTile(fx, title, href, ` data-flex${attrs}`) });
 // a clip is inserted before the Twitch tile (app.js); the built stand-ins are what shows until /api/clips answers
@@ -177,8 +182,8 @@ const clClips = () => {
 };
 // Play. Project Mountaintop (a rhythm game you play with hiking poles): the lead, its year, the dev logs. Then the tiny jam games and itch.io.
 const mtYear = Math.min(...mtLogs.map((l) => yr(l.date)), yr(mt.videoPublished));
-const clMountaintop = () => cluster({ name: mt.title, items: [['lead', mtTile('lead w2')], ['x4', yearTile({ year: mtYear, title: `${mt.title}, capstone and expo demo`, tone: 'tpaper', cls: 'x4' })]], flex: (fx) => stat({ href: `${mtBase}#logs`, num: String(mtLogs.length), title: `dev logs for ${mt.title}`, tone: 'tblue', cls: fx, attrs: ' data-flex' }) });
-const clTiny = () => cluster({ name: 'Tiny games', items: [...gl.filter((g) => g.tier === 'feature').map((g) => ['w2', gtile(g, 'w2')]), ...gl.filter((g) => g.tier !== 'feature').map((g) => ['one', gtile(g)])], flex: (fx) => itchTile(fx, ' data-flex') });
+const clMountaintop = () => cluster({ name: mt.title, items: [['lead', mtTile('lead w2')], ['x4', yearTile({ year: mtYear, title: `${mt.title}, capstone and expo demo`, tone: 'tpaper', cls: 'x4' })]], flex: (fx) => stat({ href: `${mtBase}#logs`, num: fmt(S.logWords), unit: 'words', title: `across ${WORDS[S.logCount]} dev logs`, cap: 'Written while it was being built', tone: 'tblue', cls: fx, attrs: ' data-flex data-stat="log-words"' }) });
+const clTiny = () => cluster({ name: 'Tiny games', items: [...gl.filter((g) => g.tier === 'feature').map((g) => ['w2', gtile(g, 'w2')]), ...gl.filter((g) => g.tier !== 'feature').map((g) => ['one', gtile(g)]), ['one', stat({ href: '/games/', num: S.engines.length, unit: S.engines.length === 1 ? 'engine' : 'engines', title: S.engines.length === S.gameCount ? 'One for every game' : `Across ${WORDS[S.gameCount]} games`, cap: S.engines.join(', '), tone: 'tpaper', attrs: ' data-vt="t" data-stat="engines"' })]], flex: (fx) => itchTile(fx, ' data-flex') });
 // Work. Pokémon Phoenix Rising (the lead, the game's channel, the subreddit; no dates are known, so no year tile), then the dental logo with the practice's site. Only verified facts become tiles (see content/phoenix-rising.json).
 const clPhoenix = () => cluster({ name: pr.title, items: [['lead', phoenixTile('lead w2')], ['x4', prChannelTile('x4')]], flex: (fx) => prRedditTile(fx, ' data-flex') });
 const clDental = () => cluster({ name: 'Southeast Denver Dental', items: [['w2', seddTile('w2')]], flex: (fx) => ltile({ href: 'https://www.sedenverdental.com/', kind: 'site', glyph: 'compass', title: 'sedenverdental.com', cap: 'The practice, with the logo in use', cls: fx, attrs: ' data-flex', rel: 'noopener' }) });

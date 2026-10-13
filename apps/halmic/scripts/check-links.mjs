@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { homeStats } from '../stats.mjs';
 const pub = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
 const SITE = 'https://halmic.com';
 const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]));
@@ -153,7 +154,7 @@ if ((games.match(/class="tile tm lead w2"/g) ?? []).length !== 1) bad.push('game
   same('stream', ['Special Force', 'FIFA With the Boys', 'More from the channel', 'Twitch clips']);
   same('games', ['Project Mountaintop', 'Tiny games']);
   same('work', ['Pokémon Phoenix Rising', 'Southeast Denver Dental']);
-  const yearOf = (h) => [...h.matchAll(/<div class="tile t-stat t-year [^"]*"[^>]*><span class="num">(\d{4})<\/span>/g)].map((m) => +m[1]);
+  const yearOf = (h) => [...h.matchAll(/<div class="tile t-stat t-year [^"]*"[^>]*><span class="num"[^>]*><span class="nv">(\d{4})<\/span>/g)].map((m) => +m[1]);
   const vids = JSON.parse(fs.readFileSync(path.join(pub, '..', 'content/videos.json'), 'utf8')).videos;
   const yv = (id) => +vids.find((v) => v.id === id).published.slice(0, 4);
   const cl = (id, name) => clusters(home, id).find((c) => c[0] === name)?.[1] ?? '';
@@ -162,7 +163,26 @@ if ((games.match(/class="tile tm lead w2"/g) ?? []).length !== 1) bad.push('game
   const mtJson = JSON.parse(fs.readFileSync(path.join(pub, '..', 'content/mountaintop/index.json'), 'utf8'));
   if (yearOf(cl('games', 'Project Mountaintop')).join() !== String(+mtJson.videoPublished.slice(0, 4))) bad.push('index.html: Mountaintop year tile does not match the content dates');
   if (yearOf(cl('work', 'Pokémon Phoenix Rising')).length || yearOf(cl('work', 'Southeast Denver Dental')).length) bad.push('index.html: Work has no dated source, so no year tiles');
-  if (!/class="tile t-stat tblue[^"]*"[^>]*>[\s\S]*?>6<[\s\S]*?dev logs/.test(cl('games', 'Project Mountaintop'))) bad.push('index.html: the dev-logs tile belongs to the Mountaintop cluster');
+  // stat tiles: every number shown is re-derived here from the content files (stats.mjs reads them; the minutes and the engines are also summed independently below) and must match the built tile, in the right cluster
+  {
+    const S = homeStats(), cur = JSON.parse(fs.readFileSync(path.join(pub, '..', 'content/curation.json'), 'utf8')), games = JSON.parse(fs.readFileSync(path.join(pub, '..', 'content/games.json'), 'utf8')).games;
+    const sec = (l) => l.split(':').reduce((n, p) => n * 60 + +p, 0);
+    const epSecs = cur.videos.series.episodes.reduce((n, id) => n + sec(vids.find((v) => v.id === id).length), 0);
+    const engines = new Set(games.filter((g) => (cur.games[g.slug]?.tier ?? 'more') !== 'off').map((g) => g.madeWith.toLowerCase()));
+    if (S.fifaMinutes !== Math.round(epSecs / 60) || S.engines.length !== engines.size) bad.push('stats.mjs: minutes or engines disagree with the content files');
+    const tile = (h, key) => { const m = h.match(new RegExp(`<(a|div) class="tile [^"]*"[^>]*data-stat="${key}"[^>]*>([\\s\\S]*?)</\\1>`)); if (!m) return null; const t = (re) => m[2].match(re)?.[1] ?? ''; return { num: t(/<span class="nv">([^<]*)<\/span>/), unit: t(/<small>([^<]*)<\/small>/), cap: t(/<p class="ts">([^<]*)<\/p>/), title: t(/<h3 class="tt">([^<]*)<\/h3>/) }; };
+    const want = [
+      ['stream', 'FIFA With the Boys', 'fifa-minutes', String(Math.round(epSecs / 60)), 'min'],
+      ['games', 'Project Mountaintop', 'log-words', String(Math.round(S.logWords)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f'), 'words'],
+      ['games', 'Tiny games', 'engines', String(engines.size), engines.size === 1 ? 'engine' : 'engines'],
+    ];
+    for (const [id, name, key, num, unit] of want) { const t = tile(cl(id, name), key); if (!t) bad.push(`index.html: stat "${key}" missing from the ${name} cluster`); else if (t.num !== num || t.unit !== unit) bad.push(`index.html: stat "${key}" shows ${t.num} ${t.unit}, the data says ${num} ${unit}`); }
+    const eng = tile(cl('games', 'Tiny games'), 'engines'); if (eng && eng.cap.split(', ').length !== engines.size) bad.push('index.html: the engines tile should list every engine');
+    const fm = tile(cl('stream', 'Special Force'), 'film-minutes'); const filmSecs = cur.videos.other.filter((o) => o.kind === 'short film').reduce((n, o) => n + sec(vids.find((v) => v.id === o.id).length), 0);
+    if (!fm || fm.cap !== `${Math.round(filmSecs / 60)} minutes in all`) bad.push(`index.html: Special Force runtime caption should say ${Math.round(filmSecs / 60)} minutes in all (got ${fm?.cap})`);
+    if (/class="num[^"]*"[^>]*aria-hidden/.test(home)) bad.push('index.html: a numeral is hidden from screen readers');
+    if (S.logWords % 100 !== 0 || S.logWords < 1000) bad.push('stats.mjs: the dev-log word count looks wrong');
+  }
   if (/data-cs=/.test(home)) bad.push('index.html: data-cs interleaving is gone (clips go in the Twitch cluster)');
   // each tile's internal destination appears in exactly one cluster
   const owners = {};
