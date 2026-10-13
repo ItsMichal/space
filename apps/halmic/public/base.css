@@ -309,4 +309,5 @@ a.tile:hover .goi .ic { transform: rotate(-45deg); }
 @media (prefers-reduced-motion: reduce) { .tbg img, .tbg video, a.tile .goi, a.tile .play, .ic-end { transform: none !important; } .playing .tp, .playing .tp .vframe { animation: none; } .ldot { animation: none; } }
 /* X post tiles: the post text is the title (his words, trimmed); a text-only post is a typographic tile */
 .t-post .tt { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.t-post .play { left: calc(50% - 22px); right: auto; top: 26%; bottom: auto; width: 44px; height: 44px; font-size: 18px; } .t-post.lead .play { top: 38%; width: 60px; height: 60px; left: calc(50% - 30px); font-size: 24px; }
 .tp-text { background: var(--ink-3); } .tp-text .tcap { top: 0; align-items: flex-end; } .tp-text .tt { font-size: clamp(18px, 7cqi, 30px); line-height: 1.15; -webkit-line-clamp: 5; }

@@ -26,7 +26,7 @@ Icons live in `brand/icons/` and are built into one same-origin sprite, `public/
 - To add one: fetch the SVG from the npm package (`npm pack @phosphor-icons/core` or `simple-icons` into a temp dir, never as a dependency), copy only that file into the matching folder, rebuild, and use `icon('name')`. An unknown name throws at build time, and `scripts/check-links.mjs` fails on any `<use>` whose symbol is missing from the sprite.
 
 ## Posts (X highlights)
-`content/posts.json` feeds an optional `Posts` bento on the home page (anchor `#posts`): static tiles, no widget or third-party request, media copied into `public/posts/` (neutral names, 1200px, 200 KB at most) with alt text written by hand, the post text trimmed to the title. While the list is empty the section is not rendered.
+`content/posts.json` feeds an optional `Posts` bento on the home page (anchor `#posts`): static tiles, no widget or third-party request, media copied into `public/posts/` (neutral names, 1200px, 200 KB at most) with alt text written by hand, the post text trimmed to the title. While the list is empty the section is not rendered. Extra fields: `kind` (web, game, hardware, design, video, music: icon on the chip, label for screen readers) and `video: true` (the media is a poster frame, adds a play glyph). Post links may point at any x.com status; the identity check only exempts that exact URL form.
 
 ## Test
 `npm test -w @space/halmic`: unit tests for the Worker (`node --test`, mocked `fetch`) and `scripts/check-links.mjs` (every internal link/asset/og:image in `public/` resolves, no placeholders, one h1, images have alt and size). Also run `npm run check:identity` from the root.
