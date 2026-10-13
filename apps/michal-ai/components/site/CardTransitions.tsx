@@ -11,7 +11,8 @@ type VT = { finished: Promise<void> }
 type Doc = Document & { startViewTransition?: (cb: () => Promise<void> | void) => VT }
 
 const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches
-const frame = () => new Promise<void>((r) => requestAnimationFrame(() => r()))
+// not rAF: frames are paused while the browser waits for the transition's update callback
+const tick = () => new Promise<void>((r) => setTimeout(r, 0))
 const kindOf = (el: Element) => CARD_KINDS.find((k) => el.closest(k.card))
 const cardSel = CARD_KINDS.map((k) => k.card).join(',')
 
@@ -22,8 +23,8 @@ const cardSel = CARD_KINDS.map((k) => k.card).join(',')
  *
  * One capture-phase click listener covers every card type. It prevents the link's default, which next/link respects, and
  * runs the same `router.push` inside `document.startViewTransition`, so prefetching, scroll and focus handling are Next's.
- * Back/forward is wrapped on `popstate`. The transition's update callback resolves once the new route has committed and
- * its parts are named.
+ * Back/forward is wrapped on `popstate` (see below). The transition's update callback resolves once the new route has
+ * committed and its parts are named.
  */
 export function CardTransitions() {
   const router = useRouter()
@@ -59,11 +60,11 @@ export function CardTransitions() {
         const r = card?.getBoundingClientRect()
         if (card && kind && r && r.bottom > 0 && r.top < innerHeight) clears.current.push(applyNames(cardPlan(card, kind as CardKind)))
       }
-      await frame()
+      await tick()
     }
 
     /** Run `go` (which starts the navigation) inside a view transition. Returns false when it could not start one. */
-    const run = (from: string, go: (() => void) | null) => {
+    const run = (from: string, go: () => void) => {
       root.setAttribute('data-vt', '')
       try {
         const t = doc.startViewTransition!(
@@ -76,9 +77,8 @@ export function CardTransitions() {
                   resolve()
                 })
               }
-              if (path.current !== from) done(from) // back/forward: React committed before the browser asked
-              else arrive.current = done
-              go?.()
+              arrive.current = done
+              go()
             })
         )
         const end = () => {
@@ -109,11 +109,29 @@ export function CardTransitions() {
       }
     }
 
-    const onPop = () => {
+    // Back / forward. Next commits the new route on its own schedule, which can land before the browser has captured the
+    // old page, so the old side would already be the new page. To keep the order fixed this listener (capture, so it runs
+    // first) holds Next's handler back, starts the transition, and replays the same popstate from inside the transition's
+    // update callback, after the old page has been captured.
+    let replaying = false
+    const onPop = (e: PopStateEvent) => {
+      if (replaying) return
       const from = path.current
       if (from === location.pathname || calm() || !(isPostPath(from) || isPostPath(location.pathname))) return
+      e.stopImmediatePropagation()
       if (isPostPath(from)) clears.current.push(applyNames(pagePlan(document.getElementById('main') ?? document)))
-      if (!run(from, null)) clearAll()
+      const replay = () => {
+        replaying = true
+        try {
+          window.dispatchEvent(new PopStateEvent('popstate', { state: e.state }))
+        } finally {
+          replaying = false
+        }
+      }
+      if (!run(from, replay)) {
+        clearAll()
+        replay()
+      }
     }
 
     document.addEventListener('click', onClick, true)

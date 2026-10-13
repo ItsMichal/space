@@ -19,6 +19,7 @@ export const CARD_KINDS = [
   { card: '.postnav__row', img: null, title: '.postnav__t' },
   { card: '.postnav__step', img: null, title: '.postnav__st' },
   { card: '.pv-in', img: '.pv-img', title: '.pv-t' },
+  { card: '.tl-panel', img: '.tl-p-img', title: '.tl-p-title' },
 ] as const
 export type CardKind = (typeof CARD_KINDS)[number]
 
