@@ -1,6 +1,7 @@
 // Custom Worker entry: OpenNext handler + Durable Objects.
 import { canonicalRedirect, isPreviewHost } from './host'
 import { handleLive, isLivePath, type LiveEnv } from './live'
+import { handleStarlinkRead, refreshStarlink, STARLINK_LIVE_PATH } from './starlink'
 // @ts-expect-error `.open-next/worker.js` is generated at build time by `opennextjs-cloudflare build`
 import { default as handler } from '../.open-next/worker.js'
 
@@ -20,6 +21,8 @@ export default {
     // michal.ai is canonical: the old domain and www hosts permanently redirect, keeping path and query.
     const to = canonicalRedirect(request.url)
     if (to) return Response.redirect(to, 308)
+    // Hero globe constellation (not part of the live features, so LIVE_KILL does not apply).
+    if (url.pathname === STARLINK_LIVE_PATH) return handleStarlinkRead(request, env)
     // Live features (presence socket, reactions). Handled here, before OpenNext; the site itself never depends on them.
     if (isLivePath(url.pathname)) {
       try {
@@ -34,6 +37,10 @@ export default {
     const out = new Response(res.body, res)
     out.headers.set('X-Robots-Tag', 'noindex')
     return out
+  },
+  // Cron Trigger (wrangler.jsonc triggers.crons): refresh the Starlink elements every 6 hours.
+  async scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+    ctx.waitUntil(refreshStarlink(env).then((m) => console.log(`starlink refresh: ${m}`)))
   },
 } satisfies ExportedHandler<Env>
 

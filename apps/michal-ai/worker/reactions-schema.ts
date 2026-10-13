@@ -23,6 +23,11 @@ export const MIGRATIONS: readonly { v: number; note: string; sql: readonly strin
     note: 'views: visitors already counted today (rows older than today are deleted on write); the running total lives in c as (~, views)',
     sql: ['CREATE TABLE IF NOT EXISTS vseen (day TEXT NOT NULL, vid TEXT NOT NULL, PRIMARY KEY (day, vid)) WITHOUT ROWID'],
   },
+  {
+    v: 3,
+    note: 'blob: one named binary value per row; only the "~starlink" object uses it (hero globe constellation snapshot, worker/starlink.ts)',
+    sql: ['CREATE TABLE IF NOT EXISTS blob (k TEXT PRIMARY KEY, v BLOB NOT NULL, at INTEGER NOT NULL) WITHOUT ROWID'],
+  },
 ]
 
 export const SCHEMA_VERSION = MIGRATIONS[MIGRATIONS.length - 1].v

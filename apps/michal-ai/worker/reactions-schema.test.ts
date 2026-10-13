@@ -29,7 +29,7 @@ describe('reactions schema migrations', () => {
   it('a new room gets every table, and the version is recorded', () => {
     const f = fakeSql()
     expect(migrate(f.sql)).toBe(SCHEMA_VERSION)
-    expect([...f.tables].sort()).toEqual(['c', 'meta', 'r', 'vseen'])
+    expect([...f.tables].sort()).toEqual(['blob', 'c', 'meta', 'r', 'vseen'])
     expect(f.version()).toBe(SCHEMA_VERSION)
   })
 
@@ -41,7 +41,7 @@ describe('reactions schema migrations', () => {
   })
 
   it('is a no-op once current', () => {
-    const f = fakeSql({ meta: SCHEMA_VERSION, tables: ['r', 'c', 'vseen', 'meta'] })
+    const f = fakeSql({ meta: SCHEMA_VERSION, tables: ['r', 'c', 'vseen', 'blob', 'meta'] })
     migrate(f.sql)
     expect(f.log.filter((q) => q.startsWith('CREATE TABLE IF NOT EXISTS') && !q.includes('meta'))).toEqual([])
   })
@@ -51,5 +51,15 @@ describe('reactions schema migrations', () => {
     migrate(f.sql)
     expect(f.log.some((q) => q.includes('TABLE IF NOT EXISTS r '))).toBe(false)
     expect(f.tables.has('vseen')).toBe(true)
+  })
+
+  it('v3 adds the Starlink blob table to a v2 room without touching anything else', () => {
+    const f = fakeSql({ meta: 2, tables: ['r', 'c', 'vseen', 'meta'] })
+    expect(migrate(f.sql)).toBe(3)
+    expect(f.tables.has('blob')).toBe(true)
+    const ran = f.log.filter((q) => q.startsWith('CREATE TABLE IF NOT EXISTS') && !q.includes('meta'))
+    expect(ran).toHaveLength(1)
+    expect(ran[0]).toContain('blob')
+    expect(f.log.filter((q) => q.startsWith('DROP') || q.startsWith('DELETE'))).toEqual([])
   })
 })

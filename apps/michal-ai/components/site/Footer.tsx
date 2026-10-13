@@ -30,6 +30,7 @@ export function Footer() {
         </nav>
       </div>
       <p className="t-meta mt-space-4 px-space-2">Starlink image: Starlink / SpaceX.</p>
+      <p className="t-meta mt-space-2 px-space-2">Globe satellite positions: orbit data from CelesTrak supplemental GP, derived from SpaceX public ephemerides.</p>
     </footer>
   )
 }

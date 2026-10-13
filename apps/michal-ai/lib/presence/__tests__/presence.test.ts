@@ -14,7 +14,7 @@ const SID = 'abcdefghijklmnop1234'
 
 describe('geo', () => {
   it('snaps to the 0.5 degree grid', () => {
-    expect(snap(33.9164, -118.3526)).toEqual({ lat: 34, lon: -118.5 })
+    expect(snap(39.7392, -104.9903)).toEqual({ lat: 39.5, lon: -105 })
     expect(snap(51.5074, -0.1278)).toEqual({ lat: 51.5, lon: 0 })
   })
   it('rejects non-finite and out-of-range input', () => {
@@ -33,9 +33,9 @@ describe('geo', () => {
     }
   })
   it('public points stay inside the snapped cell and never reveal the true point', () => {
-    const p = publicPoint(33.9164, -118.3526, 'id1')!
-    expect(Math.abs(p.lat - 34)).toBeLessThanOrEqual(0.25)
-    expect(Math.abs(p.lon + 118.5)).toBeLessThanOrEqual(0.25)
+    const p = publicPoint(39.7392, -104.9903, 'id1')!
+    expect(Math.abs(p.lat - 39.5)).toBeLessThanOrEqual(0.25)
+    expect(Math.abs(p.lon + 105)).toBeLessThanOrEqual(0.25)
     // decimals are capped
     expect(String(p.lat).split('.')[1]?.length ?? 0).toBeLessThanOrEqual(2)
   })
