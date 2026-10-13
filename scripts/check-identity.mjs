@@ -48,11 +48,14 @@ const globToRe = (g) =>
       '$'
   )
 
+const APPROVED_LINK = /https:\/\/x\.com\/itsmichal\/status\/\d+/gi
+
 function scan(files, patterns) {
   const hits = []
   for (const f of files) {
     const lines = fs.readFileSync(f, 'utf8').split('\n')
     lines.forEach((line, i) => {
+      line = line.replace(APPROVED_LINK, '') // owner approved outbound links to these posts on 2026-10-12
       for (const re of patterns) {
         const m = line.match(re)
         if (m) hits.push({ file: rel(f), line: i + 1, match: m[0] })
