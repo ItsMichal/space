@@ -88,7 +88,7 @@ One motion language, in `motion.css` (everything new) and `motion.js` (observers
   clips arriving from `/api/clips` get `.clip-in` (content fades in, staggered; badge pops; picture fades in on load).
 - Not done on purpose: no scroll velocity in `hero.js`, no pinned scenes, no same-document anchor fade (native smooth scroll already does the job).
 - `node scripts/check-motion.mjs <url>` asserts: no wheel or touch listeners, a real wheel input moves the page by its delta, synthetic wheel and touchmove are not default-prevented, no animation under reduced motion or `?motion=0`,
-  everything visible with scripts off, no layout shift or horizontal overflow while scrolling at 1440/390/360, no long task in the best of three runs (software rendering is noisy), numerals end on their static text.
+  everything visible with scripts off, no layout shift or horizontal overflow while scrolling at 1440/390/360, no long task in the best of three runs with the hero reel off (`nogl`; software rendering is noisy, and the reel starting up logs long tasks on the page without any motion code), numerals end on their static text.
 
 ## Content security policy (strict, generated in `build.mjs`)
 

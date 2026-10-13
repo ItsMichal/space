@@ -75,7 +75,7 @@ for (const [w, mobile] of [[1440, false], [390, true], [360, true]]) {
     await new Promise((r) => setTimeout(r, 400));
     return JSON.stringify({ longs, cls: shifts.reduce((a, b) => a + b, 0), frames, slow, maxScrollW, vw: innerWidth }); })()`;
   // long tasks on a busy software-rendered machine are noisy (the page before the motion work logs them too), so: best of three runs must be clean
-  const runs = [0, 1, 2].map(() => { const r = shot(`${base}/?clips=demo`, w, mobile ? ['mobile'] : [], ev); return r.value && JSON.parse(r.value); });
+  const runs = [0, 1, 2].map(() => { const r = shot(`${base}/?clips=demo`, w, [...(mobile ? ['mobile'] : []), 'nogl'], ev); return r.value && JSON.parse(r.value); });   // nogl: the hero reel (hero.js, not motion) starting up would otherwise dominate the long tasks
   const v = runs.find((x) => x && x.longs.length === 0) ?? runs[0];
   ok(runs.some((x) => x && x.longs.length === 0), `${w}px: long tasks per run while scrolling ${v?.frames} steps down and back: ${runs.map((x) => x?.longs.length).join(', ')} (one clean run required)`);
   const cls = Math.max(...runs.map((x) => x?.cls ?? 1)), sw = Math.max(...runs.map((x) => x?.maxScrollW ?? 9999));
