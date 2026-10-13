@@ -10,7 +10,7 @@ Two independent sites in one npm-workspaces monorepo (Node 22, one lockfile at t
 
 | Path | What | Live | Worker |
 | --- | --- | --- | --- |
-| `apps/michal-ai` | The owner's real-name portfolio. Next.js App Router on Cloudflare Workers via OpenNext. | michal.ai | `space` |
+| `apps/michal-ai` | The owner's real-name portfolio. React Router 7 + Vite, prerendered to static HTML, served by a plain Cloudflare Worker. | michal.ai | `space` |
 | `apps/halmic` | A persona site. Zero-dependency static build plus one small Worker. | halmic.com | `halmic` |
 | `packages/*` | Shared code: `motion`, `tokens`, `config`, `crosslinks`. | n/a | n/a |
 
@@ -26,7 +26,7 @@ Two independent sites in one npm-workspaces monorepo (Node 22, one lockfile at t
 npm install                 # after pulling, whenever a workspace package was added (see below)
 npm run dev:michal          # portfolio dev server (predev builds image variants)
 npm run dev:halmic          # builds, then serves http://localhost:4310/
-npm run build:michal        # next build
+npm run build:michal        # react-router build (prerender) + share cards
 npm run build:halmic        # regenerates apps/halmic/public (tracked output)
 npm run check               # typecheck + lint + test + check:identity + check:dashes + check:slugs
 npm run check:identity      # identity guard (hard for halmic, soft for the portfolio)

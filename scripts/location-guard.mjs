@@ -5,7 +5,7 @@ import path from 'node:path'
 
 export const FORBIDDEN = [new RegExp(['haw', 'thorne'].join(''), 'i'), new RegExp(['33\\.91', '64'].join('')), new RegExp(['118\\.35', '26'].join(''))]
 
-const SKIP = new Set(['node_modules', '.git', '.next', '.open-next', '.wrangler', '.cache', '.turbo', '.claude', 'dist'])
+const SKIP = new Set(['node_modules', '.git', '.next', 'build', '.react-router', '.parity', '.open-next', '.wrangler', '.cache', '.turbo', '.claude', 'dist'])
 const TEXT = /\.(html?|css|m?js|cjs|jsx?|tsx?|json|jsonc|md|mdx|txt|xml|svg|toml|ya?ml|csv)$/i
 
 export function findForbidden(text) {

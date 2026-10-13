@@ -99,7 +99,7 @@ jobs:
       - uses: ./.github/actions/setup
       - uses: ./.github/actions/checks
       - uses: ./.github/actions/media-cache
-      - name: Build and deploy (opennextjs-cloudflare build + deploy)
+      - name: Build and deploy (react-router build, then wrangler deploy)
         run: npm run deploy:michal 2>&1 | tee deploy.log
       - name: Deployed version
         run: |
