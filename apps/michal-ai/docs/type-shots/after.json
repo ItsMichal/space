@@ -1,0 +1,664 @@
+{
+  "home@1440": {
+    "18px": {
+      "n": 2381,
+      "where": [
+        "a.skip-link: Skip to content",
+        "a.flex: Work",
+        "a.flex: Writing",
+        "a.flex: About"
+      ]
+    },
+    "15px": {
+      "n": 865,
+      "where": [
+        "span: halmic.com",
+        "span.t-meta__part: 2024 to now",
+        "span: ·",
+        "span.t-meta__part: Software engineer"
+      ]
+    },
+    "136px": {
+      "n": 18,
+      "where": [
+        "span.block: Michał",
+        "span.block: Bodzianowski"
+      ]
+    },
+    "24px": {
+      "n": 150,
+      "where": [
+        "p.mt-space-4: Creative developer. AI, web ",
+        "h3.tile__title: JIA Webapp",
+        "h3.tile__title: AI Crofty",
+        "h3.tile__title: Project Mountaintop"
+      ]
+    },
+    "44px": {
+      "n": 265,
+      "where": [
+        "span.hook__stem: I've built",
+        "span.hook__w: an",
+        "span.hook__w: LLM",
+        "span.hook__w: helper"
+      ]
+    }
+  },
+  "projects@1440": {
+    "18px": {
+      "n": 959,
+      "where": [
+        "a.skip-link: Skip to content",
+        "a.flex: Work",
+        "a.flex: Writing",
+        "a.flex: About"
+      ]
+    },
+    "15px": {
+      "n": 391,
+      "where": [
+        "span: halmic.com",
+        "a.seg-opt: All",
+        "a.seg-opt: Web",
+        "a.seg-opt: AI"
+      ]
+    },
+    "44px": {
+      "n": 25,
+      "where": [
+        "h1.mb-space-12: Selected work",
+        "h3.tile__title: Starlink.com"
+      ]
+    },
+    "24px": {
+      "n": 75,
+      "where": [
+        "h3.tile__title: JIA Webapp",
+        "h3.tile__title: AI Crofty",
+        "h3.tile__title: Project Mountaintop",
+        "h3.tile__title: Office Wizards"
+      ]
+    }
+  },
+  "writing@1440": {
+    "18px": {
+      "n": 1105,
+      "where": [
+        "a.skip-link: Skip to content",
+        "a.flex: Work",
+        "a.flex: Writing",
+        "a.flex: About"
+      ]
+    },
+    "15px": {
+      "n": 293,
+      "where": [
+        "span: halmic.com",
+        "time: May 2020",
+        "time: Nov 2021",
+        "span: ·"
+      ]
+    },
+    "44px": {
+      "n": 7,
+      "where": [
+        "h1.mb-space-12: Writing"
+      ]
+    },
+    "24px": {
+      "n": 156,
+      "where": [
+        "h3.tile__title: Taco Neko Development",
+        "h3.tile__title: Making a punching bag game i",
+        "h3.tile__title: Experiments in Analog- and a",
+        "h2.writing__h: Series"
+      ]
+    }
+  },
+  "about@1440": {
+    "18px": {
+      "n": 4366,
+      "where": [
+        "a.skip-link: Skip to content",
+        "a.flex: Work",
+        "a.flex: Writing",
+        "a.flex: About"
+      ]
+    },
+    "15px": {
+      "n": 2491,
+      "where": [
+        "span: halmic.com",
+        "span.t-meta: in/mbodzianowski",
+        "span.t-meta: @ItsMichal",
+        "span.t-meta: ItsMichal"
+      ]
+    },
+    "44px": {
+      "n": 5,
+      "where": [
+        "h1.mb-space-8: About"
+      ]
+    },
+    "24px": {
+      "n": 199,
+      "where": [
+        "h2.card__h: Contact",
+        "h2.card__h: Experience",
+        "h2.card__h: Education",
+        "h2.card__h: Publications"
+      ]
+    }
+  },
+  "resume@1440": {
+    "18px": {
+      "n": 426,
+      "where": [
+        "a.skip-link: Skip to content",
+        "a.flex: Work",
+        "a.flex: Writing",
+        "a.flex: About"
+      ]
+    },
+    "15px": {
+      "n": 5304,
+      "where": [
+        "span: halmic.com",
+        "a.link: About page",
+        "span: California",
+        "a: linkedin.com/in/mbodzianowsk"
+      ]
+    },
+    "44px": {
+      "n": 19,
+      "where": [
+        "h1.rs-name: Michał Bodzianowski"
+      ]
+    }
+  },
+  "project@1440": {
+    "18px": {
+      "n": 1577,
+      "where": [
+        "a.skip-link: Skip to content",
+        "a.flex: Work",
+        "a.flex: Writing",
+        "a.flex: About"
+      ]
+    },
+    "15px": {
+      "n": 699,
+      "where": [
+        "span: halmic.com",
+        "span.st-title: Reading",
+        "span.st-title: Project Mountaintop",
+        "p.mb-space-4: Project"
+      ]
+    },
+    "44px": {
+      "n": 19,
+      "where": [
+        "h1.font-display: Project Mountaintop"
+      ]
+    },
+    "24px": {
+      "n": 144,
+      "where": [
+        "p.lede: A Unity rhythm game about hi",
+        "a: Project Mountaintop",
+        "h2.postnav__h: Progress log",
+        "h3.tl-p-title: First Steps - Week 1→2 Recap"
+      ]
+    }
+  },
+  "child@1440": {
+    "18px": {
+      "n": 6436,
+      "where": [
+        "a.skip-link: Skip to content",
+        "a.flex: Work",
+        "a.flex: Writing",
+        "a.flex: About"
+      ]
+    },
+    "15px": {
+      "n": 733,
+      "where": [
+        "span: halmic.com",
+        "span.st-title: Reading",
+        "span.st-title: Week 6 Goals",
+        "a.link: Project Mountaintop"
+      ]
+    },
+    "44px": {
+      "n": 21,
+      "where": [
+        "h1.font-display: Week 5→6 - SPAAAAACE!"
+      ]
+    },
+    "24px": {
+      "n": 142,
+      "where": [
+        "p.lede: T9Hacks week: a space theme,",
+        "a: Week 6 Goals"
+      ]
+    }
+  },
+  "post@1440": {
+    "18px": {
+      "n": 5183,
+      "where": [
+        "a.skip-link: Skip to content",
+        "a.flex: Work",
+        "a.flex: Writing",
+        "a.flex: About"
+      ]
+    },
+    "15px": {
+      "n": 532,
+      "where": [
+        "span: halmic.com",
+        "span.st-title: Reading",
+        "p.mb-space-4: Article",
+        "p.mb-space-4: ·"
+      ]
+    },
+    "44px": {
+      "n": 29,
+      "where": [
+        "h1.font-display: Creating my first PCB: Objec"
+      ]
+    },
+    "24px": {
+      "n": 124,
+      "where": [
+        "p.lede: But before we get to that… l"
+      ]
+    }
+  },
+  "404@1440": {
+    "15px": {
+      "n": 177,
+      "where": [
+        "span: halmic.com",
+        "span.font-serif: ©",
+        "span.font-serif: 2026",
+        "span.font-serif: Michał Bodzianowski"
+      ]
+    },
+    "18px": {
+      "n": 103,
+      "where": [
+        "a.flex: Work",
+        "a.flex: Writing",
+        "a.flex: About",
+        "span: Work"
+      ]
+    },
+    "44px": {
+      "n": 14,
+      "where": [
+        "h1.font-display: Page not found"
+      ]
+    },
+    "24px": {
+      "n": 21,
+      "where": [
+        "a.surface: Back to the home page"
+      ]
+    }
+  },
+  "home@375": {
+    "17px": {
+      "n": 2165,
+      "where": [
+        "a.skip-link: Skip to content",
+        "p.tile__desc: Growing the Starlink.com pla",
+        "p.tile__desc: A web app that lets an LLM a",
+        "p.tile__desc: A realtime F1 23 commentator"
+      ]
+    },
+    "53.5938px": {
+      "n": 18,
+      "where": [
+        "span.block: Michał",
+        "span.block: Bodzianowski"
+      ]
+    },
+    "21px": {
+      "n": 162,
+      "where": [
+        "p.mt-space-4: Creative developer. AI, web ",
+        "h3.tile__title: Starlink.com",
+        "h3.tile__title: JIA Webapp",
+        "h3.tile__title: AI Crofty"
+      ]
+    },
+    "34px": {
+      "n": 253,
+      "where": [
+        "span.hook__stem: I've built",
+        "span.hook__w: an",
+        "span.hook__w: LLM",
+        "span.hook__w: helper"
+      ]
+    },
+    "15px": {
+      "n": 810,
+      "where": [
+        "span.t-meta__part: 2024 to now",
+        "span: ·",
+        "span.t-meta__part: Software engineer",
+        "span.t-meta__part: 2023"
+      ]
+    }
+  },
+  "menu@375": {
+    "21px": {
+      "n": 178,
+      "where": [
+        "a.flex: Work",
+        "a.flex: Writing",
+        "a.flex: About",
+        "p.mt-space-4: Creative developer. AI, web "
+      ]
+    },
+    "17px": {
+      "n": 2302,
+      "where": [
+        "span.sheet-prow__title: Starlink.com",
+        "span.sheet-prow__title: JIA Webapp",
+        "span.sheet-prow__title: AI Crofty",
+        "span.sheet-prow__title: Taco Neko Development"
+      ]
+    },
+    "15px": {
+      "n": 1642,
+      "where": [
+        "span.sheet-prow__sub: Growing the Starlink.com pla",
+        "span.sheet-prow__sub: A web app that lets an LLM a",
+        "span.sheet-prow__sub: A realtime F1 23 commentator",
+        "span.sheet-prow__sub: Hello! Welcome to my post ab"
+      ]
+    },
+    "53.5938px": {
+      "n": 18,
+      "where": [
+        "span.block: Michał",
+        "span.block: Bodzianowski"
+      ]
+    },
+    "34px": {
+      "n": 253,
+      "where": [
+        "span.hook__stem: I've built",
+        "span.hook__w: an",
+        "span.hook__w: LLM",
+        "span.hook__w: helper"
+      ]
+    }
+  },
+  "projects@375": {
+    "17px": {
+      "n": 943,
+      "where": [
+        "a.skip-link: Skip to content",
+        "p.tile__desc: Growing the Starlink.com pla",
+        "p.tile__desc: A web app that lets an LLM a",
+        "p.tile__desc: A realtime F1 23 commentator"
+      ]
+    },
+    "34px": {
+      "n": 13,
+      "where": [
+        "h1.mb-space-12: Selected work"
+      ]
+    },
+    "15px": {
+      "n": 381,
+      "where": [
+        "a.seg-opt: All",
+        "a.seg-opt: Web",
+        "a.seg-opt: AI",
+        "a.seg-opt: Games"
+      ]
+    },
+    "21px": {
+      "n": 87,
+      "where": [
+        "h3.tile__title: Starlink.com",
+        "h3.tile__title: JIA Webapp",
+        "h3.tile__title: AI Crofty",
+        "h3.tile__title: Project Mountaintop"
+      ]
+    }
+  },
+  "writing@375": {
+    "17px": {
+      "n": 1089,
+      "where": [
+        "a.skip-link: Skip to content",
+        "p.tile__desc: Hello! Welcome to my post ab",
+        "p.tile__desc: I’m a pretty decent programm",
+        "p.tile__desc: Analog! We technically alrea"
+      ]
+    },
+    "34px": {
+      "n": 7,
+      "where": [
+        "h1.mb-space-12: Writing"
+      ]
+    },
+    "21px": {
+      "n": 156,
+      "where": [
+        "h3.tile__title: Taco Neko Development",
+        "h3.tile__title: Making a punching bag game i",
+        "h3.tile__title: Experiments in Analog- and a",
+        "h2.writing__h: Series"
+      ]
+    },
+    "15px": {
+      "n": 283,
+      "where": [
+        "time: May 2020",
+        "time: Nov 2021",
+        "span: ·",
+        "span.t-meta__part: Object"
+      ]
+    }
+  },
+  "about@375": {
+    "17px": {
+      "n": 4350,
+      "where": [
+        "a.skip-link: Skip to content",
+        "p.t-text: Hi, I'm Michał Bodzianowski,",
+        "p.t-text: I'm a software engineer at S",
+        "span: I'm currently based in Calif"
+      ]
+    },
+    "34px": {
+      "n": 5,
+      "where": [
+        "h1.mb-space-8: About"
+      ]
+    },
+    "21px": {
+      "n": 199,
+      "where": [
+        "h2.card__h: Contact",
+        "h2.card__h: Experience",
+        "h2.card__h: Education",
+        "h2.card__h: Publications"
+      ]
+    },
+    "15px": {
+      "n": 2481,
+      "where": [
+        "span.t-meta: in/mbodzianowski",
+        "span.t-meta: @ItsMichal",
+        "span.t-meta: ItsMichal",
+        "span.t-meta: Web and PDF"
+      ]
+    }
+  },
+  "resume@375": {
+    "17px": {
+      "n": 410,
+      "where": [
+        "a.skip-link: Skip to content",
+        "a.rs-btn: Download PDF",
+        "p.rs-role: Software Engineer",
+        "p.rs-role: , SpaceX (Starlink.com)"
+      ]
+    },
+    "15px": {
+      "n": 5294,
+      "where": [
+        "a.link: About page",
+        "span: California",
+        "a: linkedin.com/in/mbodzianowsk",
+        "a: github.com/ItsMichal"
+      ]
+    },
+    "34px": {
+      "n": 19,
+      "where": [
+        "h1.rs-name: Michał Bodzianowski"
+      ]
+    }
+  },
+  "project@375": {
+    "17px": {
+      "n": 1561,
+      "where": [
+        "a.skip-link: Skip to content",
+        "dd: 2023",
+        "dd: Game developer, UI/UX and mu",
+        "dd: Unity · Arduino · Game Dev ·"
+      ]
+    },
+    "15px": {
+      "n": 682,
+      "where": [
+        "span.st-title: Project Mountaintop",
+        "p.mb-space-4: Project",
+        "p.mb-space-4: ·",
+        "p.mb-space-4: 1"
+      ]
+    },
+    "34px": {
+      "n": 19,
+      "where": [
+        "h1.font-display: Project Mountaintop"
+      ]
+    },
+    "21px": {
+      "n": 144,
+      "where": [
+        "p.lede: A Unity rhythm game about hi",
+        "a: Project Mountaintop",
+        "h2.postnav__h: Progress log",
+        "h3.tl-p-title: First Steps - Week 1→2 Recap"
+      ]
+    }
+  },
+  "child@375": {
+    "17px": {
+      "n": 6420,
+      "where": [
+        "a.skip-link: Skip to content",
+        "p: Week 6 Goals",
+        "li: Get in contact with external",
+        "li: Add menus (this weekend @ T9"
+      ]
+    },
+    "15px": {
+      "n": 723,
+      "where": [
+        "span.st-title: Reading",
+        "span.st-title: Week 6 Goals",
+        "a.link: Project Mountaintop",
+        "p.mb-space-4: · Progress log"
+      ]
+    },
+    "34px": {
+      "n": 21,
+      "where": [
+        "h1.font-display: Week 5→6 - SPAAAAACE!"
+      ]
+    },
+    "21px": {
+      "n": 142,
+      "where": [
+        "p.lede: T9Hacks week: a space theme,",
+        "a: Week 6 Goals"
+      ]
+    }
+  },
+  "post@375": {
+    "17px": {
+      "n": 5167,
+      "where": [
+        "a.skip-link: Skip to content",
+        "p: But before we get to that… l",
+        "p: Introducing the",
+        "strong: ATTiny85"
+      ]
+    },
+    "15px": {
+      "n": 522,
+      "where": [
+        "span.st-title: Reading",
+        "p.mb-space-4: Article",
+        "p.mb-space-4: ·",
+        "p.mb-space-4: 5"
+      ]
+    },
+    "34px": {
+      "n": 29,
+      "where": [
+        "h1.font-display: Creating my first PCB: Objec"
+      ]
+    },
+    "21px": {
+      "n": 124,
+      "where": [
+        "p.lede: But before we get to that… l"
+      ]
+    }
+  },
+  "404@375": {
+    "17px": {
+      "n": 102,
+      "where": [
+        "a.skip-link: Skip to content",
+        "span: Work",
+        "span: Writing",
+        "span: Project Mountaintop"
+      ]
+    },
+    "34px": {
+      "n": 14,
+      "where": [
+        "h1.font-display: Page not found"
+      ]
+    },
+    "21px": {
+      "n": 21,
+      "where": [
+        "a.surface: Back to the home page"
+      ]
+    },
+    "15px": {
+      "n": 167,
+      "where": [
+        "span.font-serif: ©",
+        "span.font-serif: 2026",
+        "span.font-serif: Michał Bodzianowski",
+        "p.t-meta: Starlink image: Starlink / S"
+      ]
+    }
+  }
+}

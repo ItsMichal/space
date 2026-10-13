@@ -32,6 +32,7 @@ await send('Page.enable')
 
 // [name, route, selector to clip to (null: the top of the page)]
 const SHOTS = [
+  ['home-hero', '/', null, 900],
   ['home-about', '/', '#about'],
   ['home-work', '/', '#work'],
   ['about', '/about', null],
@@ -41,7 +42,7 @@ const SHOTS = [
 ]
 for (const [vw, w, h, dpr, mobile] of [[1440, 1440, 900, 1, false], [375, 375, 812, 2, true]]) {
   await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: dpr, mobile })
-  for (const [name, route, sel] of SHOTS) {
+  for (const [name, route, sel, cap] of SHOTS) {
     await send('Page.navigate', { url: base + route })
     await sleep(2500)
     const total = (await ev('document.documentElement.scrollHeight')) ?? 0
@@ -51,7 +52,7 @@ for (const [vw, w, h, dpr, mobile] of [[1440, 1440, 900, 1, false], [375, 375, 8
     await sleep(300)
     // Make the viewport as tall as the region, scroll it into place and take a plain viewport shot (no beyond-viewport capture).
     let top = 0
-    let height = Math.min(total, 3200)
+    let height = Math.min(total, cap ?? 3200)
     if (sel) {
       const r = await ev(`(() => { const e = document.querySelector(${JSON.stringify(sel)}); if (!e) return null; const b = e.getBoundingClientRect(); return { top: b.top + scrollY - 16, height: b.height + 32 } })()`)
       if (r) ({ top, height } = r)
@@ -60,10 +61,10 @@ for (const [vw, w, h, dpr, mobile] of [[1440, 1440, 900, 1, false], [375, 375, 8
     await sleep(400)
     await ev(`window.scrollTo(0, ${Math.max(0, top)})`)
     await sleep(900)
-    const shot = await send('Page.captureScreenshot', { format: 'png' })
+    const shot = await send('Page.captureScreenshot', { format: 'jpeg', quality: 72 })
     await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: dpr, mobile })
-    fs.writeFileSync(path.join(out, `${name}-${vw}.png`), Buffer.from(shot.result.data, 'base64'))
-    console.log('wrote', `${name}-${vw}.png`)
+    fs.writeFileSync(path.join(out, `${name}-${vw}.jpg`), Buffer.from(shot.result.data, 'base64'))
+    console.log('wrote', `${name}-${vw}.jpg`)
   }
 }
 chrome.kill()
