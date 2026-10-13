@@ -136,3 +136,17 @@
     transition: none;
   }
 }
+
+/* Cards that belong to the article sit on the wide track, centred with the cover and the figures. Inside a card the content is
+   left-aligned at the card's padding (the text-column rules above are for loose headings, not for card content). */
+.reading .postextra.card > :not(.tl) {
+  max-width: none;
+  margin-inline: 0;
+}
+.reading .postextra.card .tl-panels {
+  max-width: none;
+}
+.reading .postextra.card .tl {
+  margin-inline: 0;
+  width: auto;
+}
