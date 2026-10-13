@@ -1,4 +1,8 @@
-# halmic logotype
+# halmic brand folder
+
+What is here: the logotype generators and SVGs (this file), `icons/` (Phosphor Fill and Simple Icons sources with licences, built into the site's sprite by `build.mjs`), `type/` (the "Halmic Display" font generator, `build-display.py`; `--ship` writes the hashed woff2 into `public/fonts/`), `reel/` ([hero reel](reel/README.md)) and `previews/` ([hover previews](previews/README.md)). Do not hand-edit `wordmark-parts.json` or `svg/`: regenerate them with `build-logotype.mjs`.
+
+## Logotype
 
 Generated, not drawn: `node build-logotype.mjs` writes `svg/` (wordmarks, lockups, tiles, construction) and `wordmark-parts.json` (per-letter paths for the site). `mark.svg` is the existing mark, reused verbatim.
 

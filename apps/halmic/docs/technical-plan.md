@@ -1,5 +1,7 @@
 # halmic.com: technical plan
 
+> Historical. halmic did not ship as Next.js with OpenNext: it is a zero-dependency static build (`build.mjs`) plus one small Worker. The live-status design below is still broadly right; for anything else trust `apps/halmic/README.md` and `apps/halmic/AGENTS.md`.
+
 ## Stack
 Static-first Next.js (App Router, `output: export`-style prerender for every page) deployed to Cloudflare Workers with OpenNext, like the portfolio, plus one small Worker route group. Tokens from `tokens.json` to CSS variables (same builder). Meter, spring and reveal helpers from a shared `toolkit/` copy. No analytics or third-party requests before interaction.
 
