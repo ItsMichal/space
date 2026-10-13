@@ -27,15 +27,15 @@ export const SECTION: Record<PostKind, { base: string; label: string; kindLabel:
 /** Canonical path of a post: children live under their parent project. */
 export const postPath = (post: Pick<Post, 'kind' | 'slug' | 'parent'>) =>
   post.parent ? `/projects/${post.parent}/${post.slug}` : `${SECTION[post.kind].base}/${post.slug}`
-export const postTitle = (title: string) => `${title} — ${AUTHOR_NAME}`
+export const postTitle = (title: string) => `${title} · ${AUTHOR_NAME}`
 
 /** Defaults the root layout can spread into its `metadata` export (RSS discovery, metadataBase, site-wide OG). */
 export const siteMetadata: Metadata = {
   metadataBase,
   alternates: {
     types: {
-      'application/rss+xml': [{ url: '/feed.xml', title: `${SITE_NAME} — RSS` }],
-      'application/feed+json': [{ url: '/feed.json', title: `${SITE_NAME} — JSON Feed` }],
+      'application/rss+xml': [{ url: '/feed.xml', title: `${SITE_NAME} · RSS` }],
+      'application/feed+json': [{ url: '/feed.json', title: `${SITE_NAME} · JSON Feed` }],
     },
   },
   openGraph: { siteName: SITE_NAME, locale: 'en_US', type: 'website' },
@@ -69,7 +69,7 @@ export const profilePageJsonLd = {
   '@type': 'ProfilePage',
   '@id': `${SITE_URL}/#profilepage`,
   url: SITE_URL,
-  name: `${AUTHOR_NAME} — ${profile.titleTagline}`,
+  name: `${AUTHOR_NAME} · ${profile.titleTagline}`,
   inLanguage: 'en-US',
   isPartOf: { '@id': `${SITE_URL}/#website` },
   mainEntity: { ...personJsonLd, '@context': undefined },
@@ -86,7 +86,7 @@ export const websiteJsonLd = {
   publisher: { '@id': `${SITE_URL}/#person` },
 }
 
-const HOME_TITLE = `${profile.name} — ${profile.titleTagline}`
+const HOME_TITLE = `${profile.name} · ${profile.titleTagline}`
 
 /** Metadata fragment for the home page: canonical + profile OG. Spread into the page's `metadata`. */
 export function homeMetadata(): Metadata {

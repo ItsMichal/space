@@ -307,7 +307,7 @@ export function PostPanel({ slug, fm, onChange, allTags, otherSlugs, projects, o
             <input id={ids.role} className="ed-input" value={fm.role ?? ''} onChange={(e) => onChange({ role: e.target.value || undefined })} />
           </Field>
           <Field label="Years (spec line)" htmlFor={ids.years}>
-            <input id={ids.years} className="ed-input" placeholder="2024 – present" value={fm.years ?? ''} onChange={(e) => onChange({ years: e.target.value || undefined })} />
+            <input id={ids.years} className="ed-input" placeholder="2024 to now" value={fm.years ?? ''} onChange={(e) => onChange({ years: e.target.value || undefined })} />
           </Field>
           <Field label="Hero hook" htmlFor={ids.hook} hint={`${(fm.hook ?? '').length} / 48 · finishes \"Lately I've built ...\" on the home page`}>
             <input id={ids.hook} className="ed-input" maxLength={48} placeholder="an AI that commentates Formula 1" value={fm.hook ?? ''} onChange={(e) => onChange({ hook: e.target.value || undefined })} />

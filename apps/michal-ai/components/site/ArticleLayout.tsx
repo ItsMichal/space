@@ -7,7 +7,11 @@ import { Lightbox } from '@/components/media/Lightbox'
 import { Gallery } from '@/components/ui/Gallery'
 import { FactRows } from '@/components/ui/FactRows'
 import { ReadingToc } from '@/components/ui/ReadingToc'
+import { OtherSiteAnchor } from '@/components/content/OtherSiteLink'
 import './reading.css'
+
+/** A project link; `other` marks the link to the paired piece on the other site (label is that site's title). Set at render time, never in frontmatter. */
+export type LayoutLink = PostLink & { other?: boolean }
 
 type Props = {
   title: string
@@ -21,7 +25,7 @@ type Props = {
   coverFocus?: string
   role?: string
   years?: string
-  links?: PostLink[]
+  links?: LayoutLink[]
   gallery?: GalleryItem[]
   kind: 'project' | 'article'
   back?: { href: string; label: string; series?: string }
@@ -96,7 +100,7 @@ export function ArticleLayout({
             priority
             focus={coverFocus}
             className="hero__img"
-            sizes="(min-width: 948px) 900px, calc(100vw - 32px)"
+            sizes="(min-width: 1184px) 1120px, calc(100vw - 32px)"
           />
         </figure>
       ) : (
@@ -112,12 +116,16 @@ export function ArticleLayout({
               ? [
                   {
                     label: 'Links',
-                    value: links.map((l) => (
-                      <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer">
-                        {l.label}
-                        <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
-                      </a>
-                    )),
+                    value: links.map((l) =>
+                      l.other ? (
+                        <OtherSiteAnchor key={l.href} href={l.href} title={l.label} />
+                      ) : (
+                        <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer">
+                          {l.label}
+                          <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
+                        </a>
+                      )
+                    ),
                   },
                 ]
               : []),

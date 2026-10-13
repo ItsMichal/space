@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { notFound } from 'next/navigation'
 import { getChildren, getPost, getSeriesOf } from '@/lib/content'
 import { OriginalLink } from '@/components/content/OriginalLink'
+import { OtherSiteEnd, otherSiteFor } from '@/components/content/OtherSiteLink'
 import { SeriesNav } from '@/components/content/SeriesNav'
 import { renderMarkdown } from '@/lib/content/render'
 import { ArticleLayout } from '@/components/site/ArticleLayout'
@@ -39,7 +40,7 @@ export function postMetadata(kind: PostKind, slug: string, parent?: string): Met
   if (!post.parent && getChildren(post.slug).length) {
     meta.alternates = {
       ...meta.alternates,
-      types: { 'application/rss+xml': [{ url: `/projects/${post.slug}/feed.xml`, title: `${post.title} — updates` }] },
+      types: { 'application/rss+xml': [{ url: `/projects/${post.slug}/feed.xml`, title: `${post.title} · updates` }] },
     }
   }
   return meta
@@ -55,6 +56,9 @@ export async function PostPage({ kind, slug, parent }: { kind: PostKind; slug: s
   const siblings = post.parent ? getChildren(post.parent) : []
   const at = siblings.findIndex((s) => s.slug === post.slug)
   const series = getSeriesOf(post)
+  // The paired piece on the other site (packages/crosslinks): a row in a project's Links, a line at the end of an article.
+  const other = otherSiteFor(post.id ?? post.slug)
+  const links = other && kind === 'project' ? [...(post.links ?? []), { label: other.title, href: other.href, other: true }] : post.links
   const nav = (
     <PostNav
       parent={parentPost}
@@ -80,7 +84,7 @@ export async function PostPage({ kind, slug, parent }: { kind: PostKind; slug: s
         coverFocus={post.coverFocus}
         role={post.role}
         years={post.years}
-        links={post.links}
+        links={links}
         gallery={post.gallery}
         kind={kind}
         back={parentPost ? { href: `/projects/${parentPost.slug}`, label: parentPost.title, series: post.series } : undefined}
@@ -88,6 +92,7 @@ export async function PostPage({ kind, slug, parent }: { kind: PostKind; slug: s
           <>
             <Publications ids={post.publications} />
             <OriginalLink url={post.originalUrl} />
+            {kind === 'article' ? <OtherSiteEnd postId={post.id ?? post.slug} /> : null}
             <PostExtras slug={post.slug} />
             {/* A project's own list of entries is content: it comes before the reactions row. */}
             {!parentPost ? nav : null}

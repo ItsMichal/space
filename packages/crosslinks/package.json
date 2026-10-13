@@ -1,0 +1,17 @@
+{
+  "name": "@space/crosslinks",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The one sanctioned link between michal.ai and halmic.com: the logo switcher, the paired-content map, both site marks. Plain ESM so the Next app and the dependency-free halmic build can both import it.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.mts",
+      "default": "./src/index.mjs"
+    },
+    "./node": "./src/node.mjs"
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}

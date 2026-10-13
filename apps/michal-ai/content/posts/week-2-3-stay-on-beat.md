@@ -26,7 +26,7 @@ Week 2 Goals
 - Start reaching out to third-party developers
   - Oof. Did not do this.
 - Create an overall outline and rough design docs for the overarching final game (story, gameplay loop)
-  - Okay! We have basically this— but more could be done too
+  - Okay! We have basically this, but more could be done too
 :::
 
 So let’s look at the goals for this week in more detail
@@ -128,7 +128,7 @@ Week 3 Goals
 - Actually start reaching out
   - It’s pretty hard to find someone that has the time to give good feedback and mentorship- that would be valuable in terms of having the technical skill and also not being from CU. Regardless, I didn’t spend as much time as I should have this week on this goal, in favor of just forging ahead myself.
 - Create a community for testers to give feedback and receive updated builds
-  - Reached out to a few friends and got confirmations of interests, but have yet to setup a server and send out invites— mostly because I want to have a demo and feedback form in place before I do.
+  - Reached out to a few friends and got confirmations of interests, but have yet to setup a server and send out invites, mostly because I want to have a demo and feedback form in place before I do.
 :::
 
 Honestly I made some good progress from last week, even if on the surface its not too apparent from the videos (again a lot of the systems were expanded behind the scenes, to make stuff like animations or FX much easier to implement- before it was just hacked together to quickly tell me if something worked or not).

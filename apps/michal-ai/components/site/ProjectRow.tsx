@@ -11,7 +11,7 @@ export type ProjectRowProps = {
 export function ProjectRow({ title, description, year, tags = [], href }: ProjectRowProps) {
   const meta = [year, ...tags.slice(0, 4)].filter(Boolean).join(' · ')
   return (
-    <Link href={href} className="prow">
+    <Link href={href} className="prow card__row">
       <div>
         <h3 className="prow__title">{title}</h3>
         <p className="prow__desc">{description}</p>

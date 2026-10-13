@@ -36,7 +36,7 @@ export function SeoPanel({ fm, stats }: { fm: PostFrontmatter; stats: DocStats }
           <p className="ed-serp__url">{crumbs}</p>
           <p className="ed-serp__title">{truncate(fullTitle(fm.title), 60)}</p>
           <p className="ed-serp__desc">
-            <span>{fm.date}</span> {'—'} {truncate(fm.description || 'No description yet. Google will pick text from the page instead.', 160)}
+            <span>{fm.date}</span> {'·'} {truncate(fm.description || 'No description yet. Google will pick text from the page instead.', 160)}
           </p>
         </div>
       </div>

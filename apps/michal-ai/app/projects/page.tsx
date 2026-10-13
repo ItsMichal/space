@@ -6,7 +6,7 @@ import { listJsonLd, listMetadata } from '@/lib/seo'
 import { FilteredWork } from '@/components/ui/FilteredWork'
 import { availableFilters } from '@/components/ui/segments'
 
-const TITLE = 'Projects — Michał Bodzianowski'
+const TITLE = 'Projects · Michał Bodzianowski'
 const DESCRIPTION =
   'Games, AI tools and web platforms built by Michał Bodzianowski, from Starlink.com to Unity arcade experiments.'
 

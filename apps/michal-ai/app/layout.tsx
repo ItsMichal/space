@@ -1,6 +1,7 @@
 import './globals.css'
 import './styles/craft.css'
 import './styles/type.css'
+import './styles/card.css'
 import type { Metadata, Viewport } from 'next'
 import { IBM_Plex_Mono, Newsreader } from 'next/font/google'
 import React, { StrictMode } from 'react'
@@ -39,11 +40,11 @@ export const viewport: Viewport = {
 }
 
 const DESCRIPTION = profile.description
-const TITLE = `${profile.name} — ${profile.titleTagline}`
+const TITLE = `${profile.name} · ${profile.titleTagline}`
 
 export const metadata: Metadata = {
   ...siteMetadata,
-  title: { default: TITLE, template: `%s — ${profile.name}` },
+  title: { default: TITLE, template: `%s · ${profile.name}` },
   description: DESCRIPTION,
   robots: { index: true, follow: true },
   // Google wants a crawlable square icon in a multiple of 48px; the file-based favicon.ico/icon.svg stay as they are.
