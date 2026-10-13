@@ -39,7 +39,6 @@ export default function AboutPage() {
   const press = pressItems()
   const hacks = hackathonList()
   const projects = featuredProjects()
-  const mailto = `mailto:${profile.contact.email}`
 
   return (
     <div className="mx-auto max-w-content px-space-4 pb-space-8 pt-[120px] md:px-space-8 md:pt-[160px]">
@@ -73,12 +72,6 @@ export default function AboutPage() {
                 <span>LinkedIn</span>
                 <span className="t-meta">in/mbodzianowski</span>
                 <span className="sr-only">(opens in a new tab)</span>
-              </a>
-            </li>
-            <li>
-              <a className="ab-row card__row t-ui" href={mailto}>
-                <span>Email</span>
-                <span className="t-meta">{profile.contact.email}</span>
               </a>
             </li>
             <li>

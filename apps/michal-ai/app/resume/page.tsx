@@ -15,7 +15,7 @@ const strip = (u: string) => u.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/
 /**
  * The resume, generated from the same structured data as /about (content/profile.ts). On screen it is a document card; printed
  * (or through scripts/build-resume-pdf.mjs) it is one or two clean pages on US Letter or A4 with the site chrome hidden.
- * Privacy bar: state only ("California"), no phone, no street address, no birthday; email is the one on the published resume.
+ * Privacy bar: state only ("California"), no phone, no street address, no birthday.
  */
 export default function ResumePage() {
   const projects = featuredProjects().filter((p) => p.id !== 'spacex-starlink-general-projects')
@@ -37,7 +37,6 @@ export default function ResumePage() {
           <p className="rs-role">{profile.jobTitle}, SpaceX (Starlink.com)</p>
           <p className="rs-contact">
             <span>California</span>
-            <a href={`mailto:${profile.contact.email}`}>{profile.contact.email}</a>
             <a href={siteConfig.linkedin} rel="me">{strip(siteConfig.linkedin)}</a>
             <a href={siteConfig.github} rel="me">{strip(siteConfig.github)}</a>
             <a href={SITE_URL}>{strip(SITE_URL)}</a>

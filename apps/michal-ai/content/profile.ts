@@ -113,12 +113,11 @@ export const profile = {
     location: 'California',
     sentences: [
       "I'm currently based in California and open to exciting opportunities.",
-      'Reach out on LinkedIn or by email with specifics.',
+      'Reach out on LinkedIn with specifics.',
     ],
   },
-  /** Public contact. The email is the one printed on his published resume (public/BodzianowskiResume.pdf). */
+  /** Public contact. No email is published, by the owner's choice. */
   contact: {
-    email: 'its@michal.us',
     x: 'https://x.com/ItsMichal',
   },
   /**

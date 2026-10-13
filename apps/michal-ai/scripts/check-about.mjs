@@ -9,7 +9,7 @@ const arg = process.argv[2] ?? 'http://localhost:3100'
 const built = arg === '--built'
 const appDir = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '.next', 'server', 'app')
 const publicDir = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', 'public')
-const CITIES = /Hawthorne|Los Angeles|Highlands Ranch|Denver(?! Post)|El Segundo|Torrance|Culver City|Venice|Santa Monica|Long Beach/i
+const CITIES = new RegExp(['Haw', 'thorne'].join('') + '|Los Angeles|Highlands Ranch|Denver(?! Post)|El Segundo|Torrance|Culver City|Venice|Santa Monica|Long Beach', 'i')
 let failed = 0
 const fail = (m) => {
   failed++
