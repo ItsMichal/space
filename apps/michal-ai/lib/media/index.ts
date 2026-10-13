@@ -30,3 +30,6 @@ export function getImageInfo(src: string | undefined): ImageInfo | undefined {
   if (!src) return undefined
   return load()[decodeURI(src.split('?')[0])]
 }
+
+/** The browser build registers loader-resolved entries here (lib/media/client.ts); on the server the manifest is read directly. */
+export function registerImages(_images?: Record<string, ImageInfo>) {}

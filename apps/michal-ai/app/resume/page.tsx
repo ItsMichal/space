@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/lib/nav'
 import { Download } from 'lucide-react'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { profile } from '@/content/profile'

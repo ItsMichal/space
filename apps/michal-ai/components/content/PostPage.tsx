@@ -1,10 +1,9 @@
+import type { ReactNode } from 'react'
 import type { Metadata, Viewport } from 'next'
-import { notFound } from 'next/navigation'
 import { getChildren, getPost, getSeriesOf } from '@/lib/content'
 import { OriginalLink } from '@/components/content/OriginalLink'
 import { OtherSiteEnd, otherSiteFor } from '@/components/content/OtherSiteLink'
 import { SeriesNav } from '@/components/content/SeriesNav'
-import { renderMarkdown } from '@/lib/content/render'
 import { ArticleLayout } from '@/components/site/ArticleLayout'
 import { PostNav } from '@/components/content/PostNav'
 import type { PostKind } from '@/lib/content/types'
@@ -14,7 +13,7 @@ import { PostExtras } from '@/components/content/PostExtras'
 import { Publications } from '@/components/content/Publications'
 import { LIVE_REACTIONS_ENABLED } from '@/lib/presence/flag'
 import { LiveReactions } from '@/components/presence/LiveReactions'
-import { postJsonLd, postMetadata as buildPostMetadata } from '@/lib/seo'
+import { postMetadata as buildPostMetadata } from '@/lib/seo'
 
 /** Reading pages follow the OS light/dark setting (everything else is Birch only). */
 export const readingViewport: Viewport = {
@@ -46,12 +45,15 @@ export function postMetadata(kind: PostKind, slug: string, parent?: string): Met
   return meta
 }
 
-export async function PostPage({ kind, slug, parent }: { kind: PostKind; slug: string; parent?: string }) {
+/**
+ * `body` (the rendered markdown) and `jsonLd` (needs the full text for its word count) are produced by the route loader, because
+ * the browser only has post metadata (see lib/content/source.client.ts).
+ */
+export function PostPage({ kind, slug, parent, body, jsonLd }: { kind: PostKind; slug: string; parent?: string; body: ReactNode; jsonLd: object | object[] }) {
   const post = resolve(kind, slug, parent)
-  if (!post) notFound()
+  if (!post) throw new Response('Not found', { status: 404 })
   const parentPost = post.parent ? getPost(post.parent) : undefined
-  if (post.parent && !parentPost) notFound()
-  const body = await renderMarkdown(post.body)
+  if (post.parent && !parentPost) throw new Response('Not found', { status: 404 })
   const children = post.parent ? [] : getChildren(post.slug)
   const siblings = post.parent ? getChildren(post.parent) : []
   const at = siblings.findIndex((s) => s.slug === post.slug)
@@ -71,7 +73,7 @@ export async function PostPage({ kind, slug, parent }: { kind: PostKind; slug: s
   return (
     <>
       <ReadingTheme />
-      <JsonLd data={postJsonLd(post, parentPost)} />
+      <JsonLd data={jsonLd} />
       <ArticleLayout
         title={post.title}
         description={post.description}

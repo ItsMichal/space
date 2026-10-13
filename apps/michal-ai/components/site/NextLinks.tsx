@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/lib/nav'
 import { ArrowUpRight } from 'lucide-react'
 import './home.css'
 

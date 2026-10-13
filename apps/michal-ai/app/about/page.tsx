@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/lib/nav'
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { JsonLd } from '@/components/seo/JsonLd'

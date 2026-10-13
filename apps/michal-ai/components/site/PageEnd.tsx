@@ -1,5 +1,3 @@
-import { getChildren, getTopLevel } from '@/lib/content'
-import { postPath } from '@/lib/seo'
 import { siteConfig } from '@/site.config'
 import { profile } from '@/content/profile'
 import { NextLinks, type NextLink } from './NextLinks'
@@ -9,12 +7,11 @@ import { NextLinks, type NextLink } from './NextLinks'
  * sections, the project that keeps a progress log, and the elsewhere links from the footer). One block, same on every
  * route, so no page ends on a dead stop or a giant image.
  */
-export function PageEnd() {
-  const log = getTopLevel('project').find((p) => getChildren(p.slug).some((c) => c.kind === 'article'))
+export function PageEnd({ log }: { log?: { title: string; href: string } }) {
   const links: NextLink[] = [
     { label: 'Work', href: '/projects' },
     { label: 'Writing', href: '/writing' },
-    ...(log ? [{ label: log.title, href: postPath(log) }] : []),
+    ...(log ? [{ label: log.title, href: log.href }] : []),
     { label: 'About', href: '/about' },
     ...(profile.publications.length ? [{ label: 'Publications', href: '/about#publications' }] : []),
     { label: 'Resume', href: '/resume' },

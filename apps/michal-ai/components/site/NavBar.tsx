@@ -1,7 +1,7 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import Link from '@/lib/nav'
+import { usePathname } from '@/lib/nav'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { GlassEffectContainer, GlassFold, GlassFoldItem, glass, useGlassNamespace } from '@/components/glass'
 import { StatusSlot } from '@/components/ui/StatusPill'

@@ -1,6 +1,6 @@
 'use client'
 
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter } from '@/lib/nav'
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { CARD_KINDS, applyNames, cardPlan, isPostPath, pagePlan, transitionTarget, type CardKind } from './cardTransition'
 

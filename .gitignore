@@ -64,3 +64,7 @@ apps/michal-ai/.cache/
 
 # parity harness output (golden and candidate snapshots, screenshots)
 apps/michal-ai/.parity/
+
+# react router
+apps/michal-ai/build/
+apps/michal-ai/.react-router/
