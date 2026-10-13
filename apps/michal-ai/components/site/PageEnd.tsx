@@ -15,8 +15,9 @@ export function PageEnd() {
     { label: 'Work', href: '/projects' },
     { label: 'Writing', href: '/writing' },
     ...(log ? [{ label: log.title, href: postPath(log) }] : []),
-    ...(profile.publications.length ? [{ label: 'Publications', href: '/#publications' }] : []),
-    { label: 'Resume', href: '/BodzianowskiResume.pdf', external: true },
+    { label: 'About', href: '/about' },
+    ...(profile.publications.length ? [{ label: 'Publications', href: '/about#publications' }] : []),
+    { label: 'Resume', href: '/resume' },
     { label: 'LinkedIn', href: siteConfig.linkedin, external: true },
     { label: 'GitHub', href: siteConfig.github, external: true },
   ]

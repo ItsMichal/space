@@ -4,7 +4,24 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--card-gap);
-  grid-template-areas: 'intro' 'xp' 'pubs';
+  grid-template-areas: 'intro' 'xp' 'pubs' 'more';
+}
+.about__more {
+  grid-area: more;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: 44px;
+}
+.about__more .card__h {
+  margin-bottom: var(--space-1);
+}
+.about__more-go {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
 }
 .about__intro {
   grid-area: intro;
@@ -21,13 +38,13 @@
 @media (min-width: 900px) {
   .about {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-areas: 'intro xp' 'pubs pubs';
+    grid-template-areas: 'intro xp' 'pubs pubs' 'more more';
   }
 }
 @media (min-width: 1100px) {
   .about {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-areas: 'intro intro xp' 'pubs pubs xp';
+    grid-template-areas: 'intro intro xp' 'pubs pubs xp' 'more more more';
   }
 }
 .about__intro p {

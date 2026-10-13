@@ -56,23 +56,65 @@ export const personJsonLd = {
   alumniOf: profile.alumniOf.map((name) => ({ '@type': 'CollegeOrUniversity', name })),
   knowsAbout: [...profile.knowsAbout],
   description: siteConfig.description,
-  sameAs: [
-    siteConfig.github,
-    siteConfig.linkedin,
-    `https://twitter.com/${siteConfig.twitter.replace(/^@/, '')}`,
-  ],
+  // State only, never a city.
+  homeLocation: { '@type': 'Place', address: { '@type': 'PostalAddress', addressRegion: 'CA', addressCountry: 'US' } },
+  award: profile.awards.map((a) => `${a.title}, ${a.context}`),
+  sameAs: [siteConfig.github, siteConfig.linkedin, siteConfig.x],
 }
 
-/** ProfilePage wrapper for the home page; its mainEntity is the Person node (same @id the posts reference). */
+/**
+ * ProfilePage for /about (the page about the person; the home page no longer carries one). Its mainEntity is the Person node:
+ * same @id the posts and the WebSite publisher reference, so the graph stays one person.
+ */
 export const profilePageJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'ProfilePage',
-  '@id': `${SITE_URL}/#profilepage`,
-  url: SITE_URL,
-  name: `${AUTHOR_NAME} · ${profile.titleTagline}`,
+  '@id': `${SITE_URL}/about#profilepage`,
+  url: `${SITE_URL}/about`,
+  name: `About · ${AUTHOR_NAME}`,
   inLanguage: 'en-US',
+  dateModified: '2026-10-12',
   isPartOf: { '@id': `${SITE_URL}/#website` },
   mainEntity: { ...personJsonLd, '@context': undefined },
+}
+
+const ABOUT_TITLE = `About · ${profile.name}`
+export const ABOUT_DESCRIPTION = `${profile.name} is a software engineer at SpaceX working on Starlink.com. Experience, education, publications, hackathons and press, and how to get in touch.`
+
+/** Metadata for /about, same shape as the list pages (canonical, share card, Twitter card). */
+export function aboutMetadata(): Metadata {
+  const url = absoluteUrl('/about')
+  return {
+    metadataBase,
+    title: { absolute: ABOUT_TITLE },
+    description: ABOUT_DESCRIPTION,
+    alternates: { canonical: url },
+    openGraph: {
+      type: 'profile',
+      url,
+      title: ABOUT_TITLE,
+      description: ABOUT_DESCRIPTION,
+      siteName: SITE_NAME,
+      locale: 'en_US',
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+    },
+    twitter: { ...siteMetadata.twitter, title: ABOUT_TITLE, description: ABOUT_DESCRIPTION },
+  }
+}
+
+const RESUME_TITLE = `Resume · ${profile.name}`
+export const RESUME_DESCRIPTION = `Resume of ${profile.name}, software engineer at SpaceX: experience, education, publications, selected projects and skills.`
+export function resumeMetadata(): Metadata {
+  const url = absoluteUrl('/resume')
+  return {
+    metadataBase,
+    title: { absolute: RESUME_TITLE },
+    description: RESUME_DESCRIPTION,
+    alternates: { canonical: url },
+    openGraph: { type: 'website', url, title: RESUME_TITLE, description: RESUME_DESCRIPTION, siteName: SITE_NAME, locale: 'en_US' },
+    twitter: { ...siteMetadata.twitter, title: RESUME_TITLE, description: RESUME_DESCRIPTION },
+  }
 }
 
 export const websiteJsonLd = {

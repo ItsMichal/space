@@ -167,3 +167,18 @@ One surface, shared by every card on the site: `app/styles/card.css` (`.surface`
 | Full-width cover image on article pages, narrow text column | apple.com newsroom articles, stripe.com blog | Cover and chrome cards run the container width; article prose stays in a 66ch reading column | Matched by eye |
 
 Dashes: em and en dashes removed from everything shipped (owner instruction); separators are the middle dot, ranges "to" or a hyphen. `scripts/check-dashes.mjs` enforces it.
+
+## About page and web resume (2026-10-12)
+
+Pages were fetched as text (WebFetch) on 2026-10-12, so structure is verified but computed styles are not measured. Anything marked "memory" was not opened in this pass.
+
+| Element | Reference | What the reference does | Ours |
+| --- | --- | --- | --- |
+| Dated role rows: date, employer and title, description, tags | brittanychiang.com/#experience (fetched) | Numbered list, newest first. Each role: date range, heading "title · employer" linked to the employer, a description, optional link bullets, tech tags. A "View Full Resume" link to `/resume.pdf` follows the list | One row per role in a card: left column employer, title and dates (`<time>`), right column the LinkedIn bullets, a "Stack:" meta line and "Related" links to the project pages. Resume link in the contact card |
+| A bio that carries the work history in prose, contact as a plain mailto | leerob.com/about (fetched) | One header, prose bio with employers linked inline, an email mailto inside the text, no separate sections | Bio paragraphs first, then one status note in his own words, contact as plain rows (LinkedIn, email as `mailto:`, X, GitHub) |
+| Card grid with a link to a person's profile | linear.app/about (fetched) | Team cards with name, title and a LinkedIn link; hiring link; plain text list for the rest | Card language from the shared system; profile links as `rel="me"` rows |
+| Project tiles on the about page | apple.com newsroom tiles (see "Cards v2") | Image-top tile | The same tile component as home, in a three-column grid |
+| Quiet status line with availability | rauno.me and paco.me (memory, not opened): short first-person status near the top of the page | | A single first-person inset note in the intro card |
+| Resume as a print-styled web page with a PDF download | brittanychiang.com (resume.pdf, fetched), read.cv profiles (memory) | | `/resume` renders the same data; `@media print` hides the chrome and sets 9.5pt type; the PDF is printed from that page by headless Chrome |
+
+Honest status: the inset status note has no verified precedent beyond a recollection of short availability lines on personal sites; if the owner wants a stricter standard it should be reduced to plain text in the intro paragraph.

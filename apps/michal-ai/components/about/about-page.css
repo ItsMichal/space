@@ -1,0 +1,237 @@
+/* /about: a bento of the shared cards (app/styles/card.css) on the same container edges as the rest of the site. One type scale
+   (type.css roles: title 24, text 17, meta 15, ui 16), one gap, one padding. Three columns from 1100px, two from 900px, one below.
+   Precedents (docs/design-references.md, "About page"): leerob.com and brittanychiang.com for the dated role rows, linear.app and
+   apple.com newsroom for the card language, read.cv profile lists for the quiet contact rows. */
+.ab {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--card-gap);
+}
+.ab-card {
+  scroll-margin-top: 96px;
+}
+.ab-card > p,
+.ab-card > ul {
+  margin: 0;
+}
+.ab-card > p + p,
+.ab-card > p + ul,
+.ab-card > ul + p {
+  margin-top: var(--space-2);
+}
+.ab-intro > .t-text {
+  margin: 0;
+  color: var(--ink);
+}
+.ab-intro > .t-text + .t-text {
+  margin-top: var(--space-4);
+  color: var(--ink-muted);
+}
+/* the status: his own words, one quiet inset inside the intro card */
+.ab-status {
+  margin-top: var(--space-6);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-xs);
+  background: color-mix(in srgb, var(--accent) 7%, var(--paper-raised));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.ab-status p {
+  margin: 0;
+}
+.ab-arrow {
+  display: inline-block;
+  margin-left: 2px;
+  vertical-align: -2px;
+  opacity: 0.7;
+}
+.ab-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: 44px;
+  padding: var(--space-3) var(--card-pad);
+}
+.ab-row .t-meta {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+/* experience */
+.ab-role {
+  display: grid;
+  gap: var(--space-2) var(--space-8);
+  padding: var(--space-4) var(--card-pad);
+}
+.ab-role__meta h3,
+.ab-role__meta p {
+  margin: 0;
+}
+.ab-role__body > * {
+  margin: 0;
+}
+.ab-role__body > * + * {
+  margin-top: var(--space-2);
+}
+.ab-bullets {
+  padding-left: 1.1em;
+  list-style: disc;
+}
+.ab-bullets li {
+  padding-left: 2px;
+}
+.ab-bullets li::marker {
+  color: var(--ink-muted);
+}
+.ab-bullets li + li {
+  margin-top: 2px;
+}
+.ab-dates {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+@media (min-width: 900px) {
+  .ab-role {
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  }
+}
+
+/* education, awards, skills: short lists inside a padded card */
+.ab-plain {
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.ab-plain li + li {
+  margin-top: var(--space-2);
+}
+.ab-awards .ab-plain {
+  margin-top: 0;
+}
+.ab-awards .ab-plain li,
+.ab-skilllist > div {
+  display: grid;
+  gap: 2px;
+}
+.ab-awards .ab-plain li + li,
+.ab-skilllist > div + div {
+  margin-top: var(--space-3);
+}
+.ab-sub {
+  margin: var(--space-6) 0 0;
+}
+.ab-skilllist {
+  margin: 0;
+}
+.ab-skilllist dt,
+.ab-skilllist dd {
+  margin: 0;
+}
+.ab-edu > .t-meta {
+  margin-top: var(--space-2);
+}
+.ab-edu .t-ui {
+  margin: 0;
+}
+.ab-side {
+  display: grid;
+  gap: var(--card-gap);
+  align-content: start;
+}
+
+/* hackathons and press: rows with a title, a trailing date, and one meta line */
+.ab-hack,
+.ab-pr {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-1) var(--space-4);
+  padding: var(--space-3) var(--card-pad);
+}
+.ab-hack p,
+.ab-pr p {
+  margin: 0;
+}
+.ab-hack__d {
+  grid-column: 2;
+  grid-row: 1;
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+}
+.ab-hack__e {
+  grid-column: 1 / -1;
+}
+.ab-pr > p:nth-child(2) {
+  grid-column: 1 / -1;
+}
+@media (min-width: 900px) {
+  .ab-pr {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    align-items: baseline;
+  }
+  .ab-pr > p:nth-child(2) {
+    grid-column: auto;
+    text-align: right;
+  }
+}
+
+/* X quotes: plain quote cards, no embed */
+.ab-quotes {
+  display: grid;
+  gap: var(--card-gap);
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  list-style: none;
+}
+.ab-quote blockquote {
+  margin: 0 0 var(--space-2);
+  color: var(--ink);
+}
+.ab-quote p {
+  margin: 0;
+}
+@media (min-width: 900px) {
+  .ab-quotes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* projects grid: the home tiles, compact */
+.ab-projects {
+  margin-top: var(--space-12);
+}
+.ab-projects__h {
+  margin-bottom: var(--space-4);
+}
+
+@media (min-width: 900px) {
+  .ab {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      'intro contact'
+      'xp xp'
+      'edu pubs'
+      'hacks side'
+      'press press'
+      'x x';
+  }
+  .ab-intro { grid-area: intro; }
+  .ab-contact { grid-area: contact; }
+  .ab-xp { grid-area: xp; }
+  .ab-edu { grid-area: edu; }
+  .ab-pubs { grid-area: pubs; }
+  .ab-hacks { grid-area: hacks; }
+  .ab-side { grid-area: side; }
+  .ab-press { grid-area: press; }
+  .ab-x { grid-area: x; }
+}
+@media (min-width: 1100px) {
+  .ab {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas:
+      'intro intro contact'
+      'xp xp xp'
+      'edu pubs pubs'
+      'hacks hacks side'
+      'press press press'
+      'x x x';
+  }
+}
