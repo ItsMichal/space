@@ -78,7 +78,7 @@ First off, I can only make a successful build on macOS, which limits userbase dr
 
 Plus, it lagged pretty bad.
 
-I’ve set up a discord server, but I feel it’ll take some “pushing” to get people past the download/install barrier.
+I’ve set up a chat server, but I feel it’ll take some “pushing” to get people past the download/install barrier.
 
 ## Net Working
 
