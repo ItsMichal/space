@@ -44,3 +44,16 @@ Under `react-router dev` the same routes render on request (`ssr: true`).
 See the list in the PR description / report: asset paths (`/assets`, `/fonts`), no RSC payload (replaced by `__reactRouterContext` and `.data` files),
 HTML `Cache-Control` is revalidating instead of `s-maxage`, share-card hash values differ, links prefetch on intent, dev-only font fallbacks.
 `NEXT_PUBLIC_GLASS` (NavBar) is still read as `process.env.NEXT_PUBLIC_GLASS`, defined at build time in `vite.config.mts`.
+
+## After merging: check production
+
+1. Deploy workflow green (checks, build, deploy, smoke); note the Worker version id in the job summary.
+2. `curl -sI https://michal.ai/` 200 `text/html`; `/about/` 308 to `/about`; `/projects/frogchamp-ai-chat-stream` 308 to `/projects/frogchamp`;
+   `https://www.michal.ai/writing?a=1` 308 to `https://michal.ai/writing?a=1`; `/does-not-exist` 404 showing "Page not found".
+3. `/feed.xml` (`application/rss+xml`), `/feed.json`, `/sitemap.xml`, `/robots.txt`, `/manifest.webmanifest`, `/favicon.ico`.
+4. `https://michal.ai/writing/kinetic-typography/opengraph-image` is an `image/png`; paste a post URL into a link-preview debugger.
+5. Open a post: reactions row appears (`/api/live/reactions?id=<post id>` 200); react and unreact once; the view count moves.
+6. `/globe/starlink-live.bin` 200; after the next 6-hourly cron, `wrangler tail` shows `starlink refresh`.
+7. Click home, a project card, back, the phone menu, the lightbox on a post; watch the console for errors.
+8. Counts on an existing post are unchanged from before the deploy (same Durable Object classes, bindings and migration tags).
+9. `https://michal.ai/write` and `/api/write/posts` answer 404.
