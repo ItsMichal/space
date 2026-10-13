@@ -91,6 +91,8 @@ export function ArticleLayout({
           ) : null}
           {stack.length ? ` · ${stack.join(' · ')}` : null}
         </p>
+        {/* The page's end of the card-to-page transition: the card surface opens into this box (CardTransitions). */}
+        <span aria-hidden className="reading__surface" />
       </header>
       {cover ? (
         <figure className="hero reading__wide">

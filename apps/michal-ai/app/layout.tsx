@@ -2,10 +2,12 @@ import './globals.css'
 import './styles/craft.css'
 import './styles/type.css'
 import './styles/card.css'
+import './styles/transition.css'
 import type { Metadata, Viewport } from 'next'
 import { IBM_Plex_Mono, Newsreader } from 'next/font/google'
 import React, { StrictMode } from 'react'
 import { NavBar } from '@/components/site/NavBar'
+import { CardTransitions } from '@/components/site/CardTransitions'
 import { Footer } from '@/components/site/Footer'
 import { PageEnd } from '@/components/site/PageEnd'
 import { PaperGrid } from '@/components/site/PaperGrid'
@@ -72,6 +74,7 @@ export default function RootLayout({
             Skip to content
           </a>
           <NavBar previews={getMenuPreviews()} />
+          <CardTransitions />
           <main id="main" className="relative flex-1">
             <PaperGrid />
             <Backdrop paths={['/shaders']} />

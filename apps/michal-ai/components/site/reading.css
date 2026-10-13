@@ -43,6 +43,16 @@
 .reading__head > :first-child {
   margin-top: 0;
 }
+.reading__head {
+  position: relative;
+}
+/* Invisible; only a view-transition target (the card surface grows into it). */
+.reading__surface {
+  position: absolute;
+  inset: calc(var(--space-6) * -1) -16px calc(var(--space-4) * -1);
+  border-radius: var(--card-r);
+  pointer-events: none;
+}
 
 /* Break out of the text column and stay centred on its axis. */
 .reading__wide,
