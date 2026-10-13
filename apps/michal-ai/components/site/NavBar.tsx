@@ -156,7 +156,6 @@ export function NavBar({ previews }: { previews?: { work: MenuPreview[]; writing
                         <Link href={r.href} onClick={close} className="sheet-prow">
                           <span className="sheet-prow__tile" style={{ backgroundColor: r.tint, backgroundImage: r.thumb ? `url(${r.thumb.lqip})` : undefined }} aria-hidden>
                             {r.thumb ? (
-                              // eslint-disable-next-line @next/next/no-img-element
                               <img src={r.thumb.src} alt="" width={44} height={44} loading="lazy" decoding="async" />
                             ) : null}
                           </span>

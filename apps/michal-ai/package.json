@@ -24,14 +24,12 @@
     "build:redirects": "node scripts/build-worker-redirects.mjs"
   },
   "dependencies": {
-    "@eslint/eslintrc": "^3.3.7",
     "@react-router/node": "^7.18.4",
     "@space/crosslinks": "*",
     "@space/motion": "*",
     "@space/tokens": "*",
     "autoprefixer": "^10.6.1",
     "eslint": "^9.39.5",
-    "eslint-config-next": "^15.5.27",
     "gray-matter": "^4.0.3",
     "hast-util-to-jsx-runtime": "^2.3.6",
     "isbot": "^5.2.2",

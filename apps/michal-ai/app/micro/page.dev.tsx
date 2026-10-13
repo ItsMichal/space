@@ -72,7 +72,6 @@ export default function MicroPage() {
           style={{ display: 'block', width: '100%', aspectRatio: '4 / 3', background: 'none', border: 0, padding: 0 }}
           aria-label="Daylily photograph, press to let its edge breathe"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/botanical/own/daylily-wash-1400.webp" alt="Red and yellow daylily" />
         </button>
       </Sec>

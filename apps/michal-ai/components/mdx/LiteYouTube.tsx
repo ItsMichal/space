@@ -27,7 +27,6 @@ export function LiteYouTube({ id, title, thumbnail }: { id: string; title: strin
           }}
           style={{ position: 'absolute', inset: 0, display: 'block' }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={thumbnail}
             alt=""

@@ -21,7 +21,6 @@ export function YouTubeView({ node, updateAttributes, deleteNode, selected }: No
       <div contentEditable={false}>
         {id ? (
           <div className="ed-embed__preview" style={{ aspectRatio: '16 / 9' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={`https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`} alt="" />
             <span className="ed-embed__play">
               <Play size={22} strokeWidth={1.5} aria-hidden />
