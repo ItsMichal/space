@@ -10,15 +10,25 @@ if (!base) {
   process.exit(2)
 }
 const results = {}
-const ADVISORY = ['transition names cleared after settle', 'reactions/views request issued'] // flaky on the Next baseline itself (timing); reported, not gating
+const ADVISORY = [] // every check gates; timing-sensitive ones poll instead of sleeping
 const rec = (name, ok, detail) => {
   results[name] = { ok: !!ok, advisory: ADVISORY.includes(name) || undefined, ...(detail !== undefined ? { detail } : {}) }
   console.log(ok ? 'pass' : 'FAIL', name, detail !== undefined ? JSON.stringify(detail) : '')
 }
 
+/** Poll an in-page expression until it is truthy (up to `ms`); machines under load make fixed sleeps flaky. */
+let pageRef
+const until = async (expr, ms = 10000) => {
+  for (let t = 0; t < ms; t += 200) {
+    if (await pageRef.ev(expr)) return true
+    await sleep(200)
+  }
+  return false
+}
 const chrome = await launch()
 try {
   const page = await chrome.newPage()
+  pageRef = page
   await page.metrics({ width: 1440, height: 900 })
   const requests = []
   page.on((m) => m.method === 'Network.requestWillBeSent' && requests.push(m.params.request.url))
@@ -38,7 +48,7 @@ try {
   rec('hero canvas mounted', (await page.ev(`document.querySelectorAll('canvas').length`)) > 0, await page.ev(`document.querySelectorAll('canvas').length`))
   await page.ev(`window.__marker='alive'`)
   await page.ev(`document.querySelector('nav[aria-label="Main"] a[href="/writing"]').click()`)
-  await sleep(1500)
+  await until(`location.pathname === '/writing'`)
   rec('client navigation without reload', (await page.ev('window.__marker')) === 'alive' && (await page.ev('location.pathname')) === '/writing', await page.ev('location.pathname'))
   rec('nav marks current section', (await page.ev(`document.querySelector('nav[aria-label="Main"] a[aria-current="page"]')?.getAttribute('href')`)) === '/writing')
   rec('page-enter wrapper present after navigation', (await page.ev(`!!document.querySelector('.page-enter')`)))
@@ -47,11 +57,11 @@ try {
   await page.goto(base + '/')
   await page.ev(`window.__marker='alive'`)
   await page.ev(`document.querySelector('a[href="/projects/starlink"]').click()`)
-  await sleep(2500)
+  await until(`location.pathname === '/projects/starlink'`)
   rec('card click navigates in place', (await page.ev('location.pathname')) === '/projects/starlink' && (await page.ev('window.__marker')) === 'alive')
   rec('transition names cleared after settle', await page.ev(`!document.documentElement.hasAttribute('data-vt')`))
   await page.ev('history.back()')
-  await sleep(2000)
+  await until(`location.pathname === '/'`)
   rec('back returns home in place', (await page.ev('location.pathname')) === '/' && (await page.ev('window.__marker')) === 'alive')
 
   // 4. Logo switcher opens on focus.
@@ -101,8 +111,10 @@ try {
   // 8. Reactions row mounts and calls the API (404 on a plain server is fine; the request must be made).
   requests.length = 0
   await page.goto(base + '/writing/creating-my-first-pcb-object')
-  await page.ev(`window.scrollTo(0,document.documentElement.scrollHeight)`)
-  await sleep(2500)
+  for (let i = 0; i < 24 && !requests.some((u) => u.includes('/api/live/')); i++) {
+    await page.ev(`window.scrollTo(0,document.documentElement.scrollHeight)`)
+    await sleep(250)
+  }
   rec('reactions/views request issued', requests.some((u) => u.includes('/api/live/')), requests.filter((u) => u.includes('/api/live/')).map((u) => new URL(u).pathname))
 
   // 9. No console-fatal page errors on home.
@@ -111,6 +123,19 @@ try {
   await page.goto(base + '/')
   await sleep(1500)
   rec('no uncaught exceptions on home', errors.length === 0, errors)
+
+  // 10. No hydration mismatch or console errors on a spread of routes (React logs these as console.error / recoverable errors).
+  const bad = []
+  page.on((m) => {
+    if (m.method === 'Runtime.consoleAPICalled' && m.params.type === 'error') bad.push(m.params.args.map((a) => a.value ?? a.description ?? '').join(' ').slice(0, 160))
+    if (m.method === 'Runtime.exceptionThrown') bad.push(String(m.params.exceptionDetails.exception?.description ?? m.params.exceptionDetails.text).slice(0, 160))
+  })
+  for (const p of ['/', '/projects', '/writing', '/about', '/resume', '/projects/starlink', '/projects/project-mountaintop/week-5-6-space', '/writing/kinetic-typography', '/this-does-not-exist']) {
+    await page.goto(base + p)
+    await sleep(800)
+  }
+  const real = bad.filter((t) => !/favicon|Failed to load resource|WebGL|GPU stall|swiftshader/i.test(t))
+  rec('no console errors or hydration mismatches across 9 routes', real.length === 0, real)
 } finally {
   chrome.close()
 }
