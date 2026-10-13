@@ -52,7 +52,7 @@ try {
   const hov = flags.find((f) => f.startsWith('hover='))?.slice(6);
   const hev = flags.find((f) => f.startsWith('hoverEval='))?.slice(10);
   if (hov) {
-    const r = (await send('Runtime.evaluate', { expression: `(() => { const e = document.querySelector(${JSON.stringify(hov)}); e.scrollIntoView({ block: 'center' }); const b = e.getBoundingClientRect(); return [b.left + b.width / 2, b.top + b.height / 2]; })()`, returnByValue: true })).result.result.value;
+    const r = (await send('Runtime.evaluate', { expression: `(() => { const e = document.querySelector(${JSON.stringify(hov)}); e.scrollIntoView({ block: 'center', behavior: 'instant' }); const b = e.getBoundingClientRect(); return [b.left + b.width / 2, b.top + b.height / 2]; })()`, returnByValue: true })).result.result.value;
     await sleep(700);
     await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: r[0] - 3, y: r[1] - 3 }); await sleep(50);
     await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: r[0], y: r[1] });
@@ -60,10 +60,10 @@ try {
     if (hev) { const er = await send('Runtime.evaluate', { expression: hev, awaitPromise: true, returnByValue: true }); console.log('hover eval:', JSON.stringify(er.result.result.value ?? er.result.exceptionDetails ?? null)); }
   }
   const sel = flags.find((f) => f.startsWith('sel='))?.slice(4);
-  if (sel) { await send('Runtime.evaluate', { expression: `document.querySelector(${JSON.stringify(sel)}).scrollIntoView()` }); await sleep(1200); }
+  if (sel) { await send('Runtime.evaluate', { expression: `document.querySelector(${JSON.stringify(sel)}).scrollIntoView({ behavior: 'instant' })` }); await sleep(1200); }
   const click = flags.find((f) => f.startsWith('click='))?.slice(6);
   if (click) { await send('Runtime.evaluate', { expression: `document.querySelector(${JSON.stringify(click)}).click()` }); await sleep(600); }
-  if (scrollY) { await send('Runtime.evaluate', { expression: `window.scrollTo(0, ${scrollY})` }); await sleep(900); }
+  if (scrollY) { await send('Runtime.evaluate', { expression: `window.scrollTo({ top: ${scrollY}, behavior: 'instant' })` }); await sleep(900); }
   // tap=x,y: a touch pointerdown+up on the hero at that point (css px); strip=0,150,500: also save a shot that many ms after the tap, as <out>-t<ms>
   const tap = flags.find((f) => f.startsWith('tap='))?.slice(4).split(',').map(Number);
   if (tap) {
@@ -85,8 +85,8 @@ try {
   if (full || clipArg) {
     // walk down the page so lazy images load, then return to the top
     const hh = (await send('Runtime.evaluate', { expression: 'document.documentElement.scrollHeight', returnByValue: true })).result.result.value;
-    for (let y = 0; y < hh; y += +H * 0.8) { await send('Runtime.evaluate', { expression: `window.scrollTo(0, ${y})` }); await sleep(250); }
-    await send('Runtime.evaluate', { expression: 'window.scrollTo(0, 0)' }); await sleep(600);
+    for (let y = 0; y < hh; y += +H * 0.8) { await send('Runtime.evaluate', { expression: `window.scrollTo({ top: ${y}, behavior: 'instant' })` }); await sleep(250); }
+    await send('Runtime.evaluate', { expression: "window.scrollTo({ top: 0, behavior: 'instant' })" }); await sleep(600);
     const m = await send('Page.getLayoutMetrics');
     const h = Math.ceil(m.result.cssContentSize.height);
     if (full) clip = { x: 0, y: 0, width: +W, height: Math.min(h, 12000), scale: 1 };

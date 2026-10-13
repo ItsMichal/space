@@ -126,14 +126,14 @@ for (const w of widths) {
   out.length = 0;
   let nt = 0, nb = 0;
   for (const pg of ['/videos/', '/games/']) {   // the index pages use the same tiles: same checks, no playing probe
-    const dd = shot(`${base}${pg}`, w, PROBE);
+    const dd = shot(`${base}${pg}?motion=0`, w, PROBE);
     if (!dd) { fails++; console.log(`FAIL width ${w} ${pg}: probe returned nothing`); continue; }
     const sm = checkPage(w, pg, dd); nt += sm.tiles; nb += sm.bentos;
   }
-  const d = shot(`${base}/?clips=demo&n=6`, w, PROBE);
+  const d = shot(`${base}/?motion=0&clips=demo&n=6`, w, PROBE);
   if (!d) { fails++; console.log(`FAIL width ${w}: probe returned nothing`); continue; }
   const home = checkPage(w, '/', d); nt += home.tiles; nb += home.bentos;
-  const pl = shot(`${base}/?clips=demo&n=6`, w, PLAYING);
+  const pl = shot(`${base}/?motion=0&clips=demo&n=6`, w, PLAYING);
   if (pl && !pl.none) {
     const p = pl.pad;
     ok(near(pl.radius, pl.r, .6), `${w} playing: radius`);

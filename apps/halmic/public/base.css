@@ -18,12 +18,15 @@
   --display: "Halmic Display", "Halmic Display Fallback", "Halmic Text", "Halmic Text Fallback", ui-sans-serif, system-ui, sans-serif;
   --dtrack: 0;              /* heading tracking: the display face carries its own spacing (wordmark pairs kerned in the font) */
   --s1: 8px; --s2: 16px; --s3: 24px; --s4: 32px; --s6: 48px; --s8: 64px; --s12: 96px; --s20: 160px;
-  --ease: cubic-bezier(.2, .8, .2, 1);
-  --gut: 16px;
+  --ease: cubic-bezier(.2, .8, .2, 1);   /* the one standard ease: fast start, long settle */
+  --t1: 120ms; --t2: 200ms; --t3: 360ms; --t4: 600ms;   /* motion durations: press / hover / move / reveal */
+  --spring: cubic-bezier(.34, 1.4, .64, 1);   /* emphasised ease: a small overshoot, then rest */
+  --gut: 16px; --hdr: 72px;
 }
+@supports (transition-timing-function: linear(0, 1)) { :root { --spring: linear(0, .06, .2, .372, .544, .698, .823, .917, .983, 1.024, 1.046, 1.054, 1.053, 1.046, 1.037, 1.028, 1.019, 1.012, 1.006, 1.002, .999, .998, .997, .997, 1); } }
 @media (min-width: 768px) { :root { --gut: 32px; } }
 * { box-sizing: border-box; }
-html { color-scheme: dark; background: var(--ink); scroll-behavior: auto; }
+html { color-scheme: dark; background: var(--ink); scroll-behavior: auto; scroll-padding-top: var(--hdr); }
 body { margin: 0; background: var(--ink); color: var(--text); font: 400 17px/1.5 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; overflow-x: hidden; }
 a { color: inherit; text-decoration: none; }
 /* no real italic is shipped: never let the browser slant the text face; emphasis is the 700 weight */
@@ -38,15 +41,16 @@ img { max-width: 100%; height: auto; display: block; }
 
 /* icons: Phosphor Fill + brand marks from /icons.svg, sized in em, coloured by the text around them */
 .ic { width: 1em; height: 1em; flex: none; fill: currentColor; display: inline-block; vertical-align: -.125em; }
-.ic-end { width: 1.05em; height: 1.05em; transition: transform .32s var(--ease); }
+.ic-end { width: 1.05em; height: 1.05em; transition: transform var(--t3) var(--ease); }
 
 /* header */
 .top { position: absolute; z-index: 5; inset: 0 0 auto 0; }
+.js .top { position: fixed; }   /* with scripts the header stays; motion.css gives it a blurred ink backdrop once the hero is behind */
 .top .wrap { display: flex; align-items: center; justify-content: space-between; height: 72px; }
 .top .mark { height: 34px; width: auto; fill: var(--text); display: block; }
-.top nav { display: flex; gap: 0; min-width: 0; overflow-x: auto; scrollbar-width: none; margin-right: -8px; }
+.top nav { position: relative; display: flex; gap: 0; min-width: 0; overflow-x: auto; scrollbar-width: none; margin-right: -8px; }
 .top nav::-webkit-scrollbar { display: none; }
-.top nav a { flex: none; min-height: 44px; min-width: 44px; gap: 7px; justify-content: center; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 999px; color: var(--mute); font-size: 15px; font-weight: 600; transition: color .32s var(--ease), background .32s var(--ease); }
+.top nav a { flex: none; min-height: 44px; min-width: 44px; gap: 7px; justify-content: center; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 999px; color: var(--mute); font-size: 15px; font-weight: 600; transition: color var(--t3) var(--ease), background var(--t3) var(--ease); }
 .top nav a:hover, .top nav a[aria-current] { color: var(--text); background: #ffffff10; }
 .top nav a .ic { font-size: 17px; }
 .top nav a:focus-visible { outline-offset: -2px; }   /* the nav scrolls inside itself, so the ring stays inside its box */
@@ -56,7 +60,7 @@ img { max-width: 100%; height: auto; display: block; }
 @media (max-width: 360px) { .top .wrap { gap: 4px; } .top .mark { height: 26px; } .top nav a { padding: 0 6px; } }
 
 /* status pill: modest. The logotype's bars + dot, small. */
-.status { display: inline-flex; align-items: center; gap: 10px; margin: 0; padding: 6px 14px 6px 12px; border-radius: 999px; background: var(--ink-2); border: 1px solid var(--line); font-size: 14px; line-height: 1.3; min-height: 36px; transition: background .6s var(--ease), border-color .6s var(--ease); }
+.status { display: inline-flex; align-items: center; gap: 10px; margin: 0; padding: 6px 14px 6px 12px; border-radius: 999px; background: var(--ink-2); border: 1px solid var(--line); font-size: 14px; line-height: 1.3; min-height: 36px; transition: background var(--t4) var(--ease), border-color var(--t4) var(--ease); }
 [data-live="1"] .status { background: #0f1a36; border-color: #274a99; }
 .status .meter { position: relative; width: 62px; height: 18px; flex: none; }
 .status b { font-weight: 600; } .status .sub { color: var(--mute); }
@@ -65,33 +69,35 @@ img { max-width: 100%; height: auto; display: block; }
 
 /* meter parts */
 .meter, [data-meter] { position: relative; }
-.bar { position: absolute; bottom: 0; display: block; background: var(--mute); transform-origin: 50% 100%; transition: background .8s var(--ease); }
-.mdot { position: absolute; bottom: 0; border-radius: 50%; transform: skewX(-13deg); transition: background .8s var(--ease), border-color .8s var(--ease), box-shadow .8s var(--ease); background: transparent; border: 2px solid var(--mute); }
+.bar { position: absolute; bottom: 0; display: block; background: var(--mute); transform-origin: 50% 100%; transition: background var(--t4) var(--ease); }
+.mdot { position: absolute; bottom: 0; border-radius: 50%; transform: skewX(-13deg); transition: background var(--t4) var(--ease), border-color var(--t4) var(--ease), box-shadow var(--t4) var(--ease); background: transparent; border: 2px solid var(--mute); }
 [data-live="1"] .bar { background: var(--blue-live); }
 [data-live="1"] .mdot { background: var(--blue-live); border-color: var(--blue-live); box-shadow: 0 0 14px #3d7bffaa; animation: onair 2.8s var(--ease) infinite; }
 @keyframes onair { 0%, 100% { scale: 1; opacity: 1; } 50% { scale: 1.14; opacity: .8; } }
 @media (prefers-reduced-motion: reduce) { .mdot, .wordmark .idot { animation: none !important; } }
 
 /* buttons: one family. .btn is the hero size; .btn-sm (42px) is for card control rows, inner pages and the footer of a page. Pills, icon + label, no layout shift on hover. */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 26px; border-radius: 999px; font: 700 17px/1 var(--sans); cursor: pointer; transition: transform .32s var(--ease), background .32s var(--ease), color .32s var(--ease), border-color .32s var(--ease); border: 1.5px solid transparent; background: none; color: inherit; white-space: nowrap; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 26px; border-radius: 999px; font: 700 17px/1 var(--sans); cursor: pointer; transition: transform var(--t3) var(--ease), translate var(--t3) var(--ease), background var(--t2) var(--ease), color var(--t2) var(--ease), border-color var(--t2) var(--ease); border: 1.5px solid transparent; background: none; color: inherit; white-space: nowrap; }
 .btn .ic { font-size: 1.2em; }
-.btn:active { transform: scale(.97); transition-duration: .1s; }
+.btn:active { transform: scale(1.015, .955); transition-duration: var(--t1); }   /* press: a quick squash */
 .btn-blue { background: var(--blue); color: var(--ink); } .btn-blue:hover { background: var(--blue-live); }
 .btn-ghost { border-color: #ffffff38; color: var(--text); } .btn-ghost:hover { background: #ffffff14; border-color: #ffffff66; }
+.btn:hover { translate: 0 -2px; }   /* lift: no shadow, the colour shift does the rest */
+.btn:active { translate: 0 0; }
 .btn:hover .ic-end { transform: translate(2px, -2px); } .btn:hover .ic-arrow { transform: translateX(2px); }
 .btn-sm { min-height: 44px; padding: 0 20px; font-size: 15px; gap: 8px; }
 .btn-sm .ic { font-size: 1.15em; }
 .btn:focus-visible { outline: 2px solid var(--blue-live); outline-offset: 3px; border-radius: 999px; }
 .c-paper .btn-ghost { border-color: #0f0e1340; color: var(--paper-ink); } .c-paper .btn-ghost:hover { background: #0f0e1312; }
 /* icon-only round button (44px target; 40px disc inside the media corner) */
-.ibtn { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; color: var(--paper); background: #0f0e13b8; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); font-size: 20px; transition: background .25s var(--ease), color .25s var(--ease), transform .25s var(--ease), opacity .2s var(--ease); }
+.ibtn { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; color: var(--paper); background: #0f0e13b8; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); font-size: 20px; transition: background var(--t2) var(--ease), color var(--t2) var(--ease), transform var(--t2) var(--ease), opacity var(--t2) var(--ease); }
 .ibtn:hover { background: var(--blue); color: var(--ink); } .ibtn:active { transform: scale(.92); }
 .ibtn:focus-visible { outline: 2px solid var(--blue-live); outline-offset: 2px; border-radius: 50%; }
 
 /* videos: the featured player on a video's own page */
 .vid { display: block; position: relative; }
 .vid .thumb { display: block; position: relative; aspect-ratio: 16 / 9; border-radius: var(--r); overflow: hidden; background: var(--ink-3); }
-.vid .thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s cubic-bezier(.4, 0, .25, 1); }
+.vid .thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--t3) var(--ease); }
 .vid:hover .thumb img { transform: scale(1.03); }
 .vid .vt { display: block; margin-top: 12px; font-weight: 600; line-height: 1.25; text-wrap: balance; }
 .vid .vm { display: block; color: var(--mute); font-size: 14px; margin-top: 2px; }
@@ -120,7 +126,7 @@ img { max-width: 100%; height: auto; display: block; }
 .c-blue { background: var(--blue); color: var(--ink); }
 .c-paper:focus-visible { outline-color: var(--blue-paper); }
 .cm { position: relative; flex: 0 0 auto; aspect-ratio: 16 / 9; overflow: hidden; background: var(--ink-3); }
-.cm img, .cm video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .4s cubic-bezier(.4, 0, .25, 1); }
+.cm img, .cm video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform var(--t3) var(--ease); }
 a.card:hover .cm img, a.card:hover .cm video { transform: scale(1.03); }
 .h2 .cm, .h4 .cm, .side .cm { flex: 1 0 auto; }   /* only the tall cards let their image take the spare height; elsewhere the images line up along a row */
 /* game covers: the whole picture, never cropped, on the ink the covers were drawn for */
@@ -147,11 +153,14 @@ a.card:hover .cm img, a.card:hover .cm video { transform: scale(1.03); }
 .txt.big .tico { width: 64px; height: 64px; font-size: 32px; border-radius: 20px; }
 .note .ct { font: 600 18px/1.35 var(--sans); } .note .cb { min-height: 0; justify-content: center; }
 /* link-out cards: a circular arrow button in the corner (the whole card is the link, so this is the visible affordance, not a second target) */
-.goi { position: absolute; z-index: 2; top: var(--pad, 16px); right: var(--pad, 16px); display: grid; place-items: center; width: var(--ctl, 40px); height: var(--ctl, 40px); border-radius: 50%; background: #ffffff1c; color: var(--paper); font-size: 19px; transition: background .3s var(--ease), color .3s var(--ease), transform .3s var(--ease); }
+.goi { position: absolute; z-index: 2; top: var(--pad, 16px); right: var(--pad, 16px); display: grid; place-items: center; width: var(--ctl, 40px); height: var(--ctl, 40px); border-radius: 50%; background: #ffffff1c; color: var(--paper); font-size: 19px; overflow: hidden; transition: background var(--t2) var(--ease), color var(--t2) var(--ease); }
 .c-paper .goi { background: #0f0e1314; color: var(--paper-ink); } .c-blue .goi { background: var(--ink); color: var(--paper); }
-a.card:hover .goi, a.card:focus-visible .goi { background: var(--paper); color: var(--ink); transform: rotate(45deg); }
+a.card:hover .goi, a.card:focus-visible .goi { background: var(--paper); color: var(--ink); }
 .c-paper:hover .goi, .c-paper:focus-visible .goi { background: var(--ink); color: var(--paper); } .c-blue:hover .goi, .c-blue:focus-visible .goi { background: var(--paper); color: var(--ink); }
-.goi .ic { transition: transform .3s var(--ease); } a.card:hover .goi .ic { transform: rotate(-45deg); }
+/* the arrow loop: on hover or focus the arrow leaves along its diagonal and a second one arrives from the opposite corner (the disc clips both) */
+.goi .ic { grid-area: 1 / 1; transition: translate var(--t3) var(--ease); }
+.goi .dup { translate: -140% 140%; }
+a:is(:hover, :focus-visible) > .goi .ic:not(.dup) { translate: 140% -140%; } a:is(:hover, :focus-visible) > .goi .dup { translate: 0 0; }
 /* compact brand cards (All clips on Twitch, Everything on itch.io): big brand tile beside the words instead of a colour block */
 .compact .cb { flex-direction: row; align-items: center; justify-content: flex-start; gap: 22px; min-height: 0; padding: 26px 84px 26px 26px; }
 .compact .tico { width: 72px; height: 72px; margin: 0; font-size: 38px; border-radius: 22px; flex: none; }
@@ -162,7 +171,7 @@ a.card:hover .goi, a.card:focus-visible .goi { background: var(--paper); color: 
 .chip { position: absolute; z-index: 1; right: var(--pad, 12px); bottom: var(--pad, 12px); display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px 0 8px; border-radius: 999px; background: #0f0e13c4; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); color: var(--paper); font: 700 12.5px/1 var(--sans); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
 .chip .ic { font-size: 14px; opacity: .85; }
 /* play button: a blurred, tinted disc with the play glyph; the same on clips, videos and the featured player */
-.play { position: absolute; z-index: 1; left: var(--pad, 14px); bottom: var(--pad, 14px); display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: #0f0e13a8; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: inset 0 0 0 1.5px #ffffff30; color: var(--paper); font-size: 22px; transition: background .3s var(--ease), color .3s var(--ease), transform .3s var(--ease), box-shadow .3s var(--ease); }
+.play { position: absolute; z-index: 1; left: var(--pad, 14px); bottom: var(--pad, 14px); display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: #0f0e13a8; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: inset 0 0 0 1.5px #ffffff30; color: var(--paper); font-size: 22px; transition: background var(--t2) var(--ease), color var(--t2) var(--ease), transform var(--t3) var(--spring), box-shadow var(--t2) var(--ease); }
 .play .ic { margin-left: 2px; }
 :is(.card, .vid):is(:hover, :focus-visible) .play { background: var(--blue); color: var(--ink); transform: scale(1.08); box-shadow: none; }
 .vid .play { width: 68px; height: 68px; font-size: 28px; left: 18px; bottom: 18px; }
@@ -189,8 +198,8 @@ a.card:hover .goi, a.card:focus-visible .goi { background: var(--paper); color: 
 @media (min-width: 1280px) { .w4 { grid-column: span 2; } .w34 { grid-column: span 3; } .h4 { grid-row: span 2; } .ov.h4 { aspect-ratio: auto; } }
 /* a playing card: the media block cross-fades to the player; control row below the text, close button on the corner of the picture */
 .vframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-.playing .cm, .playing .thumb { animation: pin .18s var(--ease) both; background: #000; }
-.playing .cm .vframe, .playing .thumb .vframe { animation: pin .18s var(--ease) both; }
+.playing .cm, .playing .thumb { animation: pin var(--t2) var(--ease) both; background: #000; }
+/* the player's iframe fades in once it has loaded (motion.css), so there is no animation on it here */
 @keyframes pin { from { opacity: 0; scale: .985; } to { opacity: 1; scale: 1; } }
 .crow { margin: 14px 0 0; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; max-width: none; }
 .cb .crow { margin-top: 18px; }
@@ -199,7 +208,7 @@ a.card:hover .goi, a.card:focus-visible .goi { background: var(--paper); color: 
 .playing :is(.cm, .thumb):is(:hover, :focus-within) .pclose, .pclose:focus-visible { opacity: 1; }
 @media (hover: none) { .pclose { opacity: 1; } }
 .playing .vm { display: none; }
-@media (prefers-reduced-motion: reduce) { a.card:hover .cm img, a.card:hover .cm video, a.card:hover .goi, a.card:hover .goi .ic, .play, .btn:hover .ic-end { transform: none !important; }
+@media (prefers-reduced-motion: reduce) { a.card:hover .cm img, a.card:hover .cm video, .play, .btn:hover .ic-end { transform: none !important; } .btn:hover, .btn:active { translate: none; transform: none; } .goi .ic { translate: none !important; } .goi .dup { display: none; }
   .playing .cm, .playing .thumb, .playing .vframe { animation: none; } }
 
 @media (prefers-reduced-motion: reduce) { * { transition-duration: .01s !important; animation-duration: .01s !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; } }
@@ -227,7 +236,7 @@ a.card:hover .goi, a.card:focus-visible .goi { background: var(--paper); color: 
 /* section label: its left edge is the grid's left edge (optical: the capital's side bearing is pulled back) and its link ends on the grid's right edge */
 .sh { display: flex; align-items: baseline; justify-content: space-between; gap: 6px 20px; flex-wrap: wrap; margin: 0 0 var(--gap); }
 .sh h2 { margin: 0 0 0 -.07em; font: 800 14px/1.2 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
-.sl { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: -14px -8px -14px 0; padding: 0 8px; border-radius: 999px; font: 700 14px/1 var(--sans); color: var(--mute); transition: color .25s var(--ease); }
+.sl { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: -14px -8px -14px 0; padding: 0 8px; border-radius: 999px; font: 700 14px/1 var(--sans); color: var(--mute); transition: color var(--t2) var(--ease); }
 .sl:hover { color: var(--text); } .sl:hover .ic-end { transform: translateX(2px); } .sl .ic-end { width: 1em; height: 1em; }
 .sl-note { display: block; min-height: 0; margin: 0; padding: 0; font-weight: 500; max-width: 70ch; }
 .bq { container-type: inline-size; }
@@ -242,12 +251,12 @@ a.card:hover .goi, a.card:focus-visible .goi { background: var(--paper); color: 
 @container (min-width: 880px) { .x4 { grid-column: span 2; } .fx4-1 { grid-column: span 1; } .fx4-2 { grid-column: span 2; } .fx4-3 { grid-column: span 3; } .fx4-4 { grid-column: span 4; } }
 
 .tile { --pad: clamp(12px, 6.5cqmin, 44px); --ctl: clamp(28px, 11.5cqmin, 44px); --tt-fs: clamp(15px, 7cqmin, 48px); --ts-fs: clamp(13px, 3.4cqmin, 18px); --lsb-t: calc(var(--tt-fs) * .07);
-  position: relative; display: block; min-width: 0; min-height: 0; border-radius: var(--r); overflow: hidden; isolation: isolate; background: var(--ink-2); color: var(--text); container-type: size; scroll-margin-top: 24px; }
+  position: relative; display: block; min-width: 0; min-height: 0; border-radius: var(--r); overflow: hidden; overflow: clip; isolation: isolate; background: var(--ink-2); color: var(--text); container-type: size; scroll-margin-top: 24px; }
 .tile:focus-visible { outline: 3px solid var(--blue-live); outline-offset: 3px; }
 .w2 { grid-column: span 2; } .lead { grid-row: span 2; }
 /* picture tiles: the media fills the tile, a gradient under the title */
 .tbg { position: absolute; inset: 0; z-index: -1; background: var(--ink-3); }
-.tbg img, .tbg video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(var(--z, 1)); transition: transform .5s cubic-bezier(.4, 0, .25, 1); }
+.tbg img, .tbg video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(var(--z, 1)); transition: transform var(--t4) var(--ease); }
 .tbg .yt-img { --z: 1.334; }   /* YouTube's 4:3 thumbnails carry black bars: in a square tile the picture is zoomed past them */
 .w2:not(.lead) .tbg .yt-img { --z: 1; }
 a.tile:hover .tbg img, a.tile:hover .tbg video { transform: scale(calc(var(--z, 1) * 1.04)); }
@@ -277,7 +286,7 @@ a.tile:hover .chip { background: var(--blue); color: var(--ink); }
 /* hover preview (app.js): a muted loop over the thumbnail, absolutely placed inside the media box so nothing shifts; the badge, chips and play button stay above it */
 /* the lead films' wide title-card thumbnails: the picture whole on black instead of the centre of a square */
 .tbg.fit-contain { background: #000; } .tbg.fit-contain img:not(.pv) { object-fit: contain; object-position: 50% 24%; }
-.tbg .pv { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; pointer-events: none; transition: opacity .15s linear, transform .5s cubic-bezier(.4, 0, .25, 1); }
+.tbg .pv { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; pointer-events: none; transition: opacity var(--t2) var(--ease), transform var(--t4) var(--ease); }
 .tbg .pv.on { opacity: 1; }
 .pvbar { position: absolute; z-index: 3; left: 0; right: 0; bottom: 0; height: 2px; background: var(--blue); opacity: .8; transform-origin: 0 50%; transform: scaleX(0); pointer-events: none; }
 a.tile:is(:hover, :focus-visible) .play { background: var(--blue); color: var(--ink); transform: scale(1.08); box-shadow: none; }
@@ -311,9 +320,8 @@ a.tile:is(:hover, :focus-visible) .play { background: var(--blue); color: var(--
 .tile .goi { top: var(--pad); right: var(--pad); width: var(--ctl); height: var(--ctl); font-size: calc(var(--ctl) * .48); background: #0000003d; color: #fff; }
 .tl-itch .goi, .tl-md .goi, .tl-site .goi, .tpaper .goi { background: #0f0e1320; color: var(--ink); }
 .tblue .goi { background: #0f0e1326; color: var(--ink); }
-a.tile:is(:hover, :focus-visible) .goi { background: var(--paper); color: var(--ink); transform: rotate(45deg); }
+a.tile:is(:hover, :focus-visible) .goi { background: var(--paper); color: var(--ink); }
 .tl-md:is(:hover, :focus-visible) .goi, .tl-site:is(:hover, :focus-visible) .goi, .tpaper:is(:hover, :focus-visible) .goi, .tl-itch:is(:hover, :focus-visible) .goi { background: var(--ink); color: var(--paper); }
-a.tile:hover .goi .ic { transform: rotate(-45deg); }
 /* the Twitch tile follows the live state the hero already sets on <html data-live> */
 .ldot { display: inline-block; width: .42em; height: .42em; margin-right: .35em; border-radius: 50%; background: #fff; vertical-align: .12em; animation: onair 2.8s var(--ease) infinite; }
 .ton { display: none; } [data-live="1"] .toff { display: none; } [data-live="1"] .ton { display: inline; }
@@ -321,12 +329,11 @@ a.tile:hover .goi .ic { transform: rotate(-45deg); }
 .t-note p { margin: var(--pad); color: var(--mute); font: 500 var(--ts-fs)/1.4 var(--sans); }
 /* a playing tile grows to 2x2: the player on top, the title and the Close / Open buttons beneath, on the same insets as a lead tile */
 .tile.playing { grid-column: span 2; grid-row: span 2; display: flex; flex-direction: column; background: var(--ink-2); }
-.playing .tp { position: relative; flex: none; aspect-ratio: 16 / 9; background: #000; animation: pin .18s var(--ease) both; }
-.playing .tp .vframe { animation: pin .18s var(--ease) both; }
+.playing .tp { position: relative; flex: none; aspect-ratio: 16 / 9; background: #000; animation: pin var(--t2) var(--ease) both; }
 .playing .pb { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: var(--pad); }
 .playing .pb .tt { -webkit-line-clamp: 2; line-clamp: 2; } .playing .pb .crow { margin-top: calc(var(--pad) * .4); }
 .playing .tp .pclose { opacity: 1; top: var(--pad); right: var(--pad); }
-@media (prefers-reduced-motion: reduce) { .tbg img, .tbg video, a.tile .goi, a.tile .play, .ic-end { transform: none !important; } .playing .tp, .playing .tp .vframe { animation: none; } .ldot { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .tbg img, .tbg video, a.tile .play, .ic-end { transform: none !important; } .playing .tp, .playing .tp .vframe { animation: none; } .ldot { animation: none; } }
 /* X post tiles: the post text is the title (his words, trimmed); a text-only post is a typographic tile */
 .t-post .tt { -webkit-line-clamp: 3; line-clamp: 3; }
 .t-post .play { left: calc(50% - var(--ctl)); right: auto; top: 26%; bottom: auto; width: calc(var(--ctl) * 1.3); height: calc(var(--ctl) * 1.3); font-size: calc(var(--ctl) * .53); left: calc(50% - var(--ctl) * .65); } .t-post.lead .play { top: 38%; width: calc(var(--ctl) * 1.4); height: calc(var(--ctl) * 1.4); left: calc(50% - var(--ctl) * .7); font-size: calc(var(--ctl) * .56); }

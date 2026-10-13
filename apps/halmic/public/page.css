@@ -1,7 +1,7 @@
 /* inner pages (game, video, work): same dark stage, plain reading column; the index pages and Phoenix Rising use the wide card grid */
 .pg { padding-top: 120px; padding-bottom: var(--s12); max-width: 1040px; } .pg.pgw { max-width: 1280px; } .pgw .grid { margin-top: var(--s4); }
 .pg h1 { margin: 0 0 var(--s4); font: 750 clamp(32px, 5vw, 64px)/1 var(--display); letter-spacing: var(--dtrack); text-wrap: balance; }
-.pg .crumb { margin: 0 0 var(--s3); } .pg .crumb a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px 0 12px; margin-left: -4px; border-radius: 999px; background: #ffffff0f; color: var(--mute); font-size: 15px; font-weight: 700; text-decoration: none; transition: background .25s var(--ease), color .25s var(--ease); } .pg .crumb a:hover { background: #ffffff1c; color: var(--text); } .pg .crumb .ic { font-size: 16px; }
+.pg .crumb { margin: 0 0 var(--s3); } .pg .crumb a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px 0 12px; margin-left: -4px; border-radius: 999px; background: #ffffff0f; color: var(--mute); font-size: 15px; font-weight: 700; text-decoration: none; transition: background var(--t2) var(--ease), color var(--t2) var(--ease); } .pg .crumb a:hover { background: #ffffff1c; color: var(--text); } .pg .crumb .ic { font-size: 16px; }
 .pg p { max-width: 62ch; } .pg a { text-underline-offset: 4px; }
 .pg p a { text-decoration: underline; text-decoration-color: #ffffff44; }
 .pg .btn, .pg .crumb a { text-decoration: none; }
