@@ -112,7 +112,7 @@ export const profile = {
   status: {
     location: 'California',
     sentences: [
-      "I'm currently based in California and open to exciting opportunities.",
+      "I'm currently based in California and open to connections and meeting cool people.",
       'Reach out on LinkedIn with specifics.',
     ],
   },
