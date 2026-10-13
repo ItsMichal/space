@@ -183,3 +183,14 @@ Pages were fetched as text (WebFetch) on 2026-10-12, so structure is verified bu
 | Resume as a print-styled web page with a PDF download | brittanychiang.com (resume.pdf, fetched), read.cv profiles (memory) | | `/resume` renders the same data; `@media print` hides the chrome and sets 9.5pt type; the PDF is printed from that page by headless Chrome |
 
 Honest status: the inset status note has no verified precedent beyond a recollection of short availability lines on personal sites; if the owner wants a stricter standard it should be reduced to plain text in the intro paragraph.
+
+## About photograph and logo on share cards (2026-10-13)
+
+References were fetched as text on 2026-10-13 where marked "fetched"; none was measured for computed styles. "Memory" means not opened in this pass.
+
+| Element | Reference | What the reference does | Ours |
+| --- | --- | --- | --- |
+| A plain portrait photograph on a personal about page, real background, no treatment | leerob.com/about and brittanychiang.com (fetched: both pages are text-led; neither shows a treated photo), rauno.me and paco.me (memory: small unfiltered photographs on the about pages) | Honest status: I could not verify a photograph pattern from the fetched pages | A 3:4 photograph in a 4:5 card with the card radius, `object-position` set to the face, no filter, no overlay; beside the intro from 900px, a 4:3 window above it on phones. Weakest precedent in this change, flagged for the owner |
+| Small portrait thumbnail beside the first paragraph of a bio | read.cv and github.com profile headers (memory) | | 88 to 104px, 4:5, floated left of the first paragraph on the home intro card |
+| Mark at the foot of a generated share card, name and domain beside it | vercel.com and linear.app Open Graph cards (memory, not opened): logo in a corner, title large | | Mark bottom left on every card (post, list, home, About), 40px tall, ink on paper, with the name or domain beside it |
+| Portrait panel on the right of a card, text left | The post cards already in `lib/og.tsx` (a cover panel at 456 by 534, radius 28) | | The home and About cards reuse that panel for the photograph |

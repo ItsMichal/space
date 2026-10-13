@@ -45,3 +45,6 @@ export const NEWSLETTER_LABEL: Record<string, string> = {
 }
 
 export const featuredProjects = () => profile.featuredProjectIds.map(postById)
+
+/** Alt text for the owner's photograph: the name from the profile plus the neutral description. */
+export const portraitAlt = `${profile.name}, ${profile.portrait.description}`
