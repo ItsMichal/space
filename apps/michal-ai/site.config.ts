@@ -7,4 +7,5 @@ export const siteConfig = {
   twitter: '@itsMichal',
   github: 'https://github.com/ItsMichal',
   linkedin: 'https://www.linkedin.com/in/mbodzianowski/',
+  x: 'https://x.com/ItsMichal',
 }
