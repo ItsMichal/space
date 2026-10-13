@@ -28,5 +28,6 @@
     { "tag": "v1", "new_sqlite_classes": ["PresenceRoom"] },
     { "tag": "v2", "new_sqlite_classes": ["ReactionsRoom"] }
   ],
+  "triggers": { "crons": ["17 */6 * * *"] },
   "observability": { "enabled": true }
 }

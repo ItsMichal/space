@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { GlassEffectContainer, GlassFold, GlassFoldItem, glass, useGlassNamespace } from '@/components/glass'
 import { StatusSlot } from '@/components/ui/StatusPill'
-import { SiteMark } from './SiteMark'
+import { OtherSiteRow, SiteSwitcher } from './SiteSwitcher'
 import type { MenuPreview } from '@/lib/menu'
 
 const links = [
@@ -110,12 +110,7 @@ export function NavBar({ previews }: { previews?: { work: MenuPreview[]; writing
           panelClassName="sheet-scroll flex flex-col px-space-4 pb-space-3 pt-space-1 sm:hidden"
           header={
             <>
-              <Link href="/" aria-label="michal.ai, home" className="flex min-h-[44px] items-center gap-space-2 rounded-sm text-ink" onClick={close}>
-                <SiteMark height={18} />
-                <span className="font-display text-[21px] leading-none tracking-[-0.005em]" aria-hidden>
-                  michal.ai
-                </span>
-              </Link>
+              <SiteSwitcher onHome={close} />
               <ul className="m-0 hidden list-none items-center gap-space-6 p-0 sm:flex">
                 {links.map((l) => (
                   <li key={l.href}>
@@ -177,6 +172,9 @@ export function NavBar({ previews }: { previews?: { work: MenuPreview[]; writing
               </div>
             )
           })}
+          <GlassFoldItem index={5} as="div">
+            <OtherSiteRow />
+          </GlassFoldItem>
         </GlassFold>
       </div>
     </GlassEffectContainer>

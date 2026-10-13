@@ -35,6 +35,7 @@ export class ReactionsRoom extends DurableObject {
   }
 
   async fetch(request: Request): Promise<Response> {
+    if (new URL(request.url).pathname === '/blob') return this.blob(request)
     const ipk = request.headers.get('x-live-ipk') ?? 'none'
     const url = new URL(request.url)
     if (request.method === 'GET') {
@@ -88,6 +89,27 @@ export class ReactionsRoom extends DurableObject {
       sql.exec("INSERT INTO c (target, emoji, n) VALUES ('~', 'views', 1) ON CONFLICT (target, emoji) DO UPDATE SET n = n + 1")
       return true
     })
+  }
+
+  /**
+   * Starlink snapshot store (table `blob`, schema v3). GET /blob?k=name -> bytes (404 when empty, `x-updated` = unix seconds);
+   * PUT /blob?k=name with the bytes (max 1 MB). Only worker/starlink.ts reaches it (the object named "~starlink"); the public
+   * reactions and views routes build their own URLs and never forward a path, and their ids come from the build-time list.
+   */
+  private async blob(request: Request): Promise<Response> {
+    const sql = this.ctx.storage.sql
+    const k = new URL(request.url).searchParams.get('k') ?? ''
+    if (!/^[a-z0-9-]{1,32}$/.test(k)) return json({ error: 'bad_request' }, 400)
+    if (request.method === 'PUT') {
+      const body = await request.arrayBuffer()
+      if (body.byteLength === 0 || body.byteLength > 1_000_000) return json({ error: 'bad_request' }, 400)
+      sql.exec('INSERT INTO blob (k, v, at) VALUES (?, ?, ?) ON CONFLICT (k) DO UPDATE SET v = excluded.v, at = excluded.at', k, body, Math.floor(Date.now() / 1000))
+      return json({ ok: true }, 200)
+    }
+    if (request.method !== 'GET') return json({ error: 'method' }, 405)
+    const row = sql.exec('SELECT v, at FROM blob WHERE k = ?', k).toArray()[0]
+    if (!row) return json({ error: 'empty' }, 404)
+    return new Response(row.v as ArrayBuffer, { headers: { 'Content-Type': 'application/octet-stream', 'x-updated': String(row.at) } })
   }
 
   private set(target: string, sid: string, emoji: string, on: boolean): boolean | 'full' {

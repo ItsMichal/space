@@ -1,5 +1,7 @@
 # halmic design system: a sibling, not a copy
 
+> Historical. halmic lives in this monorepo now (`apps/halmic`), not in a repository of its own, and several details (components, layout) have moved on. The current tile and bento system is described in `apps/halmic/README.md`.
+
 halmic.com is its own brand and its own repository-to-be. It shares DNA with the portfolio (the same hand drew the mark, the same motion craft standard, the same discipline) and deliberately diverges in expression: the portfolio is the professional face, halmic is allowed to take creative risks.
 
 ## Shared vs diverging

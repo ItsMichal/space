@@ -26,9 +26,6 @@ export const REACTIONS = [
 export type ReactionId = (typeof REACTIONS)[number]['id']
 export const REACTION_IDS: readonly string[] = REACTIONS.map((e) => e.id)
 
-/** The owner. Always marked on the globe. */
-export const HAWTHORNE = { lat: 33.9164, lon: -118.3526, label: 'Hawthorne, CA' } as const
-
 export const LIVE_LIMITS = {
   /** Snap grid in degrees (~55 km). */
   gridDeg: 0.5,

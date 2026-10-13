@@ -15,7 +15,7 @@ as well as UI/UX design, 3D/VR/AR development, and AI/ML integrations.
 
 ## Experience
 
-### Software Engineer — SpaceX (full-time), Apr 2024 – present, Hawthorne, California
+### Software Engineer — SpaceX (full-time), Apr 2024 – present, California
 
 Growing the Starlink.com platform for millions and then billions worldwide, through technical
 excellence and collaboration with business stakeholders.

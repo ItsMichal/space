@@ -22,6 +22,9 @@ Measured 2026-10-11 (home pages of each site).
 | Phone menu and previews | apple.com (mobile nav sheet), linear.app mobile menu | Sheet appears at once; rows fade and rise 8px, 24ms apart, about 200ms on a critically damped curve (apple.com nav transitions are 240 and 320ms on `cubic-bezier(.4,0,.6,1)`) | Timings measured on apple.com; sheet layout matched by eye |
 | Nav bar lockup (mark plus "michal.ai") | rauno.me (name top left), family.co (logo plus wordmark) | Mark and wordmark in one link, wordmark in the display serif at 21px | Matched by eye |
 | Plain page layout: one centred container, 1120px | linear.app, vercel.com, stripe.com | Nav pill and content share one centred max-width container; footer aligned to the same column | Matched by eye |
+| Starlink constellation drawn as points on the hero globe | satellitemap.space (every Starlink satellite as a point on a globe/map), starlink.com's coverage map, GitHub's homepage globe (small points over a dotted Earth) | One tiny mark per satellite, no labels or tooltips, far side hidden. Points use the globe's ink, snap to its 6px matrix, radius about 0.2 pitch (land dots reach 0.36), true orbit radius 1.086 of the globe radius, hidden behind the disc, dimmer on the far limb | Not opened in this pass (the sandbox has no browser access to those sites); the genre is from memory. Strength, radius and thinning are mine |
+| Pointer pushes the dot/glyph field apart and it springs back | The cursor-repel dot and particle fields on landing-page hero canvases (stripe.com, linear.app style), a common three.js / p5 idiom | Radial push, gaussian falloff, radius 100px, maximum 16px, critically damped follow, eases to zero after 1.5s idle, fine pointers only, canvas stays pointer-events none | Not verified on a specific live site; numbers are mine |
+| Text-aware cutout that follows the rotating phrase | The phrase rotator itself (linear.app, apple.com iPhone page) | The dim box is the stem plus the phrase on screen, and eases between phrases over 480ms with cubic-bezier(0.22,1,0.36,1), the phrase's own enter timing and curve | Measured in screenshots mid-transition; no site found with a cutout behind a rotator |
 
 ## Removed for lack of a precedent
 
@@ -130,6 +133,19 @@ Bug: on a dark reading page the nav pill was a pale milky slab with near-white t
 | Dark bar tint and backdrop filter | apple.com global nav in dark (`saturate(1.8) blur(20px)` over `rgba(22,22,23,0.8)`), developer.apple.com materials (`rgba(29,29,31,0.7)`), numbers as recorded in the Glass surface row above | Dark tone tint `rgba(18,22,18,0.8)` (the basalt paper at the same 80 percent), frost blur 20px and saturate 1.8 on dark pages (`--glass-blur-dark`, `--glass-saturate-dark`); light tone keeps 10px and 1.6. Not re-measured in this pass (network was not available to the build environment) | Values taken from the rows above, not re-read from apple.com today |
 | Dark rim | iOS 26 and macOS Tahoe Liquid Glass in dark appearance (native, no web measurement; Apple HIG "Materials" and WWDC25 "Meet Liquid Glass" give no numbers) | Highlights are light but thin and low alpha (white at 28 percent, about 1px), the lower-right edge sinks into a deep shadow (black at 55 percent), no wash over the body. The frost bevel lift and the water-drop gloss are cut by 80 to 85 percent on dark tone so they no longer veil the tint | Matched by eye against stills |
 | Tint and glyph colour chosen together | iOS 26 (glass flips light/dark with its backdrop and its glyphs flip with it), macOS menu bar | One decision per piece of glass (`components/glass/theme.ts`): the tone picks the tint, the foreground, the rim and the edge as a set | Unit tested against the real token values, measured on rendered pixels in `docs/glass-shots/` |
+
+## Logo hover switcher between the two sites (2026-10-12)
+
+Written without network access to the references (the build sandbox could not reach them), so every row is **from memory** and
+unmeasured; the behaviour numbers are ours, chosen to sit in the range these sites use. Re-measure before treating as settled.
+
+| Element | Reference | What we match | How verified |
+| --- | --- | --- | --- |
+| Hover flyout from a nav item with an intent delay, a bridge between trigger and panel, and the same panel opening on keyboard focus | stripe.com main navigation (Products, Solutions flyouts open on hover and on focus), apple.com global nav (flyout on hover, Escape closes) | Panel under the trigger, no gap to cross (8px transparent bridge), about 120ms in and 150ms out so a passing pointer does not open it, opacity and a 4px rise only, Escape closes, focus-within opens it | From memory (stripe.com, apple.com); behaviour checked by the headless-Chrome walk-through in `scripts/switcher-shots.mjs` |
+| The logo as a switcher between a company's products or sites | vercel.com (right-clicking the logo offers brand assets and a link to the sibling site), linear.app and notion.so (workspace switcher on the top-left mark), atlassian.com (app switcher) | The mark is the trigger and still navigates home; the row holds the sibling's mark and its domain only | From memory; none of these use hover on the mark, so only the placement and content are matched. Weakest precedent here |
+| Sibling-site assertion with `rel="me"` | IndieWeb rel=me (indieweb.org/rel-me), used by Mastodon profile verification | Both links carry `rel="me"` and are plain same-tab anchors | From memory |
+| Touch fallback as a quiet last row in the phone menu | apple.com mobile nav sheet | Same row as the dropdown, hairline above, no extra control | Matched by eye |
+| Bar without a wordmark, mark alone at the left | vercel.com, linear.app (mark only, no wordmark, in the top bar) | Mark at 20px, links right of it | From memory |
 
 ## Citation (verified)
 

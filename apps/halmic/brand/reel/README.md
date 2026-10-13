@@ -47,6 +47,8 @@ Crossfades: twelve 10-frame `xfade` dissolves in one chain with the first moment
 
 Encodes (all `-an`): `libvpx-vp9 -b:v 0 -crf 40/38/38 -row-mt 1 -deadline good -cpu-used 1 -g 96` for 1080 / 720 / mobile, `libx264 -preset slow -profile:v high -crf 29/30 -movflags +faststart` for the mp4s, one `select` frame each for the posters.
 
+Size budgets for the five video files are enforced by `scripts/check-links.mjs` (`npm test -w @space/halmic`).
+
 ## How hero.js picks a file
 
 Portrait cut when the hero box is taller than wide (or the viewport is 700 px or narrower); otherwise landscape. Landscape uses `reel-1080.webm` only when the canvas is at least 1400 device px wide (capped at 1920) and the connection is not 2g/3g/save-data. WebKit (iOS, Safari) and anything where `canPlayType('video/webm; codecs="vp9"')` is empty gets the mp4. If `play()` is refused, or no frame is decoded in 6 s, the poster still stays.

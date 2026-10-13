@@ -83,6 +83,10 @@
 .hero-globe[data-mode='gl'] .hero-globe__canvas {
   opacity: 1;
 }
+/* With WebGL the shader applies the globe's opacity itself (uGlobeA, read from --hero-globe-opacity) so the portrait can be stronger. */
+.hero-globe[data-mode='gl'] {
+  opacity: 1;
+}
 .hero-globe[data-mode='gl'] .hero-globe__still {
   opacity: 0;
   transition: opacity 600ms ease;

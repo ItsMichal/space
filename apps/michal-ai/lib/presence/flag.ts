@@ -11,7 +11,7 @@ export const LIVE_REACTIONS_ENABLED = true
 export const LIVE_BLOCK_REACTIONS = false
 
 /**
- * Decorative dots on the hero globe: live visitors and the Hawthorne mark. Off by default so the globe ships without the realtime
+ * Decorative dots on the hero globe: live visitors. Off by default so the globe ships without the realtime
  * backend (the globe itself renders from static data and needs no network beyond /globe/land.bin).
  */
 export const PRESENCE_PINS = false
