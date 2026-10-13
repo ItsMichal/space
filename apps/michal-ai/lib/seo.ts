@@ -96,11 +96,10 @@ export function aboutMetadata(): Metadata {
       description: ABOUT_DESCRIPTION,
       siteName: SITE_NAME,
       locale: 'en_US',
-      images: [{ url: absoluteUrl(DEFAULT_SHARE_IMAGE) }],
       firstName: profile.firstName,
       lastName: profile.lastName,
     },
-    twitter: { ...siteMetadata.twitter, title: ABOUT_TITLE, description: ABOUT_DESCRIPTION, images: [absoluteUrl(DEFAULT_SHARE_IMAGE)] },
+    twitter: { ...siteMetadata.twitter, title: ABOUT_TITLE, description: ABOUT_DESCRIPTION },
   }
 }
 
@@ -113,8 +112,8 @@ export function resumeMetadata(): Metadata {
     title: { absolute: RESUME_TITLE },
     description: RESUME_DESCRIPTION,
     alternates: { canonical: url },
-    openGraph: { type: 'website', url, title: RESUME_TITLE, description: RESUME_DESCRIPTION, siteName: SITE_NAME, locale: 'en_US', images: [{ url: absoluteUrl(DEFAULT_SHARE_IMAGE) }] },
-    twitter: { ...siteMetadata.twitter, title: RESUME_TITLE, description: RESUME_DESCRIPTION, images: [absoluteUrl(DEFAULT_SHARE_IMAGE)] },
+    openGraph: { type: 'website', url, title: RESUME_TITLE, description: RESUME_DESCRIPTION, siteName: SITE_NAME, locale: 'en_US' },
+    twitter: { ...siteMetadata.twitter, title: RESUME_TITLE, description: RESUME_DESCRIPTION },
   }
 }
 
