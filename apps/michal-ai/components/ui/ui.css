@@ -331,6 +331,8 @@
 .st-text--in .st-sub,
 .st-text--out .st-sub {
   flex: none;
+  /* flex items lose their leading space, so the gap before each " · part" is explicit */
+  margin-left: 0.25em;
 }
 @media (max-width: 639px) {
   /* the slot is the free space between mark and menu button: keep the minutes, drop "2 of 5" */
