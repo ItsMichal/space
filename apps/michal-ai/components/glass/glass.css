@@ -246,7 +246,7 @@
 }
 @media (prefers-color-scheme: dark) {
   :root[data-reading] .nav-glass {
-    --glass-backdrop: contrast(0.6) brightness(0.62);
+    --glass-backdrop: contrast(0.55) brightness(0.5);
     --nav-flat-tint: var(--glass-tint-dark);
     --nav-sheen: rgb(255 255 255 / 0.1);
   }
