@@ -15,7 +15,7 @@ import './presence.css'
 
 const DEG_PER_S = 2.4
 const START = { lat: 18, lon: -100 } // must match GLOBE_FALLBACK_VIEW
-const FALLBACK_FRACTION = GLOBE_FALLBACK_VIEW.radius / (GLOBE_FALLBACK_VIEW.size / 2) / SHELL_SCALE
+const FALLBACK_FRACTION = GLOBE_FALLBACK_VIEW.radius / (GLOBE_FALLBACK_VIEW.size / 2)
 /** Constellation dot strength (of the ink alpha) and fade-in time. */
 const SAT_ALPHA = 0.7
 const SAT_FADE_MS = 1600
@@ -33,10 +33,15 @@ const SPRING_W = 13 // rad/s, pointer field spring
 const SPRING_ZETA = 0.65 // under-damped: a little overshoot, a slow settle
 const WAKE_GAIN = 0.07 // px of drag per px/s of pointer velocity
 const PORTRAIT_REVEAL_MS = 900
+/** The shell canvas (satellites, trails, pings) is drawn at low resolution: at most this many pixels, at most 1.25 device pixels per CSS pixel. */
+const shellDprFor = (box: number, deviceDpr: number) => {
+  const cap = box < 520 ? 1.2e6 : 2.5e6
+  return Math.max(0.6, Math.min(1.25, deviceDpr, Math.sqrt(cap) / (box * SHELL_SCALE)))
+}
 const PTR_IDLE_MS = 1500
 
 /** Portrait style shipped by default: 'dots' | 'glyphs' | 'mixed' (override with ?portrait=). */
-const PORTRAIT_DEFAULT: 'dots' | 'glyphs' | 'mixed' = 'glyphs'
+const PORTRAIT_DEFAULT: 'dots' | 'glyphs' | 'mixed' = 'dots'
 /** Hero layout switch: below this the portrait is a small bust beside the name, from here it stands over the globe. */
 const FIGURE_MIN_WIDTH = 768
 
@@ -89,11 +94,12 @@ interface Props {
 export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot', className = '' }: Props) {
   const wrap = useRef<HTMLDivElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
+  const shellCanvas = useRef<HTMLCanvasElement>(null)
   const layer = useRef<HTMLDivElement>(null)
   const [mode, setMode] = useState<'pending' | 'gl' | 'fallback'>('pending')
   const [active, setActive] = useState(false)
   const st = useRef({
-    lon: START.lon, size: 0, dpr: 1, raf: 0, last: 0, r: null as GlobeRenderer | null, reduced: false, active: false, mode: 'pending' as string,
+    lon: START.lon, size: 0, dpr: 1, raf: 0, last: 0, r: null as GlobeRenderer | null, sr: null as GlobeRenderer | null, sdpr: 1, devT: null as number | null, pingDemo: false, demoLink: -1, reduced: false, active: false, mode: 'pending' as string,
     sat: null as Packed | null, satFrom: 0,
     portrait: null as null | { aspect: number; from: number }, pspec: null as PortraitSpec | null, pstr: 0, globeA: 0.4,
     maskT0: -1e9,
@@ -175,6 +181,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     drawIn(document.getElementById('work-h'))
     const fade = animate && !s.reduced && s.active
     s.r.setMask(c, fade)
+    s.sr?.setMask(c, fade)
     s.maskT0 = fade ? performance.now() : -1e9
     kick()
   }
@@ -201,7 +208,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
       bottom = anchor + 230
       height = Math.max(300, Math.min(760, bottom - 64))
       width = height * 0.75
-      left = w.left + w.width / 2 + 0.04 * (w.width / SHELL_SCALE) - 0.44 * width
+      left = w.left + w.width / 2 + 0.04 * w.width - 0.44 * width
       cellW = sc >= 1.4 ? 2 : 2.4
       glyphH = 5
       sideTaper = true
@@ -289,7 +296,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
           s.px.x += s.px.v * h
           s.py.x += s.py.v * h
         }
-        damp(s.pk, wantK, 6, dt)
+        damp(s.pk, wantK, 10, dt)
         s.pk.x = Math.max(0, Math.min(1, s.pk.x))
         const cap = 20 * s.dpr
         wake = [Math.max(-cap, Math.min(cap, s.px.v * WAKE_GAIN)), Math.max(-cap, Math.min(cap, s.py.v * WAKE_GAIN))]
@@ -300,12 +307,13 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     const nowS = Date.now() / 1000
     const satAlpha = sat ? SAT_ALPHA * (s.reduced ? 1 : Math.min(1, (now - s.satFrom) / SAT_FADE_MS)) : 0
     // Mesh pings: a few new ones per second, chosen from the precomputed neighbour table among links on the visible hemisphere.
-    const base = s.size / SHELL_SCALE
+    const base = s.size
+    const tClock = s.devT ?? now / 1000
     let pings: PingSet | undefined
     if (sat && s.links && s.links.a.length && !s.reduced && gl) {
       const P = (s.pg ??= { a: new Float32Array(PING_CAP * 4), ad: new Float32Array(PING_CAP), b: new Float32Array(PING_CAP * 4), bd: new Float32Array(PING_CAP), t: new Float32Array(PING_CAP * 2), next: new Float32Array(PING_CAP), hops: new Int8Array(PING_CAP), lastA: new Int32Array(PING_CAP), lastB: new Int32Array(PING_CAP) })
       const K = Math.min(PING_CAP, pingsFor(base))
-      const tNow = now / 1000
+      const tNow = tClock
       const rot = rotation(lat, lon)
       const zOf = (i: number) => {
         const [x, y, z] = positionEcef(sat.data, i, sat.refEpoch, nowS)
@@ -324,7 +332,35 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
         P.lastA[i] = ia
         P.lastB[i] = ib
       }
-      for (let i = 0; i < K; i++) {
+      if (s.pingDemo && s.devT !== null) {
+        // Dev only (?pingdemo=1 with ?t=): one fixed ping on the clock s.devT, to look at the comet frame by frame. The link is the first
+        // visible one whose ends are in the open hero (not behind the first card), and demoPos reports where they are on screen.
+        const wr = wrap.current?.getBoundingClientRect()
+        const Rc = (s.size / 2) * SPHERE_FRACTION
+        const at = (i: number) => {
+          const [x, y, z] = positionEcef(sat.data, i, sat.refEpoch, nowS)
+          const rr = Math.hypot(x, y, z)
+          const shellR = SHELL[0] + (SHELL[1] - SHELL[0]) * Math.max(0, Math.min(1, (rr - 1.045) / 0.05))
+          const q = rotation(lat, lon)
+          const wx = (q[0] * y + q[3] * z + q[6] * x) / rr
+          const wy = (q[1] * y + q[4] * z + q[7] * x) / rr
+          return wr ? [wr.left + wr.width / 2 + wx * shellR * Rc, wr.top + wr.height / 2 - wy * shellR * Rc] : [0, 0]
+        }
+        const open = (i: number) => {
+          const [x, y] = at(i)
+          return y > 150 && y < 520 && x > 150 && x < window.innerWidth - 150
+        }
+        if (s.demoLink < 0) {
+          for (let li = 0; li < s.links.a.length && s.demoLink < 0; li++) if (zOf(s.links.a[li]) > 0.35 && zOf(s.links.b[li]) > 0.35 && open(s.links.a[li]) && open(s.links.b[li])) s.demoLink = li
+        }
+        if (s.demoLink >= 0) {
+          launch(0, s.links.a[s.demoLink], s.links.b[s.demoLink], 1.2)
+          P.t[0] = 0
+          ;(s as unknown as { demoPos?: number[][] }).demoPos = [at(s.links.a[s.demoLink]), at(s.links.b[s.demoLink])]
+        }
+        pings = { count: s.demoLink >= 0 ? 1 : 0, a: P.a, ad: P.ad, b: P.b, bd: P.bd, t: P.t, now: tNow }
+      }
+      for (let i = 0; i < K && !(s.pingDemo && s.devT !== null); i++) {
         // a slot is free once its comet and the bloom at the receiver are done (duration x 1.3)
         if (tNow < P.t[i * 2] + P.t[i * 2 + 1] * 1.3 || tNow < P.next[i]) continue
         const dur = 0.8 + Math.random() * 0.8
@@ -358,23 +394,40 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
         }
         if (!done) P.next[i] = tNow + 0.25
       }
-      pings = { count: K, a: P.a, ad: P.ad, b: P.b, bd: P.bd, t: P.t, now: tNow }
+      if (!(s.pingDemo && s.devT !== null)) pings = { count: K, a: P.a, ad: P.ad, b: P.b, bd: P.bd, t: P.t, now: tNow }
     }
-    s.r?.draw(lat, lon, {
-      shell: SHELL,
-      trailSeconds: sat ? trailFor(base) : 0,
-      pings,
-      satT: sat ? nowS - sat.refEpoch : 0,
-      gmst: sat ? gmst(nowS) : 0,
-      satAlpha,
-      satThin: thinFor(base),
-      globeA: s.globeA,
-      maskMix: s.reduced ? 1 : easeOutSoft(Math.min(1, (now - s.maskT0) / CUT_MS)),
-      portrait: s.pspec && s.portrait ? { ...s.pspec, time: (now / 1000) % 3600, reveal: s.reduced ? 1 : Math.min(1, (now - s.portrait.from) / PORTRAIT_REVEAL_MS), anim: s.reduced ? 0 : 1 } : undefined,
-      ptr,
-      wake,
-      push: { radius: PUSH_RADIUS * s.dpr, max: PUSH_MAX * s.dpr },
-    })
+    const maskMix = s.reduced ? 1 : easeOutSoft(Math.min(1, (now - s.maskT0) / CUT_MS))
+    const reveal = s.reduced ? 1 : s.devT !== null ? Math.min(1, s.devT / (PORTRAIT_REVEAL_MS / 1000)) : Math.min(1, (now - (s.portrait?.from ?? now)) / PORTRAIT_REVEAL_MS)
+    const ptime = s.devT ?? (now / 1000) % 3600
+    const pspec = s.pspec && s.portrait ? { ...s.pspec, time: ptime, reveal, anim: s.reduced ? 0 : 1 } : undefined
+    // The globe canvas: the dot-matrix sphere and the portrait, at the device pixel ratio, the size of the globe box.
+    s.r?.draw(lat, lon, { globeA: s.globeA, maskMix, portrait: pspec, ptr, wake, push: { radius: PUSH_RADIUS * s.dpr, max: PUSH_MAX * s.dpr } })
+    // The shell canvas: satellites, trails and pings at low resolution on a box SHELL_SCALE times larger, same centre. Pointer, rect and
+    // edge are converted from globe pixels to shell pixels through CSS pixels; the figure is only cleared (satellites give way behind him).
+    if (s.sr) {
+      const k = s.sdpr / s.dpr
+      const off = (s.size * (SHELL_SCALE - 1)) / 2
+      const toShell = (v: number) => (v / s.dpr + off) * s.sdpr
+      const sptr = ptr ? { x: toShell(ptr.x), y: toShell(ptr.y), k: ptr.k } : undefined
+      const sp = pspec
+        ? { ...pspec, knockoutOnly: true, rect: [toShell(pspec.rect[0]), toShell(pspec.rect[1]), pspec.rect[2] * k, pspec.rect[3] * k] as [number, number, number, number], edge: pspec.edge * k }
+        : undefined
+      s.sr.draw(lat, lon, {
+        shell: SHELL,
+        trailSeconds: sat ? trailFor(base) : 0,
+        pings,
+        satT: sat ? nowS - sat.refEpoch : 0,
+        gmst: sat ? gmst(nowS) : 0,
+        satAlpha,
+        satThin: thinFor(base),
+        globeA: s.globeA,
+        maskMix,
+        portrait: sp,
+        ptr: sptr,
+        wake: [wake[0] * k, wake[1] * k],
+        push: { radius: PUSH_RADIUS * s.sdpr, max: PUSH_MAX * s.sdpr },
+      })
+    }
     const L = layer.current
     if (L && s.size) {
       const rot = rotation(lat, lon)
@@ -405,6 +458,9 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     if (process.env.NODE_ENV !== 'production') {
       const q = new URLSearchParams(window.location.search)
       st.current.freeze = q.get('spin') === '0'
+      // Dev only: ?t=<seconds> drives the portrait clock, the materialise sweep and the ping clock deterministically (set window.__globe.devT to step it).
+      if (q.get('t') !== null && Number.isFinite(Number(q.get('t')))) st.current.devT = Number(q.get('t'))
+      st.current.pingDemo = q.get('pingdemo') === '1'
       // Dev only: ?lon=-100 starts the globe at that longitude (with spin=0 it stays), to put dense land behind the text.
       if (q.get('lon') !== null && Number.isFinite(Number(q.get('lon')))) st.current.lon = Number(q.get('lon'))
     }
@@ -436,21 +492,29 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
         if (!r) return setMode('fallback')
         st.current.r = r
         r.resize(st.current.size || 300, st.current.dpr)
+        // The satellite shell gets its own larger canvas at low resolution (and its own context); without it the globe simply has no shell.
+        const sr = shellCanvas.current ? createRenderer(shellCanvas.current, null, { ink }, 'shell') : null
+        st.current.sr = sr
+        st.current.sdpr = shellDprFor(st.current.size || 300, window.devicePixelRatio || 1)
+        sr?.resize((st.current.size || 300) * SHELL_SCALE, st.current.sdpr)
         setMode('gl')
         void document.fonts?.ready.then(() => measureText())
         // The constellation arrives after the globe is up and fades in; without it (offline, stale elements) nothing is drawn.
         // The portrait: picture + a glyph atlas from the system monospace, after the globe is up and fonts are ready.
-        void Promise.all([loadPortrait(), document.fonts?.ready]).then(([pic]) => {
+        // Dev only: ?bare=1 draws the plain globe (no portrait, no satellites), which is how public/globe/fallback.png is regenerated.
+        const bare = process.env.NODE_ENV !== 'production' && new URLSearchParams(window.location.search).get('bare') === '1'
+        if (!bare) void Promise.all([loadPortrait(), document.fonts?.ready]).then(([pic]) => {
           const atlas = buildAtlas(st.current.dpr)
           if (!pic || !atlas || st.current.r !== r) return
           r.setPortrait(pic, atlas.canvas, atlas.n, atlas.box)
+          st.current.sr?.setPortrait(pic, null, 0)
           st.current.portrait = { aspect: atlas.aspect, from: performance.now() }
           layoutPortrait()
           kick()
         })
-        void loadStarlink().then((p) => {
+        if (!bare) void loadStarlink().then((p) => {
           if (!p || st.current.r !== r) return
-          r.setSatellites(p.data)
+          st.current.sr?.setSatellites(p.data)
           st.current.sat = p
           const lk = buildLinks(p.data, p.count)
           st.current.links = lk
@@ -477,13 +541,15 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     const apply = () => {
       const s = st.current
       const size = el.clientWidth
-      const dpr = Math.min(size / SHELL_SCALE < 600 ? 3 : 1.5, window.devicePixelRatio || 1)
+      const dpr = Math.min(size < 600 ? 3 : 1.5, window.devicePixelRatio || 1)
       // Height-only viewport changes (the iOS toolbar showing and hiding) do not change the globe box: nothing to redo, and the
       // canvas is not touched, so it cannot flash blank during scroll.
       if (size === s.size && dpr === s.dpr && s.r) return
       s.size = size
       s.dpr = dpr
       s.r?.resize(s.size, s.dpr)
+      s.sdpr = shellDprFor(s.size, window.devicePixelRatio || 1)
+      s.sr?.resize(s.size * SHELL_SCALE, s.sdpr)
       const ga = parseFloat(getComputedStyle(el).getPropertyValue('--hero-globe-opacity'))
       if (Number.isFinite(ga)) s.globeA = ga
       measureText()
@@ -575,7 +641,9 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     () => () => {
       const s = st.current
       s.r?.destroy()
+      s.sr?.destroy()
       s.r = null
+      s.sr = null
     },
     [],
   )
@@ -586,6 +654,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="hero-globe__still" src="/globe/fallback.png" alt="" width={400} height={400} decoding="async" />
       <canvas ref={canvas} className="hero-globe__canvas" />
+      <canvas ref={shellCanvas} className="hero-globe__canvas hero-globe__shell" />
       <div ref={layer} className="hero-globe__pins">
         {dots.map((d) => (
           <i key={d.k} data-lat={d.lat} data-lon={d.lon} className={d.cls} />

@@ -49,17 +49,17 @@ export function projectPoint(lat: number, lon: number, rot: Float32Array): { x: 
 
 /** Fraction of the canvas half-size used by the sphere (the rest is margin, so dots fade out well inside the box). */
 /** The canvas is this much larger than the old globe box, so the exaggerated satellite shell fits; the sphere keeps its old CSS size. */
-export const SHELL_SCALE = 2.2
+export const SHELL_SCALE = 2.2 // the shell canvas is this many times the globe box (it is a separate, low-resolution canvas)
 export const PING_CAP = 48
-export const SPHERE_FRACTION = 0.94 / SHELL_SCALE
+export const SPHERE_FRACTION = 0.94
 
 // Shared by the land, satellite and portrait passes: the text halo and the pointer push.
 // uMaskA / uMaskB: the hero text rendered from the real glyphs and blurred (HeroGlobe.tsx), canvas-sized at 1/4 scale, row 0 at the top;
 // they cross-fade with uMaskMix when the phrase changes. 1 on and next to the letters, easing to 0 over about 12 CSS px.
 const COMMON = `
-uniform sampler2D uMaskA; uniform sampler2D uMaskB; uniform float uMaskMix; uniform vec2 uRes;
+uniform sampler2D uMaskA; uniform sampler2D uMaskB; uniform float uMaskMix; uniform float uMaskScale; uniform vec2 uRes;
 float maskAt(vec2 c){
-  vec2 uv = vec2(c.x / uRes.x, 1. - c.y / uRes.y);
+  vec2 uv = (vec2(c.x / uRes.x, 1. - c.y / uRes.y) - .5) * uMaskScale + .5;   // the mask is built in globe-box coordinates; the shell canvas is larger
   return mix(texture(uMaskA, uv).r, texture(uMaskB, uv).r, uMaskMix);
 }
 // how much of a dot's size and alpha stays at a point: 1 in the open, 0 under and hugging the letters, following their contour
@@ -422,6 +422,8 @@ function landCanvas(rings: Ring[]): HTMLCanvasElement {
 }
 
 export interface PortraitSpec {
+  /** shell canvas: only clear the figure's silhouette (the satellites give way behind him), draw nothing */
+  knockoutOnly?: boolean
   /** x, y (canvas px, origin bottom-left), width, height */
   rect: [number, number, number, number]
   /** texture crop u0, v0, u1, v1 (v from the top) */
@@ -496,7 +498,12 @@ export interface GlobeRenderer {
 }
 
 /** Returns null when WebGL2 is unavailable or setup fails (the caller shows the static image instead). */
-export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette: Palette = LIGHT): GlobeRenderer | null {
+/**
+ * role 'globe': the dot-matrix sphere and the portrait, on a canvas the size of the globe box at the device pixel ratio.
+ * role 'shell': the satellite shell (dots, trails, pings) and the portrait knockout, on a larger canvas at low resolution (HeroGlobe.tsx
+ * sizes both). The two are aligned through the same rotation and a shared box centre.
+ */
+export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[] | null, palette: Palette = LIGHT, role: 'globe' | 'shell' = 'globe'): GlobeRenderer | null {
   let gl: WebGL2RenderingContext | null = null
   try {
     gl = canvas.getContext('webgl2', { alpha: true, premultipliedAlpha: true, antialias: false, powerPreference: 'low-power', preserveDrawingBuffer: true })
@@ -531,7 +538,7 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
       if (!g.getProgramParameter(pr, g.LINK_STATUS)) throw new Error(g.getProgramInfoLog(pr) ?? 'link')
       return pr
     }
-    const COMMON_U = ['uT', 'uGmst', 'uRot', 'uRes', 'uR', 'uPitch', 'uShell', 'uHalf', 'uAlpha', 'uInk', 'uMaskA', 'uMaskB', 'uMaskMix', 'uPtr', 'uPush', 'uWake']
+    const COMMON_U = ['uT', 'uGmst', 'uRot', 'uRes', 'uR', 'uPitch', 'uShell', 'uHalf', 'uAlpha', 'uInk', 'uMaskA', 'uMaskB', 'uMaskMix', 'uMaskScale', 'uPtr', 'uPush', 'uWake']
     const uloc = (pr: WebGLProgram, more: string[]) => {
       const o: Record<string, WebGLUniformLocation | null> = {}
       for (const n of [...COMMON_U, ...more]) o[n] = g.getUniformLocation(pr, n)
@@ -548,7 +555,7 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
     g.linkProgram(pprog)
     if (!g.getProgramParameter(pprog, g.LINK_STATUS)) throw new Error(g.getProgramInfoLog(pprog) ?? 'link')
     const PU = (n: string) => g.getUniformLocation(pprog, n)
-    const pu = { pic: PU('uPic'), atlas: PU('uAtlas'), rect: PU('uRect'), crop: PU('uCrop'), cell: PU('uCell'), atlasN: PU('uAtlasN'), atlasBox: PU('uAtlasBox'), style: PU('uStyle'), time: PU('uTime'), reveal: PU('uReveal'), anim: PU('uAnim'), side: PU('uSide'), mode: PU('uMode'), str: PU('uStr'), edge: PU('uEdge'), ink: PU('uInk'), res: PU('uRes'), maskA: PU('uMaskA'), maskB: PU('uMaskB'), maskMix: PU('uMaskMix'), ptr: PU('uPtr'), push: PU('uPush'), wake: PU('uWake') }
+    const pu = { pic: PU('uPic'), atlas: PU('uAtlas'), rect: PU('uRect'), crop: PU('uCrop'), cell: PU('uCell'), atlasN: PU('uAtlasN'), atlasBox: PU('uAtlasBox'), style: PU('uStyle'), time: PU('uTime'), reveal: PU('uReveal'), anim: PU('uAnim'), side: PU('uSide'), mode: PU('uMode'), str: PU('uStr'), edge: PU('uEdge'), ink: PU('uInk'), res: PU('uRes'), maskA: PU('uMaskA'), maskB: PU('uMaskB'), maskMix: PU('uMaskMix'), maskScale: PU('uMaskScale'), ptr: PU('uPtr'), push: PU('uPush'), wake: PU('uWake') }
     let picTex: WebGLTexture | null = null
     let atlasTex: WebGLTexture | null = null
     let atlasN = 1
@@ -570,9 +577,10 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
     const sbuf = g.createBuffer()!
     let satCount = 0
 
+    const maskScale = role === 'shell' ? SHELL_SCALE : 1
     const tex = g.createTexture()!
     g.bindTexture(g.TEXTURE_2D, tex)
-    g.texImage2D(g.TEXTURE_2D, 0, g.RGBA, g.RGBA, g.UNSIGNED_BYTE, landCanvas(rings))
+    if (rings) g.texImage2D(g.TEXTURE_2D, 0, g.RGBA, g.RGBA, g.UNSIGNED_BYTE, landCanvas(rings))
     g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MIN_FILTER, g.LINEAR)
     g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MAG_FILTER, g.LINEAR)
     g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_S, g.REPEAT)
@@ -580,7 +588,7 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
     const vao = g.createVertexArray()!
 
     const U = (n: string) => g.getUniformLocation(prog, n)
-    const u = { res: U('uRes'), r: U('uR'), pitch: U('uPitch'), rot: U('uRot'), land: U('uLand'), ink: U('uInk'), globeA: U('uGlobeA'), maskA: U('uMaskA'), maskB: U('uMaskB'), maskMix: U('uMaskMix'), ptr: U('uPtr'), push: U('uPush'), wake: U('uWake') }
+    const u = { res: U('uRes'), r: U('uR'), pitch: U('uPitch'), rot: U('uRot'), land: U('uLand'), ink: U('uInk'), globeA: U('uGlobeA'), maskA: U('uMaskA'), maskB: U('uMaskB'), maskMix: U('uMaskMix'), maskScale: U('uMaskScale'), ptr: U('uPtr'), push: U('uPush'), wake: U('uWake') }
     const blank = g.createTexture()!
     g.bindTexture(g.TEXTURE_2D, blank)
     g.texImage2D(g.TEXTURE_2D, 0, g.RGBA, 1, 1, 0, g.RGBA, g.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]))
@@ -589,7 +597,8 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
     const freeMask = (t: WebGLTexture) => {
       if (t !== blank && t !== maskPrev && t !== maskCur) g.deleteTexture(t)
     }
-    const bindMasks = (loc: { a: WebGLUniformLocation | null; b: WebGLUniformLocation | null; mix: WebGLUniformLocation | null }, mix: number) => {
+    const bindMasks = (loc: { a: WebGLUniformLocation | null; b: WebGLUniformLocation | null; mix: WebGLUniformLocation | null; s: WebGLUniformLocation | null }, mix: number) => {
+      g.uniform1f(loc.s, maskScale)
       g.uniform1i(loc.a, 3)
       g.uniform1i(loc.b, 4)
       g.uniform1f(loc.mix, mix)
@@ -664,7 +673,7 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
       },
       draw(lat0, lon0, extra = {}) {
         const rot = rotation(lat0, lon0)
-        const R = px * 0.5 * SPHERE_FRACTION
+        const R = (px * 0.5 * SPHERE_FRACTION) / maskScale
         g.clearColor(0, 0, 0, 0)
         g.clear(g.COLOR_BUFFER_BIT)
         g.useProgram(prog)
@@ -677,7 +686,7 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
         g.activeTexture(g.TEXTURE4)
         g.bindTexture(g.TEXTURE_2D, maskCur)
         g.activeTexture(g.TEXTURE0)
-        bindMasks({ a: u.maskA, b: u.maskB, mix: u.maskMix }, extra.maskMix ?? 1)
+        bindMasks({ a: u.maskA, b: u.maskB, mix: u.maskMix, s: u.maskScale }, extra.maskMix ?? 1)
         const ptr = extra.ptr && extra.ptr.k > 0 ? extra.ptr : null
         const push = extra.push ?? { radius: 130, max: 14 }
         const wake = extra.wake ?? [0, 0]
@@ -689,9 +698,11 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
         g.activeTexture(g.TEXTURE0)
         g.bindTexture(g.TEXTURE_2D, tex)
         g.uniform1i(u.land, 0)
-        g.bindVertexArray(vao)
-        g.drawArrays(g.TRIANGLES, 0, 3)
-        g.bindVertexArray(null)
+        if (role === 'globe') {
+          g.bindVertexArray(vao)
+          g.drawArrays(g.TRIANGLES, 0, 3)
+          g.bindVertexArray(null)
+        }
         if (satCount > 0 && (extra.satAlpha ?? 0) > 0.003) {
           const alphaBase = (extra.satAlpha ?? 0) * (extra.globeA ?? 1)
           const common = (l: Record<string, WebGLUniformLocation | null>, alpha: number) => {
@@ -706,7 +717,7 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
             g.uniform1f(l.uHalf, (0.5 * px) / R)
             g.uniform1f(l.uAlpha, alpha)
             g.uniform3fv(l.uInk, palette.ink)
-            bindMasks({ a: l.uMaskA, b: l.uMaskB, mix: l.uMaskMix }, extra.maskMix ?? 1)
+            bindMasks({ a: l.uMaskA, b: l.uMaskB, mix: l.uMaskMix, s: l.uMaskScale }, extra.maskMix ?? 1)
             g.uniform3f(l.uPtr, ptr?.x ?? 0, ptr?.y ?? 0, ptr?.k ?? 0)
             g.uniform2f(l.uPush, push.radius, push.max)
             g.uniform2f(l.uWake, wake[0], wake[1])
@@ -743,7 +754,7 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
           g.bindVertexArray(null)
         }
         const pt = extra.portrait
-        if (pt && picTex && pt.strength > 0.003 && (pt.style === 0 || atlasTex)) {
+        if (pt && picTex && pt.strength > 0.003 && (pt.knockoutOnly || pt.style === 0 || atlasTex)) {
           g.useProgram(pprog)
           g.enable(g.SCISSOR_TEST)
           g.scissor(Math.floor(pt.rect[0]), Math.floor(pt.rect[1]), Math.ceil(pt.rect[2]) + 1, Math.ceil(pt.rect[3]) + 1)
@@ -767,7 +778,7 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
           g.uniform1f(pu.edge, pt.edge)
           g.uniform3fv(pu.ink, palette.ink)
           g.uniform2f(pu.res, px, px)
-          bindMasks({ a: pu.maskA, b: pu.maskB, mix: pu.maskMix }, extra.maskMix ?? 1)
+          bindMasks({ a: pu.maskA, b: pu.maskB, mix: pu.maskMix, s: pu.maskScale }, extra.maskMix ?? 1)
           g.uniform3f(pu.ptr, ptr?.x ?? 0, ptr?.y ?? 0, ptr?.k ?? 0)
           g.uniform2f(pu.push, pt.push.radius, pt.push.max)
           g.uniform2f(pu.wake, wake[0] * 0.5, wake[1] * 0.5)
@@ -776,8 +787,10 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
           g.uniform1f(pu.mode, 0)
           g.drawArrays(g.TRIANGLES, 0, 3)
           g.blendFunc(g.ONE, g.ONE_MINUS_SRC_ALPHA)
-          g.uniform1f(pu.mode, 1)
-          g.drawArrays(g.TRIANGLES, 0, 3)
+          if (!pt.knockoutOnly) {
+            g.uniform1f(pu.mode, 1)
+            g.drawArrays(g.TRIANGLES, 0, 3)
+          }
           g.bindVertexArray(null)
           g.disable(g.SCISSOR_TEST)
           g.activeTexture(g.TEXTURE0)
