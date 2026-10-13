@@ -22,6 +22,12 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
   const qs = new URLSearchParams(location.search)
   const bake = qs.get('backdrop') === 'bake'
   const reduced = bake || matchMedia('(prefers-reduced-motion: reduce)').matches
+  // iOS WebKit (all iPhone/iPad browsers, iPadOS in desktop mode): see docs/backdrop.md, "iOS Safari". The canvas is not redrawn
+  // while the page scrolls (parallax is a compositor transform on the canvas), and there is no lensing. `?bdscroll=live|still` forces a mode.
+  const iosWebKit = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  const scrollMode = qs.get('bdscroll')
+  const still = !bake && !reduced && (scrollMode === 'still' || (scrollMode !== 'live' && iosWebKit))
+  if (still) canvas.dataset.still = ''
   const darkMq = matchMedia('(prefers-color-scheme: dark)')
   const html = document.documentElement
   const isDark = () => (bake ? qs.get('scheme') === 'dark' : darkMq.matches && html.hasAttribute('data-reading'))
@@ -46,6 +52,10 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
   const lensArr = new Float32Array(NL * 4)
   const lensR = new Float32Array(NL)
   let lensN = 0
+  let sBase = 0 // still mode: the scroll position the bitmap was drawn for
+  let lastScrollEvt = 0
+  let lastW = 0
+  let lastH = 0
 
   // ---- glass lens tracker: rects of marked elements, offscreen ones dropped by IntersectionObserver
   const visible = new Set<Element>()
@@ -153,6 +163,8 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo)
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0)
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    lastW = cssW
+    lastH = cssH
     needsDraw = true
   }
 
@@ -171,9 +183,10 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
   const draw = (now: number) => {
     if (!gl || lost) return
     const t = reduced ? bakeT : C.staticTime + (now - t0) / 1000
-    const sy = reduced ? bakeScroll : window.scrollY
+    const sy = reduced ? bakeScroll : still ? sBase : window.scrollY
     lastScrollY = sy
-    updateLens()
+    if (still) lensN = 0
+    else updateLens()
     const unit = Math.max(cssW, 700)
     const rayO = C.rays
 
@@ -195,7 +208,7 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
     gl.uniform2f(a.uView, cssW, cssH)
     gl.uniform1f(a.uUnit, unit)
     gl.uniform1f(a.uT, t)
-    gl.uniform1f(a.uScrollB, sy * C.parallax.blobs)
+    gl.uniform1f(a.uScrollB, sy * (still ? C.parallax.still : C.parallax.blobs))
     gl.uniform1f(a.uScrollR, sy * C.parallax.rays)
     gl.uniform1f(a.uRepeat, C.repeat)
     gl.uniform1f(a.uWarp, C.warp)
@@ -228,7 +241,7 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
     gl.uniform2f(b.uRes, canvas.width, canvas.height)
     gl.uniform1f(b.uDpr, dpr)
     gl.uniform1f(b.uCell, cell)
-    gl.uniform1f(b.uOff, reduced ? 0 : Math.round(sy * C.parallax.glyphs * dpr))
+    gl.uniform1f(b.uOff, reduced ? 0 : Math.round(sy * (still ? C.parallax.still : C.parallax.glyphs) * dpr))
     gl.uniform1f(b.uT, t)
     gl.uniform1f(b.uDark, darkNow)
     gl.uniform1f(b.uGlyphOn, glyphsOn ? 1 : 0)
@@ -293,6 +306,17 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
       darkNow = darkTarget > darkNow ? Math.min(darkTarget, darkNow + 0.06) : Math.max(darkTarget, darkNow - 0.06)
       needsDraw = true
     }
+    if (still) {
+      // No redraw while the page is moving: a canvas that changes under backdrop-filter cards is what WebKit flickers on.
+      const quiet = now - lastScrollEvt > 300
+      if (quiet && Math.abs(window.scrollY - sBase) * C.parallax.still > C.stillPad * 0.15) recentre()
+      if (!quiet) return
+      if (!needsDraw && now - lastDraw < 1000 / C.fps.touchIdle - 3) return
+      needsDraw = false
+      lastDraw = now
+      draw(now)
+      return
+    }
     const scrolling = !reduced && Math.abs(window.scrollY - lastScrollY) > 0.5
     const interval = reduced ? Infinity : 1000 / (scrolling ? (lensN > 0 ? 60 : C.fps.scroll) : C.fps.idle)
     if (!needsDraw && now - lastDraw < interval - 3) return
@@ -307,9 +331,31 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
   const onVis = () => {
     if (!document.hidden) needsDraw = true
   }
+  // Draw now, in this task, so a resized (and therefore cleared) bitmap is never presented blank.
+  const drawNow = () => {
+    needsDraw = false
+    lastDraw = performance.now()
+    draw(lastDraw)
+  }
+  const recentre = () => {
+    sBase = window.scrollY
+    canvas.style.transform = ''
+    drawNow()
+  }
+  const onScroll = () => {
+    lastScrollEvt = performance.now()
+    const d = (window.scrollY - sBase) * C.parallax.still
+    if (Math.abs(d) > C.stillPad * 0.45) return recentre() // the spare margin is nearly used up (about 1000px of scrolling)
+    canvas.style.transform = `translate3d(0, ${(-d).toFixed(1)}px, 0)`
+  }
   const onResize = () => {
+    // The layer is sized in lvh, so the toolbar collapsing on iOS does not change it. Where lvh is missing, ignore small
+    // height-only changes (the bitmap is stretched a few percent) instead of clearing and re-rendering mid-scroll.
+    const w = canvas.clientWidth
+    const h = canvas.clientHeight
+    if (lastW && w === lastW && Math.abs(h - lastH) < C.resizeIgnorePx) return
     sizeTargets()
-    needsDraw = true
+    drawNow()
   }
   const ro = new ResizeObserver(onResize)
   const onDarkChange = () => {
@@ -328,7 +374,7 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
     if (disposed) return
     lost = false
     if (initGL()) {
-      html.setAttribute('data-backdrop-lens', 'on')
+      if (!still) html.setAttribute('data-backdrop-lens', 'on')
       hooks.onFallback(false)
       needsDraw = true
     }
@@ -345,7 +391,10 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
   attrMo.observe(html, { attributes: true, attributeFilter: ['data-reading'] })
   ro.observe(canvas)
   window.addEventListener('resize', onResize, { passive: true })
-  if (!reduced) {
+  if (still) {
+    window.addEventListener('scroll', onScroll, { passive: true })
+    sBase = window.scrollY
+  } else if (!reduced) {
     mo.observe(document.body, { childList: true, subtree: true })
     rescan()
     html.setAttribute('data-backdrop-lens', 'on')
@@ -362,6 +411,7 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
     document.removeEventListener('visibilitychange', onVis)
     darkMq.removeEventListener('change', onDarkChange)
     window.removeEventListener('resize', onResize)
+    window.removeEventListener('scroll', onScroll)
     attrMo.disconnect()
     mo.disconnect()
     io.disconnect()

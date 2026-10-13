@@ -90,13 +90,17 @@ export const BACKDROP = {
   },
 
   grain: 0.012, // static per-pixel paper noise amplitude
-  parallax: { blobs: 0.15, glyphs: 0.32, rays: 0.06 }, // fraction of page scroll
+  parallax: { blobs: 0.15, glyphs: 0.32, rays: 0.06, still: 0.2 }, // fraction of page scroll; `still` is the one rate used on iOS WebKit
+  /** iOS WebKit: spare canvas height (CSS px, half above, half below) for the transform parallax. Keep in sync with paper-grid.css. */
+  stillPad: 480,
+  /** Ignore height-only size changes below this (CSS px) when the layer is not sized in lvh. */
+  resizeIgnorePx: 96,
 
   paper: { light: [0xf4 / 255, 0xf1 / 255, 0xe8 / 255], lightHi: [1, 0.975, 0.925], dark: [0x12 / 255, 0x16 / 255, 0x12 / 255] },
 
   /** Frame pacing. Idle drift is slow, so it is redrawn rarely; scroll-driven redraws are capped so glass cards with
    *  backdrop-filter are not invalidated at 60Hz. */
-  fps: { idle: 12, scroll: 30 },
+  fps: { idle: 12, scroll: 30, touchIdle: 5 },
   lowResDivisor: 6, // soft layers at 1/6 of CSS resolution
   maxDpr: 1.5,
   fadeInMs: 1100,
