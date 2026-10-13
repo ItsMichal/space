@@ -226,3 +226,63 @@
 .lg-btn[data-glass-live]:active {
   transform: none;
 }
+
+/* ---------------------------------------------------------------- nav bar: see-through glass
+   The nav's tone variables, scoped to the bar (the engine reads them from its host) so buttons and other glass keep theirs.
+   Apple's Liquid Glass lets content show through as soft shapes, so the tint is low; blur and saturation go UP so the
+   text behind stays shapes and colour, not legible noise, and --glass-backdrop is a luminance clamp (contrast pulls the
+   extremes toward the middle, brightness lifts, or lowers, the middle) so the bar's label holds 4.5:1 over a black photo
+   in light mode and a white one in dark mode. Numbers and measurements: docs/design-references.md, "Nav glass". */
+.nav-glass {
+  --glass-tint-light: rgba(251, 249, 243, 0.34);
+  --glass-tint-dark: rgba(18, 22, 18, 0.42);
+  --glass-blur: 18px;
+  --glass-saturate: 1.9;
+  --glass-blur-dark: 24px;
+  --glass-saturate-dark: 1.9;
+  --glass-backdrop: contrast(0.5) brightness(1.25);
+  --nav-flat-tint: var(--glass-tint-light);
+  --nav-sheen: rgb(255 255 255 / 0.3);
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-reading] .nav-glass {
+    --glass-backdrop: contrast(0.55) brightness(0.5);
+    --nav-flat-tint: var(--glass-tint-dark);
+    --nav-sheen: rgb(255 255 255 / 0.1);
+  }
+}
+/* flat path (the server-rendered frame, no WebGL2): same tint and clamp so there is no jump when the engine takes over */
+.nav-glass .lg:not([data-glass-live]) {
+  --glass-tint: var(--nav-flat-tint);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)) var(--glass-backdrop);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)) var(--glass-backdrop);
+}
+/* a faint sheen along the top of the bar: the cheap stand-in for light bending through the upper rim */
+.nav-glass nav.lg::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 48px;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(180deg, var(--nav-sheen), transparent);
+  pointer-events: none;
+}
+/* no backdrop-filter at all: nothing blurs what is behind, so the bar must carry its own opacity */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .nav-glass {
+    --glass-tint-light: rgba(251, 249, 243, 0.92);
+    --glass-tint-dark: rgba(18, 22, 18, 0.92);
+  }
+}
+/* the user asked for less transparency or more contrast: the old, mostly opaque bar */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .nav-glass {
+    --glass-tint-light: rgba(251, 249, 243, 0.92);
+    --glass-tint-dark: rgba(18, 22, 18, 0.92);
+    --glass-backdrop: none;
+  }
+  .nav-glass nav.lg::before {
+    content: none;
+  }
+}

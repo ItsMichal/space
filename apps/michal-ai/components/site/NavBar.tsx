@@ -85,7 +85,7 @@ export function NavBar({ previews }: { previews?: { work: MenuPreview[]; writing
       engine={NAV_GLASS}
       as="header"
       spacing={16}
-      className="pointer-events-none fixed inset-x-0 z-50 flex flex-col items-center gap-[10px] [overflow-x:clip]"
+      className="nav-glass pointer-events-none fixed inset-x-0 z-50 flex flex-col items-center gap-[10px] [overflow-x:clip]"
       style={{
         top: 'calc(env(safe-area-inset-top, 0px) + 12px)',
         paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))',

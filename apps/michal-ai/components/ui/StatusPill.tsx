@@ -6,7 +6,7 @@ import { useReading } from './useReading'
 import { makeStroke } from '@space/motion/handStroke'
 import './ui.css'
 
-type View = { key: string; title: string; sub?: string; progress: number }
+type View = { key: string; title: string; sub?: string; progress: number; eta?: string | null }
 
 const REST_MS = 2200
 const useIso = typeof window === 'undefined' ? useEffect : useLayoutEffect
@@ -19,6 +19,9 @@ const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-r
  * simply takes the free space between the mark and the menu button (text ellipsised, never clipped mid-glyph).
  * Width is measured from an unscaled ruler (offsetWidth, after fonts load), so transforms never skew it. The text swaps
  * with a staggered settle; a hand-drawn stem along the pill's lower edge fills with progress.
+ * While reading it also says how long is left ("8 min left"). The text is set in place, never re-keyed, so the pill does not
+ * swap or resize as the number changes: the ruler measures the longest form ("under a minute") once. The slot is aria-hidden
+ * on purpose: a live region fed by scrolling would chatter, and the header already states the total ("N min read").
  * Reduced motion: no growth, only a thin progress line at the top edge.
  */
 export function StatusSlot({ routeKey }: { routeKey: string }) {
@@ -31,9 +34,9 @@ export function StatusSlot({ routeKey }: { routeKey: string }) {
     if (entry) return { key: `s:${entry.source}:${entry.title}`, title: entry.title, sub: entry.sub, progress: entry.progress ?? 0 }
     if (reading && reading.started && reading.scrolling && reading.headings.length && reading.section >= 0) {
       const h = reading.headings[reading.section]
-      return { key: `r:${h.id}`, title: h.text, sub: reading.headings.length > 1 ? `${reading.section + 1} of ${reading.headings.length}` : undefined, progress: reading.progress }
+      return { key: `r:${h.id}`, title: h.text, sub: reading.headings.length > 1 ? `${reading.section + 1} of ${reading.headings.length}` : undefined, progress: reading.progress, eta: reading.eta }
     }
-    if (reading && reading.started && reading.scrolling) return { key: 'r:top', title: 'Reading', progress: reading.progress }
+    if (reading && reading.started && reading.scrolling) return { key: 'r:top', title: 'Reading', progress: reading.progress, eta: reading.eta }
     return null
   }, [entry, reading])
 
@@ -56,7 +59,7 @@ export function StatusSlot({ routeKey }: { routeKey: string }) {
     return () => {
       live = false
     }
-  }, [shown?.key, shown?.sub])
+  }, [shown?.key, shown?.sub, !!shown?.eta])
 
   // Outgoing text
   const [leaving, setLeaving] = useState<View | null>(null)
@@ -93,12 +96,14 @@ export function StatusSlot({ routeKey }: { routeKey: string }) {
             {leaving ? (
               <span key={`o:${leaving.key}`} className="st-text st-text--out">
                 <span className="st-title">{leaving.title}</span>
-                {leaving.sub ? <span className="st-sub"> · {leaving.sub}</span> : null}
+                {leaving.sub ? <span className="st-sub st-count"> · {leaving.sub}</span> : null}
+                {leaving.eta ? <span className="st-sub st-eta"> · {leaving.eta}</span> : null}
               </span>
             ) : null}
             <span key={cur.key} className="st-text st-text--in">
               <span className="st-title">{cur.title}</span>
-              {cur.sub ? <span className="st-sub"> · {cur.sub}</span> : null}
+              {cur.sub ? <span className="st-sub st-count"> · {cur.sub}</span> : null}
+              {cur.eta ? <span className="st-sub st-eta"> · {cur.eta}</span> : null}
             </span>
           </span>
         </span>
@@ -107,7 +112,8 @@ export function StatusSlot({ routeKey }: { routeKey: string }) {
       <span aria-hidden ref={ruler} className="st-ruler">
         <span className="st-text">
           <span className="st-title">{cur.title}</span>
-          {cur.sub ? <span className="st-sub"> · {cur.sub}</span> : null}
+          {cur.sub ? <span className="st-sub st-count"> · {cur.sub}</span> : null}
+          {cur.eta ? <span className="st-sub st-eta"> · under a minute</span> : null}
         </span>
       </span>
       <svg aria-hidden className="st-stem" data-on={on ? '' : undefined} viewBox="0 0 240 6" preserveAspectRatio="none">

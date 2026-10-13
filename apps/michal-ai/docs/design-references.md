@@ -83,6 +83,43 @@ Numbers (headless Chrome with software GL, so only relative values mean anything
 
 Starlink image: the build makes 480/960/1600/2400 AVIF and WebP variants. Served at 1440 (1x): 1600w AVIF, 111 KB. At 375 (2x): 960w AVIF, 41 KB. The 1.8 MB original is not served.
 
+### Nav glass: more translucent (2026-10-13)
+
+The owner asked for a more see-through nav bar, in the direction of Apple's Liquid Glass. The nav is the frost engine (blur, saturate,
+tint, specular rim; `NAV_GLASS = 'frost'` in `NavBar.tsx`). The values below live on `.nav-glass` in `components/glass/glass.css`, scoped to
+the bar (the engine reads its variables from the container), so glass buttons and the preview card keep their own.
+
+| | Before | After |
+| --- | --- | --- |
+| Tint, light page | paper 64% | paper 34% |
+| Tint, dark page | basalt 80% | basalt 42% |
+| Backdrop blur, light / dark | 10px / 20px | 18px / 24px |
+| Backdrop saturate, light / dark | 1.6 / 1.8 | 1.9 / 1.9 |
+| Luminance clamp (backdrop-filter, new) | none | light: `contrast(0.5) brightness(1.25)`; dark: `contrast(0.55) brightness(0.5)` |
+| Top sheen (new) | none | 48px linear gradient, white 30% light / 10% dark, fading to clear |
+| Rim, edge, shadow | unchanged | unchanged (thin specular rim, soft shadow) |
+| Without `backdrop-filter` | 62% flat tint | 92% tint (nothing blurs what is behind it) |
+| `prefers-reduced-transparency`, `prefers-contrast: more` | flat 90% tint | flat 92% tint, no clamp |
+
+Why the clamp: with a third of the tint left, ink on a bar over a black photo drops below 4.5:1 and pale ink on a bar over a white page
+does too. `contrast()` pulls the extremes of what is behind the bar toward the middle and `brightness()` lifts (light) or lowers (dark)
+the middle, so the bar stays a soft, readable field. The first dark value (`contrast(0.6) brightness(0.62)`) gave 4.07:1 over white and
+was replaced. The engine adds the extra functions to its frost boxes (`--glass-backdrop`, read in `engine.ts`); the flat CSS path (server
+render, no WebGL2) applies the same tint and clamp so nothing jumps when the engine takes over.
+
+Measured contrast (headless Chrome, software GL, production build; the label colour against every pixel of the bar with the text hidden,
+worst pixel, backdrop forced to a full-width block behind the bar, desktop 1280 and phone 375 within 0.2 of each other):
+
+| Behind the bar | Light ink, before | Light ink, after | Pale ink (dark page), before | after |
+| --- | --- | --- | --- | --- |
+| black | 6.36 | 5.73 | 13.02 | 8.96 |
+| 8px black and white checker (busiest) | 10.27 | 9.87 | 9.48 | 6.65 |
+| white | 16.04 | 15.25 | 6.73 | 5.11 |
+
+All worst cases are at least 5.1:1 (needs 4.5). Pure black behind the light bar and pure white behind the dark bar are the extremes the
+page can produce; real photos sit between. Shots: `docs/glass-shots/nav-translucent-*.jpg` (before above, after below). Not measured: Safari and
+Firefox (same frost path, same CSS, but `backdrop-filter` with `brightness()` and `contrast()` is standard there), and a real device.
+
 ## Graph-paper backdrop and glass cards, round 2 (2026-10-11)
 
 - Backdrop: a fixed layer on the home page, 24px dots (radius 1.8px, 36% ink) and a 1px line every fourth cell (96px, 10% ink). 24 = 4 x 6, the pitch family of the globe's 6px dot matrix; the hero tint (which fades out behind the work section) hands over to the grid. It is mounted in the root layout, not in the page: the page transition wrapper carries a transform, which made `position: fixed` behave as absolute and the grid scrolled with the page (found by inspecting the computed chain). Precedent: I did not open a dot-grid site in this pass (linear.app, vercel.com, tldraw, FigJam are the ones to compare). The pitch, alpha and radius are mine.
