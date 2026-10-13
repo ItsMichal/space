@@ -123,6 +123,8 @@ const ogJobs = fs
     if (!slug || !cover || cover === 'none') return []
     return [{ from: path.join(ROOT, 'public', cover), to: path.join(OG, `${slug}.jpg`), focus: fm(text, 'coverFocus') }]
   })
+// The owner's photograph for the home and About share cards: same crop and size as a cover, face-framed (see profile.portrait.focus).
+ogJobs.push({ from: path.join(ROOT, 'public', 'media', 'about', 'portrait.webp'), to: path.join(OG, 'about-portrait.jpg'), focus: '50% 28%' })
 // Stamps (source hash + settings) live outside public/ so they are not shipped; mtimes are useless after a CI checkout.
 const STAMPS = path.join(ROOT, '.cache', 'build-images', 'og.json')
 const rk = (p) => path.relative(ROOT, p).split(path.sep).join('/')

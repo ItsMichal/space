@@ -47,6 +47,24 @@
     grid-template-areas: 'intro intro xp' 'pubs pubs xp' 'more more more';
   }
 }
+/* a small portrait beside the first paragraph: 4:5, the card's inner radius, no filter */
+.about__photo {
+  float: left;
+  width: 88px;
+  margin: 0 var(--space-4) var(--space-2) 0;
+  overflow: hidden;
+  border-radius: var(--radius-xs);
+}
+.about__photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+@media (min-width: 640px) {
+  .about__photo {
+    width: 104px;
+  }
+}
 .about__intro p {
   margin: 0;
   color: var(--ink);

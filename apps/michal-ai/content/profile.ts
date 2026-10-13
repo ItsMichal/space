@@ -89,6 +89,18 @@ export const profile = {
     { name: 'SpaceX', url: 'https://www.spacex.com' },
   ],
   alumniOf: ['University of Colorado Boulder'],
+  /**
+   * The owner's own photograph (public/media/about/portrait.webp, 900x1200, metadata stripped by scripts/make-about-portrait.mjs).
+   * Used plainly: real background, no filter. `focus` is the object-position that frames the face when the card crops it.
+   */
+  portrait: {
+    src: '/media/about/portrait.webp',
+    /** Neutral description; the alt text is `${name}, ${description}` (see `portraitAlt` in lib/about.ts). */
+    description: 'smiling, wearing round glasses, a white hoodie and a dark tweed blazer, outdoors',
+    focus: '50% 28%',
+    /** 4:5 JPEG for JSON-LD (search results). */
+    jsonLd: '/media/about/portrait-4x5.jpg',
+  },
   knowsAbout: [
     'Full-stack development',
     'React',
