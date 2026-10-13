@@ -5,21 +5,26 @@ import { createPresenceClient, EMPTY_PRESENCE, type PresenceClient } from '@/lib
 import { PRESENCE_PINS } from '@/lib/presence/flag'
 import { createMockPresence } from '@/lib/presence/mock'
 import { GLOBE_FALLBACK_VIEW } from '@/lib/presence/globe-fallback'
-import { gmst } from '@/lib/starlink/orbit.mjs'
+import { gmst, positionEcef } from '@/lib/starlink/orbit.mjs'
+import { buildLinks } from '@/lib/starlink/links.mjs'
 import { loadLand } from './globe/data'
 import { loadStarlink, type Packed } from './globe/starlink'
 import { buildAtlas, loadPortrait } from './globe/portrait'
-import { createRenderer, projectPoint, rotation, SPHERE_FRACTION, type GlobeRenderer, type PortraitSpec } from './globe/renderer'
+import { createRenderer, PING_CAP, projectPoint, rotation, SHELL_SCALE, SPHERE_FRACTION, type GlobeRenderer, type PingSet, type PortraitSpec } from './globe/renderer'
 import './presence.css'
 
 const DEG_PER_S = 2.4
 const START = { lat: 18, lon: -100 } // must match GLOBE_FALLBACK_VIEW
-const FALLBACK_FRACTION = GLOBE_FALLBACK_VIEW.radius / (GLOBE_FALLBACK_VIEW.size / 2)
+const FALLBACK_FRACTION = GLOBE_FALLBACK_VIEW.radius / (GLOBE_FALLBACK_VIEW.size / 2) / SHELL_SCALE
 /** Constellation dot strength (of the ink alpha) and fade-in time. */
 const SAT_ALPHA = 0.7
 const SAT_FADE_MS = 1600
-/** Keep every n-th satellite on small canvases. */
-const thinFor = (cssSize: number) => (cssSize < 520 ? 3 : 2)
+/** Keep every n-th satellite (and trail): fewer on small canvases. `base` is the globe box in CSS px (the canvas is SHELL_SCALE larger). */
+const thinFor = (base: number) => (base < 520 ? 5 : 3)
+/** Drawn orbit radius range, in globe radii. EXAGGERATED: the real shells are at 1.05 to 1.10 (docs/presence.md). */
+const SHELL: [number, number] = [1.34, 1.58]
+const trailFor = (base: number) => (base < 520 ? 45 : 90) // seconds of path
+const pingsFor = (base: number) => (base < 520 ? 8 : 20) // simultaneous mesh pings
 /** The phrase's own enter animation: 160 ms delay + 320 ms, cubic-bezier(0.22, 1, 0.36, 1) (app/styles/craft.css, --ease-out-soft). */
 const CUT_MS = 480
 const PUSH_RADIUS = 100 // CSS px
@@ -87,6 +92,8 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     sat: null as Packed | null, satFrom: 0,
     portrait: null as null | { aspect: number; from: number }, pspec: null as PortraitSpec | null, pstr: 0, globeA: 0.4,
     maskT0: -1e9,
+    links: null as null | { a: Int32Array; b: Int32Array },
+    pg: null as null | { a: Float32Array; ad: Float32Array; b: Float32Array; bd: Float32Array; t: Float32Array; next: Float32Array },
     freeze: false, fine: false, pin: null as null | [number, number],
     px: { x: 0, v: 0 }, py: { x: 0, v: 0 }, pk: { x: 0, v: 0 }, tx: 0, ty: 0, over: false, lastMove: 0,
   })
@@ -187,7 +194,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
       bottom = anchor + 150
       height = Math.max(300, Math.min(760, bottom - 64))
       width = height * 0.75
-      left = w.left + w.width * 0.54 - 0.44 * width
+      left = w.left + w.width / 2 + 0.04 * (w.width / SHELL_SCALE) - 0.44 * width
       cellW = sc >= 1.4 ? 2 : 2.4
       sideTaper = true
       edge = 18 * sc // a short dot taper where the figure passes the right edge of the card
@@ -267,11 +274,51 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     const sat = s.sat
     const nowS = Date.now() / 1000
     const satAlpha = sat ? SAT_ALPHA * (s.reduced ? 1 : Math.min(1, (now - s.satFrom) / SAT_FADE_MS)) : 0
+    // Mesh pings: a few new ones per second, chosen from the precomputed neighbour table among links on the visible hemisphere.
+    const base = s.size / SHELL_SCALE
+    let pings: PingSet | undefined
+    if (sat && s.links && s.links.a.length && !s.reduced && gl) {
+      const P = (s.pg ??= { a: new Float32Array(PING_CAP * 4), ad: new Float32Array(PING_CAP), b: new Float32Array(PING_CAP * 4), bd: new Float32Array(PING_CAP), t: new Float32Array(PING_CAP * 2), next: new Float32Array(PING_CAP) })
+      const K = Math.min(PING_CAP, pingsFor(base))
+      const tNow = now / 1000
+      const rot = rotation(lat, lon)
+      const zOf = (i: number) => {
+        const [x, y, z] = positionEcef(sat.data, i, sat.refEpoch, nowS)
+        const r = Math.hypot(x, y, z)
+        return (rot[2] * y + rot[5] * z + rot[8] * x) / r
+      }
+      for (let i = 0; i < K; i++) {
+        if (tNow < P.t[i * 2] + P.t[i * 2 + 1] || tNow < P.next[i]) continue
+        let done = false
+        for (let tries = 0; tries < 14 && !done; tries++) {
+          const li = (Math.random() * s.links.a.length) | 0
+          const ia = s.links.a[li]
+          const ib = s.links.b[li]
+          if (zOf(ia) > 0.3 && zOf(ib) > 0.3) {
+            for (let k = 0; k < 4; k++) {
+              P.a[i * 4 + k] = sat.data[ia * 5 + k]
+              P.b[i * 4 + k] = sat.data[ib * 5 + k]
+            }
+            P.ad[i] = sat.data[ia * 5 + 4]
+            P.bd[i] = sat.data[ib * 5 + 4]
+            P.t[i * 2] = tNow
+            P.t[i * 2 + 1] = 0.6 + Math.random() * 0.6
+            P.next[i] = tNow + P.t[i * 2 + 1] + 0.15 + Math.random() * 1.4
+            done = true
+          }
+        }
+        if (!done) P.next[i] = tNow + 0.25
+      }
+      pings = { count: K, a: P.a, ad: P.ad, b: P.b, bd: P.bd, t: P.t, now: tNow }
+    }
     s.r?.draw(lat, lon, {
+      shell: SHELL,
+      trailSeconds: sat ? trailFor(base) : 0,
+      pings,
       satT: sat ? nowS - sat.refEpoch : 0,
       gmst: sat ? gmst(nowS) : 0,
       satAlpha,
-      satThin: thinFor(s.size),
+      satThin: thinFor(base),
       globeA: s.globeA,
       maskMix: s.reduced ? 1 : easeOutSoft(Math.min(1, (now - s.maskT0) / CUT_MS)),
       portrait: s.pspec && s.portrait ? { ...s.pspec, strength: s.pspec.strength * (s.reduced ? 1 : Math.min(1, (now - s.portrait.from) / PORTRAIT_FADE_MS)) } : undefined,
@@ -355,6 +402,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
           if (!p || st.current.r !== r) return
           r.setSatellites(p.data)
           st.current.sat = p
+          st.current.links = buildLinks(p.data, p.count)
           if (wrap.current) wrap.current.dataset.sats = String(p.count)
           st.current.satFrom = performance.now()
           kick()
@@ -372,7 +420,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     const apply = () => {
       const s = st.current
       s.size = el.clientWidth
-      s.dpr = Math.min(s.size < 600 ? 3 : 1.5, window.devicePixelRatio || 1)
+      s.dpr = Math.min(s.size / SHELL_SCALE < 600 ? 3 : 1.5, window.devicePixelRatio || 1)
       s.r?.resize(s.size, s.dpr)
       const ga = parseFloat(getComputedStyle(el).getPropertyValue('--hero-globe-opacity'))
       if (Number.isFinite(ga)) s.globeA = ga

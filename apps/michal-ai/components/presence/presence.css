@@ -26,29 +26,42 @@
    contrast comes from the shader, not from a scrim. Phones: large and low-alpha, bleeding off the right edge. Tablet: about
    80% of the width. From 1024px: two thirds of the viewport, capped at 880px, bleeding a little off the right and top. */
 .hero-globe--slot {
+  /* The canvas is --hg-k times the visible globe box (room for the satellite shell, which is drawn far outside the globe); the
+     box keeps its centre and the sphere keeps its size (SPHERE_FRACTION = 0.94 / SHELL_SCALE in globe/renderer.ts). */
+  --hg-k: 1.55;
+  --hg-w: 118vw;
   display: block;
   position: absolute;
   z-index: 0;
-  width: 118vw;
-  right: -36vw;
-  top: 24px;
+  width: calc(var(--hg-w) * var(--hg-k));
+  right: calc(-36vw - var(--hg-w) * (var(--hg-k) - 1) / 2);
+  top: calc(24px - var(--hg-w) * (var(--hg-k) - 1) / 2);
   --hero-globe-opacity: var(--hero-globe-opacity-slot, 0.3);
 }
 @media (min-width: 768px) {
   .hero-globe--slot {
-    width: 84vw;
-    right: -16vw;
-    top: -10px;
+    --hg-w: 84vw;
+    right: calc(-16vw - var(--hg-w) * (var(--hg-k) - 1) / 2);
+    top: calc(-10px - var(--hg-w) * (var(--hg-k) - 1) / 2);
     --hero-globe-opacity: var(--hero-globe-opacity-slot, 0.34);
   }
 }
 @media (min-width: 1024px) {
   .hero-globe--slot {
-    width: min(66vw, 880px);
-    right: -4vw;
-    top: -50px;
+    --hg-w: min(66vw, 880px);
+    right: calc(-4vw - var(--hg-w) * (var(--hg-k) - 1) / 2);
+    top: calc(-50px - var(--hg-w) * (var(--hg-k) - 1) / 2);
     --hero-globe-opacity: var(--hero-globe-opacity-slot, 0.4);
   }
+}
+/* The static fallback picture is drawn at the old size, centred in the larger box. */
+.hero-globe--slot .hero-globe__still {
+  inset: auto;
+  left: 50%;
+  top: 50%;
+  width: calc(100% / var(--hg-k));
+  height: calc(100% / var(--hg-k));
+  transform: translate(-50%, -50%);
 }
 /* Bleed: runs off the right and top edge (the parent must clip). Not used on the homepage. */
 .hero-globe--bleed {
