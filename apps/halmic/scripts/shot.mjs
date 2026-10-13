@@ -70,10 +70,15 @@ try {
     const t0 = Date.now();
     await send('Runtime.evaluate', { expression: `(() => { const h = document.querySelector('.hero'); const o = { clientX: ${tap[0]}, clientY: ${tap[1]}, pointerId: 7, pointerType: 'touch', isPrimary: true, bubbles: true }; h.dispatchEvent(new PointerEvent('pointerdown', o)); h.dispatchEvent(new PointerEvent('pointerup', o)); })()` });
     const strip = flags.find((f) => f.startsWith('strip='))?.slice(6).split(',').map(Number) ?? [];
+    const c0 = (await send('Runtime.evaluate', { expression: 'window.__reelClock ?? -1', returnByValue: true })).result.result.value;
     for (const ms of strip) {
-      await sleep(Math.max(0, ms - (Date.now() - t0)));
+      if (c0 >= 0) {   // ?reelclock=frame: wait for that many ms of frame time, then freeze the loop while the shot is taken
+        for (let i = 0; i < 400; i++) { const c = (await send('Runtime.evaluate', { expression: 'window.__reelClock', returnByValue: true })).result.result.value; if (c >= c0 + ms) break; await sleep(100); }
+        await send('Runtime.evaluate', { expression: 'window.__reelHold = true' });
+      } else await sleep(Math.max(0, ms - (Date.now() - t0)));
       const sh = await send('Page.captureScreenshot', { format: flags.includes('jpg') ? 'jpeg' : 'png', ...(flags.includes('jpg') ? { quality: 82 } : {}) });
       fs.writeFileSync(out.replace(/(\.\w+)$/, `-t${ms}$1`), Buffer.from(sh.result.data, 'base64'));
+      if (c0 >= 0) await send('Runtime.evaluate', { expression: 'window.__reelHold = false' });
     }
   }
   let clip;

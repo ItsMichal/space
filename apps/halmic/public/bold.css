@@ -24,8 +24,8 @@
 .lede { margin: 0; font: 500 clamp(18px, 1.9vw, 24px)/1.35 var(--sans); max-width: 34ch; text-wrap: balance; }
 .cta { margin: 0; display: flex; flex-wrap: wrap; gap: 12px; }
 @media (min-width: 900px) { .hero-foot { grid-template-columns: 1.3fr 1fr; } .cta { justify-content: flex-end; } }
-/* below 900px the hero sizes to its content (no 100svh) and starts lower, so the portrait reel has the upper ~40% of the first screen to itself above the wordmark (it also runs on behind the wordmark and fades to ink above the topline); the bar field sits under the buttons */
-@media (max-width: 899px) { .hero { min-height: 0; justify-content: flex-start; padding: clamp(280px, 45svh, 400px) 0 var(--s8); } .hero .field { height: 52%; } .hero-in { gap: var(--s3); } .hero .cta { margin-top: 4px; } .hero .btn { min-height: 48px; padding: 0 22px; font-size: 16px; } }
+/* below 900px the hero sizes to its content (no 100svh) and starts lower, so the portrait reel has the upper third of the first screen above the wordmark and the buttons stay above the fold on 360x740 (the footage runs on behind the wordmark and dissolves to ink above the topline); the bar field sits under the buttons */
+@media (max-width: 899px) { .hero { min-height: 0; justify-content: flex-start; padding: clamp(236px, 36svh, 330px) 0 var(--s8); } .hero .field { height: 52%; } .hero-in { gap: var(--s3); } .hero .cta { margin-top: 4px; } .hero .btn { min-height: 48px; padding: 0 22px; font-size: 16px; } }
 
 .cards { padding-block: var(--s8) var(--s12); }
 .mrow { display: flex; flex-wrap: wrap; gap: 10px; margin: var(--s6) 0 0; } .mrow.mrow-top { margin: calc(var(--s2) * -1) 0 var(--s4); }

@@ -29,6 +29,7 @@
   const WAVE_DAMP = .974;  // velocity damping per step: the field is quiet again after ~1.3 s
   const RIPPLE = 560;      // css px per second, the speed of the analytic ring
   const GLITCH = .26;      // seconds of slice offsets and ink split after a tap
+  const WIN_UP = .12;      // phones: how much of the portrait picture (fraction of its height) rides above the top edge
   const PARALLAX = 7;      // css px the underlay drifts against the glyphs
   // adaptive quality: device-pixel scale, buffer width, sim width and steps, bloom, neighbour merge; stepped down when frames take too long
   const QUALITY = [
@@ -41,6 +42,9 @@
   const pinned = params.get('reelq');
   const fxOn = params.get('reelfx') !== '0';
   const forceQ8 = params.get('reelhf') === '0';
+  const stepClock = params.get('reelclock') === 'frame';   // test only: time advances one tick per rendered frame (software GL is far below 30 fps)
+  let clk = 0;
+  const nowMs = () => (stepClock ? clk : performance.now());
 
   // the poster as a real <img>, added after load so it can never be the page's LCP; CSS gives it the same duotone
   function still() {
@@ -64,7 +68,7 @@
   const COMMON = `
 varying vec2 v;
 const vec3 INK=vec3(.0588,.0549,.0745);
-uniform vec2 res,quiet;uniform float sc,sideW,hdrE,winH,time,ctr;
+uniform vec2 res,quiet;uniform float sc,sideW,hdrE,winH,winO,time,ctr;
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float lum(vec3 c){return dot(c,vec3(.2126,.7152,.0722));}
 float sn(vec2 q,float t){return .5+(sin(q.x*1.3+sin(q.y*.9+t*.21))+sin(q.y*1.7-q.x*.4+t*.16)+sin((q.x+q.y)*.71-t*.1))/6.;}
@@ -73,7 +77,7 @@ float zone(vec2 p,float w,float L){
   vec2 s=p/res;
   float side=smoothstep(.0,sideW,min(s.x,1.-s.x)+w*.2+(L-.4)*.07);
   float top=smoothstep(22.+w*70.,hdrE+w*90.,p.y/sc);                   // up into the nav band
-  float wb=1.-smoothstep(winH*.5,winH*.97,p.y+w*winH*.4+(L-.4)*winH*.1);   // the end of the footage window (phones)
+  float wb=1.-smoothstep(winH*.5,winH*.97,p.y-winO+w*winH*.4+(L-.4)*winH*.1);   // the end of the footage window (phones)
   float fade=1.-smoothstep(quiet.x,quiet.y,s.y+w*.12);                  // behind the wordmark, down to ink above the topline and buttons
   return side*top*wb*fade;
 }
@@ -112,7 +116,7 @@ void main(){
   // cells: one texel per glyph. Target size from the image (contrast around the scene mean), warmth, lean from edges and motion, length from edge
   // strength; then an asymmetric ease so glyphs swell and shrink instead of flickering. R size, G warmth, B lean, A length.
   const FSC = P + COMMON + `uniform sampler2D img,prev,stat;uniform vec2 cdim;uniform float cell,lean,k,first,idleOn;
-vec4 S4(vec2 p){return texture2D(img,vec2(p.x/res.x,1.-p.y/winH));}
+vec4 S4(vec2 p){return texture2D(img,vec2(p.x/res.x,1.-(p.y-winO)/winH));}
 void main(){
   vec2 id=floor(gl_FragCoord.xy);
   vec2 cp=(id+.5)*cell; cp.x-=cp.y*lean;
@@ -177,7 +181,7 @@ void main(){
   // composite: duotone underlay + the capsule screen, both displaced by the field, the idle flow and the touch glitch
   const FS2 = P + COMMON + `uniform sampler2D img,cells,sim,stat;uniform vec2 cdim,par;uniform float cell,live,lean,bt,amp,sgp,fx,bloom,nb,flowA,waveK,idleOn;uniform vec4 tp[6];
 float gSnap,gCrest,gAng;
-vec3 S(vec2 p){return texture2D(img,vec2(p.x/res.x,1.-p.y/winH)).rgb;}
+vec3 S(vec2 p){return texture2D(img,vec2(p.x/res.x,1.-(p.y-winO)/winH)).rgb;}
 float H(vec2 p){
   vec4 c=texture2D(sim,vec2(p.x/res.x,1.-p.y/res.y));
 #ifdef Q8
@@ -242,13 +246,13 @@ void main(){
       snap+=exp(-age*6.)*exp(-r*r/(2.*150.*150.))*t.w;
       float R=age*${RIPPLE.toFixed(1)};
       float w=18.+age*34.;
-      ring+=exp(-(r-R)*(r-R)/(w*w))*exp(-age*2.1)*t.w*smoothstep(.0,.06,age);
+      ring+=exp(-(r-R)*(r-R)/(w*w))*exp(-age*1.7)*t.w*smoothstep(.0,.06,age);
     }
   }
   vec2 pw=px+vec2(slice,0.)+flow*fx+gh*waveK*sc*fx;
   float qz=1.-smoothstep(quiet.x,quiet.y,px.y/res.y);
-  float crest=clamp(h0*4.,-.4,1.)*fx;
-  gCrest=(crest+ring*.9)*(.4+.6*qz);
+  float crest=clamp(h0*2.6,-.4,1.)*fx;
+  gCrest=(crest+ring*.62)*(.4+.6*qz);
   gSnap=snap*.45*(.4+.6*qz);
   gAng=clamp((gh.x*5.+gh.y*0.)*fx,-.4,.4);
   // ---- underlay: continuous-tone duotone with mild unsharp masking, drifting a little against the glyph layer
@@ -289,7 +293,7 @@ void main(){
   gl_FragColor=vec4(col,1.);
 }`;
 
-  let gl, progs = {}, vidTex, buf, W = 0, H = 0, BW = 0, BH = 0, running = false, raf = 0, last = 0, ready = false, started = false, fresh = true, liveV = 0, hasFrame = false, uploaded = -1, quietX = .4, quietY = .8, winCss = 0;
+  let gl, progs = {}, vidTex, buf, W = 0, H = 0, BW = 0, BH = 0, running = false, raf = 0, last = 0, ready = false, started = false, fresh = true, liveV = 0, hasFrame = false, uploaded = -1, quietX = .4, quietY = .8, winCss = 0, winOff = 0;
   let qi = 0, bufType, q8 = false, assetKey = '', cadence = [], lastRaf = 0, probing = true, cell0 = 6;
   const R = { buf: null, stat: null, cell: null, sim: null };   // ping-pong sets: { tex: [a, b], fbo: [a, b], cur, w, h }
   const loc = {};
@@ -349,7 +353,7 @@ void main(){
     if (!gl) return false;
     try {
       bufType = probeFloat(); q8 = bufType === gl.UNSIGNED_BYTE;
-      const common = ['res', 'quiet', 'sc', 'sideW', 'hdrE', 'winH', 'time', 'ctr'];
+      const common = ['res', 'quiet', 'sc', 'sideW', 'hdrE', 'winH', 'winO', 'time', 'ctr'];
       progs.p1 = program(FS1, ['vid', 'prev', 'asp', 'px', 'drift', 'k', 'cap', 'first']);
       progs.ps = program(FSS, ['img', 'prev', 'k', 'first']);
       progs.pc = program(FSC, [...common, 'img', 'prev', 'stat', 'cdim', 'cell', 'lean', 'k', 'first', 'idleOn']);
@@ -398,6 +402,7 @@ void main(){
     if (w !== W || h !== H) { W = w; H = h; canvas.width = w; canvas.height = h; }
     // the footage window: the whole canvas, or on phones the portrait picture's own height from the top (the rest is field only)
     winCss = phone ? Math.min(cssH, cssW * 16 / 9) : cssH;
+    winOff = phone ? -WIN_UP * winCss : 0;   // phones: the picture starts above the top edge, so the middle of the frame sits in the open area
     // working buffer (the window): 960..1280 wide on desktop (more when the canvas is big), 540 on phones, scaled by the quality tier
     const bw = Math.max(360, Math.round((phone ? 540 : (cssW * (window.devicePixelRatio || 1) >= 1500 ? 1280 : 960)) * q.b));
     const bh = Math.round(bw * winCss / cssW);
@@ -423,7 +428,7 @@ void main(){
   function setCommon(u, sc, t) {
     gl.uniform2f(u.res, W, H); gl.uniform2f(u.quiet, quietX, quietY); gl.uniform1f(u.sc, sc);
     const phone = cell0 < 6;
-    gl.uniform1f(u.sideW, phone ? .24 : .22); gl.uniform1f(u.hdrE, phone ? 110 : 180); gl.uniform1f(u.winH, winCss * sc); gl.uniform1f(u.time, t); gl.uniform1f(u.ctr, phone ? 1.2 : 1.05);
+    gl.uniform1f(u.sideW, phone ? .24 : .22); gl.uniform1f(u.hdrE, phone ? 110 : 180); gl.uniform1f(u.winH, winCss * sc); gl.uniform1f(u.winO, winOff * sc); gl.uniform1f(u.time, t); gl.uniform1f(u.ctr, phone ? 1.2 : 1.05);
   }
   function tex2(u, name, unit, t) { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t); gl.uniform1i(u[name], unit); }
   function target(set, idx) { gl.bindFramebuffer(gl.FRAMEBUFFER, set.fbo[idx]); gl.viewport(0, 0, set.w, set.h); }
@@ -444,8 +449,10 @@ void main(){
         if (qi >= QUALITY.length - 1) probing = false;
       }
     }
+    if (stepClock && window.__reelHold) return;
     if (now - last < 1000 / FPS - 2) return;
     last = now;
+    if (stepClock) { clk += 1000 / FPS; now = clk; window.__reelClock = clk; }
     const sc = size();
     const vw = video.videoWidth || 1280, vh = video.videoHeight || 720;
     // new video frame? (the footage is slowed to 24 fps, so some ticks reuse the last upload)
@@ -491,8 +498,8 @@ void main(){
     // wave field
     const simOn = fxOn && (now < simUntil || imps.length);
     if (simOn) {
-      simAcc += lastSim ? Math.min((now - lastSim) / 1000, .1) * SIM_HZ : 1; lastSim = now;
-      let n = Math.min(Math.floor(simAcc), steps + 1); simAcc -= Math.floor(simAcc);
+      simAcc += lastSim ? Math.min((now - lastSim) / 1000, pinned !== null ? .6 : .1) * SIM_HZ : 1; lastSim = now;
+      let n = Math.min(Math.floor(simAcc), pinned !== null ? 40 : steps + 1); simAcc -= Math.floor(simAcc);
       if (n < 1 && imps.length) n = 1;
       u = progs.pw; gl.useProgram(u.prog);
       gl.uniform2f(u.px, 1 / simW, 1 / simH); gl.uniform2f(u.dim, simW, simH); gl.uniform1f(u.c2, WAVE_C2); gl.uniform1f(u.damp, WAVE_DAMP);
@@ -527,15 +534,15 @@ void main(){
     return [(e.clientX - r.left) / Math.max(1, r.width), (e.clientY - r.top) / Math.max(1, r.height), r];
   }
   function ripple(u, v, s) {
-    touches.push({ u, v, t0: performance.now(), s });
+    touches.push({ u, v, t0: nowMs(), s });
     if (touches.length > 6) touches.shift();
-    imps.push({ x: u, y: 1 - v, r: 4.2, a: .9 * s });
-    simUntil = performance.now() + 4200;
+    imps.push({ x: u, y: 1 - v, r: 3, a: .7 * s });
+    simUntil = nowMs() + 4200;
   }
   function wake(u, v, speed, touch) {
     imps.push({ x: u, y: 1 - v, r: touch ? 3.4 : 2.8, a: -Math.min(.2, .03 + speed * .0014) });
     if (imps.length > 12) imps.shift();
-    simUntil = performance.now() + 3600;
+    simUntil = nowMs() + 3600;
   }
   function onDown(e) {
     if (!running || !fxOn) return;
@@ -602,7 +609,7 @@ void main(){
     load(canvas.getBoundingClientRect().width);   // the source must be set before the first play()
     go();
     // no decoded frame within a few seconds (blocked autoplay, stalled network): keep the poster
-    setTimeout(() => { if (started && !hasFrame) { stop(); fallback(); } }, 8000);
+    setTimeout(() => { if (started && !hasFrame) { stop(); fallback(); } }, pinned !== null ? 60000 : 8000);   // a pinned tier means a test run, maybe on a slow software GPU
   }
 
   const io = new IntersectionObserver((es) => { inView = es[es.length - 1].isIntersecting; if (inView) go(); else if (started) stop(); });
