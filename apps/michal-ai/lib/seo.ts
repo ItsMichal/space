@@ -50,7 +50,8 @@ export const personJsonLd = {
   name: AUTHOR_NAME,
   alternateName: profile.asciiName,
   url: SITE_URL,
-  image: absoluteUrl(DEFAULT_OG_IMAGE),
+  // 4:5 photograph (square or 4:5 is what search results crop well), metadata stripped.
+  image: absoluteUrl(profile.portrait.jsonLd),
   jobTitle: profile.jobTitle,
   worksFor: profile.worksFor.map((o) => ({ '@type': 'Organization', ...o })),
   alumniOf: profile.alumniOf.map((name) => ({ '@type': 'CollegeOrUniversity', name })),

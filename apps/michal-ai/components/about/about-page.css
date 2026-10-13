@@ -194,6 +194,34 @@
   }
 }
 
+/* the photograph: a plain card, the picture fills it. Phones: a modest 4:3 window with the face centred. From 900px it takes the
+   height of the intro beside it (the picture is absolutely filled so it never sets the row height). */
+.ab-photo {
+  margin: 0;
+  aspect-ratio: 4 / 3;
+  max-height: 300px;
+}
+.ab-photo picture,
+.ab-photo__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.ab-photo__img {
+  object-fit: cover;
+}
+@media (min-width: 900px) {
+  .ab-photo {
+    aspect-ratio: auto;
+    max-height: none;
+    min-height: 360px;
+  }
+  .ab-photo picture {
+    position: absolute;
+    inset: 0;
+  }
+}
+
 /* projects grid: the home tiles, compact */
 .ab-projects {
   margin-top: var(--space-12);
@@ -206,13 +234,15 @@
   .ab {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-areas:
-      'intro contact'
+      'photo intro'
+      'contact contact'
       'xp xp'
       'edu pubs'
       'hacks side'
       'press press'
       'x x';
   }
+  .ab-photo { grid-area: photo; }
   .ab-intro { grid-area: intro; }
   .ab-contact { grid-area: contact; }
   .ab-xp { grid-area: xp; }
@@ -227,7 +257,7 @@
   .ab {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     grid-template-areas:
-      'intro intro contact'
+      'photo intro contact'
       'xp xp xp'
       'edu pubs pubs'
       'hacks hacks side'
