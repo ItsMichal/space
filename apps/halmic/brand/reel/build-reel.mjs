@@ -1,7 +1,8 @@
-// Rebuilds the hero reel (public/hero/reel-720.webm, reel-720.mp4, reel-540.webm, reel-poster.jpg) from edl.json.
-// usage: REEL_SRC=/path/to/dir-with-source-mp4s node brand/reel/build-reel.mjs   (needs ffmpeg with libvpx-vp9 and libx264)
-// REEL_TMP overrides the scratch directory. Source footage is never committed; see README.md.
-import { spawnSync } from 'node:child_process';
+// Rebuilds the hero reel (public/hero/reel-1080.webm, reel-720.webm, reel-m.webm, reel-720.mp4, reel-m.mp4, reel-poster.jpg, reel-poster-m.jpg) from edl.json.
+// usage: REEL_SRC=/path/to/dir-with-source-mp4s node brand/reel/build-reel.mjs   (needs ffmpeg with libvpx-vp9, libx264, minterpolate)
+// Optional env: REEL_TMP (scratch dir), REEL_ONLY=3,5 (re-cut just these moment indices, reuse the rest from REEL_TMP), REEL_SKIP_ENC=1 (stop after the two loops),
+// CRF1080 CRF720 CRFM CRFMP4 CRFMMP4, POSTER_Q. Source footage is never committed; see README.md.
+import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -14,44 +15,70 @@ const tmp = process.env.REEL_TMP ?? fs.mkdtempSync(path.join(os.tmpdir(), 'reel-
 fs.mkdirSync(tmp, { recursive: true });
 const edl = JSON.parse(fs.readFileSync(path.join(here, 'edl.json'), 'utf8'));
 const { fps, speed, srcSeconds, crossfadeFrames: X } = edl;
-const N = Math.round((srcSeconds / speed) * fps);          // frames per moment after slowing (80)
-const ff = (args) => { const r = spawnSync('ffmpeg', ['-v', 'error', '-y', ...args], { stdio: 'inherit' }); if (r.status) throw new Error(`ffmpeg failed: ${args.join(' ')}`); };
+const N = Math.round((srcSeconds / speed) * fps);          // frames per moment after slowing
+const run = (cmd, args) => new Promise((res, rej) => { const p = spawn(cmd, args, { stdio: ['ignore', 'inherit', 'inherit'] }); p.on('exit', (c) => (c ? rej(new Error(`${cmd} failed: ${args.join(' ')}`)) : res())); });
+const ff = (args) => run('ffmpeg', ['-v', 'error', '-y', ...args]);
+const pool = async (jobs, n) => { const q = [...jobs]; await Promise.all(Array.from({ length: n }, async () => { while (q.length) await q.shift()(); })); };
 
-// 1. each moment: crop, scale to 720p, slow to `speed` with motion interpolation, grade flat toward the ink colour, soften
-const GRADE = "eq=saturation=0.25,curves=all='0/0.055 0.3/0.2 0.6/0.42 1/0.64',colorchannelmixer=rr=0.92:gg=0.95:bb=1.08,gblur=sigma=2.2";
+const srcDims = (f) => { const r = spawnSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height', '-of', 'csv=p=0', f], { encoding: 'utf8' }); const [w, h] = r.stdout.trim().split(',').map(Number); return { w, h }; };
+// crops in edl.json are w:h:x:y in a 1280x720 reference frame; scale them to the real source size (even numbers)
+const scaleCrop = (c, w) => { const k = w / 1280, ev = (v) => 2 * Math.round(v * k / 2); const [cw, ch, cx, cy] = c.split(':').map(Number); return `${ev(cw)}:${ev(ch)}:${ev(cx)}:${ev(cy)}`; };
+
+// grade, applied after the exposure stretch: modest saturation (the shader reads the footage's chroma for its violet ink), a gentle S that lifts black to the ink colour,
+// a light unsharp so edges survive the halftone, and a little denoise so the encode spends its bits on shapes instead of sensor noise. No blur.
+const GRADE = "eq=saturation=0.9:contrast=1.06,curves=all='0/0.045 0.3/0.25 0.7/0.68 1/0.93',unsharp=5:5:0.7:3:3:0.0,hqdn3d=1.2:1.2:5:5";
 // exposure: each moment's 10th and 90th luminance percentiles (ffmpeg signalstats) are stretched to black and white before the grade,
-// so a dark arena and a bright game screen land at the same level and the shader sees a steady range (gain is limited so dark scenes do not blow up noise)
-function levels(m) {
-  const r = spawnSync('ffmpeg', ['-v', 'error', '-ss', String(m.in), '-t', String(srcSeconds), '-i', path.join(src, `${m.src}.mp4`), '-an', '-vf', `crop=${m.crop},scale=320:-2,signalstats,metadata=mode=print:file=-`, '-f', 'null', '-'], { encoding: 'utf8' });
+// so a dark arena and a bright game screen land at the same level (gain is limited so dark scenes do not blow up noise)
+function levels(m, file, w) {
+  const r = spawnSync('ffmpeg', ['-v', 'error', '-ss', String(m.in), '-t', String(srcSeconds), '-i', file, '-an', '-vf', `crop=${scaleCrop(m.crop, w)},scale=320:-2,signalstats,metadata=mode=print:file=-`, '-f', 'null', '-'], { encoding: 'utf8' });
   const v = (k) => { const a = [...r.stdout.matchAll(new RegExp(`lavfi.signalstats.${k}=([0-9.]+)`, 'g'))].map((x) => +x[1]); return a.reduce((x, y) => x + y, 0) / a.length; };
   const lo = v('YLOW'), hi = Math.max(v('YHIGH'), lo + 70);
   return { lo: Math.round(lo), hi: Math.round(hi) };
 }
-const only = process.env.REEL_ONLY?.split(',').map(Number);   // optional: re-cut just these moment indices, reuse the other segments already in REEL_TMP
+const only = process.env.REEL_ONLY?.split(',').map(Number);
+const VARIANTS = [{ k: 'L', crop: 'crop', size: '1920:1080' }, { k: 'P', crop: 'pcrop', size: '540:960' }];
+const jobs = [];
 edl.moments.forEach((m, i) => {
   if (only && !only.includes(i)) return;
-  const lv = levels(m); console.log(`moment ${i}: levels ${lv.lo}..${lv.hi}`);
-  ff(['-ss', String(m.in), '-t', String(srcSeconds + 0.2), '-i', path.join(src, `${m.src}.mp4`), '-an',
-    '-vf', `crop=${m.crop},scale=1280:720:flags=lanczos,lutyuv=y='clip((val-${lv.lo})*219/(${lv.hi}-${lv.lo})+16,16,235)',setpts=PTS/${speed},minterpolate=fps=${fps}:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,${GRADE},format=yuv444p`,
-    '-frames:v', String(N), '-c:v', 'ffv1', path.join(tmp, `seg${i}.mkv`)]);
+  const file = path.join(src, `${m.src}.mp4`), { w } = srcDims(file);
+  const lv = levels(m, file, w); console.log(`moment ${i}: levels ${lv.lo}..${lv.hi}`);
+  for (const v of VARIANTS) {
+    jobs.push(() => ff(['-ss', String(m.in), '-t', String(srcSeconds + 0.2), '-i', file, '-an',
+      '-vf', `crop=${scaleCrop(m[v.crop], w)},scale=${v.size}:flags=lanczos,lutyuv=y='clip((val-${lv.lo})*219/(${lv.hi}-${lv.lo})+16,16,235)',setpts=PTS/${speed},minterpolate=fps=${fps}:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,${GRADE},format=yuv420p`,
+      '-frames:v', String(N), '-c:v', 'libx264', '-preset', 'fast', '-crf', '6', path.join(tmp, `seg${v.k}${i}.mp4`)]));
+  }
 });
+await pool(jobs, 3);
 
-// 2. chain the crossfades with the first moment repeated at the end, then cut one full cycle out of the middle so the last frame leads into the first
-const n = edl.moments.length, ins = [...Array(n).keys(), 0];
-let g = '', prev = '[0:v]';
-for (let k = 1; k < ins.length; k++) { const o = `${(N - X) * k}`; g += `${prev}[${k}:v]xfade=transition=fade:duration=${X / fps}:offset=${Number(o) / fps}[x${k}];`; prev = `[x${k}]`; }
-const cycle = (N - X) * n;
-g += `${prev}trim=start_frame=${X}:end_frame=${X + cycle},setpts=PTS-STARTPTS,fps=${fps}[loop]`;
-const loop = path.join(tmp, 'loop.mkv');
-ff([...ins.flatMap((i) => ['-i', path.join(tmp, `seg${i}.mkv`)]), '-filter_complex', g, '-map', '[loop]', '-an', '-c:v', 'ffv1', loop]);
+// chain the crossfades with the first moment repeated at the end, then cut one full cycle out of the middle so the last frame leads into the first
+const n = edl.moments.length, ins = [...Array(n).keys(), 0], cycle = (N - X) * n;
+async function loopOf(k) {
+  let g = '', prev = '[0:v]';
+  for (let j = 1; j < ins.length; j++) { g += `${prev}[${j}:v]xfade=transition=fade:duration=${X / fps}:offset=${((N - X) * j) / fps}[x${j}];`; prev = `[x${j}]`; }
+  g += `${prev}trim=start_frame=${X}:end_frame=${X + cycle},setpts=PTS-STARTPTS,fps=${fps}[loop]`;
+  const f = path.join(tmp, `loop${k}.mkv`);
+  await ff([...ins.flatMap((i) => ['-i', path.join(tmp, `seg${k}${i}.mp4`)]), '-filter_complex', g, '-map', '[loop]', '-an', '-c:v', 'ffv1', f]);
+  return f;
+}
+const [loopL, loopP] = await Promise.all([loopOf('L'), loopOf('P')]);
 console.log(`loop: ${(cycle / fps).toFixed(2)} s, ${cycle} frames`);
+if (process.env.REEL_SKIP_ENC) process.exit(0);
 
-// 3. encodes (no audio track anywhere)
+// encodes (no audio track anywhere)
 fs.mkdirSync(out, { recursive: true });
-const vp9 = (file, w, crf) => ff(['-i', loop, '-an', '-vf', `scale=${w}:-2:flags=lanczos,format=yuv420p`, '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', String(crf), '-row-mt', '1', '-deadline', 'good', '-cpu-used', '1', '-g', '120', '-pix_fmt', 'yuv420p', path.join(out, file)]);
-vp9('reel-720.webm', 1280, +(process.env.CRF720 ?? 37));
-vp9('reel-540.webm', 960, +(process.env.CRF540 ?? 43));
-ff(['-i', loop, '-an', '-vf', 'format=yuv420p', '-c:v', 'libx264', '-preset', 'slow', '-profile:v', 'high', '-crf', String(process.env.CRFMP4 ?? 29), '-movflags', '+faststart', '-pix_fmt', 'yuv420p', path.join(out, 'reel-720.mp4')]);
-// poster: a calm frame (the racing stretch), same grade as the video
-ff(['-i', loop, '-vf', `select=eq(n\\,${process.env.POSTER_FRAME ?? 88}),format=yuvj420p`, '-frames:v', '1', '-q:v', String(process.env.POSTER_Q ?? 2), path.join(out, 'reel-poster.jpg')]);
+// a strong spatio-temporal denoise just before encoding: the footage is graded dark and the shader re-screens it, so noise is wasted bytes
+const DN = 'hqdn3d=3:3:9:9';
+const vp9 = (loop, file, w, crf, extra = []) => ff(['-i', loop, '-an', '-vf', `${DN},scale=${w}:-2:flags=lanczos,format=yuv420p`, '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', String(crf), '-row-mt', '1', '-tile-columns', '1', '-deadline', 'good', '-cpu-used', '1', '-lag-in-frames', '25', '-auto-alt-ref', '1', '-g', '96', '-pix_fmt', 'yuv420p', ...extra, path.join(out, file)]);
+const h264 = (loop, file, w, crf) => ff(['-i', loop, '-an', '-vf', `${DN},scale=${w}:-2:flags=lanczos,format=yuv420p`, '-c:v', 'libx264', '-preset', 'slow', '-profile:v', 'high', '-crf', String(crf), '-g', '96', '-movflags', '+faststart', '-pix_fmt', 'yuv420p', path.join(out, file)]);
+await Promise.all([
+  vp9(loopL, 'reel-1080.webm', 1920, +(process.env.CRF1080 ?? 54)),
+  vp9(loopL, 'reel-720.webm', 1280, +(process.env.CRF720 ?? 54)),
+  vp9(loopP, 'reel-m.webm', 540, +(process.env.CRFM ?? 52)),
+  h264(loopL, 'reel-720.mp4', 1280, +(process.env.CRFMP4 ?? 35)),
+  h264(loopP, 'reel-m.mp4', 540, +(process.env.CRFMMP4 ?? 36)),
+]);
+// posters: one recognisable frame (edl.poster = [moment index, frames into it]), same grade as the video
+const pf = (N - X) * edl.poster[0] - X + edl.poster[1];
+const still = (loop, file, w) => ff(['-i', loop, '-vf', `select=eq(n\\,${pf}),scale=${w}:-2:flags=lanczos,format=yuvj420p`, '-frames:v', '1', '-q:v', String(process.env.POSTER_Q ?? 4), path.join(out, file)]);
+await Promise.all([still(loopL, 'reel-poster.jpg', 1280), still(loopP, 'reel-poster-m.jpg', 540)]);
 for (const f of fs.readdirSync(out).filter((x) => x.startsWith('reel-'))) console.log(f, fs.statSync(path.join(out, f)).size);

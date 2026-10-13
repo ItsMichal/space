@@ -74,8 +74,8 @@ if (!/<script src="\/hero\.js\?v=[0-9a-f]+" defer>/.test(home)) bad.push('index.
 const heroJs = fs.readFileSync(path.join(pub, 'hero.js'), 'utf8');
 if (/\beval\(|new Function\(|\.innerHTML\s*=|\.style\.cssText|setAttribute\(\s*['"]style/.test(heroJs)) bad.push('hero.js: eval/inline-style patterns are not allowed (CSP)');
 for (const m of heroJs.matchAll(/'(\/hero\/[^']+)'/g)) if (!resolve(m[1])) bad.push(`hero.js: ${m[1]} does not exist`);
-for (const [f, max] of [['reel-720.webm', 2.5], ['reel-720.mp4', 3], ['reel-540.webm', 1.2]]) { const fp = path.join(pub, 'hero', f); if (!fs.existsSync(fp)) bad.push(`hero/${f} missing`); else if (fs.statSync(fp).size > max * 1024 * 1024) bad.push(`hero/${f} is over ${max} MB`); }
-if (fs.existsSync(path.join(pub, 'hero/reel-poster.jpg')) && fs.statSync(path.join(pub, 'hero/reel-poster.jpg')).size > 60 * 1024) bad.push('hero/reel-poster.jpg is over 60 KB');
+for (const [f, max] of [['reel-1080.webm', 4.5], ['reel-720.webm', 2.5], ['reel-720.mp4', 3.2], ['reel-m.webm', 1.6], ['reel-m.mp4', 2]]) { const fp = path.join(pub, 'hero', f); if (!fs.existsSync(fp)) bad.push(`hero/${f} missing`); else if (fs.statSync(fp).size > max * 1024 * 1024) bad.push(`hero/${f} is over ${max} MB`); }
+for (const [f, max] of [['reel-poster.jpg', 110], ['reel-poster-m.jpg', 80]]) { const fp = path.join(pub, 'hero', f); if (!fs.existsSync(fp)) bad.push(`hero/${f} missing`); else if (fs.statSync(fp).size > max * 1024) bad.push(`hero/${f} is over ${max} KB`); }
 // Special Force leads Watch (home) and /videos/; the clean names show, the real titles stay in data-title
 {
   const watch = home.slice(home.indexOf('<div class="bento b-watch">'));
