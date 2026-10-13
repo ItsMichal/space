@@ -175,7 +175,9 @@ and the measures below remove every backdrop-side trigger. What changed, and why
    `width`/`height`, which clears its bitmap (opaque black, the context is `alpha: false`) until the next draw. It is now
    `height: 100lvh` (the large viewport, never changes with the toolbar), and the engine ignores height-only size changes under 96px
    and, for real resizes, redraws in the same task as the resize so a cleared bitmap is never presented. Measured in desktop Chrome
-   with the layout height changed 30 times: before, 60 canvas clears (width and height, once per change); after, 0.
+   with the layout height changed 30 times: before, 60 canvas clears (width and height, once per change); after, 0. In Chrome the
+   old code redrew within 1 to 3 ms, inside the same frame (0 dark frames out of 415 screencast frames), so this cause is plausible
+   for iOS, where rAF and layout timing differ, but not proven.
 2. **No redraws while the page scrolls on iOS WebKit** (`/iP(hone|ad|od)/` or iPadOS desktop mode; `?bdscroll=still|live`
    forces a mode). The cards' `backdrop-filter: blur()` re-samples whatever is behind it every time that layer changes, and a
    WebGL canvas redrawn at 30 to 60Hz under blurred cards is a known WebKit flicker source. In this mode the canvas is 480px taller
