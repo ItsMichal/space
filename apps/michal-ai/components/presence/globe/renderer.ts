@@ -2,15 +2,14 @@
 // One canvas, one fullscreen triangle, transparent. The sphere has no colour or texture of its own: each cell of a fixed pixel
 // grid (snapped to whole device pixels, so it never shimmers) samples the sphere at the cell centre, turns land / lambert shading /
 // limb falloff into a luminance, and draws one round dot whose radius follows it. The globe rotates underneath a stationary
-// matrix. Dots are the hero's ink colour; the page behind shows through. The only other colour is the Hawthorne cell.
+// matrix. Dots are the hero's ink colour; the page behind shows through. No other colour.
 import { toVec } from '@/lib/presence/geo'
 import type { Ring } from './data'
 
 export interface Palette {
   ink: [number, number, number]
-  accent: [number, number, number]
 }
-export const LIGHT: Palette = { ink: [0.13, 0.13, 0.11], accent: [0.24, 0.42, 0.21] }
+export const LIGHT: Palette = { ink: [0.13, 0.13, 0.11] }
 
 /** Axial tilt: the spin axis leans 23 degrees towards the upper right, so the planet reads as tilted, not as an upright map. */
 export const AXIAL_TILT = (-23 * Math.PI) / 180
@@ -80,7 +79,7 @@ void main(){ vec2 p = vec2((gl_VertexID<<1)&2, gl_VertexID&2); gl_Position = vec
 const FS = `#version 300 es
 precision highp float;
 uniform vec2 uRes; uniform float uR; uniform float uPitch; uniform mat3 uRot; uniform sampler2D uLand;
-uniform vec3 uInk; uniform vec3 uAccent; uniform vec2 uHomeCell; uniform float uHomeVis; uniform float uGlobeA;
+uniform vec3 uInk; uniform float uGlobeA;
 ${COMMON}
 out vec4 o;
 float h2(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -115,11 +114,6 @@ void main(){
     a *= .86 + .14 * h2(cell);                 // the faintest per-cell variation
     a *= dimf;
     vec3 c = uInk;
-    if (uHomeVis > .5 && cell == uHomeCell) {
-      float ra = uPitch * .42;
-      a = (1. - smoothstep(ra - .55, ra + .55, d)) * limb;
-      c = uAccent;
-    }
     a *= uGlobeA;
     col = vec4(c * a, a);
   }
@@ -313,7 +307,7 @@ export interface GlobeRenderer {
   setSatellites(data: Float32Array | null): void
   /** Portrait picture (luminance in rgb, matte in alpha) and its glyph atlas (n glyphs side by side, lightest first). */
   setPortrait(pic: ImageBitmap | null, atlas: HTMLCanvasElement | null, glyphs: number): void
-  draw(lat0: number, lon0: number, home?: { lat: number; lon: number } | null, extra?: DrawExtra): void
+  draw(lat0: number, lon0: number, extra?: DrawExtra): void
   /** Boxes (canvas px, origin bottom-left: x0, y0, x1, y1) behind which the dots thin out, with the factor that remains (0..1). */
   setBoxes(boxes: { box: [number, number, number, number]; dim: number }[], feather: number): void
   destroy(): void
@@ -380,7 +374,7 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
     const vao = g.createVertexArray()!
 
     const U = (n: string) => g.getUniformLocation(prog, n)
-    const u = { res: U('uRes'), r: U('uR'), pitch: U('uPitch'), rot: U('uRot'), land: U('uLand'), ink: U('uInk'), accent: U('uAccent'), globeA: U('uGlobeA'), homeCell: U('uHomeCell'), homeVis: U('uHomeVis'), box: U('uBox[0]'), dim: U('uDim[0]'), feather: U('uFeather'), ptr: U('uPtr'), push: U('uPush') }
+    const u = { res: U('uRes'), r: U('uR'), pitch: U('uPitch'), rot: U('uRot'), land: U('uLand'), ink: U('uInk'), globeA: U('uGlobeA'), box: U('uBox[0]'), dim: U('uDim[0]'), feather: U('uFeather'), ptr: U('uPtr'), push: U('uPush') }
     const boxes = new Float32Array(12)
     const dims = new Float32Array([1, 1, 1])
     let feather = 24
@@ -429,7 +423,7 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
         g.vertexAttribPointer(1, 1, g.FLOAT, false, 20, 16)
         g.bindVertexArray(null)
       },
-      draw(lat0, lon0, home, extra = {}) {
+      draw(lat0, lon0, extra = {}) {
         const rot = rotation(lat0, lon0)
         const R = px * 0.5 * SPHERE_FRACTION
         g.clearColor(0, 0, 0, 0)
@@ -448,16 +442,6 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[], palette
         g.uniform2f(u.push, push.radius, push.max)
         g.uniform1f(u.globeA, extra.globeA ?? 1)
         g.uniform3fv(u.ink, palette.ink)
-        g.uniform3fv(u.accent, palette.accent)
-        let vis = 0
-        if (home) {
-          const p = projectPoint(home.lat, home.lon, rot)
-          if (p.z > 0.25) {
-            vis = 1
-            g.uniform2f(u.homeCell, Math.floor((px / 2 + p.x * R) / pitch), Math.floor((px / 2 + p.y * R) / pitch))
-          }
-        }
-        g.uniform1f(u.homeVis, vis)
         g.activeTexture(g.TEXTURE0)
         g.bindTexture(g.TEXTURE_2D, tex)
         g.uniform1i(u.land, 0)

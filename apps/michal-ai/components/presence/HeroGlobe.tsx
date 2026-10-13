@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
-import { HAWTHORNE } from '@/lib/presence/constants'
 import { createPresenceClient, EMPTY_PRESENCE, type PresenceClient } from '@/lib/presence/client'
 import { PRESENCE_PINS } from '@/lib/presence/flag'
 import { createMockPresence } from '@/lib/presence/mock'
@@ -71,7 +70,7 @@ function damp(o: { x: number; v: number }, target: number, w: number, dt: number
 }
 
 interface Props {
-  /** Show small dots for live visitors and the Hawthorne mark. Defaults to the PRESENCE_PINS flag (off). */
+  /** Show small dots for live visitors. Defaults to the PRESENCE_PINS flag (off). */
   pins?: boolean
   /** Demo only: fixed made-up visitors instead of the Worker. */
   mock?: boolean
@@ -209,6 +208,8 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     const force = new URLSearchParams(window.location.search).get('portrait')
     const dots = circle || force === 'dots' || (force !== 'glyphs' && sc < 1.4)
     const sq = circle ? cellW : Math.min(cellW, 2.4)
+    // Thin glyph strokes carry less ink than dots at the same strength.
+    if (!dots) strength = Math.min(1, strength * 1.35)
     s.pspec = {
       rect: [(left - w.left) * sc, px - (bottom - w.top) * sc, width * sc, height * sc],
       crop,
@@ -255,7 +256,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     const sat = s.sat
     const nowS = Date.now() / 1000
     const satAlpha = sat ? SAT_ALPHA * (s.reduced ? 1 : Math.min(1, (now - s.satFrom) / SAT_FADE_MS)) : 0
-    s.r?.draw(lat, lon, HAWTHORNE, {
+    s.r?.draw(lat, lon, {
       satT: sat ? nowS - sat.refEpoch : 0,
       gmst: sat ? gmst(nowS) : 0,
       satAlpha,
@@ -317,7 +318,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
         // The hero's own ink colour, so the dots take the surface they sit on (opacity does the rest).
         const m = /rgba?\(([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)/.exec(getComputedStyle(wrap.current!).color)
         const ink: [number, number, number] = m ? [+m[1] / 255, +m[2] / 255, +m[3] / 255] : [0.13, 0.13, 0.11]
-        const r = createRenderer(canvas.current, rings, { ink, accent: [0.24, 0.42, 0.21] })
+        const r = createRenderer(canvas.current, rings, { ink })
         if (!r) return setMode('fallback')
         st.current.r = r
         r.resize(st.current.size || 300, st.current.dpr)
