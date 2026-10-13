@@ -86,6 +86,25 @@ Starlink image: the build makes 480/960/1600/2400 AVIF and WebP variants. Served
 - Contrast over the busiest backdrop (text hidden, darkest pixel under each text block, desktop): meta 6.25, description 6.67, title 8.81. Phone not measured.
 - Scroll on a 4x throttled 375px profile in headless Chrome with software GL: frame p50 33ms, p95 50ms, max 100ms, 0 long tasks (it was p50 17 / p95 33 before the glass and grid; relative only).
 
+## Page backdrop: ink-wash blobs, god rays, glyph star field, glass lensing (2026-10-12)
+
+Replaces the graph-paper dots. Nothing here was measured in a browser pass; precedents are named so they can be opened and
+compared, and the "How verified" column says what was and was not checked.
+
+| Element | Reference | What we take from it | How verified |
+| --- | --- | --- | --- |
+| Very large, slow, soft colour blobs on a page background | stripe.com home hero (WebGL gradient, the open-source "stripe-gradient" mesh shader), apple.com colour washes behind product pages | Colour fields wider than the viewport, edges with no visible shape, motion measured in tens of seconds; the page never shows a distinct blob | Matched by eye from memory of those pages, not opened in this pass |
+| Pale, subtractive process-colour inks on cream stock | Risograph and CMYK print (misregistration, overprint: cyan over yellow gives green); the owner's own 2023 site (below) | Multiply blending so overlaps mix like inks, kept pale, never emissive | Overlap colours checked in the shader output; print precedent is a process, not a site |
+| Soft light shafts from an off-screen point | linear.app and vercel.com hero light fields and "god ray" gradients | A few wide, low-contrast shafts, slowly breathing, never a hard edge | Matched by eye, not measured |
+| Terminal glyph / dot-matrix field as texture | The hero globe on this site (6px dot matrix, ink `0.13 0.13 0.11`, 0.28 to 0.42 of ink); ASCII and glyph fields on studio and developer sites (for example ordered-dither and character-grid heroes) | Same pitch family (12px cell, 6px matrix), same ink, same "faint speck" size; symbol variety on top (`. : + x * o`, 4-point stars, constellation segments, a rare shooting star) | Ink, radius and alpha read from `components/presence/globe/renderer.ts`; the studio-site precedents were not opened |
+| Glyph opacity | Our own contrast rule | Capped at 0.22 so 4.5:1 holds for muted ink over the worst glyph pixel | Computed, see docs/backdrop.md |
+| Glass lensing: edge-weighted refraction, slight magnification, chromatic split, thin specular rim | Apple Liquid Glass (iOS 26, apple.com), the same references as the glass cards above | Bend concentrated in the first ~15px, almost nothing in the middle, rim lit from the top left | Not measurable on the web (see the glass section above); matched by eye |
+
+Original site (2023, first commits `4ca66cb` "added really cool bg shader" and `4f5934a`): a react-three-fiber full-screen plane
+(`components/BGAnim.tsx`, `BGShaders.tsx`) with a domain-warped fbm displacement driving contour lines in a yellow `#F2EA72`
+to cyan `#6DF7F5` gradient over deep indigo (`#1A041B`, `#150C64`), slowly animated, dark and saturated, behind frosted-glass
+panels. This backdrop keeps its spirit (warped noise fields in yellow and cyan, slow, behind glass) and inverts it: pale
+inks on cream instead of neon on near-black.
 ## Reading view: column, prose and components (2026-10-12)
 
 None of these references could be opened and measured from this environment (the sandbox allows no outside browsing). They
