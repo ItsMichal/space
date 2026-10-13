@@ -3,6 +3,11 @@
 // document by the CSSOM: names are unique per page, so only the tile being left or returned to gets one.
 // Loaded in the head (not deferred) so pagereveal is not missed. Playing in place and external links never reach this.
 (() => {
+  // html.js: scripts run (the header may then be fixed). html.mo: motion is on (no reduced-motion preference, no ?motion=0): motion.css hides nothing without it.
+  // ?motion=0 (a test override) sets data-motion="0", which also switches every CSS animation and transition off.
+  const de = document.documentElement;
+  de.classList.add('js');
+  if (/[?&]motion=0(&|$)/.test(location.search)) de.dataset.motion = '0'; else if (!matchMedia('(prefers-reduced-motion: reduce)').matches) de.classList.add('mo');
   const NAMES = { media: 'hero-media', title: 'hero-title' };
   const path = (u) => { try { const x = new URL(u, location.href); return x.origin === location.origin ? x.pathname : null; } catch { return null; } };
   const tileFor = (p) => [...document.querySelectorAll('a[data-vt]')].find((a) => new URL(a.href).pathname === p);
@@ -22,7 +27,7 @@
     const from = path(globalThis.navigation?.activation?.from?.url);
     if (!from) return;
     const t = tileFor(from);
-    if (t) { t.scrollIntoView({ block: 'nearest' }); nameTile(t); } else nameHero();
+    if (t) { t.scrollIntoView({ block: 'nearest', behavior: 'instant' }); nameTile(t); } else nameHero();
     e.viewTransition.finished.finally(clear);
   });
   addEventListener('pageshow', (e) => { if (e.persisted) clear(); });

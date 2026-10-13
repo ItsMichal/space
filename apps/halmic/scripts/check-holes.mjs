@@ -14,7 +14,7 @@ holes += cr * cols - occ.size; rows += cr; }
 return JSON.stringify({ cols, clusters: n, rows, holes, ok }); })()`.replace(/\s+/g, ' ');
 let fail = 0;
 const run = (sel, n, w, cols) => {
-  const url = `${base}/?clips=${n ? 'demo&n=' + n : 'none'}`;
+  const url = `${base}/?motion=0&clips=${n ? 'demo&n=' + n : 'none'}`;   // motion=0: nothing animates, so boxes are the laid-out ones
   const r = spawnSync('node', [path.join(here, 'shot.mjs'), url, path.join(os.tmpdir(), 'holes.jpg'), String(w), '900', 'jpg', '700', `eval=${probe(sel)}`], { encoding: 'utf8' });
   const m = r.stdout.match(/eval: (".*")/);
   const res = m ? JSON.parse(JSON.parse(m[1])) : null;

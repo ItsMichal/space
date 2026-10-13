@@ -6,10 +6,10 @@
    transparent, never display:none or visibility:hidden, so its links stay focusable and in the accessibility tree. */
 .xs { position: relative; align-self: stretch; display: flex; align-items: center; }
 .xs-logo { display: flex; align-items: center; min-height: 44px; }
-.xs-menu { position: absolute; z-index: 6; left: -10px; top: 100%; margin: 0; padding: 4px 0 0; list-style: none; opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity .14s ease .15s, transform .14s ease .15s; }
+.xs-menu { position: absolute; z-index: 6; left: -10px; top: 100%; margin: 0; padding: 4px 0 0; list-style: none; opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity var(--t1) var(--ease) .15s, transform var(--t1) var(--ease) .15s; }
 .xs-menu li { background: var(--ink-2); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 12px 32px -8px #000a; }
 .xs-hl { display: none; }
-.xs-row, .xs-home { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 16px 0 14px; border-radius: 14px; white-space: nowrap; color: var(--mute); font: 600 15px/1 var(--sans); transition: color .15s ease; }
+.xs-row, .xs-home { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 16px 0 14px; border-radius: 14px; white-space: nowrap; color: var(--mute); font: 600 15px/1 var(--sans); transition: color var(--t2) var(--ease); }
 .xs-row:hover, .xs-row:focus-visible, .xs-home:hover, .xs-home:focus-visible { color: var(--text); }
 .xs-row:focus-visible, .xs-home:focus-visible { outline-offset: -2px; }
 .xs-mark { height: 14px; width: auto; fill: currentColor; flex: none; }
@@ -24,7 +24,7 @@
 @media (hover: none), (max-width: 640px) {
   .xs-logo { padding-inline: 8px; margin-inline: -8px; }
   .xs-hl { display: block; }
-  .xs-menu { display: flex; left: calc(100% + 2px); top: 50%; padding: 0; background: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; box-shadow: 0 12px 32px -8px #000c; opacity: 0; transform: translate(-14px, -50%) scale(.92); transform-origin: 0 50%; clip-path: inset(0 100% 0 0 round 999px); transition: opacity .12s ease, transform .23s cubic-bezier(.34, 1.56, .64, 1), clip-path .23s cubic-bezier(.34, 1.3, .64, 1); }
+  .xs-menu { display: flex; left: calc(100% + 2px); top: 50%; padding: 0; background: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; box-shadow: 0 12px 32px -8px #000c; opacity: 0; transform: translate(-14px, -50%) scale(.92); transform-origin: 0 50%; clip-path: inset(0 100% 0 0 round 999px); transition: opacity var(--t1) var(--ease), transform var(--t3) var(--spring), clip-path var(--t3) var(--spring); }
   .xs-menu li { background: none; border: 0; border-radius: 0; box-shadow: none; }
   .xs-row, .xs-home { border-radius: 999px; padding: 0 14px 0 12px; gap: 8px; color: var(--text); }
   .xs-home { padding-left: 14px; }
