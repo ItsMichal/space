@@ -1,7 +1,7 @@
 // Headless Chrome screenshot via CDP (uses the `ws` package from the portfolio repo, or any ws on the path).
 // usage: node halmic/scripts/shot.mjs <url> <out.png> <width> <height> [full] [mobile] [wait-ms] [scrollY] [sel=css] [click=css] [clip=x,y,w,h]
 //   hover=<css>: scroll that element into view and move the mouse onto it (real mouse events) before the screenshot, after eval
-//   extra flags: tap=x,y and strip=ms,ms,... (simulate a touch and save timed shots), console (print console output and exceptions), gl (software WebGL via SwiftShader), rm (emulate prefers-reduced-motion), eval=<js> (run after the wait, then 900 ms), netlog (print requests, sizes and the load time), jpg (write JPEG), nogl (getContext('webgl') returns null)
+//   extra flags: nojs (scripts disabled), wheel=<dy> (real wheel input, prints scrollY before and after), tap=x,y and strip=ms,ms,... (simulate a touch and save timed shots), console (print console output and exceptions), gl (software WebGL via SwiftShader), rm (emulate prefers-reduced-motion), eval=<js> (run after the wait, then 900 ms), netlog (print requests, sizes and the load time), jpg (write JPEG), nogl (getContext('webgl') returns null)
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -45,10 +45,19 @@ try {
   if (flags.includes('nogl')) await send('Page.addScriptToEvaluateOnNewDocument', { source: "const g = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (t, ...a) { return /webgl/.test(t) ? null : g.call(this, t, ...a); };" });
   if (flags.includes('rm')) await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
   await send('Emulation.setDeviceMetricsOverride', { width: +W, height: +H, deviceScaleFactor: dpr, mobile });
+  if (flags.includes('nojs')) await send('Emulation.setScriptExecutionDisabled', { value: true });
   await send('Page.navigate', { url });
   await sleep(waitMs);
   const ev = flags.find((f) => f.startsWith('eval='))?.slice(5);
   if (ev) { const er = await send('Runtime.evaluate', { expression: ev, awaitPromise: true, returnByValue: true }); console.log('eval:', JSON.stringify(er.result.result.value ?? er.result.exceptionDetails ?? null)); await sleep(900); }
+  // wheel=dy: a real mouse-wheel event (browser input, not a script) at the middle of the page, then print where the page ended up
+  const wheel = flags.find((f) => f.startsWith('wheel='))?.slice(6);
+  if (wheel) {
+    const before = (await send('Runtime.evaluate', { expression: 'scrollY', returnByValue: true })).result.result.value;
+    await send('Input.dispatchMouseEvent', { type: 'mouseWheel', x: +W / 2, y: +H / 2, deltaX: 0, deltaY: +wheel });
+    await sleep(1200);
+    console.log('wheel:', JSON.stringify({ before, dy: +wheel, after: (await send('Runtime.evaluate', { expression: 'scrollY', returnByValue: true })).result.result.value }));
+  }
   const hov = flags.find((f) => f.startsWith('hover='))?.slice(6);
   const hev = flags.find((f) => f.startsWith('hoverEval='))?.slice(10);
   if (hov) {

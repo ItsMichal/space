@@ -81,7 +81,7 @@
   document.addEventListener('pointerdown', (e) => { if (e.button > 0) return; const a = e.target.closest?.('a.tile:not(.playing), a.card'); if (a) { pressed = a; a.classList.add('is-press'); } }, { passive: true });
   for (const type of ['pointerup', 'pointercancel', 'dragstart']) document.addEventListener(type, release, { passive: true });
 
-  // ---- numerals count up once, when their tile is half in view ----
+  // ---- numerals count up once, as their tile comes into view ----
   const parse = (t) => (/^(\d{1,3}(,\d{3})+|\d+)$/.test(t) ? +t.replace(/,/g, '') : null);
   const fmt = (n, grouped) => (grouped ? n.toLocaleString('en') : String(n));
   const ease = (x) => 1 - Math.pow(1 - x, 3);
@@ -103,7 +103,7 @@
       const o = numerals.find((x) => x.nv.closest('.tile') === e.target); if (!o) return;
       const n = parse(o.text), year = !!o.nv.closest('.t-year');
       count(o.nv, year ? n - 8 : 0, n, o.text.includes(','), o.text, year ? 600 : 800);
-    }, { threshold: 0.5 });
+    }, { threshold: 0.2 });
     numerals.forEach((o, i) => {
       const n = parse(o.text), year = !!o.nv.closest('.t-year');
       o.nv.style.minWidth = `${Math.ceil(widths[i])}px`; o.nv.classList.add('cnt');

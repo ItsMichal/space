@@ -19,7 +19,7 @@ html[data-motion="0"] *, html[data-motion="0"] *::before, html[data-motion="0"] 
 @keyframes draw { from { scale: 0 1; } to { scale: 1 1; } }
 @keyframes plx { from { translate: 0 -3.5%; } to { translate: 0 3.5%; } }
 @keyframes lg-tilt { from { rotate: -3.5deg; translate: 0 5px; } to { rotate: 3.5deg; translate: 0 -5px; } }
-@keyframes wm-away { to { opacity: .4; scale: .94; translate: 0 4vh; } }
+@keyframes wm-away { to { opacity: .5; scale: .95; translate: 0 3vh; } }
 @keyframes fld-away { to { transform: translateY(8%) skewX(-4deg); opacity: .6; } }
 @keyframes hdr-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes prog { to { transform: scaleX(1); } }
