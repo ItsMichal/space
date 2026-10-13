@@ -3,7 +3,7 @@
 // Cards follow the site: warm paper, ink type, Newsreader for the home name, Schibsted Grotesk for titles.
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { ImageResponse } from 'next/og'
+import { ImageResponse } from './og-render'
 import type { Post, PostKind } from '@/lib/content/types'
 import { SECTION } from '@/lib/seo'
 import { profile } from '@/content/profile'

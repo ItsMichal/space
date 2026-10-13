@@ -19,7 +19,13 @@ const add = (url, field, g, c) => diffs.push({ url, field, gold: g, cand: c })
 const j = (v) => JSON.stringify(v)
 const same = (a, b) => j(a) === j(b)
 
+// Font files kept their hashed names; only the folder changed (/_next/static/media -> /fonts), which the snapshot already collapsed on the golden side.
+const fontNorm = (s) => s.replace(/"href":"\/fonts\/[^"]+\.woff2"/g, '"href":"<build-asset>.woff2"')
+// Share-card URLs carry a content-hash query that differs by construction.
+const hashNorm = (s) => s.replace(/(-image)\?[0-9a-f]{16}/g, '$1?<hash>')
 function setDiff(url, field, a, b) {
+  a = a.map(hashNorm).map(fontNorm)
+  b = b.map(hashNorm).map(fontNorm)
   const sa = new Set(a), sb = new Set(b)
   const only = (x, y) => [...x].filter((v) => !y.has(v))
   const oa = only(sa, sb), ob = only(sb, sa)
@@ -37,7 +43,8 @@ for (const url of Object.keys(gold)) {
   if (!c) { add(url, 'missing in candidate', g.status, undefined); continue }
   if (g.error || c.error) { if (g.error !== c.error) add(url, 'error', g.error, c.error); continue }
   if (g.status !== c.status) add(url, 'status', g.status, c.status)
-  for (const h of ['content-type', 'location', 'x-robots-tag', 'cache-class']) {
+  // cache-class is not compared: the golden is `next start`, which does not apply public/_headers (see docs/migration/baseline.md).
+  for (const h of ['content-type', 'location', 'x-robots-tag']) {
     if (g.headers[h] !== c.headers[h]) add(url, `header ${h}`, g.headers[h], c.headers[h])
   }
   if (g.kind === 'ref' || g.kind === 'redirect' || g.kind === 'missing' || g.kind === 'slash' || g.kind === 'worker') {

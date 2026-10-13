@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "url": "^/(_next/static|assets)/nope\\.js$",
+    "field": "header content-type",
+    "why": "unknown hashed-asset paths answer a bare 404 (no body) instead of Next's text/plain or the HTML 404 page"
+  },
+  {
+    "url": "^/api/live/|^/globe/starlink-live",
+    "field": "extra in candidate",
+    "why": "Worker routes are only snapshotted on the candidate (the golden is next start, which has no Worker)"
+  }
+]
