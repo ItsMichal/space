@@ -172,11 +172,40 @@ export default function AboutPage() {
             ))}
           </ul>
           <p className="t-meta">{profile.education.activities.join(', ')}</p>
-          <h3 className="ab-sub t-ui">Leadership</h3>
+        </Card>
+
+        <Card id="blueprint" title={profile.blueprint.name} className="ab-bp">
+          <p className="t-text">
+            {profile.blueprint.description}{' '}
+            <span className="t-meta">
+              <Ext href={profile.blueprint.url}>blueprintboulder.org</Ext>
+            </span>
+          </p>
           <ul className="ab-plain t-text">
             {profile.volunteer.map((v) => (
               <li key={v.role}>
-                {v.org}, {v.role} <span className="t-meta">({v.dates})</span>
+                {v.role} <span className="t-meta">({v.dates})</span>
+              </li>
+            ))}
+            <li>
+              {profile.blueprint.site.label}{' '}
+              <span className="t-meta">
+                <Ext href={profile.blueprint.url}>site</Ext>
+                {', '}
+                <Ext href={profile.blueprint.site.repo}>code</Ext>
+              </span>
+            </li>
+          </ul>
+          <h3 className="ab-sub t-ui">Non-profit projects during my time</h3>
+          <ul className="ab-bp__list">
+            {profile.blueprint.projects.map((p) => (
+              <li key={p.org}>
+                <p className="t-ui">
+                  <Ext href={p.url}>{p.org}</Ext>
+                </p>
+                <p className="t-meta">
+                  {p.what}, {p.year}
+                </p>
               </li>
             ))}
           </ul>
