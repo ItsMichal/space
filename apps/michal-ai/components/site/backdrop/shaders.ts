@@ -76,7 +76,7 @@ precision highp float;
 uniform sampler2D uLowTex; uniform vec2 uRes; uniform float uDpr; uniform float uCell; uniform float uOff;
 uniform float uT; uniform float uDark; uniform float uGlyphOn; uniform float uShootOn;
 uniform vec3 uInkL; uniform vec3 uInkD; uniform float uMax; uniform float uDensity; uniform float uTwinkle;
-uniform float uConst; uniform float uGrain; uniform vec4 uThin; uniform vec2 uShoot; /* every, for */
+uniform float uConst; uniform float uGrain; uniform sampler2D uTooth; uniform float uToothA; uniform vec4 uThin; uniform vec2 uShoot; /* every, for */
 uniform vec4 uLens[${NL}]; uniform float uLensR[${NL}]; uniform int uLensN;
 uniform vec4 uLensP; /* edge, bend, magnify, split (device px / fraction) */
 uniform vec3 uRim; /* rim width px, light strength, dark strength */
@@ -225,5 +225,7 @@ void main(){
   uvec2 pi = uvec2(gl_FragCoord.xy);
   float gr = u01(pcg(pi.x + pcg(pi.y + 4242u))) - .5;
   col += gr * uGrain;
+  // paper tooth: static, one texel per canvas pixel, zero mean (the paper's average colour is untouched), in screen space so glass lensing does not bend it
+  col += (float(texelFetch(uTooth, ivec2(gl_FragCoord.xy) & ivec2(1023), 0).r) - .5) * uToothA;
   o = vec4(col, 1.);
 }`

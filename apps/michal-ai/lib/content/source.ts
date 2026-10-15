@@ -10,7 +10,8 @@ function readPost(file: string): Post {
   const raw = fs.readFileSync(path.join(POSTS_DIR, file), 'utf8')
   const { frontmatter, body } = parsePost(raw, file.replace(/\.md$/, ''))
   const words = body.split(/\s+/).filter(Boolean).length
-  return { ...frontmatter, body, readingMinutes: Math.max(1, Math.round(words / 220)) }
+  const m = /!\[([^\]]*)\]\((\/media\/[^)\s]+)/.exec(body)
+  return { ...frontmatter, body, readingMinutes: Math.max(1, Math.round(words / 220)), ...(m ? { firstImage: { src: m[2], alt: m[1] } } : {}) }
 }
 
 export function loadPosts(includeDrafts: boolean): Post[] {
