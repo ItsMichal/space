@@ -313,7 +313,7 @@ void main(){
 
   let gl, progs = {}, vidTex, buf, W = 0, H = 0, BW = 0, BH = 0, running = false, raf = 0, last = 0, ready = false, started = false, fresh = true, liveV = 0, hasFrame = false, uploaded = -1, quietX = .4, quietY = .8, winCss = 0, winOff = 0;
   let qi = 0, bufType, q8 = false, assetKey = '', cadence = [], lastRaf = 0, probing = true, cell0 = 6;
-  let stillOn = false, ctxLost = false, curSc = 1, texW = 0, texH = 0, layoutDirty = false, resizeT = 0, resizeFirst = 0, quietUntil = 0, retryT = 0, retries = 0, goAt = 0, uploadedAt = 0, swapAt = 0, cssW0 = 0, cssH0 = 0, dpr0 = window.devicePixelRatio || 1;
+  let stillOn = false, ctxLost = false, curSc = 1, texW = 0, texH = 0, layoutDirty = false, resizeT = 0, resizeFirst = 0, quietUntil = 0, retryT = 0, retries = 0, goAt = 0, uploadedAt = 0, swapAt = 0, dpr0 = window.devicePixelRatio || 1;
   const R = { buf: null, stat: null, cell: null, sim: null };   // ping-pong sets: { tex: [a, b], fbo: [a, b], cur, w, h }
   const loc = {};
   let cdimW = 0, cdimH = 0, simW = 0, simH = 0, cellFresh = true, statFresh = true, lastSim = 0, simAcc = 0, simUntil = 0, steps = 2;
@@ -433,7 +433,6 @@ void main(){
     const r = canvas.getBoundingClientRect();
     if (r.width < 2 || r.height < 2) return curSc;   // hidden or collapsed: keep what is there
     const cssW = r.width, cssH = r.height;
-    cssW0 = cssW; cssH0 = cssH;
     const q = QUALITY[qi];
     const portrait = wantPortrait();
     const phone = portrait && innerWidth <= 900;

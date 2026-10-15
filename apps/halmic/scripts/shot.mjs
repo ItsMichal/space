@@ -1,4 +1,5 @@
 // Headless Chrome screenshot via CDP (uses the `ws` package from the portfolio repo, or any ws on the path).
+// pre=<js> runs after the wait and before resize=.
 // resize=<WxH[xDPR][zZOOM]@ms,...>: after the wait, apply each size (device metrics; zoom shrinks the css size and grows the device ratio, like the browser's zoom), ms after the previous one; rshots saves a shot after each as <out>-r<i> once it has settled (rwait=ms, default 2500)
 // usage: node halmic/scripts/shot.mjs <url> <out.png> <width> <height> [full] [mobile] [wait-ms] [scrollY] [sel=css] [click=css] [clip=x,y,w,h]
 //   hover=<css>: scroll that element into view and move the mouse onto it (real mouse events) before the screenshot, after eval
@@ -49,6 +50,8 @@ try {
   if (flags.includes('nojs')) await send('Emulation.setScriptExecutionDisabled', { value: true });
   await send('Page.navigate', { url });
   await sleep(waitMs);
+  const pre = flags.find((f) => f.startsWith('pre='))?.slice(4);   // pre=<js>: run after the wait, before resize=
+  if (pre) await send('Runtime.evaluate', { expression: pre, awaitPromise: true });
   const rs = flags.find((f) => f.startsWith('resize='))?.slice(7);
   if (rs) {
     const settle = +(flags.find((f) => f.startsWith('rwait='))?.slice(6) ?? 2500);
