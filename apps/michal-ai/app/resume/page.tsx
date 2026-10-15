@@ -83,11 +83,21 @@ export default function ResumePage() {
               </p>
             </div>
             <p className="rs-p">{[...profile.education.degrees, ...profile.education.extras].join('. ')}.</p>
-            {profile.volunteer.map((v) => (
-              <p key={v.role} className="rs-p">
-                {v.org}, {v.role} ({v.dates}).{v.note ? ` ${v.note}` : ''}
-              </p>
-            ))}
+          </div>
+        </section>
+
+        <section aria-labelledby="rs-ld">
+          <h2 id="rs-ld" className="rs-h">Leadership</h2>
+          <div className="rs-item">
+            <div className="rs-line">
+              <h3 className="rs-t">{profile.blueprint.name}</h3>
+              <p className="rs-d">Nov 2020 to May 2023</p>
+            </div>
+            <p className="rs-p">
+              Vice President (Apr 2022 to May 2023); Vice President of Technology (Nov 2020 to Apr 2022). Built the organization&apos;s website
+              ({profile.blueprint.site.repo.replace('https://', '')}) and led student teams building software for non-profits, {profile.blueprint.projects.length} projects
+              from Spring 2021 to April 2023.
+            </p>
           </div>
         </section>
 

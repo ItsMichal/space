@@ -172,14 +172,36 @@ export default function AboutPage() {
             ))}
           </ul>
           <p className="t-meta">{profile.education.activities.join(', ')}</p>
-          <h3 className="ab-sub t-ui">Leadership</h3>
+        </Card>
+
+        <Card id="blueprint" title={profile.blueprint.name} className="ab-bp">
+          <p className="t-text">
+            {profile.blueprint.description} <span className="t-meta">Source: <Ext href={profile.blueprint.descriptionSource}>blueprintboulder.org</Ext></span>
+          </p>
           <ul className="ab-plain t-text">
             {profile.volunteer.map((v) => (
               <li key={v.role}>
-                {v.org}, {v.role} <span className="t-meta">({v.dates})</span>
+                {v.role} <span className="t-meta">({v.dates})</span>
+              </li>
+            ))}
+            <li>
+              <Ext href={profile.blueprint.site.repo}>{profile.blueprint.site.label}</Ext>
+            </li>
+          </ul>
+          <h3 className="ab-sub t-ui">Non-profit projects during his term</h3>
+          <ul className="ab-bp__list t-text">
+            {profile.blueprint.projects.map((p) => (
+              <li key={p.org}>
+                <Ext href={p.url}>{p.org}</Ext>
+                <span className="t-meta">
+                  {p.what}, {p.year}
+                </span>
               </li>
             ))}
           </ul>
+          <p className="t-meta">
+            Source: <Ext href={profile.blueprint.projectsSource}>blueprintboulder.org/projects</Ext>
+          </p>
         </Card>
 
         <Card id="publications" title="Publications" list className="ab-pubs">

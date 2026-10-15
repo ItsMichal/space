@@ -223,7 +223,7 @@ export const profile = {
     dates: '2019 to 2023',
     start: '2019',
     end: '2023',
-    activities: ['Blueprint Boulder', 'CU Boulder Racing Team', 'CU Boulder Esports'],
+    activities: ['CU Boulder Racing Team', 'CU Boulder Esports'],
   },
   volunteer: [
     {
@@ -242,6 +242,35 @@ export const profile = {
       note: "Built the organization's website and technical foundation, consulted with non-profits, and mentored and led over 50 students across 10+ shipped projects for social good.",
     },
   ] satisfies VolunteerEntry[],
+  /** Blueprint Boulder, from blueprintboulder.org (read Oct 2026). Roles and terms are the LinkedIn ones in `volunteer`; the site's own People page prints "Ex-Vice President, 2020 to Present". */
+  blueprint: {
+    name: 'Blueprint Boulder',
+    url: 'https://blueprintboulder.org',
+    /** The org's own words, https://blueprintboulder.org/ ("We're Blueprint Boulder, and we've been creating tech for social good since 2020."). */
+    description: 'A University of Colorado Boulder student organization that, in its own words, has been creating tech for social good since 2020.',
+    descriptionSource: 'https://blueprintboulder.org/',
+    peopleUrl: 'https://blueprintboulder.org/people',
+    site: {
+      label: 'Built the Blueprint Boulder website',
+      repo: 'https://github.com/blueprintboulder/blueprintboulder-website',
+      /** Repo README says "Built by ItsMichal"; repo created 2021-09-11; top contributor with 32 commits (GitHub API). */
+      evidence: 'README credit and 32 commits, the most of any contributor',
+    },
+    /** Non-profit projects the site's /projects page lists inside his term (Nov 2020 to May 2023), as printed. */
+    projectsSource: 'https://blueprintboulder.org/projects',
+    projects: [
+      { org: 'Safehouse Denver', url: 'https://safehouse-denver.org/', what: 'Database redesign plan and instructional videos', year: 'Spring 2021' },
+      { org: 'Girls Inc Metro Denver', url: 'https://www.girlsincdenver.org/', what: 'Gamified learning platform', year: 'Spring 2021' },
+      { org: 'Thinking Huts', url: 'https://www.thinkinghuts.org/', what: 'Web scraper to find Madagascan suppliers', year: 'Spring 2021' },
+      { org: 'Impact on Education', url: 'https://www.impactoneducation.org/', what: 'Scholarship portal', year: '2021 to 2022' },
+      { org: 'Anonymous Applications', url: 'https://github.com/blueprintboulder/f21s22-impact-on-education', what: 'Web-based identity redactor and form processor', year: '2021 to 2022' },
+      { org: 'Colorado Immigrant Rights Coalition', url: 'https://coloradoimmigrant.org/', what: 'Hotline mobile app', year: '2021 to 2022' },
+      { org: 'Foster Source', url: 'https://fostersource.org/', what: 'Respite matching website', year: '2021 to 2022' },
+      { org: 'Earth Force', url: 'https://earthforce.org/', what: 'Sustainability challenge portal', year: '2022 to 2023' },
+      { org: 'Lafayette Empowerment Center', url: 'https://www.lafayetteempowerment.org/', what: 'Database for grants, lesson plans and registration', year: '2022 to 2023' },
+      { org: 'Bevara', url: 'https://bevara.co/', what: 'Website features for an outdoor stewardship program', year: '2022 to 2023' },
+    ],
+  },
   awards: [
     { id: 'aied-2022', title: 'Best Interactive Event', context: 'AI in Education Conference (AIED), for the iSAT dashboard display', year: '2022', postId: 'isat-dashboard' },
     { id: 'hackcu-8', title: 'HackCU 8: 2nd place overall, and Best Games, Music, and Entertainment Hack', context: 'for Creatle, a solo project', year: '2022', hackathonId: 'hackcu-8-creatle' },
