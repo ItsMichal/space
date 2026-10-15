@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata } from '@/lib/meta-types'
 import { getTopLevel } from '@/lib/content'
 import { ProjectCard, type CardVariant } from '@/components/work/Showcase'
 import '@/components/work/cards.css'

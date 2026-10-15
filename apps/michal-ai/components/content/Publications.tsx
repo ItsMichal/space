@@ -10,7 +10,7 @@ export function Publications({ ids }: { ids?: string[] }) {
   if (!pubs.length) return null
   return (
     <section className="pubs card surface reading__wide" aria-labelledby="pubs-h">
-      <h2 id="pubs-h" className="pubs__h card__h t-title">
+      <h2 id="pubs-h" className="pubs__h card__h t-heading">
         Publication
       </h2>
       {pubs.map((p) => (

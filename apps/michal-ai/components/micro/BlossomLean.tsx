@@ -59,9 +59,7 @@ export function BlossomLean({ src, alt }: { src: string; alt: string }) {
       onPointerUp={rest}
       onPointerCancel={rest}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img ref={far} className="m-lean__layer" src={src} alt="" aria-hidden style={{ opacity: 0.55, filter: 'blur(6px)' }} />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         ref={near}
         className="m-lean__layer"

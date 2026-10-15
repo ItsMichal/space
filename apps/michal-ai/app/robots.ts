@@ -1,4 +1,4 @@
-import { MetadataRoute } from 'next'
+import { MetadataRoute } from '@/lib/meta-types'
 
 export default function robots(): MetadataRoute.Robots {
   return {

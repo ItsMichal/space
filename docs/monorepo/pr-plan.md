@@ -1,5 +1,7 @@
 # PR plan
 
+> Historical: the PR stack described here has been merged. Kept as a record.
+
 A stack, merged in order. Each PR targets the previous branch until its parent merges, then retarget to `main`.
 Screenshot folder: `/private/tmp/claude-501/-Users-michal-Desktop-dev-space/ec70ad79-12cb-4462-b58a-1b95b9bae29e/scratchpad/shots/`
 (attach by drag-and-drop; files are not committed).

@@ -50,6 +50,16 @@
     --hero-globe-opacity: var(--hero-globe-opacity-slot, 0.4);
   }
 }
+/* The satellite shell (dots, trails, pings) lives on its own canvas, 2.2 times the globe box and centred on it, drawn at low resolution
+   (globe/renderer.ts SHELL_SCALE, HeroGlobe.tsx shellDprFor): the big area costs few pixels, the globe and the portrait keep their
+   resolution. It sits above the globe canvas and has the figure cut out of it. */
+.hero-globe__canvas.hero-globe__shell {
+  inset: auto;
+  left: -60%;
+  top: -60%;
+  width: 220%;
+  height: 220%;
+}
 /* Bleed: runs off the right and top edge (the parent must clip). Not used on the homepage. */
 .hero-globe--bleed {
   position: absolute;
@@ -81,6 +91,10 @@
   transition: opacity 600ms ease;
 }
 .hero-globe[data-mode='gl'] .hero-globe__canvas {
+  opacity: 1;
+}
+/* With WebGL the shader applies the globe's opacity itself (uGlobeA, read from --hero-globe-opacity) so the portrait can be stronger. */
+.hero-globe[data-mode='gl'] {
   opacity: 1;
 }
 .hero-globe[data-mode='gl'] .hero-globe__still {
@@ -137,7 +151,7 @@
 /* Quiet tertiary line beside the reactions, like the view count under a post on medium.com and the counts on github.com. */
 .reactionbar__views {
   margin: 0 0 0 auto;
-  font: 400 15px/22px var(--font-serif);
+  font: 400 var(--type-small-size)/22px var(--font-serif);
   color: var(--ink-muted);
   font-variant-numeric: tabular-nums lining-nums;
 }
@@ -152,7 +166,7 @@
   background: var(--paper-raised);
   color: var(--ink-muted);
   font-family: var(--font-serif);
-  font-size: 16px;
+  font-size: var(--type-small-size);
   cursor: pointer;
   transition: border-color 80ms cubic-bezier(0.65, 0, 0.35, 1), background-color 80ms cubic-bezier(0.65, 0, 0.35, 1), color 80ms cubic-bezier(0.65, 0, 0.35, 1);
   -webkit-tap-highlight-color: transparent;
@@ -171,7 +185,7 @@
 }
 .reactionbar__glyph {
   display: inline-block;
-  font-size: 19px;
+  font-size: var(--type-body-size);
   line-height: 1;
   transform: scale(var(--pop, 1));
 }
@@ -204,14 +218,14 @@
   background: color-mix(in srgb, var(--paper-raised) 92%, transparent);
   color: var(--ink-muted);
   font-family: var(--font-serif);
-  font-size: 13px;
+  font-size: var(--type-small-size);
   line-height: 1;
   cursor: pointer;
   transition: opacity 160ms ease, border-color 160ms ease;
   -webkit-tap-highlight-color: transparent;
 }
 .hl-mark span:first-child {
-  font-size: 13px;
+  font-size: var(--type-small-size);
 }
 .hl-mark:hover,
 .hl-add:hover {
@@ -254,7 +268,7 @@
   background: transparent;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 20px;
+  font-size: var(--type-body-size);
   line-height: 1;
   -webkit-tap-highlight-color: transparent;
 }
@@ -269,7 +283,7 @@
   position: absolute;
   right: 4px;
   bottom: 1px;
-  font-size: 10px;
+  font-size: var(--type-small-size);
   font-family: var(--font-serif);
   color: var(--ink-muted);
 }

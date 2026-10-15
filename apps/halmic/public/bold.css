@@ -5,7 +5,8 @@
 [data-live="1"] .hero .field .bar { background: #3d7bff2b; }   /* text sits on at most 17% blue over ink: contrast stays above 11:1 */
 /* hero reel (hero.js): a slow highlights loop, re-drawn by a WebGL shader as leaning capsules in ink and cobalt. Under the bars (z -1) and all text. */
 .hero .reel { position: absolute; z-index: -2; inset: 0; overflow: hidden; pointer-events: none; }
-.reel-cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity 1.6s var(--ease); }
+.hero { touch-action: pan-y pinch-zoom; }   /* vertical scroll and pinch stay native; horizontal drags reach the pointer ripples */
+.reel-cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity 1.6s var(--ease); }   /* the reel's own first fade-in, deliberately slower than the motion tokens */
 .reel.is-on .reel-cv { opacity: 1; }
 .reel-vid { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 /* fallback (reduced motion, data saver, no WebGL): the poster as a real image, same ink and cobalt duotone via filter (grayscale, sepia, hue-rotate), faded to ink by a mask, no blend modes */
@@ -15,7 +16,7 @@
 .hero-in .status { align-self: flex-start; }
 .wm { margin: 0; line-height: 0; }
 .wordmark { display: block; width: 100%; height: auto; fill: var(--text); overflow: visible; }
-.wordmark .idot { transition: fill .8s var(--ease); transform-box: fill-box; transform-origin: center; }
+.wordmark .idot { transition: fill var(--t4) var(--ease); transform-box: fill-box; transform-origin: center; }
 [data-live="1"] .wordmark .idot { fill: var(--blue-live); animation: onair 2.8s var(--ease) infinite; }
 .hero-foot { display: grid; gap: var(--s3); grid-template-columns: 1fr; align-items: end; padding-top: var(--s2); }
 .topline { display: grid; gap: 10px; }
@@ -23,8 +24,8 @@
 .lede { margin: 0; font: 500 clamp(18px, 1.9vw, 24px)/1.35 var(--sans); max-width: 34ch; text-wrap: balance; }
 .cta { margin: 0; display: flex; flex-wrap: wrap; gap: 12px; }
 @media (min-width: 900px) { .hero-foot { grid-template-columns: 1.3fr 1fr; } .cta { justify-content: flex-end; } }
-/* below 900px the hero sizes to its content (no 100svh) and starts lower, so the portrait reel has the upper ~40% of the first screen to itself above the wordmark (it also runs on behind the wordmark and fades to ink above the topline); the bar field sits under the buttons */
-@media (max-width: 899px) { .hero { min-height: 0; justify-content: flex-start; padding: clamp(280px, 45svh, 400px) 0 var(--s8); } .hero .reel { bottom: auto; height: min(100%, 177.78vw); } .hero .field { height: 52%; } .hero-in { gap: var(--s3); } .hero .cta { margin-top: 4px; } .hero .btn { min-height: 48px; padding: 0 22px; font-size: 16px; } }
+/* below 900px the hero sizes to its content (no 100svh) and starts lower, so the portrait reel has the upper third of the first screen above the wordmark and the buttons stay above the fold on 360x740 (the footage runs on behind the wordmark and dissolves to ink above the topline); the bar field sits under the buttons */
+@media (max-width: 899px) { .hero { min-height: 0; justify-content: flex-start; padding: clamp(236px, 36svh, 330px) 0 var(--s8); } .hero .field { height: 52%; } .hero-in { gap: var(--s3); } .hero .cta { margin-top: 4px; } .hero .btn { min-height: 48px; padding: 0 22px; font-size: 16px; } }
 
 .cards { padding-block: var(--s8) var(--s12); }
 .mrow { display: flex; flex-wrap: wrap; gap: 10px; margin: var(--s6) 0 0; } .mrow.mrow-top { margin: calc(var(--s2) * -1) 0 var(--s4); }
@@ -32,5 +33,5 @@
 .vfeat .vt { font: 700 clamp(22px, 2.6vw, 34px)/1.1 var(--display); letter-spacing: var(--dtrack); margin-top: 16px; }
 .foot { background: var(--paper); color: var(--paper-mute); padding: 0 0 var(--s12); font-size: 15px; }
 .foot .wrap { display: flex; flex-wrap: wrap; gap: var(--s2); justify-content: space-between; border-top: 1px solid #0f0e1325; padding-top: var(--s3); }
-.foot p { margin: 0; } .links { display: flex; flex-wrap: wrap; gap: 2px; } .links a { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 12px; margin: -12px 0; border-radius: 999px; color: var(--paper-ink); font-weight: 600; transition: background .25s var(--ease); } .links a .ic { font-size: 17px; } .links a:hover { background: #0f0e1312; }
+.foot p { margin: 0; } .links { display: flex; flex-wrap: wrap; gap: 2px; } .links a { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 12px; margin: -12px 0; border-radius: 999px; color: var(--paper-ink); font-weight: 600; transition: background var(--t2) var(--ease); } .links a .ic { font-size: 17px; } .links a:hover { background: #0f0e1312; }
 .foot .links a:focus-visible { outline-color: var(--blue-paper); }

@@ -5,8 +5,11 @@
 }
 .writing__h {
   margin-bottom: var(--space-4);
-  font: 400 30px/1.15 var(--font-display);
-  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  font-size: var(--type-heading-size);
+  line-height: var(--type-heading-line);
+  font-weight: 400;
+  letter-spacing: var(--type-heading-tracking);
 }
 .writing__stack {
   display: grid;
@@ -32,5 +35,5 @@
   margin: 0;
   padding: var(--space-3) var(--card-pad);
   border-bottom: 1px solid var(--hairline);
-  font: 400 17px/25px var(--font-serif);
+  font: 400 var(--type-body-size) / var(--type-body-line) var(--font-serif);
 }

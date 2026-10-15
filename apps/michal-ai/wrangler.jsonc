@@ -4,13 +4,15 @@
   "main": "worker/index.ts",
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  // Prerendered site (react-router build). The Worker runs first for every request (host and legacy redirects, live API, 404 status)
+  // and reads files through the ASSETS binding; slash handling and 404 pages are decided in worker/static.ts and worker/index.ts.
   "assets": {
-    "directory": ".open-next/assets",
-    "binding": "ASSETS"
+    "directory": "build/client",
+    "binding": "ASSETS",
+    "html_handling": "drop-trailing-slash",
+    "not_found_handling": "none",
+    "run_worker_first": true
   },
-  "services": [
-    { "binding": "WORKER_SELF_REFERENCE", "service": "space" }
-  ],
   "durable_objects": {
     "bindings": [
       { "name": "PRESENCE", "class_name": "PresenceRoom" },
@@ -28,5 +30,6 @@
     { "tag": "v1", "new_sqlite_classes": ["PresenceRoom"] },
     { "tag": "v2", "new_sqlite_classes": ["ReactionsRoom"] }
   ],
+  "triggers": { "crons": ["17 */6 * * *"] },
   "observability": { "enabled": true }
 }

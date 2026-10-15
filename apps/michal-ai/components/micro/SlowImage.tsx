@@ -23,7 +23,6 @@ export function SlowImage({ src, alt, ratio = '4 / 3' }: { src: string; alt: str
   }, [])
   return (
     <div ref={ref} className="m-arrive" data-in={inView} style={{ aspectRatio: ratio }}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={src} alt={alt} />
     </div>
   )

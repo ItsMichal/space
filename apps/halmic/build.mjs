@@ -4,6 +4,9 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { md, inline, frontMatter } from './md.mjs';
+import { FOR_HALMIC as SIB, markSvg } from '@space/crosslinks';
+import { readSiblingPosts } from '@space/crosslinks/node';
+import { homeStats, fmt } from './stats.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const SITE = 'https://halmic.com';
@@ -39,6 +42,11 @@ function wordmark(dir = 'c') {
 const hbare = read('./brand/svg/hmark-3-bare.svg');
 const hv = hbare.match(/viewBox="([^"]+)"/)[1];
 const hpaths = [...hbare.matchAll(/<path d="([^"]+)"/g)].map((m) => `<path d="${m[1]}"/>`).join('');
+// ---- the one link to the sibling site (packages/crosslinks): logo switcher in the header, the same row in the footer for
+// touch screens, and one link on each paired page. Nothing else on the site names it; scripts/check-identity.mjs enforces that. ----
+const sibPosts = readSiblingPosts(path.resolve(here, '../..'));
+const xrow = (cls) => `<a class="${cls}" href="${SIB.origin}" rel="me">${markSvg(SIB.mark, 'xs-mark')}<span>${SIB.domain}</span>${icon('arrow-up-right', 'xs-go')}</a>`;
+const xpair = (p) => { const l = SIB.pairLink(p, sibPosts); return l ? `<p class="xl"><a href="${l.href}" rel="me">${markSvg(SIB.mark, 'xs-mark')}<span>${l.domain}</span>${l.title ? ` · ${esc(l.title)}` : ''}${icon('arrow-up-right', 'xs-go')}</a></p>` : ''; };
 const mark = `<svg class="mark" viewBox="${hv}" aria-hidden="true" focusable="false">${hpaths}</svg>`;
 
 // ---- content ----
@@ -73,7 +81,7 @@ const mtImg = (src, alt) => { const d = mt.images[src]; if (!d) throw new Error(
 const PLAY = `<span class="play" aria-hidden="true">${icon('play')}</span>`;
 const chip = (text, ic) => (text ? `<span class="chip">${ic ? icon(ic) : ''}<span>${esc(text)}</span></span>` : '');
 const media = (src, alt, { w = 640, h = 360, play = false, cls = '', chip: c = '' } = {}) => `<div class="cm${cls ? ` ${cls}` : ''}"><img src="${src}" width="${w}" height="${h}" loading="lazy" decoding="async" alt="${esc(alt)}">${play ? PLAY : ''}${c}</div>`;
-const GO = `<span class="goi" aria-hidden="true">${icon('arrow-up-right')}</span>`;
+const GO = `<span class="goi" aria-hidden="true">${icon('arrow-up-right')}${icon('arrow-up-right', 'dup')}</span>`;   // two arrows: the hover loop slides the second one in
 // ei: the small icon in the eyebrow of a media card; tile: the larger icon tile that text-only cards carry instead; go: the corner arrow on link-out cards
 const card = ({ href, cls = '', m = '', ei = '', ey = '', title, text = '', attrs = '', rel = 'noopener', go = false, tile = '' }) => {
   const inner = `${m}${go ? GO : ''}<div class="cb">${tile ? `<span class="tico">${icon(tile)}</span>` : ''}<div class="bt"><p class="ey">${!tile && ei ? icon(ei) : ''}<span>${esc(ey)}</span></p><h3 class="ct">${esc(title)}</h3>${text ? `<p class="cx">${esc(text)}</p>` : ''}</div></div>`;
@@ -105,7 +113,7 @@ const kchip = (text, ic) => `<span class="chip kchip">${icon(ic)}<span>${esc(tex
 const hasHd = (v) => fs.existsSync(path.join(here, 'public', 'videos', `${v.id}-hd.jpg`));
 const vtile = (v, cls = '', o = {}) => {
   const hd = o.hd && hasHd(v), big = cls.includes('w2');
-  return tile({ href: `/videos/${vslug(v)}/`, cls: `tm ${cls}`, attrs: ` data-vid="${v.id}" data-title="${esc(v.title)}"${o.attrs ?? ''}`, inner: `<span class="tbg${hd && v.thumbFit ? ` fit-${v.thumbFit}` : ''}">${hd ? `<img src="/videos/${v.id}-hd.jpg" width="960" height="540" loading="lazy" decoding="async" alt="">` : timg(v.thumb, 'yt-img')}</span>${badge('yt')}${o.kind ? kchip(o.kind, kindIcon(o.kind)) : ''}${tchip(v.length, big ? 'clock' : 'play')}${big ? disc : ''}${tcap({ title: o.title ?? v.name ?? vtitle(v), cap: o.cap })}` });
+  return tile({ href: `/videos/${vslug(v)}/`, cls: `tm ${cls}`, attrs: ` data-vid="${v.id}" data-title="${esc(v.title)}" data-vt="m t"${o.attrs ?? ''}`, inner: `<span class="tbg${hd && v.thumbFit ? ` fit-${v.thumbFit}` : ''}">${hd ? `<img src="/videos/${v.id}-hd.jpg" width="960" height="540" loading="lazy" decoding="async" alt="">` : timg(v.thumb, 'yt-img')}</span>${badge('yt')}${o.kind ? kchip(o.kind, kindIcon(o.kind)) : ''}${tchip(v.length, big ? 'clock' : 'play')}${big ? disc : ''}${tcap({ title: o.title ?? v.name ?? vtitle(v), cap: o.cap })}` });
 };
 // FIFA episode tiles carry the series name; the short films carry their clean name and a kind chip
 const epTile = (v, cls = '', attrs = '') => vtile(v, cls, { title: vc.series.title, cap: `Episode ${v.ep}`, attrs });
@@ -113,57 +121,78 @@ const filmTile = (v, cls = 'lead w2', attrs = '') => vtile(v, cls, { hd: true, k
 // a Twitch clip before /api/clips has answered: no picture, the scissors stand in. The browser swaps these for the real clips.
 const CLIPS_URL = 'https://www.twitch.tv/halmictv/clips?range=all';
 const clipFallback = (t, g, i) => tile({ href: CLIPS_URL, cls: `tm tm-nopic${i === 0 ? ' w2' : ''}`, attrs: ' data-clipcard', inner: `<span class="tbg">${icon('scissors', 'ghost')}</span>${badge('tw')}${tcap({ title: t, sr: g ? `Game: ${g}` : '' })}` });
-const gtile = (g, cls = '') => tile({ href: `/games/${g.slug}/`, cls: `tm tg ${cls}`, inner: `<span class="tbg"><img src="${g.coverLocal}" width="640" height="508" loading="lazy" decoding="async" alt=""></span>${tchip(g.madeWith, 'cpu')}${tcap({ title: g.title.replace(/ \(.*\)$/, ''), cap: cls.includes('lead') ? g.line.split(/(?<=\.) /)[0] : '' })}` });
-const seddTile = (cls = '') => tile({ href: '/design/southeast-denver-dental/', cls: `tm ${cls}`, inner: `<span class="tbg">${seddVideo(' aria-hidden="true"')}</span>${kbadge('pen-nib', 'Logo design')}${tcap({ title: 'Southeast Denver Dental', cap: 'Logo design' })}` });
-const mtTile = (cls = '') => tile({ href: mtBase, cls: `tm ${cls}`, inner: `<span class="tbg"><img src="/work/mountaintop/${mt.cover}" width="${mt.images[mt.cover].w}" height="${mt.images[mt.cover].h}" loading="lazy" decoding="async" alt=""></span>${tchip('Unity', 'cpu')}${tcap({ title: mt.title, cap: mt.hook })}` });
+const gtile = (g, cls = '') => tile({ href: `/games/${g.slug}/`, cls: `tm tg ${cls}`, attrs: ' data-vt="m t"', inner: `<span class="tbg"><img src="${g.coverLocal}" width="640" height="508" loading="lazy" decoding="async" alt=""></span>${tchip(g.madeWith, 'cpu')}${tcap({ title: g.title.replace(/ \(.*\)$/, ''), cap: cls.includes('lead') ? g.line.split(/(?<=\.) /)[0] : '' })}` });
+const seddTile = (cls = '') => tile({ href: '/design/southeast-denver-dental/', cls: `tm ${cls}`, attrs: ' data-vt="m t"', inner: `<span class="tbg">${seddVideo(' aria-hidden="true"')}</span>${kbadge('pen-nib', 'Logo design')}${tcap({ title: 'Southeast Denver Dental', cap: 'Logo design' })}` });
+const mtTile = (cls = '') => tile({ href: mtBase, cls: `tm ${cls}`, attrs: ' data-vt="t"', inner: `<span class="tbg"><img src="/work/mountaintop/${mt.cover}" width="${mt.images[mt.cover].w}" height="${mt.images[mt.cover].h}" loading="lazy" decoding="async" alt=""></span>${tchip('Unity', 'cpu')}${tcap({ title: mt.title, cap: mt.hook })}` });
 // stat tile: a big word or number in the display face and one caption line. Numbers come from the content files, never typed in.
-const stat = ({ href, cls = '', attrs = '', num, word = false, title, cap = '', tone = '', img = '', ic = '', go = true, rel = '' }) => tile({ href, rel, cls: `t-stat ${tone} ${cls}`, attrs, inner: `${img ? `<span class="tbg">${img}</span>` : ''}${ic ? `<span class="lg lg-s">${icon(ic)}</span>` : ''}${go ? GO : ''}<span class="num${word ? ' word' : ''}" aria-hidden="true">${esc(num)}</span>${tcap({ title, cap })}` });
-const phoenixTile = (cls = '') => stat({ href: '/work/pokemon-phoenix-rising/', cls, num: 'QA', word: true, tone: 'tdim', img: timg(`/videos/${pr.thumb}.jpg`, 'yt-img'), title: pr.title, cap: pr.role, go: false });
+// data-len (characters shown) sizes it to the tile's width; data-g (first glyph) lets the CSS pull the numeral's ink onto the caption's left edge
+const numEl = (num, { unit = '', word = false } = {}) => { const t = String(num); return `<span class="num${word ? ' word' : ''}" data-len="${Math.min(t.length, 6)}" data-g="${esc(t[0])}"><span class="nv">${esc(t)}</span>${unit ? `<small>${esc(unit)}</small>` : ''}</span>`; };
+const stat = ({ href, cls = '', attrs = '', num, unit = '', word = false, title, cap = '', tone = '', img = '', ic = '', go = true, rel = '' }) => tile({ href, rel, cls: `t-stat ${tone} ${cls}`, attrs, inner: `${img ? `<span class="tbg">${img}</span>` : ''}${ic ? `<span class="lg lg-s">${icon(ic)}</span>` : ''}${go ? GO : ''}${numEl(num, { unit, word })}${tcap({ title, cap })}` });
+// year tile: the year in the display face and one line on what happened that year in this work. Years are read from the content's own dates, never typed in.
+const yr = (iso) => +String(iso).slice(0, 4);
+const WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six'];
+const yearTile = ({ year, title, cap = '', tone = 'tink', cls = '', attrs = '' }) => `<div class="tile t-stat t-year ${tone} ${cls}"${attrs}>${numEl(year)}${tcap({ title, cap })}</div>`;
+const phoenixTile = (cls = '') => stat({ href: '/work/pokemon-phoenix-rising/', cls, attrs: ' data-vt="t"', num: 'QA', word: true, tone: 'tdim', img: timg(`/videos/${pr.thumb}.jpg`, 'yt-img'), title: pr.title, cap: pr.role, go: false });
 // one of the game's official videos (the game's own channel): plays in place like every other video tile
 const prVideoTile = (v, cls = '') => tile({ href: `https://www.youtube.com/watch?v=${v.id}`, cls: `tm ${cls}`, attrs: ` data-vid="${v.id}" data-title="${esc(v.title)}"`, inner: `<span class="tbg">${timg(`/videos/${v.id}.jpg`, 'yt-img')}</span>${badge('yt')}${tchip(v.length, 'play')}${tcap({ title: v.title.replace(/^Phoenix Rising - /, ''), cap: String(v.published.slice(0, 4)) })}` });
-const prRedditTile = (cls = '') => ltile({ href: pr.reddit.url, kind: 'rd', glyph: 'b-reddit', title: pr.reddit.title, cap: 'The game’s community', cls, rel: 'me noopener' });
-const prChannelTile = (cls = '') => ltile({ href: pr.channel.url, kind: 'yt', glyph: 'b-youtube', title: 'The game on YouTube', cls, rel: 'noopener' });
+const prRedditTile = (cls = '', attrs = '') => ltile({ href: pr.reddit.url, kind: 'rd', glyph: 'b-reddit', title: pr.reddit.title, cap: 'The game’s community', cls, attrs, rel: 'me noopener' });
+const prChannelTile = (cls = '') => ltile({ href: pr.channel.url, kind: 'yt', glyph: 'b-youtube', title: 'The game on YouTube', cap: 'Its official channel', cls, rel: 'noopener' });
 // link-out tile: the brand mark large on the brand colour, a short label, the corner arrow (the whole tile is the link)
-const ltile = ({ href, kind, glyph, title, cap = '', cls = '', attrs = '', rel = '', inner = '' }) => tile({ href, rel, cls: `t-link tl-${kind} ${cls}`, attrs, inner: `<span class="lg">${icon(glyph)}</span>${GO}${inner || tcap({ title, cap })}` });
+const ltile = ({ href, kind, glyph, title, cap = '', cls = '', attrs = '', rel = '', inner = '' }) => tile({ href, rel, cls: `t-link tl-${kind} ${cls}`, attrs, inner: `<span class="lg" data-ic="${glyph}">${icon(glyph)}</span>${GO}${inner || tcap({ title, cap })}` });
 const twitchTile = (cls = '') => ltile({ href: 'https://www.twitch.tv/halmictv', kind: 'tw', glyph: 'b-twitch', cls: `${cls}`, rel: 'me noopener', attrs: ' id="twitch" data-flex', inner: `<span class="tcap"><span class="tx"><h3 class="tt"><span class="toff">Watch live on Twitch</span><span class="ton"><i class="ldot" aria-hidden="true"></i>Live now</span></h3><p class="ts"><span class="toff">No set schedule</span><span class="ton" data-live-game>halmictv</span></p></span></span>` });
 const ytTile = (cls = '', title = 'All videos on YouTube', href = 'https://www.youtube.com/@halmic', attrs = '') => ltile({ href, kind: 'yt', glyph: 'b-youtube', title, cls, attrs, rel: 'me noopener' });
-const itchTile = (cls = '') => ltile({ href: 'https://halmic.itch.io/', kind: 'itch', glyph: 'b-itchdotio', title: 'Play the games on itch.io', cls, rel: 'me noopener' });
+const itchTile = (cls = '', attrs = '') => ltile({ href: 'https://halmic.itch.io/', kind: 'itch', glyph: 'b-itchdotio', title: 'Play the games on itch.io', cls, attrs, rel: 'me noopener' });
 const hiTile = (cls = '') => ltile({ href: 'https://x.com/halmicc', kind: 'x', glyph: 'b-x', title: 'Say hi on X', cap: 'Want something made?', cls, attrs: ' id="hi"', rel: 'me noopener' });
-const mediumTile = () => ltile({ href: 'https://halmic.medium.com/', kind: 'md', glyph: 'b-medium', title: 'Posts on Medium', attrs: ' data-flex', rel: 'me noopener' });
-// a bento: a section label (small, quiet) and a packed grid. data-flex marks the one tile whose width app.js adjusts so the last row is always full.
-const bento = ({ id = '', alias = [], title = '', more = '', cls = '', tiles }) => `<div class="bsec"${id ? ` id="${id}"` : ''}>${alias.map((a) => `<span class="anc" id="${a}"></span>`).join('')}${title ? `<div class="sh"><h2>${esc(title)}</h2>${more}</div>` : ''}<div class="bq"><div class="bento ${cls}">${tiles.join('')}</div></div></div>`;
+const mediumTile = (cls = '') => ltile({ href: 'https://halmic.medium.com/', kind: 'md', glyph: 'b-medium', title: 'Posts on Medium', cls, attrs: ' data-flex', rel: 'me noopener' });
+// A bento is a stack of clusters; a cluster is one project (or one kind of thing) and is its own packed grid, so another project's tile can never land between its tiles.
+// Each tile has a size in grid cells at 4 / 3 / 2 columns; the one tile marked data-flex gets the width that fills the cluster's last row (the fx classes give it that width
+// before app.js runs, app.js recomputes it when the cells change: a clip arrives, a tile plays).
+const S = homeStats();
+const cap1 = (t) => t[0].toUpperCase() + t.slice(1);
+const SZ = { one: [1, 1, 1], w2: [2, 2, 2], x4: [2, 1, 1], lead: [4, 4, 4] };
+const cluster = ({ name, items, flex }) => {
+  const fx = [4, 3, 2].map((k, i) => { const c = items.reduce((n, [z]) => n + SZ[z][i], 0); return `fx${k}-${k - (c % k)}`; }).join(' ');
+  return `<div class="cl" role="group" aria-label="${esc(name)}">${items.map(([, h]) => h).join('')}${flex ? flex(fx) : ''}</div>`;
+};
+// a bento: a section label (small, quiet) and its clusters
+const bento = ({ id = '', alias = [], title = '', more = '', cls = '', clusters }) => `<div class="bsec"${id ? ` id="${id}"` : ''}>${alias.map((a) => `<span class="anc" id="${a}"></span>`).join('')}${title ? `<div class="sh"><h2>${esc(title)}</h2>${more}</div>` : ''}<div class="bq"><div class="bento ${cls}">${clusters.join('')}</div></div></div>`;
 const more = (href, text) => `<a class="sl" href="${href}">${esc(text)}${icon('arrow-right', 'ic-end')}</a>`;
 
 // X highlights (content/posts.json, empty until there are showcases worth showing): static tiles, no widget or script, the media is a local copy. The whole tile links to the post.
 const posts = json('./content/posts.json').posts;
 const trimPost = (t) => { const x = t.replace(/https?:\/\/\S+/g, '').replace(/(^|\s)#\w+/g, '').replace(/\s+/g, ' ').trim(); return x.length > 110 ? `${x.slice(0, 107).replace(/\s+\S*$/, '')}…` : x; };
-const postTile = (p, cls = '') => tile({ href: p.url, cls: `tm t-post${p.media ? '' : ' tp-text'} ${cls}`, rel: 'noopener', inner: `${p.media ? `<span class="tbg"><img src="/posts/${p.media}" width="${p.w}" height="${p.h}" loading="lazy" decoding="async" alt="${esc(p.alt)}"></span>` : ''}${kbadge('b-x', 'Post on X')}${tchip(fmtDate(p.date), 'calendar-blank')}${tcap({ title: trimPost(p.text) })}` });
-const postTiles = () => [...posts.map((p, i) => postTile(p, i === 0 && posts.length >= 4 ? 'lead w2' : '')), ltile({ href: 'https://x.com/halmicc', kind: 'x', glyph: 'b-x', title: 'More on X', attrs: ' data-flex', rel: 'me noopener' })];
+const KINDS = { web: ['lightning', 'Web'], game: ['game-controller', 'Game'], hardware: ['cpu', 'Robotics'], design: ['pen-nib', 'Design'], video: ['film-strip', 'Video'], music: ['star', 'Music'] };
+const postTile = (p, cls = '') => tile({ href: p.url, cls: `tm t-post${p.media ? '' : ' tp-text'} ${cls}`, rel: 'noopener', inner: `${p.media ? `<span class="tbg"><img src="/posts/${p.media}" width="${p.w}" height="${p.h}" loading="lazy" decoding="async" alt="${esc(p.alt)}"></span>` : ''}${kbadge('b-x', 'Post on X')}${tchip(fmtDate(p.date), KINDS[p.kind]?.[0] ?? 'calendar-blank')}${p.video ? `<span class="play" aria-hidden="true">${icon('play')}</span>` : ''}${tcap({ title: trimPost(p.text), sr: `${KINDS[p.kind]?.[1] ?? 'Post'}${p.text.length > 110 ? `: ${p.text}` : ''}` })}` });
+const clPosts = () => cluster({ name: 'Posts on X', items: posts.map((p, i) => [i === 0 && posts.length >= 4 ? 'lead' : 'one', postTile(p, i === 0 && posts.length >= 4 ? 'lead w2' : '')]), flex: (fx) => ltile({ href: 'https://x.com/halmicc', kind: 'x', glyph: 'b-x', title: 'More on X', cls: fx, attrs: ' data-flex', rel: 'me noopener' }) });
 
 const clips = [['CREEPER, AW MAN', 'Minecraft'], ['4k clutch on Bind', 'VALORANT'], ['Hbox would be proud', ''], ['5 kills no win :<', ''], ['cross map tomahawk on miami', 'VALORANT'], ['run 6 dies after blaze rods...', 'Minecraft']];
-// a clip is inserted before the video tile that lists its index in data-cs (app.js); this is the order they take with all six
-const watchTiles = () => {
-  const [sf1, sf2] = films, [e4, e3, e2, e1] = episodes.slice().reverse(), [robo, lap] = others.filter((o) => !films.includes(o));
-  const cs = (v, n) => epTile(v, '', ` data-cs="${n}"`);
+
+// ---- clusters: one project each, years from the content's own dates ----
+// Watch. Special Force (the lead film, the year it came out, the sequel), FIFA With the Boys (its year, the four episodes, the playlist), the other edits with the channel link, then the Twitch clips with the Twitch tile.
+const filmGroup = films[0].group;
+const clFilms = () => cluster({ name: filmGroup, items: [['lead', filmTile(films[0])], ['x4', filmTile(films[1], 'x4')]], flex: (fx) => yearTile({ year: Math.min(...films.map((f) => yr(f.published))), title: `${filmGroup}, ${WORDS[films.length]} short films`, cap: `${S.filmMinutes} minutes in all`, tone: 'tink', cls: fx, attrs: ' data-flex data-stat="film-minutes"' }) });
+const epYears = episodes.map((e) => yr(e.published));
+const clFifa = () => cluster({ name: vc.series.title, items: [['x4', yearTile({ year: Math.min(...epYears), title: `First episode of ${vc.series.title}`, cap: Math.max(...epYears) > Math.min(...epYears) ? `Latest in ${Math.max(...epYears)}` : '', tone: 'tblue', cls: 'x4' })], ...episodes.slice().reverse().map((v) => ['one', epTile(v)]), ['x4', stat({ href: `https://www.youtube.com/playlist?list=${vc.series.playlist}`, num: S.fifaMinutes, unit: 'min', title: 'of bad shots', cap: `${cap1(WORDS[episodes.length])} episodes of ${vc.series.title}`, tone: 'tpaper', cls: 'x4', attrs: ' data-stat="fifa-minutes"' })]] });
+const edits = others.filter((o) => !films.includes(o));
+const clEdits = (title, href, attrs = '') => cluster({ name: 'More from the channel', items: edits.map((v) => ['one', vtile(v)]), flex: (fx) => ytTile(fx, title, href, ` data-flex${attrs}`) });
+// a clip is inserted before the Twitch tile (app.js); the built stand-ins are what shows until /api/clips answers
+const clClips = () => {
   const fb = (i) => clipFallback(clips[i][0], clips[i][1], i);
-  return [
-    filmTile(sf1), filmTile(sf2),
-    fb(0), cs(e4, '0'), fb(1), fb(2), cs(e3, '1 2'), fb(3), cs(e2, '3'), fb(4), cs(e1, '4'), fb(5),
-    vtile(robo, '', { attrs: ' data-cs="5"' }), vtile(lap),
-    stat({ href: `https://www.youtube.com/playlist?list=${vc.series.playlist}`, num: String(episodes.length), title: `episodes of ${vc.series.title}`, tone: 'tpaper' }),
-    ytTile(), twitchTile('w2'),
-  ];
+  return cluster({ name: 'Twitch clips', items: [['w2', fb(0)], ...[1, 2, 3, 4, 5].map((i) => ['one', fb(i)])], flex: (fx) => twitchTile(fx) });
 };
-// Play: Project Mountaintop leads (a game: a rhythm game you play with hiking poles), the two featured games are 2x1, then the little ones, itch.io, and the dev-log count that goes with Mountaintop
-const playTiles = () => [mtTile('lead w2'), ...gl.filter((g) => g.tier === 'feature').map((g) => gtile(g, 'w2')), ...gl.filter((g) => g.tier !== 'feature').map((g) => gtile(g)), itchTile(), stat({ href: `${mtBase}#logs`, num: String(mtLogs.length), title: `dev logs for ${mt.title}`, tone: 'tblue', attrs: ' data-flex' })];
-// Work: the Pokémon Phoenix Rising feature (2x2 lead, its three official videos, the subreddit), then the dental logo, the game's channel and a fact. Only verified facts become stats (see content/phoenix-rising.json).
-const workTiles = () => [phoenixTile('lead w2'), ...pr.videos.map((v) => prVideoTile(v)), prRedditTile(), seddTile(), prChannelTile(), stat({ href: '/work/pokemon-phoenix-rising/', cls: '', num: pr.episode1.year, title: 'Episode 1 of the game came out', tone: 'tpaper', attrs: ' data-flex', go: false })];
+// Play. Project Mountaintop (a rhythm game you play with hiking poles): the lead, its year, the dev logs. Then the tiny jam games and itch.io.
+const mtYear = Math.min(...mtLogs.map((l) => yr(l.date)), yr(mt.videoPublished));
+const clMountaintop = () => cluster({ name: mt.title, items: [['lead', mtTile('lead w2')], ['x4', yearTile({ year: mtYear, title: `${mt.title}, capstone and expo demo`, tone: 'tpaper', cls: 'x4' })]], flex: (fx) => stat({ href: `${mtBase}#logs`, num: fmt(S.logWords), unit: 'words', title: `across ${WORDS[S.logCount]} dev logs`, cap: 'Written while it was being built', tone: 'tblue', cls: fx, attrs: ' data-flex data-stat="log-words"' }) });
+const clTiny = () => cluster({ name: 'Tiny games', items: [...gl.filter((g) => g.tier === 'feature').map((g) => ['w2', gtile(g, 'w2')]), ...gl.filter((g) => g.tier !== 'feature').map((g) => ['one', gtile(g)]), ['one', stat({ href: '/games/', num: S.engines.length, unit: S.engines.length === 1 ? 'engine' : 'engines', title: S.engines.length === S.gameCount ? 'One for every game' : `Across ${WORDS[S.gameCount]} games`, cap: S.engines.join(', '), tone: 'tpaper', attrs: ' data-vt="t" data-stat="engines"' })]], flex: (fx) => itchTile(fx, ' data-flex') });
+// Work. Pokémon Phoenix Rising (the lead, the game's channel, the subreddit; no dates are known, so no year tile), then the dental logo with the practice's site. Only verified facts become tiles (see content/phoenix-rising.json).
+const clPhoenix = () => cluster({ name: pr.title, items: [['lead', phoenixTile('lead w2')], ['x4', prChannelTile('x4')]], flex: (fx) => prRedditTile(fx, ' data-flex') });
+const clDental = () => cluster({ name: 'Southeast Denver Dental', items: [['w2', seddTile('w2')]], flex: (fx) => ltile({ href: 'https://www.sedenverdental.com/', kind: 'site', glyph: 'compass', title: 'sedenverdental.com', cap: 'The practice, with the logo in use', cls: fx, attrs: ' data-flex', rel: 'noopener' }) });
 const homeCards = () => [
-  bento({ id: 'stream', alias: ['videos'], title: 'Watch', cls: 'b-watch', more: more('/videos/', 'All videos'), tiles: watchTiles() }),
-  bento({ id: 'games', title: 'Play', cls: 'b-play', more: more('/games/', 'All games'), tiles: playTiles() }),
-  bento({ id: 'work', alias: ['design'], title: 'Work', cls: 'b-work', more: more('/work/pokemon-phoenix-rising/', 'Pokémon Phoenix Rising'), tiles: workTiles() }),
-  ...(posts.length ? [bento({ id: 'posts', title: 'Posts', cls: 'b-posts', more: more('https://x.com/halmicc', 'More on X'), tiles: postTiles() })] : []),
-  bento({ id: 'elsewhere', title: 'Elsewhere', cls: 'b-else', tiles: [hiTile('w2'), mediumTile()] }),
+  bento({ id: 'stream', alias: ['videos'], title: 'Watch', cls: 'b-watch', more: more('/videos/', 'All videos'), clusters: [clFilms(), clFifa(), clEdits('All videos on YouTube', 'https://www.youtube.com/@halmic'), clClips()] }),
+  bento({ id: 'games', title: 'Play', cls: 'b-play', more: more('/games/', 'All games'), clusters: [clMountaintop(), clTiny()] }),
+  bento({ id: 'work', alias: ['design'], title: 'Work', cls: 'b-work', more: more('/work/pokemon-phoenix-rising/', 'Pokémon Phoenix Rising'), clusters: [clPhoenix(), clDental()] }),
+  ...(posts.length ? [bento({ id: 'posts', title: 'Posts', cls: 'b-posts', more: more('https://x.com/halmicc', 'More on X'), clusters: [clPosts()] })] : []),
+  bento({ id: 'elsewhere', title: 'Elsewhere', cls: 'b-else', clusters: [cluster({ name: 'Elsewhere', items: [['w2', hiTile('w2')]], flex: (fx) => mediumTile(fx) })] }),
 ].join('');
 
 const SAME_AS = ['https://www.twitch.tv/halmictv', 'https://www.youtube.com/@halmic', 'https://halmic.itch.io/', 'https://halmic.medium.com/', 'https://x.com/halmicc'];
@@ -178,8 +207,9 @@ const navLinks = [['watch', '/#stream', 'video-camera'], ['play', '/#games', 'ga
 const NAV_OF = { videos: 'watch', games: 'play' };   // an inner page's section name -> its nav item
 const navFor = (section) => `<nav aria-label="Primary">${navLinks.map(([t, h, i]) => `<a href="${h}"${t === (NAV_OF[section] ?? section) ? ' aria-current="true"' : ''}>${icon(i)}<span>${t}</span></a>`).join('')}</nav>`;   // on an inner page the link to its own section is marked as current
 const NAV = navFor();
+const LOGO = `<div class="xs"><a class="xs-logo" href="/" aria-label="halmic, home" aria-controls="xs-menu">${mark}</a><ul class="xs-menu" id="xs-menu"><li class="xs-hl"><a class="xs-home" href="/">${icon('arrow-left')}<span>Home</span></a></li><li>${xrow('xs-row')}</li></ul></div>`;
 const SKIP = '<a class="skip" href="#main">Skip to content</a>';
-const FOOT = `<footer class="foot"><div class="wrap"><p>© ${new Date().getFullYear()} halmic</p><p class="links">${[['Twitch', 'https://www.twitch.tv/halmictv', 'b-twitch', ' rel="me"'], ['YouTube', 'https://www.youtube.com/@halmic', 'b-youtube', ' rel="me"'], ['itch.io', 'https://halmic.itch.io/', 'b-itchdotio', ' rel="me"'], ['Medium', 'https://halmic.medium.com/', 'b-medium', ' rel="me"'], ['X', 'https://x.com/halmicc', 'b-x', ' rel="me"']].map(([t, h, i, r]) => `<a href="${h}"${r}>${icon(i)}<span>${t}</span></a>`).join('')}</p></div></footer>`;
+const FOOT = `<footer class="foot"><div class="wrap"><p>© ${new Date().getFullYear()} halmic</p><p class="links">${[['Twitch', 'https://www.twitch.tv/halmictv', 'b-twitch', ' rel="me"'], ['YouTube', 'https://www.youtube.com/@halmic', 'b-youtube', ' rel="me"'], ['itch.io', 'https://halmic.itch.io/', 'b-itchdotio', ' rel="me"'], ['Medium', 'https://halmic.medium.com/', 'b-medium', ' rel="me"'], ['X', 'https://x.com/halmicc', 'b-x', ' rel="me"']].map(([t, h, i, r]) => `<a href="${h}"${r}>${icon(i)}<span>${t}</span></a>`).join('')}${xrow('xs-foot')}</p></div></footer>`;
 // buttons and button rows for the inner pages; ext adds the external-link arrow
 const btn = ({ href, label, ic = '', kind = 'ghost', ext = false, rel = '' }) => `<a class="btn btn-sm btn-${kind}" href="${href}"${ext ? ` rel="noopener${rel}"` : ''}>${ic ? icon(ic) : ''}<span>${label}</span>${ext ? icon('arrow-up-right', 'ic-end') : ''}</a>`;
 const mrow = (...b) => `<div class="mrow">${b.map(btn).join('')}</div>`;
@@ -193,9 +223,9 @@ const head = ({ title, desc, path: p, og, ogAlt, published, ld, css = ['bold.css
 <meta property="og:site_name" content="halmic productions"><meta property="og:type" content="${type}"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${SITE}${p}"><meta property="og:image" content="${SITE}${og}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:type" content="${ogType(og)}"><meta property="og:image:alt" content="${ogAltOf(title, ogAlt)}"><meta property="og:locale" content="en_US">${published ? `<meta property="article:published_time" content="${published}">` : ''}
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${esc(title)}"><meta name="twitter:description" content="${esc(desc)}"><meta name="twitter:image" content="${SITE}${og}"><meta name="twitter:image:alt" content="${ogAltOf(title, ogAlt)}"><meta name="twitter:site" content="@halmicc">
 <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16"><link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32"><link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="alternate" type="application/rss+xml" title="halmic" href="/rss.xml"><link rel="preload" href="/fonts/halmic-display.43848237.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/halmic-text-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="${V('base.css')}">${css.map((c) => `<link rel="stylesheet" href="${V(c)}">`).join('')}${ld ? ldTag(ld) : ''}`;
+<link rel="stylesheet" href="${V('base.css')}"><link rel="stylesheet" href="${V('switcher.css')}"><script src="${V('switcher.js')}" defer></script><script src="${V('vt.js')}"></script>${css.map((c) => `<link rel="stylesheet" href="${V(c)}">`).join('')}<link rel="stylesheet" href="${V('motion.css')}"><script src="${V('motion.js')}" defer></script>${ld ? ldTag(ld) : ''}`;
 const inner = ({ title, desc, path: p, og, ogAlt, published, ld, body, type, noindex, section, wide = false }) => `<!doctype html><html lang="en"><head>${head({ title, desc, path: p, og, ogAlt, published, ld, css: ['bold.css', 'page.css'], type, noindex })}</head><body>
-${SKIP}<header class="top"><div class="wrap"><a href="/" aria-label="halmic, home">${mark}</a>${navFor(section)}</div></header>
+${SKIP}<header class="top"><div class="wrap">${LOGO}${navFor(section)}</div></header>
 <main id="main" class="pg wrap${wide ? ' pgw' : ''}">${body}</main>${FOOT}<script src="${V('app.js')}" defer></script></body></html>`;
 
 // ---- home templates ----
@@ -203,8 +233,8 @@ const subs = {
   wordmark: wordmark('c'), mark, year: String(new Date().getFullYear()),
   cards: homeCards(),
   head_bold: head({ title: 'halmic productions: streams, videos, games and design', desc: 'An assortment of various somewhat creative work I’ve done: Twitch (halmictv) clips, YouTube videos, tiny itch.io games, logo design and QA work.', path: '/', og: '/og/home.jpg', ogAlt: 'halmic productions: the halmic wordmark in cream on a dark background with blue leaning bars', ld: [PERSON, { '@type': 'WebSite', '@id': `${SITE}/#site`, url: `${SITE}/`, name: 'halmic productions', alternateName: 'halmic', description: 'An assortment of various somewhat creative work I’ve done.', publisher: { '@id': `${SITE}/#halmic` } }, ...pageVideos.map(videoLd), ...gl.map(gameLd), designLd], css: ['bold.css'] }),
-  ic_twitch: icon('b-twitch'), ic_out: icon('arrow-up-right', 'ic-end'), ic_down: icon('arrow-down', 'ic-end'),
-  nav: NAV, skip: SKIP, appjs: V('app.js'), herojs: V('hero.js'), foot: FOOT,
+  ic_twitch: icon('b-twitch'), ic_out: icon('arrow-up-right', 'ic-end'), ic_down: icon('arrow-down', 'ic-end ic-down'),
+  nav: NAV, logo: LOGO, skip: SKIP, appjs: V('app.js'), herojs: V('hero.js'), foot: FOOT,
   design_shots: ['header', 'footer', 'phone'].map((k) => { const png = fs.readFileSync(path.join(here, `public/work/southeast-denver-dental-${k}.png`)); return `<figure class="shot shot-${k}"><img src="/work/southeast-denver-dental-${k}.png" width="${png.readUInt32BE(16)}" height="${png.readUInt32BE(20)}" loading="lazy" decoding="async" alt="${{ header: 'The Southeast Denver Dental logo in the header of their website: an orange and blue four-lobed tooth mark beside the name in blue and orange capitals.', footer: 'The same logo in white on the blue footer of their website.', phone: 'The logo in the phone header of their website, next to a menu button.' }[k]}"></figure>`; }).join(''),
 };
 for (const d of ['videos', 'games']) { const dir = path.join(here, 'public', d); if (fs.existsSync(dir)) for (const e of fs.readdirSync(dir, { withFileTypes: true })) if (e.isDirectory()) fs.rmSync(path.join(dir, e.name), { recursive: true, force: true }); }
@@ -223,17 +253,17 @@ write('previews/index.json', `${JSON.stringify({ ids: pvIds })}\n`);
 
 // ---- inner pages ----
 const urls = [{ loc: '/', pri: 1.0 }, { loc: '/games/', pri: 0.8 }, { loc: '/videos/', pri: 0.8 }, { loc: '/design/', pri: 0.7 }, { loc: '/design/southeast-denver-dental/', pri: 0.7 }];
-const vplayer = (v, lazy = false) => `<a class="vid vid-featured" href="${v.url}" data-vid="${v.id}" data-title="${esc(v.title)}" aria-label="Play video: ${esc(v.title)}"><span class="thumb"><img src="${v.thumb}" width="640" height="360" ${lazy ? 'loading="lazy" decoding="async"' : 'fetchpriority="high"'} alt="Thumbnail for the video ${esc(v.title)}">${PLAY}</span>${lazy ? `<span class="vt">${esc(v.title)}</span>` : ''}<span class="vm">Plays here when you press it. Nothing loads from YouTube before that.</span></a>`;
-const mtVideo = (id, lazy = true) => vplayer({ id, title: mt.videos[id], url: `https://www.youtube.com/watch?v=${id}`, thumb: `/videos/${id}.jpg` }, lazy);
+const vplayer = (v, lazy = false, hero = !lazy) => `<a class="vid vid-featured" href="${v.url}" data-vid="${v.id}" data-title="${esc(v.title)}" aria-label="Play video: ${esc(v.title)}"><span class="thumb"${hero ? ' data-hero' : ''}><img src="${v.thumb}" width="640" height="360" ${lazy ? 'loading="lazy" decoding="async"' : 'fetchpriority="high"'} alt="Thumbnail for the video ${esc(v.title)}">${PLAY}</span>${lazy ? `<span class="vt">${esc(v.title)}</span>` : ''}<span class="vm">Plays here when you press it. Nothing loads from YouTube before that.</span></a>`;
+const mtVideo = (id, lazy = true) => vplayer({ id, title: mt.videos[id], url: `https://www.youtube.com/watch?v=${id}`, thumb: `/videos/${id}.jpg` }, lazy, false);
 
 for (const g of gl) {
   urls.push({ loc: `/games/${g.slug}/`, pri: g.tier === 'feature' ? 0.8 : 0.7 });
   write(`games/${g.slug}/index.html`, inner({
     title: `${g.title.replace(/ \(.*\)$/, '')}: a tiny ${g.madeWith ?? 'browser'} game by halmic`, desc: `${g.line} Play ${g.title.replace(/ \(.*\)$/, '')} in your browser on itch.io.`, path: `/games/${g.slug}/`, og: `/og/game-${g.slug}.jpg`, ogAlt: `${g.title.replace(/ \(.*\)$/, '')}, a tiny game by halmic: cover art next to the title`, ld: [PERSON, gameLd(g)], section: 'games',
-    body: `${crumb('/#games', 'games')}<h1>${esc(g.title)}</h1><div class="gpage"><img class="gcover" src="${g.coverLocal}" width="640" height="508" fetchpriority="high" alt="${esc(g.alt)}"><div><p class="lede2">${esc(g.line)}</p>${g.description ? `<p>${esc(g.description)}</p>` : ''}${meta(['tag', g.status], ['cpu', g.madeWith], ['game-controller', g.genre?.replace(/ ,/g, ',')], ['calendar-blank', g.jam])}<p class="crow"><a class="btn btn-blue" href="${g.url}" rel="noopener">${icon('b-itchdotio')}<span>Play on itch.io</span>${icon('arrow-up-right', 'ic-end')}</a></p></div></div>${mrow({ href: '/#games', label: 'More little games', ic: 'game-controller' }, { href: '/#videos', label: 'Videos', ic: 'video-camera' }, { href: 'https://www.twitch.tv/halmictv', label: 'halmic on Twitch', ic: 'b-twitch', ext: true })}`,
+    body: `${crumb('/#games', 'games')}<h1>${esc(g.title)}</h1><div class="gpage"><img class="gcover" data-hero src="${g.coverLocal}" width="640" height="508" fetchpriority="high" alt="${esc(g.alt)}"><div><p class="lede2">${esc(g.line)}</p>${g.description ? `<p>${esc(g.description)}</p>` : ''}${meta(['tag', g.status], ['cpu', g.madeWith], ['game-controller', g.genre?.replace(/ ,/g, ',')], ['calendar-blank', g.jam])}${xpair(`/games/${g.slug}/`)}<p class="crow"><a class="btn btn-blue" href="${g.url}" rel="noopener">${icon('b-itchdotio')}<span>Play on itch.io</span>${icon('arrow-up-right', 'ic-end')}</a></p></div></div>${mrow({ href: '/#games', label: 'More little games', ic: 'game-controller' }, { href: '/#videos', label: 'Videos', ic: 'video-camera' }, { href: 'https://www.twitch.tv/halmictv', label: 'halmic on Twitch', ic: 'b-twitch', ext: true })}`,
   }));
 }
-write('games/index.html', inner({ title: 'Games by halmic: tiny jam games and experiments', desc: 'Tiny games made by halmic in PICO-8, PuzzleScript, Bitsy and GB Studio. Play them in the browser on itch.io.', path: '/games/', og: '/og/games.jpg', ogAlt: 'Little games by halmic: screenshots of four tiny games', section: 'games', wide: true, ld: [PERSON, ...gl.map(gameLd)], body: `<h1>Little games</h1><p class="lede2">Jam entries and experiments, mostly in tiny engines.</p>${bento({ cls: 'b-play', tiles: playTiles() })}` }));
+write('games/index.html', inner({ title: 'Games by halmic: tiny jam games and experiments', desc: 'Tiny games made by halmic in PICO-8, PuzzleScript, Bitsy and GB Studio. Play them in the browser on itch.io.', path: '/games/', og: '/og/games.jpg', ogAlt: 'Little games by halmic: screenshots of four tiny games', section: 'games', wide: true, ld: [PERSON, ...gl.map(gameLd)], body: `<h1>Little games</h1><p class="lede2">Jam entries and experiments, mostly in tiny engines.</p>${bento({ cls: 'b-play', clusters: [clMountaintop(), clTiny()] })}` }));
 for (const v of pageVideos) {
   urls.push({ loc: `/videos/${vslug(v)}/`, pri: films.includes(v) ? 0.7 : 0.6 });
   write(`videos/${vslug(v)}/index.html`, inner({
@@ -242,12 +272,13 @@ for (const v of pageVideos) {
   }));
 }
 const smashTile = (st) => tile({ href: `https://www.youtube.com/watch?v=${st.id}`, cls: 'tm', attrs: ` data-vid="${st.id}" data-title="${esc(`${st.event}: ${st.round}, halmic vs ${st.opp}`)}"`, inner: `<span class="tbg">${timg(`/videos/${st.id}.jpg`, 'yt-img')}</span>${badge('yt')}${tcap({ title: `vs ${st.opp}`, cap: `${st.event}, ${st.round}`, sr: '' })}` });
-const vindex = `<h1>Videos</h1>${bento({ title: 'Short films, FIFA and edits', cls: 'b-watch', tiles: [filmTile(films[0]), filmTile(films[1]), ...episodes.slice().reverse().map((v) => epTile(v)), ...others.filter((o) => !films.includes(o)).map((v) => vtile(v)), stat({ href: `https://www.youtube.com/playlist?list=${vc.series.playlist}`, num: String(episodes.length), title: `episodes of ${vc.series.title}`, tone: 'tpaper' }), ytTile('', 'halmic on YouTube', 'https://www.youtube.com/@halmic?sub_confirmation=1', ' data-flex')] })}${bento({ id: 'smash', title: 'Smash', more: `<span class="sl sl-note">${esc(smash.line)}</span>`, cls: 'b-smash', tiles: [...smash.sets.map(smashTile), `<div class="tile t-note" data-flex><p>${esc(smash.credit)}</p></div>`] })}`;
+const smashFlex = (fx) => `<div class="tile t-note ${fx}" data-flex><p>${esc(smash.credit)}</p></div>`;
+const vindex = `<h1>Videos</h1>${bento({ title: 'Short films, FIFA and edits', cls: 'b-watch', clusters: [clFilms(), clFifa(), clEdits('halmic on YouTube', 'https://www.youtube.com/@halmic?sub_confirmation=1')] })}${bento({ id: 'smash', title: 'Smash', more: `<span class="sl sl-note">${esc(smash.line)}</span>`, cls: 'b-smash', clusters: [cluster({ name: 'Smash sets', items: smash.sets.map((st) => ['one', smashTile(st)]), flex: smashFlex })] })}`;
 write('videos/index.html', inner({ title: 'Videos by halmic: edits, highlights and friends', desc: 'Videos from halmic on YouTube: edits, highlight reels and friends playing games.', path: '/videos/', og: '/og/videos.jpg', ogAlt: 'Videos by halmic: thumbnails of four videos', section: 'videos', wide: true, ld: [PERSON, ...pageVideos.map(videoLd)], body: vindex }));
-write('design/index.html', inner({ title: 'Design by halmic: logos and things I made', desc: 'Things halmic has designed: a logo for Southeast Denver Dental, a dental practice in Denver, Colorado, and how it looks in use.', path: '/design/', og: '/og/design.jpg', ogAlt: 'Design by halmic: the Southeast Denver Dental logo', section: 'work', wide: true, ld: [PERSON, designLd], body: `<h1>Things I’ve designed</h1>${bento({ cls: 'b-design', tiles: [seddTile('lead w2'), hiTile(''), ytTile(), mediumTile()] })}` }));
+write('design/index.html', inner({ title: 'Design by halmic: logos and things I made', desc: 'Things halmic has designed: a logo for Southeast Denver Dental, a dental practice in Denver, Colorado, and how it looks in use.', path: '/design/', og: '/og/design.jpg', ogAlt: 'Design by halmic: the Southeast Denver Dental logo', section: 'work', wide: true, ld: [PERSON, designLd], body: `<h1>Things I’ve designed</h1>${bento({ cls: 'b-design', clusters: [cluster({ name: 'Southeast Denver Dental', items: [['lead', seddTile('lead w2')], ['one', hiTile('')], ['one', ytTile()]], flex: (fx) => mediumTile(fx) })] })}` }));
 write('design/southeast-denver-dental/index.html', inner({
   title: 'Logo for Southeast Denver Dental | halmic productions', desc: 'halmic designed the logo for Southeast Denver Dental, a dental practice in Denver, Colorado. See it in use on their website.', path: '/design/southeast-denver-dental/', og: '/og/design-sedd.jpg', ogAlt: 'The Southeast Denver Dental logo, an orange and blue four-lobed tooth mark beside the name', section: 'work', ld: [PERSON, designLd],
-  body: `${crumb('/#work', 'work')}<h1>Logo for Southeast Denver Dental</h1><p class="lede2">I designed the logo for Southeast Denver Dental, a dental practice in Denver, Colorado.</p><figure class="inuse-fig"><div class="inuse-wrap">${seddVideo(` aria-label="${SEDD_LABEL}"`)}<button type="button" class="ibtn vtoggle is-paused" data-vtoggle aria-label="Play video" aria-pressed="false">${icon('pause', 'ic-pause')}${icon('play', 'ic-play')}</button></div><figcaption>${icon('film-strip')}<span>${SEDD_LABEL}. Footage from the <a href="https://www.sedenverdental.com/" rel="noopener">practice’s own website</a>.</span></figcaption></figure><div class="shots">${subs.design_shots}</div><p>Screenshots are of their public website.</p>${mrow({ href: 'https://www.sedenverdental.com/', label: 'Visit sedenverdental.com', kind: 'blue', ext: true }, { href: '/#work', label: 'More work', ic: 'briefcase' })}`,
+  body: `${crumb('/#work', 'work')}<h1>Logo for Southeast Denver Dental</h1><p class="lede2">I designed the logo for Southeast Denver Dental, a dental practice in Denver, Colorado.</p><figure class="inuse-fig"><div class="inuse-wrap" data-hero>${seddVideo(` aria-label="${SEDD_LABEL}"`)}<button type="button" class="ibtn vtoggle is-paused" data-vtoggle aria-label="Play video" aria-pressed="false">${icon('pause', 'ic-pause')}${icon('play', 'ic-play')}</button></div><figcaption>${icon('film-strip')}<span>${SEDD_LABEL}. Footage from the <a href="https://www.sedenverdental.com/" rel="noopener">practice’s own website</a>.</span></figcaption></figure><div class="shots">${subs.design_shots}</div><p>Screenshots are of their public website.</p>${mrow({ href: 'https://www.sedenverdental.com/', label: 'Visit sedenverdental.com', kind: 'blue', ext: true }, { href: '/#work', label: 'More work', ic: 'briefcase' })}`,
 }));
 
 urls.push({ loc: '/work/pokemon-phoenix-rising/', pri: 0.6 });
@@ -262,16 +293,16 @@ const mtVideoLd = { '@type': 'VideoObject', name: mt.videos[mt.video], descripti
 const mtWorkLd = { '@type': 'CreativeWork', '@id': `${SITE}${mtBase}#work`, name: mt.title, description: mt.line, url: `${SITE}${mtBase}`, image: `${SITE}/work/mountaintop/${mt.cover}`, creator: { '@id': `${SITE}/#halmic` }, genre: 'Video game', video: { '@type': 'VideoObject', name: mt.videos[mt.video], url: `${SITE}${mtBase}` }, hasPart: mtLogs.map((l) => ({ '@type': 'BlogPosting', headline: l.title, url: `${SITE}${l.url}` })) };
 const mtLogLd = (l) => ({ '@type': 'BlogPosting', headline: l.title, description: l.description, datePublished: l.date, dateModified: l.updated ?? l.date, image: `${SITE}/work/mountaintop/${l.hero}`, url: `${SITE}${l.url}`, mainEntityOfPage: `${SITE}${l.url}`, author: { '@id': `${SITE}/#halmic` }, publisher: { '@id': `${SITE}/#halmic` }, isPartOf: { '@id': `${SITE}${mtBase}#work` }, about: { '@id': `${SITE}${mtBase}#work` } });
 urls.push({ loc: mtBase, pri: 0.7 }, ...mtLogs.map((l) => ({ loc: l.url, pri: 0.5 })));
-const mtLogCard = (l, i) => card({ href: l.url, cls: l.hero === mt.cover ? 'c-3 txt' : '', m: l.hero === mt.cover ? '' : media(`/work/mountaintop/${l.hero}`, l.heroAlt, { w: mt.images[l.hero].w, h: mt.images[l.hero].h }), tile: l.hero === mt.cover ? 'notebook' : '', ei: 'notebook', ey: `dev log ${l.order} · ${mtDate(l.date)}`, title: l.title, text: l.description });
+const mtLogCard = (l, i) => card({ href: l.url, attrs: ` data-vt="${l.hero === mt.cover ? 't' : 'm t'}"`, cls: l.hero === mt.cover ? 'c-3 txt' : '', m: l.hero === mt.cover ? '' : media(`/work/mountaintop/${l.hero}`, l.heroAlt, { w: mt.images[l.hero].w, h: mt.images[l.hero].h }), tile: l.hero === mt.cover ? 'notebook' : '', ei: 'notebook', ey: `dev log ${l.order} · ${mtDate(l.date)}`, title: l.title, text: l.description });
 write('work/project-mountaintop/index.html', inner({
   title: `${mt.title}: a hiking-pole rhythm game | halmic productions`, desc: `${mt.title}, a Unity rhythm game played with custom Arduino hiking-pole controllers. Gameplay video and the dev logs, by halmic.`, path: mtBase, og: '/og/work-project-mountaintop.jpg', ogAlt: mt.coverAlt, section: 'work', ld: [PERSON, mtWorkLd, mtVideoLd], wide: true,
-  body: `${crumb('/#work', 'work')}<h1>${esc(mt.title)}</h1><p class="lede2">${esc(mt.hook)}</p>${meta(['user-circle', mt.role], ['cpu', 'Unity'], ['cpu', 'Arduino'], ['tag', 'C#'])}<div class="mtintro"><div class="log">${md(mtIntro, mtOpts)}</div><div class="vfeat">${mtVideo(mt.video, false)}</div></div>${gh('Dev logs', 'logs', 'Written while it was being built, in 2023.', 'notebook')}<div class="grid g3">${mtLogs.map(mtLogCard).join('')}</div>${mrow({ href: '/#work', label: 'More work', ic: 'briefcase' }, { href: '/#games', label: 'Little games', ic: 'game-controller' }, { href: 'https://www.youtube.com/@halmic', label: 'halmic on YouTube', ic: 'b-youtube', ext: true })}`,
+  body: `${crumb('/#work', 'work')}<h1>${esc(mt.title)}</h1><p class="lede2">${esc(mt.hook)}</p>${meta(['user-circle', mt.role], ['cpu', 'Unity'], ['cpu', 'Arduino'], ['tag', 'C#'])}${xpair(mtBase)}<div class="mtintro"><div class="log">${md(mtIntro, mtOpts)}</div><div class="vfeat">${mtVideo(mt.video, false)}</div></div>${gh('Dev logs', 'logs', 'Written while it was being built, in 2023.', 'notebook')}<div class="grid g3">${mtLogs.map(mtLogCard).join('')}</div>${mrow({ href: '/#work', label: 'More work', ic: 'briefcase' }, { href: '/#games', label: 'Little games', ic: 'game-controller' }, { href: 'https://www.youtube.com/@halmic', label: 'halmic on YouTube', ic: 'b-youtube', ext: true })}`,
 }));
 for (const l of mtLogs) {
   const i = mtLogs.indexOf(l), prev = mtLogs[i - 1], next = mtLogs[i + 1];
   write(`work/project-mountaintop/${l.slug}/index.html`, inner({
     title: `${l.title} | Project Mountaintop dev log`, desc: l.description.slice(0, 160), path: l.url, og: `/og/mountaintop-${l.slug}.jpg`, ogAlt: l.heroAlt, published: l.date, section: 'work', type: 'article', ld: [PERSON, mtWorkLd, mtLogLd(l)],
-    body: `${crumb(mtBase, `Project Mountaintop · dev log ${l.order}`)}<h1>${esc(l.title)}</h1>${meta(['calendar-blank', mtDate(l.date)], ['notebook', `Dev log ${l.order} of ${mtLogs.length}`])}<article class="log">${md(l.body, mtOpts)}</article>${mrow(...(prev ? [{ href: prev.url, label: prev.title, ic: 'arrow-left' }] : []), ...(next ? [{ href: next.url, label: next.title, ic: 'arrow-right' }] : []), { href: mtBase, label: 'All dev logs', ic: 'notebook' })}`,
+    body: `${crumb(mtBase, `Project Mountaintop · dev log ${l.order}`)}<h1>${esc(l.title)}</h1>${meta(['calendar-blank', mtDate(l.date)], ['notebook', `Dev log ${l.order} of ${mtLogs.length}`])}${xpair(l.url)}<article class="log">${md(l.body, mtOpts).replace('<img ', '<img data-hero ')}</article>${mrow(...(prev ? [{ href: prev.url, label: prev.title, ic: 'arrow-left' }] : []), ...(next ? [{ href: next.url, label: next.title, ic: 'arrow-right' }] : []), { href: mtBase, label: 'All dev logs', ic: 'notebook' })}`,
   }));
 }
 

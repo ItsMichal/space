@@ -1,18 +1,5 @@
-import { Fraunces, Instrument_Serif } from 'next/font/google'
-
-// Prototype candidates only (not wired into the live layout). Both are OFL and self-hosted by next/font.
-export const instrument = Instrument_Serif({
-  subsets: ['latin', 'latin-ext'],
-  weight: '400',
-  style: ['normal', 'italic'],
-  display: 'swap',
-  variable: '--font-instrument',
-})
-
-export const fraunces = Fraunces({
-  subsets: ['latin', 'latin-ext'],
-  style: ['normal', 'italic'],
-  axes: ['opsz', 'SOFT'],
-  display: 'swap',
-  variable: '--font-fraunces',
-})
+// Prototype candidates for the mood lab (/mood, development only). They were Instrument Serif and Fraunces through next/font; the
+// site no longer bundles those files, so the lab's `--font-instrument` and `--font-fraunces` fall back to the system serif stack.
+// Self-host the woff2 (both OFL) and declare them in app/styles/fonts.css to compare the candidates again.
+export const instrument = { variable: '' }
+export const fraunces = { variable: '' }

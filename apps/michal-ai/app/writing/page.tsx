@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata } from '@/lib/meta-types'
 import { getArticleSeries, getBlogPosts, getProjectLogs } from '@/lib/content'
 import { groupWriting } from '@/lib/content/writing'
 import { WritingIndex } from '@/components/writing/WritingIndex'
@@ -20,7 +20,7 @@ export default function Page() {
   return (
     <div className="mx-auto max-w-content px-space-4 pb-space-16 pt-[120px] md:px-space-8 md:pt-[160px]">
       <JsonLd data={listJsonLd('article', TITLE, posts)} />
-      <h1 className="mb-space-12 font-display text-[clamp(46px,13vw,60px)] font-normal leading-none tracking-[-0.02em] md:text-display">Writing</h1>
+      <h1 className="mb-space-12 font-display text-title">Writing</h1>
       <WritingIndex {...groups} />
     </div>
   )

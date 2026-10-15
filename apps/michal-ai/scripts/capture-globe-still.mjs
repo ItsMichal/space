@@ -36,7 +36,7 @@ const send = (method, params = {}) => new Promise((res) => { const i = ++id; pen
 await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 2, mobile: false })
 await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
 await send('Page.enable')
-await send('Page.navigate', { url: 'http://localhost:3000/presence?mock=1&full=1' })
+await send('Page.navigate', { url: `http://localhost:${process.env.PORT ?? 3000}/presence?mock=1&full=1&bare=1` })
 await sleep(3000)
 const ev = (expression) => send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true })
 await ev(`document.querySelector('.hero-globe').style.cssText='width:400px;right:0;top:0;transform:none;opacity:1'`)

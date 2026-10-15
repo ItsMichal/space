@@ -130,8 +130,11 @@
   background: color-mix(in srgb, var(--tile-tint, var(--tint-birch)) 30%, transparent);
 }
 .tile__word {
-  font: 400 clamp(40px, 11vw, 56px) / 1 var(--font-display);
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  font-size: var(--type-title-size);
+  line-height: var(--type-title-line);
+  font-weight: 400;
+  letter-spacing: var(--type-title-tracking);
   color: var(--ink);
 }
 
@@ -147,7 +150,6 @@
    subgrid (below) each row of tiles shares image / title / description / meta tracks, so the title track is only as tall as
    the tallest title in that row and a row of one-line titles has no empty line. Without subgrid, two title lines are reserved. */
 .tile__title {
-  font-size: 28px;
   text-wrap: balance;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -235,10 +237,9 @@
     padding: var(--space-8);
   }
   .tile--feature .tile__title {
-    font-size: 44px;
-  }
-  .tile--feature .tile__word {
-    font-size: clamp(64px, 7vw, 96px);
+    font-size: var(--type-title-size);
+    line-height: var(--type-title-line);
+    letter-spacing: var(--type-title-tracking);
   }
 }
 
@@ -292,7 +293,9 @@
     justify-content: flex-start;
   }
   .tile--feature .tile__title {
-    font-size: 36px;
+    font-size: var(--type-title-size);
+    line-height: var(--type-title-line);
+    letter-spacing: var(--type-title-tracking);
   }
   .tile--feature .tile__meta,
   .tile--feature .tile__desc {

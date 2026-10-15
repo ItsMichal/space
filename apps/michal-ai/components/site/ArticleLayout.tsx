@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import Link from 'next/link'
+import Link from '@/lib/nav'
 import { ArrowUpRight } from 'lucide-react'
 import type { GalleryItem, PostLink } from '@/lib/content/types'
 import { Zoomable } from '@/components/media/Zoomable'
@@ -7,7 +7,11 @@ import { Lightbox } from '@/components/media/Lightbox'
 import { Gallery } from '@/components/ui/Gallery'
 import { FactRows } from '@/components/ui/FactRows'
 import { ReadingToc } from '@/components/ui/ReadingToc'
+import { OtherSiteAnchor } from '@/components/content/OtherSiteLink'
 import './reading.css'
+
+/** A project link; `other` marks the link to the paired piece on the other site (label is that site's title). Set at render time, never in frontmatter. */
+export type LayoutLink = PostLink & { other?: boolean }
 
 type Props = {
   title: string
@@ -21,7 +25,7 @@ type Props = {
   coverFocus?: string
   role?: string
   years?: string
-  links?: PostLink[]
+  links?: LayoutLink[]
   gallery?: GalleryItem[]
   kind: 'project' | 'article'
   back?: { href: string; label: string; series?: string }
@@ -59,25 +63,25 @@ export function ArticleLayout({
   // "Web" is a category, not a stack item: it never leads a spec line.
   const stack = tags.filter((t) => t !== 'Web')
   return (
-    <article data-post className="reading">
+    <article data-post data-reading-minutes={readingMinutes} className="reading">
       <header className="reading__head">
         {back ? (
-          <p className="mb-space-4 font-serif text-[16px] text-ink-muted">
+          <p className="mb-space-4 font-serif text-small text-ink-muted">
             <Link href={back.href} className="link inline-flex min-h-[44px] items-center">
               {back.label}
             </Link>
             {back.series ? ` · ${back.series}` : ''} · {readingMinutes} min read
           </p>
         ) : (
-          <p className="mb-space-4 font-serif text-[16px] text-ink-muted">
+          <p className="mb-space-4 font-serif text-small text-ink-muted">
             {kind === 'project' ? 'Project' : 'Article'} · {readingMinutes} min read
           </p>
         )}
-        <h1 className="font-display text-[clamp(46px,13vw,60px)] font-normal leading-none tracking-[-0.02em] md:text-display">
+        <h1 className="font-display text-title">
           {title}
         </h1>
         <p className="lede mt-space-6 max-w-[40ch]">{description}</p>
-        <p className="mt-space-6 font-serif text-[16px] italic text-ink-muted">
+        <p className="mt-space-6 font-serif text-small italic text-ink-muted">
           <time dateTime={date}>{fmt(date)}</time>
           {updated && updated !== date ? (
             <>
@@ -87,6 +91,8 @@ export function ArticleLayout({
           ) : null}
           {stack.length ? ` · ${stack.join(' · ')}` : null}
         </p>
+        {/* The page's end of the card-to-page transition: the card surface opens into this box (CardTransitions). */}
+        <span aria-hidden className="reading__surface" />
       </header>
       {cover ? (
         <figure className="hero reading__wide">
@@ -112,12 +118,16 @@ export function ArticleLayout({
               ? [
                   {
                     label: 'Links',
-                    value: links.map((l) => (
-                      <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer">
-                        {l.label}
-                        <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
-                      </a>
-                    )),
+                    value: links.map((l) =>
+                      l.other ? (
+                        <OtherSiteAnchor key={l.href} href={l.href} title={l.label} />
+                      ) : (
+                        <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer">
+                          {l.label}
+                          <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
+                        </a>
+                      )
+                    ),
                   },
                 ]
               : []),

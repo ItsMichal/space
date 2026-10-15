@@ -1,6 +1,7 @@
 // halmic behaviour: live/offline state from /api/live, bar meters (the logotype's bars as a level meter),
 // click-to-load video (youtube-nocookie only after interaction) and Twitch clips, played in place inside their card. No dependencies.
 // Testing override: ?live=1 (or ?live=0) forces the state and skips the fetch; with ?live=1 you can add &game=Name.
+// Clips are inserted before the Twitch tile, inside the Twitch cluster.
 // ?clips=demo swaps in six fake clips (local video thumbnails, stand-in game art) and skips the fetch (layout testing; the embed will not load a real clip);
 // the first four demo clips use real clip ids, so their hover previews (public/previews/clip-<id>) play; &n=3 shows only three, ?clips=none none (the Watch bento then holds videos only).
 (() => {
@@ -9,11 +10,21 @@
   const override = params.get('live');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const LEAN = 13;
+  const still = () => reduce || root.dataset.motion === '0';   // ?motion=0 is the test override that switches motion off
 
   // ---- live state: the page is offline until the status endpoint says otherwise ----
   const settle = () => { if (reduce) meters.forEach((m) => { for (let s = 0; s < 40; s++) tick(m, 3, 1 / 20); }); };
+  // a flip of the live state: the status pill springs once and the meter bars kick (the bars' own springs do the rest)
+  function flip() {
+    if (still()) return;
+    const pill = document.querySelector('.status');
+    if (pill) { pill.classList.remove('flip'); void pill.offsetWidth; pill.classList.add('flip'); pill.addEventListener('animationend', () => pill.classList.remove('flip'), { once: true }); }
+    meters.forEach((m) => { const w = m.el.clientWidth; m.kick = [...m.kick, ...[0.15, 0.5, 0.85].map((f) => ({ x: w * f, s: 0.9 }))].slice(-6); });
+  }
   function setLive(on, game) {
+    const before = root.dataset.live;
     root.dataset.live = on ? '1' : '0';
+    if (before !== root.dataset.live) flip();
     const g = document.querySelector('[data-game]');
     if (g) { g.querySelector('[data-game-name]').textContent = on && game ? game : ''; g.hidden = !(on && game); }
     settle();
@@ -107,6 +118,7 @@
     if (!open) return;
     const { el: cur, orig } = open; open = null;
     cur.replaceWith(orig);   // dropping the iframe stops playback
+    if (!still()) { orig.classList.add('back'); orig.addEventListener('animationend', () => orig.classList.remove('back'), { once: true }); setTimeout(() => orig.classList.remove('back'), 600); }   // the tile comes back with a fade
     refit();
     if (focus) orig.focus({ preventScroll: true });
   }
@@ -121,12 +133,18 @@
     c.addEventListener('click', () => closePlayer());
     return { row, corner: c, first: x };
   }
-  const mkFrame = (src, title, allow) => { const f = el('iframe', 'vframe'); f.src = src; f.title = title; f.allow = allow; f.allowFullscreen = true; return f; };
+  // the iframe stays transparent until it has loaded; meanwhile a disc with a spinner arc shows where the play button was (motion.css), then the iframe fades in
+  const mkFrame = (src, title, allow) => {
+    const f = el('iframe', 'vframe'), l = el('span', 'pload'); l.setAttribute('aria-hidden', 'true'); l.appendChild(el('i'));
+    const ready = () => { f.classList.add('ready'); l.classList.add('done'); setTimeout(() => l.remove(), 500); };
+    f.addEventListener('load', ready, { once: true }); setTimeout(ready, 8000);
+    f.src = src; f.title = title; f.allow = allow; f.allowFullscreen = true; f.loader = l; return f;
+  };
   function playCard(a, src, title, allow, site, siteIcon) {
     closePlayer(false);
     const d = el('div', `${a.className} playing`);
     const m = el('div', 'cm'); const c = controls(a, site, siteIcon);
-    m.append(mkFrame(src, title, allow), c.corner);
+    const fr = mkFrame(src, title, allow); m.append(fr, fr.loader, c.corner);
     const b = a.querySelector('.cb').cloneNode(true);
     b.querySelector('.bt').appendChild(c.row);
     d.append(m, b); a.replaceWith(d);
@@ -138,7 +156,7 @@
     closePlayer(false);
     const d = el('div', 'tile playing');
     const tp = el('div', 'tp'); const c = controls(a, site, siteIcon);
-    tp.append(mkFrame(src, title, allow), c.corner);
+    const fr = mkFrame(src, title, allow); tp.append(fr, fr.loader, c.corner);
     const pb = el('div', 'pb'); pb.append(el('h3', 'tt', a.querySelector('.tt')?.textContent ?? title), c.row);
     d.append(tp, pb); a.replaceWith(d);
     open = { el: d, orig: a };
@@ -163,7 +181,8 @@
       closePlayer(false);
       const d = el('div', `${a.className} playing`);
       const th = el('span', 'thumb'); const c = controls(a, 'YouTube', 'b-youtube');
-      th.append(mkFrame(`https://www.youtube-nocookie.com/embed/${a.dataset.vid}?autoplay=1&rel=0`, a.dataset.title, 'autoplay; encrypted-media; picture-in-picture'), c.corner);
+      const fr = mkFrame(`https://www.youtube-nocookie.com/embed/${a.dataset.vid}?autoplay=1&rel=0`, a.dataset.title, 'autoplay; encrypted-media; picture-in-picture');
+      th.append(fr, fr.loader, c.corner);
       const parts = [th];
       if (a.querySelector('.vt')) parts.push(el('span', 'vt', a.dataset.title));
       parts.push(c.row);
@@ -187,7 +206,7 @@
     cancelAnimationFrame(raf);
     video.classList.remove('on'); bar.remove();
     const drop = () => { video.pause(); video.removeAttribute('src'); video.replaceChildren(); video.load(); video.remove(); };   // free the decoder and the buffered data
-    if (now) drop(); else setTimeout(drop, 170);
+    if (now) drop(); else setTimeout(drop, 210);   // after the fade-out (--t2)
     tile.removeAttribute('data-pv');
   }
   async function pvStart(tile) {
@@ -237,7 +256,7 @@
     }
   }
 
-  // ---- bentos: the one tile marked data-flex gets the width that fills the bento's last row. The column count is the bento's own (--cols, set by a container query). ----
+  // ---- clusters: the one tile marked data-flex gets the width that fills its cluster's last row. The column count is the bento's own (--cols, set by a container query). ----
   const spanOf = (v) => +(/span (\d+)/.exec(v)?.[1] ?? 1);
   function fit(b) {
     const flex = b.querySelector(':scope > [data-flex]');
@@ -249,7 +268,7 @@
   }
   const bentos = [...document.querySelectorAll('.bento')];
   let refitQueued = false;
-  function refit() { if (refitQueued) return; refitQueued = true; requestAnimationFrame(() => { refitQueued = false; bentos.forEach(fit); }); }
+  function refit() { if (refitQueued) return; refitQueued = true; requestAnimationFrame(() => { refitQueued = false; document.querySelectorAll('.cl').forEach(fit); }); }
   if (bentos.length) { const ro = new ResizeObserver(refit); bentos.forEach((b) => ro.observe(b)); refit(); }
 
   // ---- the Twitch tile: "Live now" comes from the same data-live the hero uses; the game name is copied from the hero's status text, no second fetch ----
@@ -271,6 +290,7 @@
     const bg = el('span', 'tbg'), img = el('img');
     img.src = c.thumb; img.width = 640; img.height = 360; img.loading = 'lazy'; img.decoding = 'async'; img.alt = '';
     img.addEventListener('error', () => { img.remove(); a.classList.add('tm-nopic'); bg.appendChild(icon('scissors', 'ghost')); });   // no thumbnail: the dark tile with the scissors
+    img.addEventListener('load', () => img.classList.add('ld'), { once: true });   // the picture fades in once it is there (motion.css, .clip-in)
     bg.appendChild(img);
     const chip = el('span', 'chip'); chip.append(icon(wide ? 'clock' : 'play'), el('span', '', mmss(c.duration)));
     a.append(bg, bdg(), chip);
@@ -288,7 +308,12 @@
   function renderClips(clips) {
     closePlayer();
     document.querySelectorAll('[data-clipcard]').forEach((n) => n.remove());
-    clips.forEach((c, i) => { const at = document.querySelector(`[data-cs~="${i}"]`) ?? twitchTile; at.before(clipTile(c, i)); });
+    const fresh = clips.map((c, i) => clipTile(c, i));
+    if (!still() && fresh.length) {   // swap without a blink: content fades in, staggered; the platform badge pops
+      fresh.forEach((t, i) => { t.classList.add('clip-in'); t.style.setProperty('--d', `${i * 70}ms`); });
+      setTimeout(() => fresh.forEach((t) => { t.classList.remove('clip-in'); t.style.removeProperty('--d'); }), 1500 + fresh.length * 70);
+    }
+    fresh.forEach((t) => twitchTile.before(t));
     refit();
   }
   if (twitchTile) {

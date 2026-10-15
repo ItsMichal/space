@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/lib/nav'
 import { siteConfig } from '@/site.config'
 import { profile } from '@/content/profile'
 import { SiteMark } from './SiteMark'
@@ -13,7 +13,7 @@ export function Footer() {
           <Link href="/" aria-label="Home" className="rounded-sm">
             <SiteMark height={24} />
           </Link>
-          <span className="font-serif text-meta text-ink-muted">
+          <span className="font-serif text-small text-ink-muted">
             © {new Date().getFullYear()} {profile.name}
           </span>
         </div>
@@ -24,12 +24,13 @@ export function Footer() {
           <a className={linkCls} href={siteConfig.linkedin} target="_blank" rel="noreferrer">
             LinkedIn
           </a>
-          <a className={linkCls} href="/BodzianowskiResume.pdf" target="_blank" rel="noreferrer">
+          <Link className={linkCls} href="/resume">
             Resume
-          </a>
+          </Link>
         </nav>
       </div>
       <p className="t-meta mt-space-4 px-space-2">Starlink image: Starlink / SpaceX.</p>
+      <p className="t-meta mt-space-2 px-space-2">Globe satellite positions: orbit data from CelesTrak supplemental GP, derived from SpaceX public ephemerides.</p>
     </footer>
   )
 }

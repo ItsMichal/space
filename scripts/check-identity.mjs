@@ -4,6 +4,8 @@
 //   HARD (exit 1): nothing that ships on halmic.com may contain the owner's real name or the portfolio domain.
 //     Scanned: everything under apps/halmic (source, content, public files, build output such as dist/ and
 //     .open-next/) EXCEPT docs/, README*, node_modules, .wrangler, caches. Patterns: scripts/identity-denylist.txt.
+//     Exception, by construction: the logo switcher and the paired-content links (packages/crosslinks) may print the portfolio
+//     domain, only in the exact strings, files and counts built by scripts/identity-lib.mjs. Anything else still fails.
 //   SOFT (warning only): the portfolio's shipped copy/metadata mentioning "halmic". Allowlist:
 //     scripts/identity-allowlist.txt. The tie between the two identities is accepted; this just keeps the
 //     portfolio from advertising it by accident.
@@ -11,6 +13,8 @@
 // Run from anywhere: node scripts/check-identity.mjs   (also: npm run check:identity)
 import fs from 'node:fs'
 import path from 'node:path'
+import { readMichalPosts } from '../packages/crosslinks/src/node.mjs'
+import { halmicAllowances, scanContent } from './identity-lib.mjs'
 
 const root = path.resolve(import.meta.dirname, '..')
 const rel = (p) => path.relative(root, p).split(path.sep).join('/')
@@ -22,7 +26,7 @@ const readLines = (f) =>
     .map((l) => l.trim())
     .filter((l) => l && !l.startsWith('#'))
 
-const SKIP_DIRS = new Set(['node_modules', '.git', '.wrangler', '.next', '.turbo', '.cache', 'docs'])
+const SKIP_DIRS = new Set(['node_modules', '.git', '.wrangler', '.next', 'build', '.react-router', '.parity', '.turbo', '.cache', 'docs'])
 const TEXT_EXT = /\.(html?|css|js|mjs|cjs|jsx|ts|tsx|json|jsonc|md|mdx|txt|xml|svg|webmanifest|toml|ya?ml|map|csv)$/i
 
 function* walk(dir, { skip = SKIP_DIRS, skipFile = () => false } = {}) {
@@ -48,16 +52,10 @@ const globToRe = (g) =>
       '$'
   )
 
-function scan(files, patterns) {
+function scan(files, patterns, allowancesFor = () => []) {
   const hits = []
   for (const f of files) {
-    const lines = fs.readFileSync(f, 'utf8').split('\n')
-    lines.forEach((line, i) => {
-      for (const re of patterns) {
-        const m = line.match(re)
-        if (m) hits.push({ file: rel(f), line: i + 1, match: m[0] })
-      }
-    })
+    for (const h of scanContent(fs.readFileSync(f, 'utf8'), patterns, allowancesFor(rel(f)))) hits.push({ file: rel(f), ...h })
   }
   return hits
 }
@@ -70,7 +68,8 @@ const deny = readLines('identity-denylist.txt').map((p) => new RegExp(p, 'i'))
 const isReadme = (p) => /^README(\..*)?$/i.test(path.basename(p))
 // The halmic sync script keeps its own copy of the denylist (it must contain the patterns it blocks); it is never served.
 const EXEMPT = new Set(['apps/halmic/content/identity-denylist.txt'])
-const hard = scan(walk(halmicDir, { skipFile: (p) => isReadme(p) || EXEMPT.has(rel(p)) }), deny)
+const posts = readMichalPosts(root)
+const hard = scan(walk(halmicDir, { skipFile: (p) => isReadme(p) || EXEMPT.has(rel(p)) }), deny, (r) => halmicAllowances(r, posts))
 if (hard.length) {
   failed = true
   console.error(`FAIL: ${hard.length} real-name/portfolio reference(s) in apps/halmic:`)

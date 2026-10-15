@@ -1,17 +1,17 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import Link from '@/lib/nav'
+import { usePathname } from '@/lib/nav'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { GlassEffectContainer, GlassFold, GlassFoldItem, glass, useGlassNamespace } from '@/components/glass'
 import { StatusSlot } from '@/components/ui/StatusPill'
-import { SiteMark } from './SiteMark'
+import { OtherSiteRow, SiteSwitcher } from './SiteSwitcher'
 import type { MenuPreview } from '@/lib/menu'
 
 const links = [
   { label: 'Work', href: '/projects', match: '/projects' },
   { label: 'Writing', href: '/writing', match: '/writing' },
-  { label: 'About', href: '/#about', match: null },
+  { label: 'About', href: '/about', match: '/about' },
 ]
 
 function MenuIcon({ open }: { open: boolean }) {
@@ -85,7 +85,7 @@ export function NavBar({ previews }: { previews?: { work: MenuPreview[]; writing
       engine={NAV_GLASS}
       as="header"
       spacing={16}
-      className="pointer-events-none fixed inset-x-0 z-50 flex flex-col items-center gap-[10px] [overflow-x:clip]"
+      className="nav-glass pointer-events-none fixed inset-x-0 z-50 flex flex-col items-center gap-[10px] [overflow-x:clip]"
       style={{
         top: 'calc(env(safe-area-inset-top, 0px) + 12px)',
         paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))',
@@ -110,12 +110,7 @@ export function NavBar({ previews }: { previews?: { work: MenuPreview[]; writing
           panelClassName="sheet-scroll flex flex-col px-space-4 pb-space-3 pt-space-1 sm:hidden"
           header={
             <>
-              <Link href="/" aria-label="michal.ai, home" className="flex min-h-[44px] items-center gap-space-2 rounded-sm text-ink" onClick={close}>
-                <SiteMark height={18} />
-                <span className="font-display text-[21px] leading-none tracking-[-0.005em]" aria-hidden>
-                  michal.ai
-                </span>
-              </Link>
+              <SiteSwitcher onHome={close} />
               <ul className="m-0 hidden list-none items-center gap-space-6 p-0 sm:flex">
                 {links.map((l) => (
                   <li key={l.href}>
@@ -149,7 +144,7 @@ export function NavBar({ previews }: { previews?: { work: MenuPreview[]; writing
                     href={l.href}
                     onClick={close}
                     aria-current={l.match && pathname.startsWith(l.match) ? 'page' : undefined}
-                    className={`${linkClass(!!l.match && pathname.startsWith(l.match))} sheet-row min-h-[52px] w-full !text-ink font-display text-[28px] leading-none tracking-[-0.01em]`}
+                    className={`${linkClass(!!l.match && pathname.startsWith(l.match))} sheet-row min-h-[52px] w-full !text-ink font-display text-heading`}
                   >
                     {l.label}
                   </Link>
@@ -161,7 +156,6 @@ export function NavBar({ previews }: { previews?: { work: MenuPreview[]; writing
                         <Link href={r.href} onClick={close} className="sheet-prow">
                           <span className="sheet-prow__tile" style={{ backgroundColor: r.tint, backgroundImage: r.thumb ? `url(${r.thumb.lqip})` : undefined }} aria-hidden>
                             {r.thumb ? (
-                              // eslint-disable-next-line @next/next/no-img-element
                               <img src={r.thumb.src} alt="" width={44} height={44} loading="lazy" decoding="async" />
                             ) : null}
                           </span>
@@ -177,6 +171,9 @@ export function NavBar({ previews }: { previews?: { work: MenuPreview[]; writing
               </div>
             )
           })}
+          <GlassFoldItem index={5} as="div">
+            <OtherSiteRow />
+          </GlassFoldItem>
         </GlassFold>
       </div>
     </GlassEffectContainer>

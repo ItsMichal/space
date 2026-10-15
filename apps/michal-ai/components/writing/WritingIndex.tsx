@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/lib/nav'
 import type { Post } from '@/lib/content/types'
 import type { SeriesGroup } from '@/lib/content'
 import { ProjectCard } from '@/components/work/Showcase'

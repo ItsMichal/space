@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import Link from '@/lib/nav'
 import { ArrowUpRight } from 'lucide-react'
 import { Fragment, useEffect, useReducer, useRef, useState } from 'react'
 import { setHeroIndex } from '@/lib/hero/store'

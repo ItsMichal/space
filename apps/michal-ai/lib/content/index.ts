@@ -1,35 +1,15 @@
-// Build-time only: reads the filesystem. Never call from a request-time code path
-// (Workers have no fs). Use from generateStaticParams / statically rendered pages.
-import fs from 'node:fs'
-import path from 'node:path'
-import { parsePost } from './serialize'
+// Content queries. The data comes from ./source: it reads content/posts at build time on the server; the browser build swaps in
+// ./source.client (a registry the root loader fills, see vite.config.ts), so the same query code runs in both places.
+import { loadPosts } from './source'
+export { registerPosts } from './source'
 import type { Post, PostKind } from './types'
 
 export * from './types'
 
-const POSTS_DIR = path.join(process.cwd(), 'content', 'posts')
-
-function readPost(file: string): Post {
-  const raw = fs.readFileSync(path.join(POSTS_DIR, file), 'utf8')
-  const { frontmatter, body } = parsePost(raw, file.replace(/\.md$/, ''))
-  const words = body.split(/\s+/).filter(Boolean).length
-  return { ...frontmatter, body, readingMinutes: Math.max(1, Math.round(words / 220)) }
-}
-
 export function getAllPosts({ includeDrafts = false }: { includeDrafts?: boolean } = {}): Post[] {
-  if (!fs.existsSync(POSTS_DIR)) return []
-  return fs
-    .readdirSync(POSTS_DIR)
-    .filter((f) => f.endsWith('.md'))
-    .map(readPost)
-    .filter((p) => includeDrafts || !p.draft)
-    .sort(
-      (a, b) =>
-        Number(Boolean(a.minor)) - Number(Boolean(b.minor)) ||
-        (b.priority ?? 0) - (a.priority ?? 0) ||
-        b.date.localeCompare(a.date)
-    )
+  return loadPosts(includeDrafts)
 }
+
 
 export function getPost(slug: string, opts: { includeDrafts?: boolean } = {}): Post | undefined {
   return getAllPosts(opts).find((p) => p.slug === slug)

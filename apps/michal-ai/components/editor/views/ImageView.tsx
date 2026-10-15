@@ -9,7 +9,6 @@ export function ImageView({ node, updateAttributes, deleteNode, selected }: Node
   return (
     <NodeViewWrapper as="figure" className={`ed-figure${selected ? ' is-selected' : ''}`}>
       <div className="ed-figure__media" contentEditable={false} data-drag-handle>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={src} alt={alt ?? ''} draggable={false} />
         <button type="button" className="ed-figure__remove" title="Remove image" aria-label="Remove image" onClick={deleteNode}>
           <Trash2 size={16} strokeWidth={1.5} />

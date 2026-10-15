@@ -1,7 +1,7 @@
 'use client'
 import { EditorContent, useEditor } from '@tiptap/react'
 import { ArrowLeft, Eye, Focus, PanelRight, TriangleAlert } from 'lucide-react'
-import Link from 'next/link'
+import Link from '@/lib/nav'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { PostFrontmatter } from '@/lib/content/types'
 import { slugify } from '@/lib/content/serialize'

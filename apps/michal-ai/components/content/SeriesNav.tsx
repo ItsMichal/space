@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/lib/nav'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import type { Post } from '@/lib/content/types'
 import { postPath } from '@/lib/seo'

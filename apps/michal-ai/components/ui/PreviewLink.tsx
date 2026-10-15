@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import Link from '@/lib/nav'
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Glass, glass } from '@/components/glass'
@@ -152,7 +152,6 @@ export function PreviewLink({ href, preview, children }: { href: string; preview
               <Glass as="div" effect={glass.regular} shape={{ cornerRadius: 22 }} className="pv-glass">
                 <Link href={href} tabIndex={-1} className="pv-in" aria-hidden>
                   {preview.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
                     <img className="pv-img" src={preview.image} alt="" loading="lazy" decoding="async" />
                   ) : null}
                   <span className="pv-txt">

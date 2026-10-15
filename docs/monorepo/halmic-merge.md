@@ -1,5 +1,7 @@
 # Bringing `halmic-site` into the monorepo
 
+> Historical: the merge described here is done (halmic lives in `apps/halmic`). Kept as a record; the commands will not apply to the current tree.
+
 `halmic-site` was cut from the old single-app layout and keeps everything under a top-level `halmic/` folder
 (`halmic/site`, `halmic/brand`, `halmic/docs`, `halmic/scripts`, `halmic/content`). Its merge base is the pre-release-2
 `overhaul` commit `d30cbd2`; it touches nothing outside `halmic/`, so the merge is mechanical.

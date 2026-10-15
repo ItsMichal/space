@@ -1,6 +1,6 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
+import { usePathname } from '@/lib/nav'
 import { useEffect, useRef, useState } from 'react'
 import { createSpring, isSettled } from '@space/motion/spring'
 import { BACKDROP_FRAG, BACKDROP_VERT } from './shaders'

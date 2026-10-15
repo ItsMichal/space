@@ -556,6 +556,7 @@ export class Field {
     fgDark: [0.922, 0.906, 0.855, 1] as RGBA,
     blur: 10,
     sat: 1.6,
+    backdrop: '',
     refraction: 36,
     pageLum: 0.9,
     themeDark: 0,
@@ -908,6 +909,9 @@ export class Field {
     c.blur = this.opts.blur ?? (c.themeDark ? cssNumber(h, '--glass-blur-dark', blurLight) : blurLight)
     c.sat = this.opts.saturate ?? (c.themeDark ? cssNumber(h, '--glass-saturate-dark', satLight) : satLight)
     c.refraction = this.opts.refraction ?? cssNumber(h, '--glass-refraction', 36)
+    // optional extra backdrop-filter functions for the frost path, e.g. "brightness(1.1) contrast(.8)": a luminance clamp
+    // that lets a low tint stay legible over very dark or very bright content. Empty (the default) adds nothing.
+    c.backdrop = getComputedStyle(h).getPropertyValue('--glass-backdrop').trim()
   }
 
   /** Returns true to keep the field in the active set. */
@@ -1146,7 +1150,7 @@ export class Field {
     stats.surfacePx = wpx * hpx
 
     // ---- frost boxes (frost mode): backdrop blur per member, under the canvas
-    if (this.mode === 'frost') this.updateFrost(shapes, c.blur, c.sat)
+    if (this.mode === 'frost') this.updateFrost(shapes, c.blur, c.sat, c.backdrop)
 
     // ---- displacement map (svg mode): rendered at most every MAP_INTERVAL ms, read back asynchronously
     if (this.mode === 'svg' && this.fx && this.feImage && this.mapCanvas && this.mctx && this.filterEl) {
@@ -1306,7 +1310,7 @@ export class Field {
     return shapes.every((s) => s.clear > 0.5)
   }
 
-  private updateFrost(shapes: ShapeState[], blur: number, sat: number) {
+  private updateFrost(shapes: ShapeState[], blur: number, sat: number, extra: string) {
     const layer = this.layer!
     const live = new Set<HTMLElement>()
     for (const s of shapes) {
@@ -1326,7 +1330,7 @@ export class Field {
       fr.style.borderRadius = `${Math.max(s.r.x, 0)}px`
       fr.style.opacity = String(clamp(s.mat.x, 0, 1))
       const b = s.clear > 0.5 ? blur * 0.25 : blur
-      const f = `blur(${b}px) saturate(${s.clear > 0.5 ? 1.15 : sat})`
+      const f = `blur(${b}px) saturate(${s.clear > 0.5 ? 1.15 : sat})${extra && s.clear <= 0.5 ? ' ' + extra : ''}`
       if (fr.style.backdropFilter !== f) {
         fr.style.backdropFilter = f
         fr.style.setProperty('-webkit-backdrop-filter', f)

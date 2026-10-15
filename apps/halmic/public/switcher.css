@@ -1,0 +1,49 @@
+/* Logo switcher: the h mark with a small menu under it, plus the same row in the footer for touch screens and one link on
+   paired pages. Dark surface, Halmic Text. Hover-capable wide screens: a dropdown with the portfolio row, open on hover (120ms in,
+   150ms out) or keyboard focus inside. Phones and touch (hover: none, or 640px and narrower): the menu is a pill that slides out of
+   the mark over the nav (Home, then the portfolio row); switcher.js opens it on the first tap (aria-expanded, data-open) and
+   closes it on a second tap, a tap elsewhere, scroll or Escape. Escape also sets data-dismissed. The closed menu is only
+   transparent, never display:none or visibility:hidden, so its links stay focusable and in the accessibility tree. */
+.xs { position: relative; align-self: stretch; display: flex; align-items: center; }
+.xs-logo { display: flex; align-items: center; min-height: 44px; }
+.xs-menu { position: absolute; z-index: 6; left: -10px; top: 100%; margin: 0; padding: 4px 0 0; list-style: none; opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity var(--t1) var(--ease) .15s, transform var(--t1) var(--ease) .15s; }
+.xs-menu li { background: var(--ink-2); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 12px 32px -8px #000a; }
+.xs-hl { display: none; }
+.xs-row, .xs-home { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 16px 0 14px; border-radius: 14px; white-space: nowrap; color: var(--mute); font: 600 15px/1 var(--sans); transition: color var(--t2) var(--ease); }
+.xs-row:hover, .xs-row:focus-visible, .xs-home:hover, .xs-home:focus-visible { color: var(--text); }
+.xs-row:focus-visible, .xs-home:focus-visible { outline-offset: -2px; }
+.xs-mark { height: 14px; width: auto; fill: currentColor; flex: none; }
+.xs-go { font-style: normal; font-size: 13px; opacity: .6; }
+@media (hover: hover) and (pointer: fine) {
+  .xs:hover:not([data-dismissed]) .xs-menu { opacity: 1; transform: none; pointer-events: auto; transition-delay: .12s; }
+}
+.xs:has(:focus-visible):not([data-dismissed]) .xs-menu { opacity: 1; transform: none; pointer-events: auto; transition-delay: 0s; }
+@media (prefers-reduced-motion: reduce) { .xs-menu { transform: none; transition: none; } }
+
+/* pill: slides out of the mark, over the nav (nothing in the header moves) */
+@media (hover: none), (max-width: 640px) {
+  .xs-logo { padding-inline: 8px; margin-inline: -8px; }
+  .xs-hl { display: block; }
+  .xs-menu { display: flex; left: calc(100% + 2px); top: 50%; padding: 0; background: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; box-shadow: 0 12px 32px -8px #000c; opacity: 0; transform: translate(-14px, -50%) scale(.92); transform-origin: 0 50%; clip-path: inset(0 100% 0 0 round 999px); transition: opacity var(--t1) var(--ease), transform var(--t3) var(--spring), clip-path var(--t3) var(--spring); }
+  .xs-menu li { background: none; border: 0; border-radius: 0; box-shadow: none; }
+  .xs-row, .xs-home { border-radius: 999px; padding: 0 14px 0 12px; gap: 8px; color: var(--text); }
+  .xs-home { padding-left: 14px; }
+  .xs-home .ic { font-size: 14px; }
+  .xs:not([data-dismissed]):has(:focus-visible) .xs-menu, .xs[data-open] .xs-menu { opacity: 1; transform: translate(0, -50%); clip-path: inset(0 0 0 0 round 999px); pointer-events: auto; transition-delay: 0s; }
+  .xs:hover:not([data-open]) .xs-menu { opacity: 0; pointer-events: none; }
+}
+@media (hover: hover) and (pointer: fine) and (max-width: 640px) {
+  .xs:hover:not([data-dismissed]) .xs-menu { opacity: 1; transform: translate(0, -50%); clip-path: inset(0 0 0 0 round 999px); pointer-events: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .xs-menu { transition: none !important; } }
+
+/* touch fallback: the last link in the footer, shown only where there is no hover */
+.foot .links a.xs-foot { display: inline-flex; align-items: center; gap: 8px; }
+.foot .links a.xs-foot .xs-mark { height: 12px; }
+@media (hover: hover) and (pointer: fine) { .foot .links a.xs-foot { display: none; } }
+
+/* the link on a paired page */
+.pg p.xl { margin: var(--s2) 0 0; }
+.pg p.xl a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--mute); text-decoration: none; }
+.pg p.xl a:hover { color: var(--text); text-decoration: underline; text-decoration-color: #ffffff44; }
+.pg p.xl .xs-mark { height: 12px; }

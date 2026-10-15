@@ -1,37 +1,61 @@
-/* Type roles. One display face (Michelangelus) for titles, ONE text face (Newsreader) for everything else: descriptions,
-   meta lines, UI. Mono only for code. Two weights (400, 500), six sizes, no synthetic bold or italic.
-   The same hierarchy discipline as apple.com: few sizes, one family doing most of the work.
+/* Type roles. One display face (Michelangelus) for titles and headings, ONE text face (Newsreader) for everything else:
+   descriptions, meta lines, UI. Mono only for code. Two weights (400, 500), four sizes, no synthetic bold or italic.
+   The same hierarchy discipline as apple.com: few sizes, one family doing most of the work. The sizes are tokens
+   (docs/design-system/tokens.json, generated into tokens.css; rules in docs/design-system/type-scale.md). Phones step the
+   same tokens down, so nothing here has a media query for type. scripts/check-type.mjs fails on any other font size.
 
-     role      face      size / line     weight  colour
-     title     display   24 / 1.15       400     ink
-     text      Newsreader 17 / 25        400     ink-muted
-     meta      Newsreader 15 / 22        400     ink-muted
-     ui        Newsreader 16 / 24        500     ink
-   (page titles and section heads use the display scale in tokens: 60, 44, 30)
+     role      token    face       desktop / phone    weight  colour
+     title     title    display    44 / 34            400     ink            section and page headings, article title
+     heading   heading  display    24 / 21            400     ink            card headings, tile and row titles, article h2
+     text      body     Newsreader 18 / 17            400     ink-muted      paragraphs, descriptions, list rows
+     ui        body     Newsreader 18 / 17            500     ink            item titles inside a card, nav, buttons
+     meta      small    Newsreader 15                 400     ink-muted      dates, years, roles, venue lines, captions
+
+   Item titles: a card's heading is `heading`; the title of one item inside a card or list (employer, publication, post row,
+   hackathon, press, prev/next step) is `ui` (body at 500). A tile that is itself the card titles itself with `heading`.
 
    Project rows (home, /projects lists) and writing rows are the same style: they share the rules below. */
-.t-title,
-.prow__title,
-.wrt__title,
+.t-title {
+  font-family: var(--font-display);
+  font-size: var(--type-title-size);
+  line-height: var(--type-title-line);
+  font-weight: var(--type-title-weight);
+  letter-spacing: var(--type-title-tracking);
+}
+.t-heading,
 .wseries__name {
-  font: 400 24px/1.15 var(--font-display);
-  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  font-size: var(--type-heading-size);
+  line-height: var(--type-heading-line);
+  font-weight: var(--type-heading-weight);
+  letter-spacing: var(--type-heading-tracking);
 }
 .t-text,
 .prow__desc,
 .wrt__desc {
-  font: 400 17px/25px var(--font-serif);
+  font-family: var(--font-serif);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line);
+  font-weight: var(--type-body-weight);
   color: var(--ink-muted);
+}
+.t-ui,
+.prow__title,
+.wrt__title {
+  font-family: var(--font-serif);
+  font-size: var(--type-body-strong-size);
+  line-height: var(--type-body-strong-line);
+  font-weight: var(--type-body-strong-weight);
 }
 .t-meta,
 .prow__meta,
 .wrt__date,
 .wseries__meta {
-  font: 400 15px/22px var(--font-serif);
+  font-family: var(--font-serif);
+  font-size: var(--type-small-size);
+  line-height: var(--type-small-line);
+  font-weight: var(--type-small-weight);
   color: var(--ink-muted);
-}
-.t-ui {
-  font: 500 16px/24px var(--font-serif);
 }
 
 /* ---------- Rows: one component's worth of style for projects and writing ---------- */

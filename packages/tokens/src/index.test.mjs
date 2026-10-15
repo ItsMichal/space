@@ -24,3 +24,13 @@ test('emits light and dark values', () => {
 test('rejects malformed tokens', () => {
   assert.throws(() => validateTokens({}), /color\.tokens/)
 })
+
+test('emits a phone step-down block only for styles that have one', () => {
+  const t = structuredClone(sample)
+  assert.doesNotMatch(tokensToCss(t), /max-width: 767px/)
+  t.type.groups[0].styles.push({ name: 'title', fontSize: '44px', fontSizeMobile: '34px', lineHeight: 1.1, lineHeightMobile: 1.2, fontWeight: 400 })
+  const css = tokensToCss(t)
+  assert.match(css, /--type-title-size: 44px;/)
+  assert.match(css, /@media \(max-width: 767px\) \{\n {2}:root \{\n {4}--type-title-size: 34px;\n {4}--type-title-line: 1.2;/)
+  assert.doesNotMatch(css.split('max-width: 767px')[1], /--type-body/)
+})

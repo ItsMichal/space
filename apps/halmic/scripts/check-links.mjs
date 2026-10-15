@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { homeStats } from '../stats.mjs';
 const pub = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
 const SITE = 'https://halmic.com';
 const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]));
@@ -49,7 +50,7 @@ if (/\b(clip|video)\b/i.test([...home.matchAll(/<span class="chip">[\s\S]*?<\/sp
 for (const m of home.matchAll(/<span class="bdg[^>]*>/g)) if (!/role="img"/.test(m[0]) || !/aria-label="[^"]+"/.test(m[0])) bad.push(`index.html: badge without an accessible name ${m[0].slice(0, 70)}`);
 for (const [id, name] of [['tw', 'Twitch'], ['yt', 'YouTube']]) if (!new RegExp(`class="bdg bdg-${id}" role="img" aria-label="${name}"`).test(home)) bad.push(`index.html: no ${name} badge`);
 for (const [kind, href, extra] of [['tw', 'https://www.twitch.tv/halmictv', 'id="twitch"'], ['yt', 'https://www.youtube.com/@halmic', ''], ['itch', 'https://halmic.itch.io/', ''], ['x', 'https://x.com/halmicc', 'id="hi"'], ['rd', 'https://www.reddit.com/r/pokemonphoenixrising/', ''], ['md', 'https://halmic.medium.com/', '']]) {
-  const m = home.match(new RegExp(`<a class="tile t-link tl-${kind}[^"]*" href="([^"]+)"[^>]*>`));
+  const m = home.match(new RegExp(`<a class="tile t-link tl-${kind}[^"]*" href="([^"]+)"[^>]*${extra ? extra.replace(/"/g, '"') : ''}[^>]*>`)) ?? home.match(new RegExp(`<a class="tile t-link tl-${kind}[^"]*" href="([^"]+)"[^>]*>`)); // the Posts bento has its own link tile for the same network, so look for the tagged one first
   if (!m) bad.push(`index.html: link tile ${kind} missing`);
   else { if (m[1] !== href) bad.push(`index.html: link tile ${kind} points at ${m[1]}`); if (extra && !m[0].includes(extra)) bad.push(`index.html: link tile ${kind} lost ${extra}`); }
 }
@@ -81,7 +82,7 @@ for (const [f, max] of [['reel-poster.jpg', 110], ['reel-poster-m.jpg', 80]]) { 
   const watch = home.slice(home.indexOf('<div class="bento b-watch">'));
   const vids = [...watch.matchAll(/<a class="tile tm ([^"]*)" href="[^"]*" data-vid="([^"]+)" data-title="([^"]*)"/g)];
   if (vids[0]?.[2] !== 'qVEDjNc5Gmg' || vids[1]?.[2] !== 'IIJVKHEtawU') bad.push(`index.html: Special Force 1 and 2 should be the first two Watch tiles (got ${vids.slice(0, 2).map((m) => m[2])})`);
-  for (const m of vids.slice(0, 2)) if (!/\blead w2\b/.test(m[1])) bad.push(`index.html: Special Force tile ${m[2]} should be a 2x2 lead`);
+  if (!/\blead w2\b/.test(vids[0]?.[1] ?? '') || !/\bx4\b/.test(vids[1]?.[1] ?? '')) bad.push('index.html: Special Force 1 should be the 2x2 lead and Special Force 2 its x4 satellite');
   if (!/<h3 class="tt">Special Force: Origins<\/h3>/.test(home) || !/<h3 class="tt">Special Force 2: The Array<\/h3>/.test(home)) bad.push('index.html: clean Special Force titles missing');
   if (!/data-title="SPECIAL FORCE 1 - ORIGINS"/.test(home)) bad.push('index.html: real Special Force title should stay in data-title');
   if (!/<span class="chip kchip">[\s\S]*?<span>Short film<\/span>/.test(watch)) bad.push('index.html: Short film kind chip missing');
@@ -121,21 +122,22 @@ for (const f of walk(mtDir).filter((x) => x.endsWith('.html'))) { const h = fs.r
 {
   const sec = (id) => { const i = home.indexOf(`id="${id}"`); return home.slice(i, home.indexOf('class="bsec"', i + 10) > 0 ? home.indexOf('class="bsec"', i + 10) : undefined); };
   const play = sec('games'), work = sec('work');
-  if (!/^[\s\S]*?<div class="bento b-play"><a class="tile tm lead w2" href="\/work\/project-mountaintop\/"/.test(play)) bad.push('index.html: Project Mountaintop should be the 2x2 lead tile of Play');
+  if (!/<div class="bento b-play"><div class="cl" role="group" aria-label="Project Mountaintop"><a class="tile tm lead w2" href="\/work\/project-mountaintop\/"/.test(play)) bad.push('index.html: Project Mountaintop should be the 2x2 lead tile of Play');
   if (/project-mountaintop\/"[^>]*>/.test(work.replace(/<a class="tile t-stat[^>]*>/g, ''))) bad.push('index.html: Mountaintop tile should not be in Work');
   if (!/<a class="tile t-stat tdim\s+lead w2" href="\/work\/pokemon-phoenix-rising\/"/.test(work) || !/QA developer/.test(work)) bad.push('index.html: Phoenix Rising 2x2 lead with the QA developer role missing from Work');
-  if ((work.match(/data-vid="/g) ?? []).length < 2) bad.push('index.html: Work should carry the Phoenix Rising videos');
+  if (/data-vid="/.test(work)) bad.push('index.html: the Phoenix Rising videos live on its page, not as Work tiles');
+  if (/Episode 1 of the game|>2018</.test(home)) bad.push('index.html: the 2018 stat tile is back');
   if (!/<a class="tile t-link tl-rd[^"]*" href="https:\/\/www\.reddit\.com\/r\/pokemonphoenixrising\/"/.test(work)) bad.push('index.html: subreddit link tile missing from Work');
-  const gamesOrder = [...play.matchAll(/<a class="tile [^"]*" href="([^"]+)"/g)].map((m) => m[1]);
+  const gamesOrder = [...play.matchAll(/<a class="tile [^"]*" href="([^"]+)"/g)].map((m) => m[1]).filter((h) => !h.includes('#logs'));
   if (gamesOrder[1] !== '/games/glass-gunslinger-dod/' || gamesOrder[2] !== '/games/lvasion-du-criminel-de-sa-prison/') bad.push(`index.html: Play order after the lead should be Glass Gunslinger, L'évasion (got ${gamesOrder.slice(1, 3)})`);
   for (const f of walk(pub).filter((x) => /\.(html|txt|xml|js|css)$/.test(x))) if (/discord/i.test(fs.readFileSync(f, 'utf8'))) bad.push(`${path.relative(pub, f)}: mentions Discord`);
   if (/discord/i.test(fs.readFileSync(path.join(pub, 'icons.svg'), 'utf8'))) bad.push('icons.svg: Discord glyph still in the sprite');
   const gi = fs.readFileSync(path.join(pub, 'games/index.html'), 'utf8');
-  if (!/<div class="bento b-play"><a class="tile tm lead w2" href="\/work\/project-mountaintop\/"/.test(gi)) bad.push('games/index.html: Project Mountaintop should be the first tile');
+  if (!/<div class="bento b-play"><div class="cl" role="group" aria-label="Project Mountaintop"><a class="tile tm lead w2" href="\/work\/project-mountaintop\/"/.test(gi)) bad.push('games/index.html: Project Mountaintop should be the first tile');
   const postsJson = JSON.parse(fs.readFileSync(path.join(pub, '..', 'content/posts.json'), 'utf8')).posts;
   if (postsJson.length) {
     if (!home.includes('id="posts"') || !/<h2>Posts<\/h2>/.test(home)) bad.push('index.html: #posts bento missing');
-    for (const p of postsJson) { if (!/^https:\/\/x\.com\/halmicc\/status\/\d+$/.test(p.url) || !home.includes(`href="${p.url}"`)) bad.push(`index.html: post tile ${p.id} missing or wrong url`); if (p.media && (!p.alt || !resolve(`/posts/${p.media}`) || fs.statSync(path.join(pub, 'posts', p.media)).size > 200 * 1024)) bad.push(`posts/${p.media}: missing, no alt, or over 200 KB`); }
+    for (const p of postsJson) { if (!/^https:\/\/x\.com\/[A-Za-z0-9_]+\/status\/\d+$/.test(p.url) || !home.includes(`href="${p.url}"`)) bad.push(`index.html: post tile ${p.id} missing or wrong url`); if (p.media && (!p.alt || !resolve(`/posts/${p.media}`) || fs.statSync(path.join(pub, 'posts', p.media)).size > 200 * 1024)) bad.push(`posts/${p.media}: missing, no alt, or over 200 KB`); }
   } else if (home.includes('id="posts"')) bad.push('index.html: empty #posts bento rendered');
 }
 const games = fs.readFileSync(path.join(pub, 'games/index.html'), 'utf8');
@@ -143,6 +145,67 @@ const gOrder = [...games.matchAll(/<a class="tile [^"]*" href="\/games\/([^/"]+)
 if (gOrder[0] !== 'glass-gunslinger-dod' || gOrder[1] !== 'lvasion-du-criminel-de-sa-prison') bad.push(`games/index.html: featured games should come first (got ${gOrder.slice(0, 2)})`);
 for (const f of ['games/index.html', 'videos/index.html', 'design/index.html']) { const h = fs.readFileSync(path.join(pub, f), 'utf8'); if (/class="[^"]*\b(ey|cb)\b/.test(h)) bad.push(`${f}: eyebrow/card markup on an index page`); if (!/class="bento /.test(h)) bad.push(`${f}: bento expected`); }
 if ((games.match(/class="tile tm lead w2"/g) ?? []).length !== 1) bad.push('games/index.html: expected exactly one lead tile (Project Mountaintop)');
+// clusters: every bento is a stack of .cl groups; projects stay together; year tiles come from the data (years are never typed in build.mjs)
+{
+  const clusters = (h, id) => { const i = h.indexOf(`id="${id}"`); const sec = h.slice(i, h.indexOf('class="bsec"', i + 10) > 0 ? h.indexOf('class="bsec"', i + 10) : undefined); return [...sec.matchAll(/<div class="cl" role="group" aria-label="([^"]*)">([\s\S]*?)(?=<div class="cl"|$)/g)].map((m) => [m[1], m[2]]); };
+  for (const id of ['stream', 'games', 'work', 'elsewhere']) if (/<div class="bento [^"]*">(?!<div class="cl")/.test(home.slice(home.indexOf(`id="${id}"`)).split('class="bsec"')[0])) bad.push(`index.html: #${id} has tiles outside a cluster`);
+  const names = (id) => clusters(home, id).map((c) => c[0]);
+  const same = (id, want) => { const got = names(id).join('|'); if (got !== want.join('|')) bad.push(`index.html: #${id} clusters should be ${want.join(', ')} (got ${names(id).join(', ')})`); };
+  same('stream', ['Special Force', 'FIFA With the Boys', 'More from the channel', 'Twitch clips']);
+  same('games', ['Project Mountaintop', 'Tiny games']);
+  same('work', ['Pokémon Phoenix Rising', 'Southeast Denver Dental']);
+  const yearOf = (h) => [...h.matchAll(/<div class="tile t-stat t-year [^"]*"[^>]*><span class="num"[^>]*><span class="nv">(\d{4})<\/span>/g)].map((m) => +m[1]);
+  const vids = JSON.parse(fs.readFileSync(path.join(pub, '..', 'content/videos.json'), 'utf8')).videos;
+  const yv = (id) => +vids.find((v) => v.id === id).published.slice(0, 4);
+  const cl = (id, name) => clusters(home, id).find((c) => c[0] === name)?.[1] ?? '';
+  if (yearOf(cl('stream', 'Special Force')).join() !== String(Math.min(yv('qVEDjNc5Gmg'), yv('IIJVKHEtawU')))) bad.push('index.html: Special Force year tile does not match the films\' publish dates');
+  if (yearOf(cl('stream', 'FIFA With the Boys')).join() !== String(yv('Nhs4iQcN7-w'))) bad.push('index.html: FIFA year tile does not match the first episode');
+  const mtJson = JSON.parse(fs.readFileSync(path.join(pub, '..', 'content/mountaintop/index.json'), 'utf8'));
+  if (yearOf(cl('games', 'Project Mountaintop')).join() !== String(+mtJson.videoPublished.slice(0, 4))) bad.push('index.html: Mountaintop year tile does not match the content dates');
+  if (yearOf(cl('work', 'Pokémon Phoenix Rising')).length || yearOf(cl('work', 'Southeast Denver Dental')).length) bad.push('index.html: Work has no dated source, so no year tiles');
+  // stat tiles: every number shown is re-derived here from the content files (stats.mjs reads them; the minutes and the engines are also summed independently below) and must match the built tile, in the right cluster
+  {
+    const S = homeStats(), cur = JSON.parse(fs.readFileSync(path.join(pub, '..', 'content/curation.json'), 'utf8')), games = JSON.parse(fs.readFileSync(path.join(pub, '..', 'content/games.json'), 'utf8')).games;
+    const sec = (l) => l.split(':').reduce((n, p) => n * 60 + +p, 0);
+    const epSecs = cur.videos.series.episodes.reduce((n, id) => n + sec(vids.find((v) => v.id === id).length), 0);
+    const engines = new Set(games.filter((g) => (cur.games[g.slug]?.tier ?? 'more') !== 'off').map((g) => g.madeWith.toLowerCase()));
+    if (S.fifaMinutes !== Math.round(epSecs / 60) || S.engines.length !== engines.size) bad.push('stats.mjs: minutes or engines disagree with the content files');
+    const tile = (h, key) => { const m = h.match(new RegExp(`<(a|div) class="tile [^"]*"[^>]*data-stat="${key}"[^>]*>([\\s\\S]*?)</\\1>`)); if (!m) return null; const t = (re) => m[2].match(re)?.[1] ?? ''; return { num: t(/<span class="nv">([^<]*)<\/span>/), unit: t(/<small>([^<]*)<\/small>/), cap: t(/<p class="ts">([^<]*)<\/p>/), title: t(/<h3 class="tt">([^<]*)<\/h3>/) }; };
+    const want = [
+      ['stream', 'FIFA With the Boys', 'fifa-minutes', String(Math.round(epSecs / 60)), 'min'],
+      ['games', 'Project Mountaintop', 'log-words', String(Math.round(S.logWords)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f'), 'words'],
+      ['games', 'Tiny games', 'engines', String(engines.size), engines.size === 1 ? 'engine' : 'engines'],
+    ];
+    for (const [id, name, key, num, unit] of want) { const t = tile(cl(id, name), key); if (!t) bad.push(`index.html: stat "${key}" missing from the ${name} cluster`); else if (t.num !== num || t.unit !== unit) bad.push(`index.html: stat "${key}" shows ${t.num} ${t.unit}, the data says ${num} ${unit}`); }
+    const eng = tile(cl('games', 'Tiny games'), 'engines'); if (eng && eng.cap.split(', ').length !== engines.size) bad.push('index.html: the engines tile should list every engine');
+    const fm = tile(cl('stream', 'Special Force'), 'film-minutes'); const filmSecs = cur.videos.other.filter((o) => o.kind === 'short film').reduce((n, o) => n + sec(vids.find((v) => v.id === o.id).length), 0);
+    if (!fm || fm.cap !== `${Math.round(filmSecs / 60)} minutes in all`) bad.push(`index.html: Special Force runtime caption should say ${Math.round(filmSecs / 60)} minutes in all (got ${fm?.cap})`);
+    if (/class="num[^"]*"[^>]*aria-hidden/.test(home)) bad.push('index.html: a numeral is hidden from screen readers');
+    if (S.logWords % 100 !== 0 || S.logWords < 1000) bad.push('stats.mjs: the dev-log word count looks wrong');
+  }
+  if (/data-cs=/.test(home)) bad.push('index.html: data-cs interleaving is gone (clips go in the Twitch cluster)');
+  // each tile's internal destination appears in exactly one cluster
+  const owners = {};
+  for (const id of ['stream', 'games', 'work']) for (const [n, body] of clusters(home, id)) for (const m of body.matchAll(/<a class="tile [^"]*" href="(\/[^"#]+)"/g)) { if (owners[m[1]] && owners[m[1]] !== n) bad.push(`index.html: ${m[1]} in two clusters`); owners[m[1]] = n; }
+}
+// switcher: header menu with Home and the one portfolio link; the footer row; aria-controls matches; the portfolio href and label appear exactly twice
+for (const h of htmls) {
+  const t = fs.readFileSync(h, 'utf8'), rel = path.relative(pub, h);
+  if (rel === '404.html' || !t.includes('class="xs"')) continue;
+  if (!/<a class="xs-logo" href="\/"[^>]*aria-controls="xs-menu"><svg/.test(t) || !/<ul class="xs-menu" id="xs-menu"><li class="xs-hl"><a class="xs-home" href="\/">/.test(t)) bad.push(`${rel}: switcher markup changed`);
+  if ((t.match(/class="xs-row"/g) ?? []).length !== 1 || (t.match(/class="xs-foot"/g) ?? []).length !== 1) bad.push(`${rel}: expected one header and one footer portfolio row`);
+  if (!/<script src="\/vt\.js\?v=[0-9a-f]+"><\/script>/.test(t)) bad.push(`${rel}: vt.js missing from the head`);
+}
+// view transitions: a page has at most one [data-hero] and one h1 (names are unique per document); internal tiles carry data-vt; vt.js and the CSS agree on the names
+for (const h of htmls) { const t = fs.readFileSync(h, 'utf8'); if ((t.match(/\bdata-hero\b/g) ?? []).length > 1) bad.push(`${path.relative(pub, h)}: more than one data-hero`); }
+for (const f of ['games/glass-gunslinger-dod', 'design/southeast-denver-dental', 'work/project-mountaintop/first-steps-week-1-2-recap']) if (!/\bdata-hero\b/.test(fs.readFileSync(path.join(pub, f, 'index.html'), 'utf8'))) bad.push(`${f}: no data-hero`);
+for (const m of home.matchAll(/<a class="tile [^"]*" href="(\/[^"]*)"[^>]*>/g)) if (!/data-vt="/.test(m[0]) && !m[1].startsWith('/#') && !m[1].includes('#logs')) bad.push(`index.html: internal tile ${m[1]} has no data-vt`);
+{
+  const css = fs.readFileSync(path.join(pub, 'base.css'), 'utf8'), vt = fs.readFileSync(path.join(pub, 'vt.js'), 'utf8');
+  if (!/@view-transition \{ navigation: auto; \}/.test(css) || !/prefers-reduced-motion: no-preference\) \{\s*@view-transition/.test(css)) bad.push('base.css: @view-transition must be opt-in under no-preference motion');
+  for (const n of ['hero-media', 'hero-title']) if (!css.includes(n) || !vt.includes(n)) bad.push(`view transition name ${n} missing from base.css or vt.js`);
+  if (/\.style\.cssText|setAttribute\(\s*['"]style|innerHTML/.test(vt)) bad.push('vt.js: CSP-unsafe pattern');
+}
 const sm = fs.readFileSync(path.join(pub, 'sitemap.xml'), 'utf8');
 for (const m of sm.matchAll(/<loc>([^<]+)<\/loc>/g)) { check('sitemap.xml', m[1]); if (/calm|404/.test(m[1])) bad.push(`sitemap.xml: ${m[1]}`); }
 if (!/name="robots" content="noindex"/.test(fs.readFileSync(path.join(pub, '404.html'), 'utf8'))) bad.push('404.html: not noindex');

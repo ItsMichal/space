@@ -44,7 +44,6 @@ export function SeoPanel({ fm, stats }: { fm: PostFrontmatter; stats: DocStats }
       <div className="ed-field">
         <p className="ed-label">Link preview (Open Graph)</p>
         <div className="ed-og">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={image} alt={fm.coverAlt ?? ''} />
           <div>
             <p className="ed-og__domain">{domain}</p>

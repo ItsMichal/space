@@ -22,6 +22,10 @@ Measured 2026-10-11 (home pages of each site).
 | Phone menu and previews | apple.com (mobile nav sheet), linear.app mobile menu | Sheet appears at once; rows fade and rise 8px, 24ms apart, about 200ms on a critically damped curve (apple.com nav transitions are 240 and 320ms on `cubic-bezier(.4,0,.6,1)`) | Timings measured on apple.com; sheet layout matched by eye |
 | Nav bar lockup (mark plus "michal.ai") | rauno.me (name top left), family.co (logo plus wordmark) | Mark and wordmark in one link, wordmark in the display serif at 21px | Matched by eye |
 | Plain page layout: one centred container, 1120px | linear.app, vercel.com, stripe.com | Nav pill and content share one centred max-width container; footer aligned to the same column | Matched by eye |
+| Satellite shell with short trails and sparse mesh pings, altitude exaggerated | satellitemap.space and other satellite trackers (orbit paths and trails), GitHub's homepage globe (arcs with a travelling pulse), Stripe's globe (sparse animated links) | Thin trails fading to the tail, a few short links with one travelling pulse, nothing glowing; radius pushed out so the swarm reads around the globe | Not opened in this pass; from memory. Radius, counts and timings are mine |
+| Starlink constellation drawn as points on the hero globe | satellitemap.space (every Starlink satellite as a point on a globe/map), starlink.com's coverage map, GitHub's homepage globe (small points over a dotted Earth) | One tiny mark per satellite, no labels or tooltips, far side hidden. Points use the globe's ink, snap to its 6px matrix, radius about 0.2 pitch (land dots reach 0.36), true orbit radius 1.086 of the globe radius, hidden behind the disc, dimmer on the far limb | Not opened in this pass (the sandbox has no browser access to those sites); the genre is from memory. Strength, radius and thinning are mine |
+| Pointer pushes the dot/glyph field apart and it springs back | The cursor-repel dot and particle fields on landing-page hero canvases (stripe.com, linear.app style), a common three.js / p5 idiom | Radial push, gaussian falloff, radius 100px, maximum 16px, critically damped follow, eases to zero after 1.5s idle, fine pointers only, canvas stays pointer-events none | Not verified on a specific live site; numbers are mine |
+| Text-aware cutout that follows the rotating phrase | The phrase rotator itself (linear.app, apple.com iPhone page) | The dim box is the stem plus the phrase on screen, and eases between phrases over 480ms with cubic-bezier(0.22,1,0.36,1), the phrase's own enter timing and curve | Measured in screenshots mid-transition; no site found with a cutout behind a rotator |
 
 ## Removed for lack of a precedent
 
@@ -51,7 +55,7 @@ Measured 2026-10-11 (home pages of each site).
 | Tile hover | apple.com/newsroom | Image only: `transform: scale(1.03)`, `0.4s cubic-bezier(0.4, 0, 0.25, 1)`. The card does not lift. | Same: image scale 1.03, 400ms, same curve. No card lift, no shadow change |
 | Horizontal tile gallery on phones | apple.com/iphone (tile transitions `transform 0.3s cubic-bezier(0, 0, 0.5, 1)`), apple.com home tiles | Tiles in a swipeable row | Home page: native `overflow-x` snap row of the same tiles on phones; /projects stacks them |
 | Solid tile with a product name | apple.com (solid colour tiles with a name) | Name set large on a flat colour | Projects without a usable image (Starlink.com): the project name in the display serif on a pale palette tint, in the same media slot |
-| Type hierarchy | apple.com | One family carries nearly everything; few sizes; weights 400 and 600/700 | One text face (Newsreader) for text, meta and UI, one display face for titles; two weights (400, 500); roles in `app/styles/type.css` |
+| Type hierarchy | apple.com | One family carries nearly everything; few sizes; weights 400 and 600/700 | One text face (Newsreader) for text, meta and UI, one display face for titles; two weights (400, 500); four sizes (title, heading, body, small) as tokens, see "Type scale" below |
 
 Not measured: the App Store "Today" cards (not reachable from a headless browser without the app).
 
@@ -78,6 +82,43 @@ Behind the lower card rows there is flat paper, so a blurred translucent card th
 Numbers (headless Chrome with software GL, so only relative values mean anything): idle with the pointer elsewhere, the only rAF source is the globe's draw loop; the glass engine's loop runs only while the pointer is over the nav (about 10 callbacks a second) and is at zero 3 seconds after leaving. Globe frame interval on a 4x CPU throttle, 1440 wide: p50 66ms, p95 133ms idle; 375 wide: p50 33ms, p95 67ms.
 
 Starlink image: the build makes 480/960/1600/2400 AVIF and WebP variants. Served at 1440 (1x): 1600w AVIF, 111 KB. At 375 (2x): 960w AVIF, 41 KB. The 1.8 MB original is not served.
+
+### Nav glass: more translucent (2026-10-13)
+
+The owner asked for a more see-through nav bar, in the direction of Apple's Liquid Glass. The nav is the frost engine (blur, saturate,
+tint, specular rim; `NAV_GLASS = 'frost'` in `NavBar.tsx`). The values below live on `.nav-glass` in `components/glass/glass.css`, scoped to
+the bar (the engine reads its variables from the container), so glass buttons and the preview card keep their own.
+
+| | Before | After |
+| --- | --- | --- |
+| Tint, light page | paper 64% | paper 34% |
+| Tint, dark page | basalt 80% | basalt 42% |
+| Backdrop blur, light / dark | 10px / 20px | 18px / 24px |
+| Backdrop saturate, light / dark | 1.6 / 1.8 | 1.9 / 1.9 |
+| Luminance clamp (backdrop-filter, new) | none | light: `contrast(0.5) brightness(1.25)`; dark: `contrast(0.55) brightness(0.5)` |
+| Top sheen (new) | none | 48px linear gradient, white 30% light / 10% dark, fading to clear |
+| Rim, edge, shadow | unchanged | unchanged (thin specular rim, soft shadow) |
+| Without `backdrop-filter` | 62% flat tint | 92% tint (nothing blurs what is behind it) |
+| `prefers-reduced-transparency`, `prefers-contrast: more` | flat 90% tint | flat 92% tint, no clamp |
+
+Why the clamp: with a third of the tint left, ink on a bar over a black photo drops below 4.5:1 and pale ink on a bar over a white page
+does too. `contrast()` pulls the extremes of what is behind the bar toward the middle and `brightness()` lifts (light) or lowers (dark)
+the middle, so the bar stays a soft, readable field. The first dark value (`contrast(0.6) brightness(0.62)`) gave 4.07:1 over white and
+was replaced. The engine adds the extra functions to its frost boxes (`--glass-backdrop`, read in `engine.ts`); the flat CSS path (server
+render, no WebGL2) applies the same tint and clamp so nothing jumps when the engine takes over.
+
+Measured contrast (headless Chrome, software GL, production build; the label colour against every pixel of the bar with the text hidden,
+worst pixel, backdrop forced to a full-width block behind the bar, desktop 1280 and phone 375 within 0.2 of each other):
+
+| Behind the bar | Light ink, before | Light ink, after | Pale ink (dark page), before | after |
+| --- | --- | --- | --- | --- |
+| black | 6.36 | 5.73 | 13.02 | 8.96 |
+| 8px black and white checker (busiest) | 10.27 | 9.87 | 9.48 | 6.65 |
+| white | 16.04 | 15.25 | 6.73 | 5.11 |
+
+All worst cases are at least 5.1:1 (needs 4.5). Pure black behind the light bar and pure white behind the dark bar are the extremes the
+page can produce; real photos sit between. Shots: `docs/glass-shots/nav-translucent-*.jpg` (before above, after below). Not measured: Safari and
+Firefox (same frost path, same CSS, but `backdrop-filter` with `brightness()` and `contrast()` is standard there), and a real device.
 
 ## Graph-paper backdrop and glass cards, round 2 (2026-10-11)
 
@@ -114,7 +155,7 @@ on the rendered text). Compare against the live sites before treating any of the
 
 | Element | Reference (not measured) | Ours |
 | --- | --- | --- |
-| One centred reading column with wider media | stripe.com/blog, vercel.com/blog, apple.com/newsroom articles, medium.com | Text column 35rem (about 67 characters at the 20px prose size, measured), wide track 900px for figures, tables, code, embeds and the timeline, both centred on the viewport axis. Phones: one track. Nothing full-bleed |
+| One centred reading column with wider media | stripe.com/blog, vercel.com/blog, apple.com/newsroom articles, medium.com | Text column 33rem (about 70 characters at the 18px body size, measured with `scripts/measure-type.mjs`), wide track 900px for figures, tables, code, embeds and the timeline, both centred on the viewport axis. Phones: one track. Nothing full-bleed |
 | Side contents list in the margin | stripe.com/docs, vercel.com/docs ("On this page") | Fixed in the margin outside the wide track from 1360px, so it never moves or overlaps the column |
 | Visible bullets, hanging indent, nested marker shapes | any long-form site (medium.com, github.com READMEs) | Native list markers (disc, circle, square; decimal, alpha, roman), 1.5em indent, markers in muted ink |
 | Boxed callout with an accent on one edge | vercel.com/docs, stripe.com/docs | Raised paper, hairline, 14px radius, 3px inset accent by type (note, tip, warning) |
@@ -130,6 +171,19 @@ Bug: on a dark reading page the nav pill was a pale milky slab with near-white t
 | Dark bar tint and backdrop filter | apple.com global nav in dark (`saturate(1.8) blur(20px)` over `rgba(22,22,23,0.8)`), developer.apple.com materials (`rgba(29,29,31,0.7)`), numbers as recorded in the Glass surface row above | Dark tone tint `rgba(18,22,18,0.8)` (the basalt paper at the same 80 percent), frost blur 20px and saturate 1.8 on dark pages (`--glass-blur-dark`, `--glass-saturate-dark`); light tone keeps 10px and 1.6. Not re-measured in this pass (network was not available to the build environment) | Values taken from the rows above, not re-read from apple.com today |
 | Dark rim | iOS 26 and macOS Tahoe Liquid Glass in dark appearance (native, no web measurement; Apple HIG "Materials" and WWDC25 "Meet Liquid Glass" give no numbers) | Highlights are light but thin and low alpha (white at 28 percent, about 1px), the lower-right edge sinks into a deep shadow (black at 55 percent), no wash over the body. The frost bevel lift and the water-drop gloss are cut by 80 to 85 percent on dark tone so they no longer veil the tint | Matched by eye against stills |
 | Tint and glyph colour chosen together | iOS 26 (glass flips light/dark with its backdrop and its glyphs flip with it), macOS menu bar | One decision per piece of glass (`components/glass/theme.ts`): the tone picks the tint, the foreground, the rim and the edge as a set | Unit tested against the real token values, measured on rendered pixels in `docs/glass-shots/` |
+
+## Logo hover switcher between the two sites (2026-10-12)
+
+Written without network access to the references (the build sandbox could not reach them), so every row is **from memory** and
+unmeasured; the behaviour numbers are ours, chosen to sit in the range these sites use. Re-measure before treating as settled.
+
+| Element | Reference | What we match | How verified |
+| --- | --- | --- | --- |
+| Hover flyout from a nav item with an intent delay, a bridge between trigger and panel, and the same panel opening on keyboard focus | stripe.com main navigation (Products, Solutions flyouts open on hover and on focus), apple.com global nav (flyout on hover, Escape closes) | Panel under the trigger, no gap to cross (8px transparent bridge), about 120ms in and 150ms out so a passing pointer does not open it, opacity and a 4px rise only, Escape closes, focus-within opens it | From memory (stripe.com, apple.com); behaviour checked by the headless-Chrome walk-through in `scripts/switcher-shots.mjs` |
+| The logo as a switcher between a company's products or sites | vercel.com (right-clicking the logo offers brand assets and a link to the sibling site), linear.app and notion.so (workspace switcher on the top-left mark), atlassian.com (app switcher) | The mark is the trigger and still navigates home; the row holds the sibling's mark and its domain only | From memory; none of these use hover on the mark, so only the placement and content are matched. Weakest precedent here |
+| Sibling-site assertion with `rel="me"` | IndieWeb rel=me (indieweb.org/rel-me), used by Mastodon profile verification | Both links carry `rel="me"` and are plain same-tab anchors | From memory |
+| Touch fallback as a quiet last row in the phone menu | apple.com mobile nav sheet | Same row as the dropdown, hairline above, no extra control | Matched by eye |
+| Bar without a wordmark, mark alone at the left | vercel.com, linear.app (mark only, no wordmark, in the top bar) | Mark at 20px, links right of it | From memory |
 
 ## Citation (verified)
 
@@ -151,3 +205,37 @@ One surface, shared by every card on the site: `app/styles/card.css` (`.surface`
 | Full-width cover image on article pages, narrow text column | apple.com newsroom articles, stripe.com blog | Cover and chrome cards run the container width; article prose stays in a 66ch reading column | Matched by eye |
 
 Dashes: em and en dashes removed from everything shipped (owner instruction); separators are the middle dot, ranges "to" or a hyphen. `scripts/check-dashes.mjs` enforces it.
+
+## About page and web resume (2026-10-12)
+
+Pages were fetched as text (WebFetch) on 2026-10-12, so structure is verified but computed styles are not measured. Anything marked "memory" was not opened in this pass.
+
+| Element | Reference | What the reference does | Ours |
+| --- | --- | --- | --- |
+| Dated role rows: date, employer and title, description, tags | brittanychiang.com/#experience (fetched) | Numbered list, newest first. Each role: date range, heading "title · employer" linked to the employer, a description, optional link bullets, tech tags. A "View Full Resume" link to `/resume.pdf` follows the list | One row per role in a card: left column employer, title and dates (`<time>`), right column the LinkedIn bullets, a "Stack:" meta line and "Related" links to the project pages. Resume link in the contact card |
+| A bio that carries the work history in prose, contact as a plain mailto | leerob.com/about (fetched) | One header, prose bio with employers linked inline, an email mailto inside the text, no separate sections | Bio paragraphs first, then one status note in his own words, contact as plain rows (LinkedIn, email as `mailto:`, X, GitHub) |
+| Card grid with a link to a person's profile | linear.app/about (fetched) | Team cards with name, title and a LinkedIn link; hiring link; plain text list for the rest | Card language from the shared system; profile links as `rel="me"` rows |
+| Project tiles on the about page | apple.com newsroom tiles (see "Cards v2") | Image-top tile | The same tile component as home, in a three-column grid |
+| Quiet status line with availability | rauno.me and paco.me (memory, not opened): short first-person status near the top of the page | | A single first-person inset note in the intro card |
+| Resume as a print-styled web page with a PDF download | brittanychiang.com (resume.pdf, fetched), read.cv profiles (memory) | | `/resume` renders the same data; `@media print` hides the chrome and sets 9.5pt type; the PDF is printed from that page by headless Chrome |
+
+Honest status: the inset status note has no verified precedent beyond a recollection of short availability lines on personal sites; if the owner wants a stricter standard it should be reduced to plain text in the intro paragraph.
+
+## Type scale: four sizes (michal-type-scale)
+
+The owner's request: no more than three or four font sizes across the page. A small fixed scale is how the reference sites work; none of these was re-measured in this pass (the sandbox could not reach them), so the numbers below are from memory and from the earlier measurement of the apple.com newsroom card in the table above.
+
+| Pattern | Precedent | What they do | What we do | Source of the numbers |
+| --- | --- | --- | --- | --- |
+| A handful of text sizes, hierarchy from weight and colour | apple.com newsroom (earlier measurement above: headline 21 to 32, category 12 to 14, date 14 to 17, all one family), linear.app (about four text sizes in the product UI: 13, 15, 16 and 20 to 24, plus a display size on the landing page), stripe.com/blog (title, dek, body, caption), vercel.com (heading, body, caption steps in Geist) | A few steps; a muted ink for tertiary text; one medium weight for emphasis; fluid or stepped headings on phones | Four tokens, title 44 / heading 24 / body 18 / small 15, stepped down together below 768px (34 / 21 / 17 / 15); item titles are body at weight 500; one display exception, the home name | From memory for linear.app, stripe.com and vercel.com; apple.com newsroom from the measurement above |
+| Body at 17 to 18px for long text | stripe.com/blog and vercel.com/blog (about 18px), medium.com (about 20px) | A text column of 65 to 75 characters | 18px body, column 33rem, about 70 characters (measured by `scripts/measure-type.mjs`) | Measured on our page; the references from memory |
+## About photograph and logo on share cards (2026-10-13)
+
+References were fetched as text on 2026-10-13 where marked "fetched"; none was measured for computed styles. "Memory" means not opened in this pass.
+
+| Element | Reference | What the reference does | Ours |
+| --- | --- | --- | --- |
+| A plain portrait photograph on a personal about page, real background, no treatment | leerob.com/about and brittanychiang.com (fetched: both pages are text-led; neither shows a treated photo), rauno.me and paco.me (memory: small unfiltered photographs on the about pages) | Honest status: I could not verify a photograph pattern from the fetched pages | A 3:4 photograph in a 4:5 card with the card radius, `object-position` set to the face, no filter, no overlay; beside the intro from 900px, a 4:3 window above it on phones. Weakest precedent in this change, flagged for the owner |
+| Small portrait thumbnail beside the first paragraph of a bio | read.cv and github.com profile headers (memory) | | 88 to 104px, 4:5, floated left of the first paragraph on the home intro card |
+| Mark at the foot of a generated share card, name and domain beside it | vercel.com and linear.app Open Graph cards (memory, not opened): logo in a corner, title large | | Mark bottom left on every card (post, list, home, About), 40px tall, ink on paper, with the name or domain beside it |
+| Portrait panel on the right of a card, text left | The post cards already in `lib/og.tsx` (a cover panel at 456 by 534, radius 28) | | The home and About cards reuse that panel for the photograph |

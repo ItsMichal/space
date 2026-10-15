@@ -1,0 +1,28 @@
+# Exceptions to scripts/check-type.mjs (the four-step type scale). One entry per line:
+#   <path from repo root>                      a file, or a directory when it ends with "/": the whole thing is exempt
+#   <path from repo root> :: <text on the line> only lines containing that text
+# Print stylesheets keep their own pt sizes: `pt` values are never flagged, so they need no entry.
+# The Halmic app (apps/halmic) is not scanned at all.
+
+# Share cards are rendered to PNG by next/og with their own pixel sizes; they are not page typography.
+apps/michal-ai/lib/og.tsx
+
+# Dev-only routes: never built for production (pageExtensions only registers *.dev.tsx under `next dev`) and the labs they use.
+apps/michal-ai/app/write/
+apps/michal-ai/app/ui/
+apps/michal-ai/app/cards/
+apps/michal-ai/app/mood/
+apps/michal-ai/app/micro/
+apps/michal-ai/app/shaders/
+apps/michal-ai/components/glass/demo/
+apps/michal-ai/components/motion/MotionLab.tsx
+apps/michal-ai/components/mood/
+apps/michal-ai/components/mood2/
+apps/michal-ai/components/micro/
+apps/michal-ai/components/presence/PresenceLab.tsx
+
+# Reaction bar and highlight popover: owned by the michal-portrait-fix branch for now (components/presence/). Fold into the
+# scale once that branch has merged; until then they are the only sizes outside it on pages that show reactions.
+
+# The guard's own test holds offending sizes as fixtures.
+apps/michal-ai/lib/__tests__/type-guard.test.ts

@@ -59,10 +59,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - uses: ./.github/actions/media-cache
-      - run: npm run build:michal
-      - name: OpenNext bundle (same output the Worker deploys)
-        working-directory: apps/michal-ai
-        run: npx opennextjs-cloudflare build
+      - name: Prerender the site (react-router build) and generate share cards
+        run: npm run build:michal
       - name: Worker config sanity (no upload)
         working-directory: apps/michal-ai
         run: npx wrangler deploy --dry-run
