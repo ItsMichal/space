@@ -1,4 +1,5 @@
 // Headless Chrome screenshot via CDP (uses the `ws` package from the portfolio repo, or any ws on the path).
+// resize=<WxH[xDPR][zZOOM]@ms,...>: after the wait, apply each size (device metrics; zoom shrinks the css size and grows the device ratio, like the browser's zoom), ms after the previous one; rshots saves a shot after each as <out>-r<i> once it has settled (rwait=ms, default 2500)
 // usage: node halmic/scripts/shot.mjs <url> <out.png> <width> <height> [full] [mobile] [wait-ms] [scrollY] [sel=css] [click=css] [clip=x,y,w,h]
 //   hover=<css>: scroll that element into view and move the mouse onto it (real mouse events) before the screenshot, after eval
 //   extra flags: nojs (scripts disabled), wheel=<dy> (real wheel input, prints scrollY before and after), tap=x,y and strip=ms,ms,... (simulate a touch and save timed shots), console (print console output and exceptions), gl (software WebGL via SwiftShader), rm (emulate prefers-reduced-motion), eval=<js> (run after the wait, then 900 ms), netlog (print requests, sizes and the load time), jpg (write JPEG), nogl (getContext('webgl') returns null)
@@ -48,6 +49,21 @@ try {
   if (flags.includes('nojs')) await send('Emulation.setScriptExecutionDisabled', { value: true });
   await send('Page.navigate', { url });
   await sleep(waitMs);
+  const rs = flags.find((f) => f.startsWith('resize='))?.slice(7);
+  if (rs) {
+    const settle = +(flags.find((f) => f.startsWith('rwait='))?.slice(6) ?? 2500);
+    let i = 0;
+    for (const spec of rs.split(',')) {
+      const m = spec.match(/^(\d+)x(\d+)(?:x([\d.]+))?(?:z([\d.]+))?(?:@(\d+))?$/);
+      if (!m) { console.log('bad resize spec', spec); continue; }
+      const z = +(m[4] ?? 1);
+      await sleep(+(m[5] ?? 0));
+      await send('Emulation.setDeviceMetricsOverride', { width: Math.round(+m[1] / z), height: Math.round(+m[2] / z), deviceScaleFactor: +(m[3] ?? dpr) * z, mobile: mobile && +m[1] < 900 });
+      i++;
+      if (flags.includes('rshots')) { await sleep(settle); const sh = await send('Page.captureScreenshot', { format: flags.includes('jpg') ? 'jpeg' : 'png', ...(flags.includes('jpg') ? { quality: 82 } : {}) }); fs.writeFileSync(out.replace(/(\.\w+)$/, `-r${i}$1`), Buffer.from(sh.result.data, 'base64')); }
+    }
+    await sleep(settle);
+  }
   const ev = flags.find((f) => f.startsWith('eval='))?.slice(5);
   if (ev) { const er = await send('Runtime.evaluate', { expression: ev, awaitPromise: true, returnByValue: true }); console.log('eval:', JSON.stringify(er.result.result.value ?? er.result.exceptionDetails ?? null)); await sleep(900); }
   // wheel=dy: a real mouse-wheel event (browser input, not a script) at the middle of the page, then print where the page ended up
