@@ -16,7 +16,7 @@ if (!base) {
 const root = path.resolve(import.meta.dirname, '..', '..')
 process.chdir(root)
 const client = path.join(root, 'build', 'client')
-const retries = Number(process.argv[process.argv.indexOf('--retries') + 1] || 5)
+const retries = process.argv.includes('--retries') ? Number(process.argv[process.argv.indexOf('--retries') + 1]) : 5
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
 const pages = []
