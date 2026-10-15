@@ -70,7 +70,7 @@ describe('minor projects (short write-ups for public repos)', () => {
 
   it('contain no em or en dashes in their text or links', () => {
     for (const p of minor) {
-      expect(JSON.stringify([p.title, p.description, p.role, p.years, p.links, p.body]), p.slug).not.toMatch(/[–—]/)
+      expect(JSON.stringify([p.title, p.description, p.role, p.years, p.links, p.body]), p.slug).not.toMatch(/[\u2013\u2014]/)
     }
   })
 
