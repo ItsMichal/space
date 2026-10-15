@@ -666,7 +666,6 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
   return (
     <div ref={wrap} className={`hero-globe hero-globe--${variant} ${className}`} data-mode={mode} aria-hidden="true">
       {/* Static drawing of the same globe: server-rendered, shown under reduced motion / without WebGL2. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="hero-globe__still" src="/globe/fallback.png" alt="" width={400} height={400} decoding="async" />
       <canvas ref={canvas} className="hero-globe__canvas" />
       <canvas ref={shellCanvas} className="hero-globe__canvas hero-globe__shell" />

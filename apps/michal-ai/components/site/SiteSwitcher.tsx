@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import Link from '@/lib/nav'
 import { useRef, useState } from 'react'
 import { ArrowUpRight } from 'lucide-react'
 import { FOR_MICHAL as SIB } from '@space/crosslinks'

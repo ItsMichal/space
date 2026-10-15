@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import { getTopLevel } from '@/lib/content'
 import { profile } from '@/content/profile'
 import { Showcase } from '@/components/work/Showcase'
@@ -58,7 +57,7 @@ export function CompShell({ v }: { v: Variant }) {
           </header>
           <section id="work" aria-labelledby="m2-work-h" className="relative">
             {v === 'c' ? (
-              <Image src="/botanical/silene-480.webp" alt="" width={480} height={413} aria-hidden="true" className="c-sprig" draggable={false} />
+              <img src="/botanical/silene-480.webp" alt="" width={480} height={413} aria-hidden="true" className="c-sprig" draggable={false} />
             ) : null}
             <h2 id="m2-work-h" className="m2-h2 mb-space-8">
               Selected work

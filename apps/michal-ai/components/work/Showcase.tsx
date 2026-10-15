@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/lib/nav'
 import { ArrowRight } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
 import type { Post } from '@/lib/content/types'

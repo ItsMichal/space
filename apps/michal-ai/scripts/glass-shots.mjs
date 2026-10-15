@@ -2,7 +2,7 @@
 //
 //   node scripts/glass-shots.mjs [baseUrl=http://localhost:3123] [outDir=docs/glass-shots]
 //
-// Needs a running site (next start / next dev) and Google Chrome. For each scenario it emulates the OS colour scheme and a
+// Needs a running site (npm run dev, or npm run start after a build) and Google Chrome. For each scenario it emulates the OS colour scheme and a
 // viewport, loads the page (or client-navigates from home when `nav` is set), scrolls, optionally opens the phone menu,
 // screenshots the nav region, and measures contrast: the bar is rendered with its glyphs hidden, sampled on a grid, and the
 // worst sample is compared with the computed colour of the glyphs.

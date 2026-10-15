@@ -8,7 +8,7 @@ Working with an AI coding agent? Start from [`AGENTS.md`](AGENTS.md): rules, tra
 
 ```
 apps/
-  michal-ai/   the portfolio (Next 15 on Cloudflare Workers via OpenNext), Worker name `space`, https://michal.ai
+  michal-ai/   the portfolio (React Router 7 + Vite, every route prerendered, served by a plain Worker), Worker name `space`, https://michal.ai
   halmic/      halmic.com: zero-dependency static build plus one small Worker `halmic` (see apps/halmic/README.md)
 packages/
   motion/      @space/motion  spring / stroke / petal-physics toolkit (TypeScript source, consumed via transpilePackages)
@@ -40,7 +40,7 @@ Inside an app directory the usual scripts still work: `cd apps/michal-ai && npm 
 Build-time scripts under `apps/michal-ai/scripts/` `chdir` to the app root themselves, so
 `node apps/michal-ai/scripts/build-images.mjs` works from anywhere, and so do `npm run -w` invocations.
 Every `process.cwd()` in the app (content reader, media manifest, OG fonts, `next.config.mjs` redirects, editor) assumes
-the app root; Next, vitest, OpenNext and `npm -w` all start there.
+the app root; Vite, vitest, wrangler and `npm -w` all start there.
 
 ## Where things live
 
@@ -69,7 +69,7 @@ On a push to `main`, for each app whose files (or `packages/`, `scripts/`, `pack
 
 1. `preflight` checks that the `CLOUDFLARE_API_TOKEN` secret exists; if not, the deploy jobs are skipped with a warning (no red run).
 2. `deploy-michal` (GitHub environment `production`, https://michal.ai): `npm ci`, typecheck + lint + tests + identity check,
-   restore the generated-image cache, `npm run deploy:michal` (OpenNext build, then `opennextjs-cloudflare deploy`), then a smoke
+   restore the generated-image cache, `npm run deploy:michal` (`react-router build`, share cards, then `wrangler deploy`), then a smoke
    test of `/`, `/sitemap.xml`, `/robots.txt` and `/projects/isat-dashboard` with retries. The Worker version id is printed and put
    in the run summary. Deploys queue (one at a time, never cancelled mid-flight).
 3. `deploy-halmic` runs when the variable `DEPLOY_HALMIC` is `true` (it is) or on a manual run that chooses halmic. It runs the

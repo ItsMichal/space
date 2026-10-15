@@ -216,7 +216,6 @@ export function Timeline({ items, label, pitch: basePitch = 120, fit = false, in
             <h3 className="tl-p-title">{it.title}</h3>
             {it.summary ? <p className="tl-p-sum">{it.summary}</p> : null}
             {it.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img className="tl-p-img" src={it.image.src} alt={it.image.alt} loading="lazy" decoding="async" />
             ) : null}
             {it.link || it.source ? (

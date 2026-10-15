@@ -3,7 +3,7 @@
 // Cards follow the site: warm paper, ink type, Newsreader for the home name, Schibsted Grotesk for titles.
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { ImageResponse } from 'next/og'
+import { ImageResponse } from './og-render'
 import type { Post, PostKind } from '@/lib/content/types'
 import { SECTION } from '@/lib/seo'
 import { profile } from '@/content/profile'
@@ -112,7 +112,7 @@ export function renderPostOg(post: Post) {
           <Footer />
         </div>
         {cover ? (
-          // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+          // eslint-disable-next-line jsx-a11y/alt-text
           <img src={cover} width={456} height={534} style={{ width: 456, height: 534, borderRadius: 28, marginLeft: 56, alignSelf: 'center', objectFit: 'cover' }} />
         ) : null}
       </div>
@@ -164,7 +164,7 @@ async function renderPersonOg(label: string) {
             <div style={{ display: 'flex', marginLeft: 18 }}>michal.ai</div>
           </div>
         </div>
-        {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
+        {/* eslint-disable-next-line jsx-a11y/alt-text */}
         <img src={photo} width={456} height={534} style={{ width: 456, height: 534, borderRadius: 28, marginLeft: 40, alignSelf: 'center', objectFit: 'cover', position: 'relative' }} />
       </div>
     ),

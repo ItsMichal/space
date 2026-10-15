@@ -267,7 +267,6 @@ export function PostPanel({ slug, fm, onChange, allTags, otherSlugs, projects, o
       <Field label="Cover image">
         {fm.cover ? (
           <div className="ed-cover">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={fm.cover} alt={fm.coverAlt ?? ''} />
             <button type="button" aria-label="Remove cover" title="Remove cover" onClick={() => onChange({ cover: undefined, coverAlt: undefined })}>
               <X size={14} strokeWidth={1.5} />

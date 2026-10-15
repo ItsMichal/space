@@ -1,4 +1,4 @@
-import type { MetadataRoute } from 'next'
+import type { MetadataRoute } from '@/lib/meta-types'
 import { profile } from '@/content/profile'
 
 export default function manifest(): MetadataRoute.Manifest {

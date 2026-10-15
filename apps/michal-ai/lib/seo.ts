@@ -1,6 +1,6 @@
 // Central SEO helpers: absolute URLs, metadata builders and JSON-LD for posts and the site.
 // Safe to import from server components, route handlers and (statically) from the root layout.
-import type { Metadata } from 'next'
+import type { Metadata } from '@/lib/meta-types'
 import { siteConfig } from '@/site.config'
 import { profile } from '@/content/profile'
 import type { Post, PostKind } from '@/lib/content/types'

@@ -1,10 +1,9 @@
-import type { Metadata, Viewport } from 'next'
+import type { Metadata, Viewport } from '@/lib/meta-types'
 import { ArticleLayout } from '@/components/site/ArticleLayout'
 import { ReadingTheme } from '@/components/site/ReadingTheme'
 import { Publications } from '@/components/content/Publications'
 import { Disclosure } from '@/components/ui/Disclosure'
 import { Timeline } from '@/components/ui/Timeline'
-import { renderMarkdown } from '@/lib/content/render'
 import { getPost } from '@/lib/content'
 import { profile } from '@/content/profile'
 import { starlinkLaunches } from '@/content/starlink-launches'
@@ -17,7 +16,7 @@ export const viewport: Viewport = readingViewport
 // Dev-only (page.dev.tsx is only registered under `next dev`, so `next build` and the Worker never see this route).
 // One of every element and component the reading view supports, in the real ArticleLayout, so a regression in the
 // column, lists, media or components shows up in one place. The text is placeholder, not site copy.
-const SOURCE = `
+export const SOURCE = `
 Lead paragraph with **bold**, _italic_, ~~strikethrough~~, \`inline code\`, an [internal link](/projects), an [external link](https://example.com/some/long/path/that/keeps/going/and/going/and/going/past/the/column/edge) and a footnote-free sentence that is long enough to wrap onto a second and third line so the measure (characters per line) and the rhythm between lines can be judged.
 
 A second paragraph, to check the space between paragraphs. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
@@ -91,8 +90,7 @@ export function veryLongFunctionName(argumentNumberOne: string, argumentNumberTw
 Text after the embed, to check the space below it.
 `
 
-export default async function KitchenSink() {
-  const body = await renderMarkdown(SOURCE)
+export default function KitchenSink({ body }: { body: React.ReactNode }) {
   const donor = getPost('project-mountaintop')
   const pub = profile.publications[0]?.id
   return (

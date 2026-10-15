@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { getAllPosts } from '@/lib/content'
@@ -6,8 +6,8 @@ import { homeMetadata, listMetadata, postMetadata, profilePageJsonLd, websiteJso
 
 const appDir = join(__dirname, '../../app')
 
-// Share cards come from app/**/opengraph-image.tsx. Next uses a page's own `images` instead of the file convention, so
-// no metadata builder may set them (that is how the home page once lost its card, and how posts got raw WebP covers).
+// Share cards are rendered by scripts/share-cards.ts and referenced by lib/rr/head.ts. A page's own `images` would replace them,
+// so no metadata builder may set them (that is how the home page once lost its card, and how posts got raw WebP covers).
 describe('share card metadata', () => {
   it('leaves og:image / twitter:image to the generated cards', () => {
     expect(homeMetadata().openGraph?.images).toBeUndefined()
@@ -20,10 +20,11 @@ describe('share card metadata', () => {
     }
   })
 
-  it('has a generated card next to every page that sets openGraph', () => {
-    for (const dir of ['', 'projects', 'writing', 'projects/[slug]', 'projects/[slug]/[child]', 'writing/[slug]']) {
-      expect(existsSync(join(appDir, dir, 'opengraph-image.tsx')), `${dir || '.'}/opengraph-image.tsx`).toBe(true)
-    }
+  it('gives every route module that builds head tags a generated card', () => {
+    const routes = join(appDir, 'routes')
+    const heads = readdirSync(routes).filter((f) => f.endsWith('.tsx') && readFileSync(join(routes, f), 'utf8').includes('headFor('))
+    expect(heads.length).toBeGreaterThan(5)
+    for (const f of heads) expect(readFileSync(join(routes, f), 'utf8'), f).toContain('shareFor(')
   })
 
   it('sets twitter:site and creator on every page type', () => {

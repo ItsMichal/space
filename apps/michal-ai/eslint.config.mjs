@@ -1,3 +1,3 @@
-import { nextConfig } from '@space/config/eslint'
+import { reactConfig } from '@space/config/eslint'
 
-export default nextConfig(import.meta.dirname)
+export default reactConfig()

@@ -1,6 +1,6 @@
 // Prints /resume to PDF with headless Google Chrome: public/resume.pdf (US Letter) and public/resume-a4.pdf (A4).
 // The page's own print stylesheet (components/about/resume.css) hides the site chrome and sets the type for paper.
-// Needs a running site (default http://localhost:3100: `npm run build:michal` then `next start -p 3100`, or `next dev -p 3100`).
+// Needs a running site (default http://localhost:3100: `npm run dev:michal`, or `npm run build:michal` then `npm run start -w @space/michal-ai`).
 // Usage: node scripts/build-resume-pdf.mjs [baseUrl] [outDir]
 // The old public/BodzianowskiResume.pdf is left untouched until the owner approves the new one.
 import { createRequire } from 'node:module'

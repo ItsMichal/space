@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/lib/nav'
 import { siteConfig } from '@/site.config'
 import { profile } from '@/content/profile'
 import { SiteMark } from './SiteMark'

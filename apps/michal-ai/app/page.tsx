@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/lib/nav'
 import { ArrowRight } from 'lucide-react'
 import { getAllPosts, getBlogPosts, getTopLevel } from '@/lib/content'
 import { HeroGlobe } from '@/components/presence/HeroGlobe'

@@ -1,13 +1,13 @@
 // Checks /about and /resume: every internal link resolves to a route, no city names, no em or en dashes, JSON-LD parses and has the
 // required Person and ProfilePage fields.
 //   node scripts/check-about.mjs [http://localhost:3100]   against a running site (HTTP 200 for every internal link)
-//   node scripts/check-about.mjs --built                   against the prerendered build in .next/server/app (no server needed)
+//   node scripts/check-about.mjs --built                   against the prerendered build in build/client (no server needed)
 import fs from 'node:fs'
 import path from 'node:path'
 
 const arg = process.argv[2] ?? 'http://localhost:3100'
 const built = arg === '--built'
-const appDir = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '.next', 'server', 'app')
+const appDir = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', 'build', 'client')
 const publicDir = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', 'public')
 const CITIES = new RegExp(['Haw', 'thorne'].join('') + '|Los Angeles|Highlands Ranch|Denver(?! Post)|El Segundo|Torrance|Culver City|Venice|Santa Monica|Long Beach', 'i')
 let failed = 0
@@ -16,14 +16,17 @@ const fail = (m) => {
   console.error('FAIL', m)
 }
 const get = async (route) => {
-  if (built) return { status: fs.existsSync(path.join(appDir, route === '/' ? 'index.html' : `${route}.html`)) ? 200 : 404, text: async () => fs.readFileSync(path.join(appDir, `${route}.html`), 'utf8') }
+  if (built) {
+    const file = path.join(appDir, route === '/' ? 'index.html' : path.join(route, 'index.html'))
+    return { status: fs.existsSync(file) ? 200 : 404, text: async () => fs.readFileSync(file, 'utf8') }
+  }
   return fetch(arg + route, { redirect: 'manual' })
 }
 const exists = async (l) => {
   if (built && ['/manifest.webmanifest', '/favicon.ico'].includes(l)) return true // metadata routes, not .html files
   if (!built) return (await get(l)).status === 200
-  if (l === '/' || fs.existsSync(path.join(appDir, `${l}.html`)) || fs.existsSync(path.join(publicDir, l))) return true
-  // dynamic segments are prerendered as <slug>.html or <parent>/<child>.html
+  if (l === '/' || fs.existsSync(path.join(publicDir, l)) || fs.existsSync(path.join(appDir, l))) return true
+  // every prerendered page is <path>/index.html
   return fs.existsSync(path.join(appDir, l, 'index.html'))
 }
 for (const route of ['/about', '/resume']) {

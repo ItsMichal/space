@@ -82,7 +82,7 @@ export function findViolations(text, { ext = '.css' } = {}) {
   return hits
 }
 
-const SKIP_DIRS = new Set(['node_modules', '.next', '.open-next', '.wrangler', '.cache', '.turbo', '.claude', 'dist'])
+const SKIP_DIRS = new Set(['node_modules', '.next', 'build', '.react-router', '.parity', '.open-next', '.wrangler', '.cache', '.turbo', '.claude', 'dist'])
 const EXTS = new Set(['.css', '.ts', '.tsx', '.js', '.jsx', '.mjs'])
 
 /** Parses scripts/type-allowlist.txt: `<path or dir prefix, from repo root>` or `<path> :: <text that must appear on the line>`. */

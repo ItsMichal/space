@@ -232,7 +232,6 @@ export function Lightbox() {
           <div ref={strip} className="lb__strip" data-zoomed={zoomed || undefined} onScroll={onScroll} tabIndex={-1}>
             {items.map((it, i) => (
               <div key={i} className="lb__slide" data-cur={i === index ? '' : undefined} data-zoomed={zoomed && i === index ? '' : undefined} onClick={(e) => e.target === e.currentTarget && close()}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={it.src}
                   srcSet={it.srcSet}

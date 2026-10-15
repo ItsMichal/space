@@ -38,7 +38,6 @@ export function Picture({ src, alt, sizes, priority = false, className, aspect, 
     ...imgProps,
   }
   if (!info || info.animated || !info.variants.webp.length) {
-    // eslint-disable-next-line @next/next/no-img-element
     return <img src={src} alt={alt} width={info?.w} height={info?.h} {...common} />
   }
   const set = (list: { w: number; src: string }[]) => list.map((v) => `${v.src} ${v.w}w`).join(', ')

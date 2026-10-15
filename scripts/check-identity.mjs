@@ -26,7 +26,7 @@ const readLines = (f) =>
     .map((l) => l.trim())
     .filter((l) => l && !l.startsWith('#'))
 
-const SKIP_DIRS = new Set(['node_modules', '.git', '.wrangler', '.next', '.turbo', '.cache', 'docs'])
+const SKIP_DIRS = new Set(['node_modules', '.git', '.wrangler', '.next', 'build', '.react-router', '.parity', '.turbo', '.cache', 'docs'])
 const TEXT_EXT = /\.(html?|css|js|mjs|cjs|jsx|ts|tsx|json|jsonc|md|mdx|txt|xml|svg|webmanifest|toml|ya?ml|map|csv)$/i
 
 function* walk(dir, { skip = SKIP_DIRS, skipFile = () => false } = {}) {
