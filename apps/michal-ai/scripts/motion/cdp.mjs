@@ -40,10 +40,12 @@ export async function launch({
       '--disable-backgrounding-occluded-windows',
       '--hide-scrollbars',
       '--force-color-profile=srgb',
-      // GPU: MOTION_GPU=swiftshader forces software GL (deterministic but slow with the WebGL hero); default is the machine's GPU.
+      // GPU: MOTION_GPU=swiftshader forces software GL (deterministic but slow with the WebGL hero); default is the machine's GPU (Metal on macOS).
       ...(process.env.MOTION_GPU === 'swiftshader'
         ? ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']
-        : ['--use-angle=metal']),
+        : process.platform === 'darwin'
+          ? ['--use-angle=metal']
+          : []),
       '--ignore-gpu-blocklist',
       '--enable-gpu-rasterization',
       'about:blank',

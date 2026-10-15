@@ -68,3 +68,8 @@ apps/michal-ai/.parity/
 # react router
 apps/michal-ai/build/
 apps/michal-ai/.react-router/
+
+# motion audit harness output (apps/michal-ai/scripts/motion): committed runs live under docs/motion/<pr>/
+apps/michal-ai/docs/motion/run/
+apps/michal-ai/docs/motion/_*/
+apps/michal-ai/.wrangler-motion.jsonc
