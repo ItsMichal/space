@@ -1,3 +1,5 @@
+export type TimelineIconName = 'satellite' | 'globe' | 'file' | 'users' | 'rocket'
+
 export type TimelineItem = {
   id: string
   /** ISO date (yyyy-mm-dd or yyyy-mm) or a bare year. Used for year marks and the dateTime attribute. Omit when unknown. */
@@ -9,7 +11,10 @@ export type TimelineItem = {
   label?: string
   /** One line. */
   summary?: string
-  image?: { src: string; alt: string }
+  /** A picture from the image pipeline (path under /media/...). Shown as the thumbnail on the strip and large in the detail. */
+  image?: { src: string; alt: string; focus?: string }
+  /** Named icon, used on the strip and in the detail when there is no image. */
+  icon?: TimelineIconName
   link?: { href: string; label: string }
   /** Where the fact comes from; shown under the detail. */
   source?: { href: string; label: string }

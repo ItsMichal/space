@@ -12,6 +12,14 @@ type Props = {
   position?: { n: number; of: number }
 }
 
+/** The picture for an entry on the strip: its card image or cover, else the first image in its text (none when it has no picture). */
+function entryImage(c: Post): TimelineItem['image'] {
+  if (c.cardImage && c.cardImage !== 'none') return { src: c.cardImage, alt: c.cardImageAlt ?? '' }
+  if (c.cover) return { src: c.cover, alt: c.coverAlt ?? '', focus: c.coverFocus }
+  const m = /!\[([^\]]*)\]\((\/media\/[^)\s]+)/.exec(c.body)
+  return m ? { src: m[2], alt: m[1] } : undefined
+}
+
 /**
  * Below a project: the list of its children (progress log, selected pieces) in reading order.
  * Below a child: prev/next among siblings and a link back to the parent. Rows, not cards.
@@ -30,12 +38,15 @@ export function PostNav({ parent, items, prev, next, position }: Props) {
             label={heading}
             statusLabel={heading}
             initial={0}
+            fit
+            pitch={112}
             items={items.map<TimelineItem>((c) => ({
               id: c.slug,
               date: c.date,
               title: c.title,
               summary: c.description,
-              image: c.cover ? { src: c.cover, alt: c.coverAlt ?? '' } : undefined,
+              image: entryImage(c),
+              icon: 'file',
               link: { href: postPath(c), label: 'Read this entry' },
             }))}
           />
