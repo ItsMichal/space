@@ -95,8 +95,8 @@ export default function ResumePage() {
             </div>
             <p className="rs-p">
               Vice President (Apr 2022 to May 2023); Vice President of Technology (Nov 2020 to Apr 2022). Built the organization&apos;s website
-              ({profile.blueprint.site.repo.replace('https://', '')}) and led student teams building software for non-profits, {profile.blueprint.projects.length} projects
-              from Spring 2021 to April 2023.
+              (blueprintboulder.org) and helped oversee student teams building software for non-profits ({profile.blueprint.projects.length} projects
+              from Spring 2021 to April 2023).
             </p>
           </div>
         </section>
