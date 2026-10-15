@@ -176,7 +176,10 @@ export default function AboutPage() {
 
         <Card id="blueprint" title={profile.blueprint.name} className="ab-bp">
           <p className="t-text">
-            {profile.blueprint.description} <span className="t-meta">Source: <Ext href={profile.blueprint.descriptionSource}>blueprintboulder.org</Ext></span>
+            {profile.blueprint.description}{' '}
+            <span className="t-meta">
+              <Ext href={profile.blueprint.url}>blueprintboulder.org</Ext>
+            </span>
           </p>
           <ul className="ab-plain t-text">
             {profile.volunteer.map((v) => (
@@ -185,23 +188,27 @@ export default function AboutPage() {
               </li>
             ))}
             <li>
-              <Ext href={profile.blueprint.site.repo}>{profile.blueprint.site.label}</Ext>
+              {profile.blueprint.site.label}{' '}
+              <span className="t-meta">
+                <Ext href={profile.blueprint.url}>site</Ext>
+                {', '}
+                <Ext href={profile.blueprint.site.repo}>code</Ext>
+              </span>
             </li>
           </ul>
-          <h3 className="ab-sub t-ui">Non-profit projects during his term</h3>
-          <ul className="ab-bp__list t-text">
+          <h3 className="ab-sub t-ui">Non-profit projects during my time</h3>
+          <ul className="ab-bp__list">
             {profile.blueprint.projects.map((p) => (
               <li key={p.org}>
-                <Ext href={p.url}>{p.org}</Ext>
-                <span className="t-meta">
+                <p className="t-ui">
+                  <Ext href={p.url}>{p.org}</Ext>
+                </p>
+                <p className="t-meta">
                   {p.what}, {p.year}
-                </span>
+                </p>
               </li>
             ))}
           </ul>
-          <p className="t-meta">
-            Source: <Ext href={profile.blueprint.projectsSource}>blueprintboulder.org/projects</Ext>
-          </p>
         </Card>
 
         <Card id="publications" title="Publications" list className="ab-pubs">

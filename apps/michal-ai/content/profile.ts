@@ -246,8 +246,8 @@ export const profile = {
   blueprint: {
     name: 'Blueprint Boulder',
     url: 'https://blueprintboulder.org',
-    /** The org's own words, https://blueprintboulder.org/ ("We're Blueprint Boulder, and we've been creating tech for social good since 2020."). */
-    description: 'A University of Colorado Boulder student organization that, in its own words, has been creating tech for social good since 2020.',
+    /** Paraphrase of the org's own words, https://blueprintboulder.org/ ("We're Blueprint Boulder, and we've been creating tech for social good since 2020."). */
+    description: 'A CU Boulder student organization building tech for social good since 2020.',
     descriptionSource: 'https://blueprintboulder.org/',
     peopleUrl: 'https://blueprintboulder.org/people',
     site: {
