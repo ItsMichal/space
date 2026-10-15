@@ -152,6 +152,8 @@ float visAt(vec3 v){
   float vis = v.z < 0. ? smoothstep(.985, 1.03, rho) : 1.;
   vis *= mix(.4, 1., depthOf(v));
   vis *= 1. - smoothstep(uHalf * .94, uHalf * .99, rho);
+  // the shell is a halo around the globe: it fades out well before the text column, and is denser near the limb than far out
+  vis *= (1. - smoothstep(1.35, 1.85, rho)) * mix(1., .5, smoothstep(1.15, 1.6, rho));
   return vis;
 }
 `
@@ -193,8 +195,8 @@ void main(){
   float d = length(p - vOff);
   // a '+': two thin strokes, crisp at any pixel ratio; size and strength come from depth
   vec2 q = abs(p - vOff);
-  float L = max(2.4, uPitch * .3) * vS * (.5 + .5 * vDim);
-  float a = (1. - smoothstep(.5, 1.1, min(q.x, q.y))) * (1. - smoothstep(L, L + .8, max(q.x, q.y))) * vA;
+  float L = max(1.5, uPitch * .17) * vS * (.5 + .5 * vDim);
+  float a = (1. - smoothstep(.35, .95, min(q.x, q.y))) * (1. - smoothstep(L, L + .8, max(q.x, q.y))) * vA;
   o = vec4(uInk * a, a);
 }`
 
@@ -299,7 +301,7 @@ out vec4 o;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 vec2 picUV(vec2 p){ vec2 t = (p - uRect.xy) / uRect.zw; t.y = 1. - t.y; return mix(uCrop.xy, uCrop.zw, t); }
 // text over the figure: only the letters and a few px around them, so the face never fades near the name
-float dimTight(vec2 c){ return 1. - .85 * smoothstep(.15, .65, maskAt(c)); }
+float dimTight(vec2 c){ return 1. - .97 * smoothstep(.06, .38, maskAt(c)); }
 void main(){
   vec2 f = gl_FragCoord.xy;
   vec2 rel = f - uRect.xy;
@@ -401,7 +403,7 @@ void main(){
   float col = mod(glyph, uAtlasInfo.x);
   float row = floor(glyph / uAtlasInfo.x);
   vUV = vec2((col + uAtlasBox.x + v.x * uAtlasBox.y) / uAtlasInfo.x, (row + uAtlasBox.z + (1. - v.y) * uAtlasBox.w) / uAtlasInfo.y);
-  vA = aQ.x * uStr * scl * (1. - .85 * smoothstep(.15, .65, maskAt(c)));
+  vA = aQ.x * uStr * scl * (1. - .97 * smoothstep(.06, .38, maskAt(c)));
   vCol = aC;
 }`
 const G_FS = `#version 300 es
@@ -414,7 +416,7 @@ void main(){
   // the photo's colour at this cell, brought to the ink's darkness (hue and chroma kept) and mixed with the globe ink
   float li = dot(uInk, vec3(.299, .587, .114));
   float lc = max(dot(vCol, vec3(.299, .587, .114)), .06);
-  vec3 tint = clamp(vCol * (li / lc) * 1.6, 0., 1.);
+  vec3 tint = clamp(vec3(mix(li, lc, .4)) + (vCol - vec3(lc)) * 1.7, 0., 1.);
   vec3 c = mix(uInk, tint, uChroma);
   float a = vCursor > .5 ? .9 * vA / max(vA, .3) : pow(texture(uAtlas, vUV).a, .85) * min(pow(vA, .8), 1.);
   o = vec4(c * a, a);

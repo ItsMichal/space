@@ -18,7 +18,7 @@ const TEX = path.join(root, 'public', 'globe', 'portrait.webp')
 const FONT = path.join(root, 'lib', 'og-fonts', 'IBMPlexMono-Regular.ttf')
 const CHARS = ".,'`:;-_~=+*/\\|!^<>()[]{}vxzcunwmoO0aMWQ#%&@8$"
 const ASPECT = 0.6
-const LEVEL_H = [40, 20, 10, 5] // cell heights in texture pixels (576 x 768)
+const LEVEL_H = [18, 9, 4.5] // largest 18 px (about 18 CSS px at 1440); texture 576 x 768 // cell heights in texture pixels (576 x 768)
 const GW = 16
 const GH = 27 // canonical raster for matching
 const CELL_W = 64 // atlas cell, pixels (glyph box 58 x 96 plus padding)
@@ -35,7 +35,13 @@ for (let i = 0; i < TW * TH; i++) {
   A[i] = tex[i * 4 + 3] / 255
   const tn = 1 - tex[i * 4] / 255
   // slightly stronger S-curve on the light tones: skin a little darker than the hoodie, mid-tones back
-  T[i] = Math.min(1, Math.max(0, (tn - 0.06) * 1.3 + 0.1)) * A[i]
+  // mid-dark fabric rather than black: the darks are pulled down to about 0.8
+  const hx = (i % TW) / TW
+  const hy = Math.floor(i / TW) / TH
+  const inHair = hx > 0.2 && hx < 0.62 && hy < 0.24
+  const sm = Math.min(1, Math.max(0, (tn - 0.55) / 0.35))
+  // jacket and shoulders are pulled down to mid-dark; hair and face keep their full tone so the head stays the focal point
+  T[i] = Math.min(1, Math.max(0, (tn - 0.06) * 1.3 + 0.1)) * (1 - (inHair ? 0.1 : 0.4) * sm * sm * (3 - 2 * sm)) * A[i]
 }
 
 // --- photo colour, same crop as the tone texture (build-portrait.mjs): 576 x 768 RGB
@@ -128,7 +134,7 @@ function patch(x0, y0, w, h) {
 
 // best glyph and ink for a patch. The score mixes the fine pixel error with a coarse (4 x 6) one, so light flat tones (skin) are matched by a
 // sparse character at low ink instead of falling back to blank, and ink may go from faint to full.
-const INKS = [0.35, 0.5, 0.65, 0.8, 0.95, 1.1, 1.25]
+const INKS = [0.45, 0.6, 0.75, 0.9, 1.05, 1.2]
 const CW = 4
 const CH = 6
 function coarse(a) {
@@ -140,7 +146,11 @@ function coarse(a) {
 }
 const smallC = small.map(coarse)
 const gSqC = smallC.map((g) => g.reduce((a, b) => a + b * b, 0))
+const DENSE = new Set([...'@#%$MW8Q&'].map((c) => CHARS.indexOf(c)))
 function bestGlyph(p, fw = 0, seed = 0) {
+  let mean = 0
+  for (let i = 0; i < p.length; i++) mean += p[i]
+  mean /= p.length
   let tt = 0
   for (let i = 0; i < p.length; i++) tt += p[i] * p[i]
   const pc = coarse(p)
@@ -151,6 +161,8 @@ function bestGlyph(p, fw = 0, seed = 0) {
   let best = { err: FINE * tt + COARSE * ttc, glyph: -1, ink: 0 }
   const cands = []
   for (let g = 0; g < small.length; g++) {
+    // fabric and hair stay light-bodied (: = + * x o ...); the dense characters are kept for the darkest tones
+    if (DENSE.has(g) && mean < 0.7) continue
     let gt = 0
     const gg = small[g]
     for (let i = 0; i < p.length; i++) gt += gg[i] * p[i]
@@ -162,13 +174,14 @@ function bestGlyph(p, fw = 0, seed = 0) {
       cands.push({ err, glyph: g, ink: a })
     }
   }
-  // near-ties (within 6%) are broken by position, so flat areas do not repeat one character
-  const near = cands.filter((c) => c.err <= best.err * 1.06 + 1e-6 && c.glyph >= 0)
+  // near-ties (within 30%) are broken by position, so flat areas do not repeat one character
+  if (fw > 0.12 && mean > 0.02 && best.glyph < 0 && cands.length) best = cands.reduce((m, c) => (c.err < m.err ? c : m))   // no gaps in the face
+  const near = cands.filter((c) => c.err <= best.err * 1.3 + 1e-6 && c.glyph >= 0)
   if (near.length > 1 && best.glyph >= 0) return near[Math.floor(((Math.sin(seed * 12.9898) * 43758.5453) % 1 + 1) % 1 * near.length)]
   return best
 }
 
-const LAMBDA = [0, 1.2, 0.9, 0.6] // cost of a split into the next level, scaled down by the face weight
+const LAMBDA = [0, 1.2, 0.9] // cost of a split into the next level, scaled down by the face weight
 const FACE_GAIN = 60
 const instances = []
 function cell(level, x0, y0) {
@@ -178,13 +191,16 @@ function cell(level, x0, y0) {
   const cx = x0 + w / 2
   const cy = y0 + h / 2
   const fw = face(cx, cy)
+  const u0 = cx / TW
+  const v0 = cy / TH
   // inside the matte only
   const centreIn = A[Math.min(TH - 1, Math.max(0, Math.round(cy))) * TW + Math.min(TW - 1, Math.max(0, Math.round(cx)))] >= 0.5
   const last = level === LEVEL_H.length - 1
   if (alpha < 0.02) return { err: 0, items: [] }
   // a cell that is only partly inside the silhouette must split (a big character would stick out of the matte)
   // the face is always drawn small enough for eyes, glasses, mouth to read
-  const forceSplit = !last && (alpha < 0.93 || (fw > 0.25 && level < 2) || (fw > 0.5 && level < 3))
+  const hair = u0 > 0.2 && u0 < 0.62 && v0 < 0.22
+  const forceSplit = !last && (alpha < 0.93 || (fw > 0.25 && level < 1) || (fw > 0.5 && level < 2) || (hair && level < 1))
   if (last && (alpha < 0.5 || !centreIn)) return { err: 0, items: [] }
   const weight = 1 + FACE_GAIN * fw
   const leaf = bestGlyph(p, fw, x0 * 0.37 + y0 * 1.31 + level)
@@ -234,7 +250,7 @@ let o = 0
 head.write('PGL1', o); o += 4
 head.writeUInt32LE(instances.length, o); o += 4
 head.writeFloatLE(ASPECT, o); o += 4
-for (const h of LEVEL_H) { head.writeFloatLE(h / TH, o); o += 4 }
+for (let l = 0; l < 4; l++) { head.writeFloatLE((LEVEL_H[l] ?? 0) / TH, o); o += 4 } // four slots, unused ones 0
 const ACOLS = 8
 const AROWS = Math.ceil(CHARS.length / ACOLS)
 head.writeUInt8(ACOLS, o++); head.writeUInt8(AROWS, o++); head.writeUInt8(CHARS.length, o++); head.writeUInt8(0, o++)

@@ -17,10 +17,10 @@ const DEG_PER_S = 2.4
 const START = { lat: 18, lon: -100 } // must match GLOBE_FALLBACK_VIEW
 const FALLBACK_FRACTION = GLOBE_FALLBACK_VIEW.radius / (GLOBE_FALLBACK_VIEW.size / 2)
 /** Constellation dot strength (of the ink alpha) and fade-in time. */
-const SAT_ALPHA = 0.7
+const SAT_ALPHA = 0.45
 const SAT_FADE_MS = 1600
 /** Keep every n-th satellite (and trail): fewer on small canvases. `base` is the globe box in CSS px (the canvas is SHELL_SCALE larger). */
-const thinFor = (base: number) => (base < 520 ? 7 : 2)
+const thinFor = (base: number) => (base < 520 ? 14 : 8)
 /** Drawn orbit radius range, in globe radii. EXAGGERATED: the real shells are at 1.05 to 1.10 (docs/presence.md). */
 const SHELL: [number, number] = [2.6, 3.1]
 const trailFor = (base: number) => (base < 520 ? 60 : 90) // seconds of path (about 3 and 5 minutes)
@@ -36,7 +36,7 @@ const WAKE_GAIN = 0.07 // px of drag per px/s of pointer velocity
 const SKETCH_SECONDS = (box: number) => (box < 520 ? 2.2 : 3.4)
 const RETYPE_EVERY = 3.5
 /** How much of the photo's chroma the characters keep. */
-const PORTRAIT_CHROMA = 0.7
+const PORTRAIT_CHROMA = 0.6
 /** The shell canvas (satellites, trails, pings) is drawn at low resolution: at most this many pixels, at most 1.25 device pixels per CSS pixel. */
 const shellDprFor = (box: number, deviceDpr: number) => {
   const cap = box < 520 ? 1.2e6 : 2.5e6
