@@ -54,7 +54,7 @@ async function session(profile) {
 const SNAP = `(() => { const b = document.querySelector('[data-reel]'), c = b.querySelector('canvas'), v = b.querySelector('video'), r = c.getBoundingClientRect(), d = window.__reel || null;
   return { frames: d ? d.frames : -1, state: d ? d.state : null, sc: d ? d.sc : null, W: c.width, H: c.height, cssW: r.width, cssH: r.height, dpr: devicePixelRatio, iw: innerWidth,
     still: !!b.querySelector('.reel-still'), isStill: b.classList.contains('is-still'), isOn: b.classList.contains('is-on'), src: (v.currentSrc || '').replace(/^.*\\/hero\\//, ''), t: v.currentTime, paused: v.paused, rs: v.readyState,
-    swaps: d ? d.swaps : 0, fallbacks: d ? d.fallbacks : 0, reason: d ? d.reason : '', qi: d ? d.qi : -1, resizes: d ? d.resizes : 0, lost: d ? d.lost : false, sy: scrollY }; })()`;
+    swaps: d ? d.swaps : 0, want: d ? d.src.replace(/^.*\\/hero\\//, '') : '', qd: [1, .8, .62, .5][d ? d.qi : 0], fallbacks: d ? d.fallbacks : 0, reason: d ? d.reason : '', qi: d ? d.qi : -1, resizes: d ? d.resizes : 0, lost: d ? d.lost : false, sy: scrollY }; })()`;
 
 async function waitFrames(s, n, ms) {   // wait until the loop has rendered n more frames (or the video clock moved, when there is no debug global)
   const a = await s.ev(SNAP); const t0 = Date.now();
@@ -70,14 +70,21 @@ let failed = 0; const rows = [];
 async function check(s, label, opts = {}) {
   const settle = opts.settle ?? 900;
   await sleep(settle);
-  const { a, b, ok } = await waitFrames(s, 2, opts.wait ?? 40000);
-  const why = [];
+  const { a, b: b0, ok } = await waitFrames(s, 2, opts.wait ?? 40000);
+  let b = b0; const why = [];
+  // the source the loop asked for must be the one the video element plays, and its clock must run
+  let t1 = b.t; const tw = Date.now();
+  while (b.frames >= 0 && Date.now() - tw < 30000) { b = await s.ev(SNAP); if (b.src === b.want && b.t !== t1 && !b.paused) break; if (b.src !== b.want) t1 = b.t; await sleep(300); }
+  if (b.frames >= 0 && b.src !== b.want) why.push(`video plays ${b.src || '-'} but the loop wants ${b.want}`);
+  else if (b.frames >= 0 && (b.t === t1 || b.paused)) why.push('video clock not running');
   const exp = b.sc ?? null;
   if (exp !== null) {
+    const lim = Math.min(b.dpr, 2, 1920 / b.cssW) * b.qd;
+    if (Math.abs(exp - lim) > 0.02) why.push(`scale ${exp.toFixed(3)} but dpr ${b.dpr}, css width ${b.cssW.toFixed(0)} and tier ${b.qi} give ${lim.toFixed(3)}`);
     if (Math.abs(b.W - Math.round(b.cssW * exp)) > 1 || Math.abs(b.H - Math.round(b.cssH * exp)) > 1) why.push(`canvas ${b.W}x${b.H} vs css ${b.cssW.toFixed(1)}x${b.cssH.toFixed(1)} * ${exp.toFixed(3)}`);
   } else if (Math.abs(b.W / b.cssW - b.dpr) > 0.01 && b.W / b.cssW > b.dpr + 0.01) why.push(`canvas ${b.W}x${b.H} too big for css ${b.cssW}x${b.cssH} at dpr ${b.dpr}`);
   if (b.frames >= 0 ? !ok : !ok) why.push(b.frames >= 0 ? `loop not advancing (frames ${a.frames} -> ${b.frames})` : 'video clock not advancing');
-  if (b.still || b.isStill || (b.state !== null && b.state !== 'run')) why.push(`poster fallback (state ${b.state}, .reel-still ${b.still}, reason ${b.reason || '-'})`);
+  if (b.isStill || (b.state !== null && b.state !== 'run')) why.push(`poster fallback (state ${b.state}, .reel-still ${b.still}, reason ${b.reason || '-'})`);
   if (!b.isOn) why.push('canvas not shown (.is-on missing)');
   const errs = s.errors.splice(0);
   if (errs.length) why.push(...errs.slice(0, 3));
@@ -94,7 +101,7 @@ for (const p of profiles) {
     await s.metrics(p.w, p.h);
     await s.send('Page.navigate', { url: `${base}/?reeldebug=1&motion=0${auto ? '' : '&reelq=3'}` });
     // the reel starts after load and idle
-    for (let i = 0; i < 120; i++) { const b = await s.ev("window.__reel ? window.__reel.frames > 3 : document.querySelector('[data-reel]').classList.contains('is-on')"); if (b) break; await sleep(500); }
+    for (let i = 0; i < 120; i++) { const b = await s.ev("window.__reel ? window.__reel.frames > 3 : !!document.querySelector('[data-reel].is-on')"); if (b) break; await sleep(500); }
     await check(s, `initial ${p.w}x${p.h}`, { settle: 200 });
     const seq = p.mobile
       ? [['narrower 360x800', 360, 800], ['wider 430x932', 430, 932], ['mobile to desktop 1440x900', 1440, 900], ['desktop to phone 390x844', 390, 844], ['landscape 844x390', 844, 390], ['portrait again 390x844', 390, 844], ['tablet 820x1180', 820, 1180], ['phone again 390x844', 390, 844]]
