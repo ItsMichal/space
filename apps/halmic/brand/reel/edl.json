@@ -15,8 +15,8 @@
    "id": "Et47QCJ3-3g",
    "title": "Robomaster 2019 Robotics Competition - Highlight Reel",
    "in": 128.6,
-   "crop": "1000:562:0:110",
-   "pcrop": "1000:562:0:110",
+   "crop": "960:540:0:130",
+   "pcrop": "960:540:0:130",
    "why": "the whole arena from above: lit red tower, blue robots closing in; scoreboard strip, minimap and captions cropped"
   },
   {
@@ -40,14 +40,14 @@
    "why": "wall-run along a lit hallway: a dark silhouette against bright walls; action shot, no cards or text"
   },
   {
-   "src": "yt-N7HKj1dYZjU",
+   "src": "yt-2jM2QSTSte4",
    "site": "youtube",
-   "id": "N7HKj1dYZjU",
-   "title": "FIFA With The Boys - Episode 4(EVER)",
-   "in": 304.8,
-   "crop": "1200:675:0:0",
-   "pcrop": "1200:675:0:0",
-   "why": "broadcast angle, striker and keeper in orange with the ball, sunlit pitch and crowd; channel logo corner cropped"
+   "id": "2jM2QSTSte4",
+   "title": "FIFA With the Boys - Episode 3",
+   "in": 148.4,
+   "crop": "1280:720:0:0",
+   "pcrop": "1280:720:0:0",
+   "why": "overhead replay, a scissor-kick over white and orange kits on bright grass; clean frame, no HUD or name tags in this stretch"
   },
   {
    "src": "tw-3298804610",
@@ -75,8 +75,8 @@
    "id": "Et47QCJ3-3g",
    "title": "Robomaster highlight reel",
    "in": 223.4,
-   "crop": "1000:562:20:120",
-   "pcrop": "1000:562:20:120",
+   "crop": "960:540:20:130",
+   "pcrop": "960:540:20:130",
    "why": "lit robots in a firefight behind the mesh, red tower in frame; scoreboard and minimap cropped"
   },
   {
@@ -94,20 +94,20 @@
    "site": "youtube",
    "id": "pl6lJAYPLgc",
    "title": "CU Boulder Racing Team onboard",
-   "in": 61.4,
+   "in": 39.4,
    "crop": "1040:585:0:0",
    "pcrop": "1040:585:0:0",
-   "why": "second onboard stretch, wide bend with the horizon; lap timer cropped"
+   "why": "second onboard stretch: sky, airfield and track around the hoop; lap timer cropped"
   },
   {
    "src": "yt-N7HKj1dYZjU",
    "site": "youtube",
    "id": "N7HKj1dYZjU",
    "title": "FIFA With The Boys - Episode 4(EVER)",
-   "in": 89.4,
-   "crop": "1200:675:0:0",
-   "pcrop": "1200:675:0:0",
-   "why": "overhead scramble, white and teal kits on bright grass, a scissor-kick; no name tags in this stretch"
+   "in": 194.2,
+   "crop": "1280:720:0:0",
+   "pcrop": "1280:720:0:0",
+   "why": "goal mouth from the side: keeper diving, orange and dark kits, crowd behind; clean frame"
   },
   {
    "src": "tw-3298804610",

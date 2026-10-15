@@ -1,6 +1,6 @@
 // Rebuilds the hero reel (public/hero/reel-1080.webm, reel-720.webm, reel-m.webm, reel-720.mp4, reel-m.mp4, reel-poster.jpg, reel-poster-m.jpg) from edl.json.
 // usage: REEL_SRC=/path/to/dir-with-source-mp4s node brand/reel/build-reel.mjs   (needs ffmpeg with libvpx-vp9, libx264, minterpolate)
-// Optional env: REEL_VARIANT=L|P (cut only that variant), REEL_TMP (scratch dir), REEL_ONLY=3,5 (re-cut just these moment indices, reuse the rest from REEL_TMP), REEL_SKIP_ENC=1 (stop after the two loops),
+// Optional env: REEL_VARIANT=L|P (cut only that variant), REEL_JOBS (parallel cuts, default 3), REEL_NOLOOP=1 (stop after the segments), REEL_TMP (scratch dir), REEL_ONLY=3,5 (re-cut just these moment indices, reuse the rest from REEL_TMP), REEL_SKIP_ENC=1 (stop after the two loops),
 // CRF1080 CRF720 CRFM CRFMP4 CRFMMP4, POSTER_Q. Source footage is never committed; see README.md.
 import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -63,7 +63,8 @@ edl.moments.forEach((m, i) => {
       '-frames:v', String(N), '-c:v', 'libx264', '-preset', 'fast', '-crf', '6', path.join(tmp, `seg${v.k}${i}.mp4`)]));
   }
 });
-await pool(jobs, 3);
+await pool(jobs, +(process.env.REEL_JOBS ?? 3));
+if (process.env.REEL_NOLOOP) process.exit(0);   // segments only
 
 // chain the crossfades with the first moment repeated at the end, then cut one full cycle out of the middle so the last frame leads into the first
 const n = edl.moments.length, ins = [...Array(n).keys(), 0], cycle = (N - X) * n;
