@@ -1,0 +1,92 @@
+{
+ "scenario": "nav content widens 281.7 -> 500px (late font, status chip, breakpoint); dark reading page, frost engine; frames stepped at 60fps with Field.update; dom = nav box (content and ::before sheen), glass = frost box width (same spring state as the canvas rim, tint and shadow)",
+ "before_fix": [
+  {
+   "frame": -1,
+   "dom_px": 281.7,
+   "glass_px": 281.7
+  },
+  {
+   "frame": 0,
+   "dom_px": 500,
+   "glass_px": 305.1
+  },
+  {
+   "frame": 1,
+   "dom_px": 500,
+   "glass_px": 313.6
+  },
+  {
+   "frame": 3,
+   "dom_px": 500,
+   "glass_px": 332
+  },
+  {
+   "frame": 8,
+   "dom_px": 500,
+   "glass_px": 377.8
+  },
+  {
+   "frame": 13,
+   "dom_px": 500,
+   "glass_px": 415.7
+  },
+  {
+   "frame": 18,
+   "dom_px": 500,
+   "glass_px": 443.8
+  },
+  {
+   "frame": 23,
+   "dom_px": 500,
+   "glass_px": 463.3
+  },
+  {
+   "frame": 28,
+   "dom_px": 500,
+   "glass_px": 476.4
+  },
+  {
+   "frame": 33,
+   "dom_px": 500,
+   "glass_px": 485
+  },
+  {
+   "frame": 38,
+   "dom_px": 500,
+   "glass_px": 490.5
+  },
+  {
+   "frame": 43,
+   "dom_px": 500,
+   "glass_px": 494.1
+  }
+ ],
+ "after_fix": [
+  {
+   "frame": -1,
+   "dom_px": 281.7,
+   "glass_px": 281.7
+  },
+  {
+   "frame": 0,
+   "dom_px": 500,
+   "glass_px": 500
+  },
+  {
+   "frame": 1,
+   "dom_px": 500,
+   "glass_px": 500
+  },
+  {
+   "frame": 2,
+   "dom_px": 500,
+   "glass_px": 500
+  },
+  {
+   "frame": 3,
+   "dom_px": 500,
+   "glass_px": 500
+  }
+ ]
+}
