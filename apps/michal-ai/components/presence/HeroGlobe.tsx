@@ -9,7 +9,7 @@ import { gmst, positionEcef } from '@/lib/starlink/orbit.mjs'
 import { buildLinks } from '@/lib/starlink/links.mjs'
 import { loadLand } from './globe/data'
 import { loadStarlink, type Packed } from './globe/starlink'
-import { buildAtlas, loadPortrait } from './globe/portrait'
+import { loadGlyphs, loadPortrait, type Glyphs } from './globe/portrait'
 import { createRenderer, PING_CAP, projectPoint, rotation, SHELL_SCALE, SPHERE_FRACTION, type GlobeRenderer, type PingSet, type PortraitSpec } from './globe/renderer'
 import './presence.css'
 
@@ -20,11 +20,11 @@ const FALLBACK_FRACTION = GLOBE_FALLBACK_VIEW.radius / (GLOBE_FALLBACK_VIEW.size
 const SAT_ALPHA = 0.7
 const SAT_FADE_MS = 1600
 /** Keep every n-th satellite (and trail): fewer on small canvases. `base` is the globe box in CSS px (the canvas is SHELL_SCALE larger). */
-const thinFor = (base: number) => (base < 520 ? 4 : 2)
+const thinFor = (base: number) => (base < 520 ? 7 : 2)
 /** Drawn orbit radius range, in globe radii. EXAGGERATED: the real shells are at 1.05 to 1.10 (docs/presence.md). */
-const SHELL: [number, number] = [1.9, 2.3]
-const trailFor = (base: number) => (base < 520 ? 180 : 300) // seconds of path (about 3 and 5 minutes)
-const pingsFor = (base: number) => (base < 520 ? 12 : 30) // simultaneous mesh pings (comets)
+const SHELL: [number, number] = [2.6, 3.1]
+const trailFor = (base: number) => (base < 520 ? 60 : 90) // seconds of path (about 3 and 5 minutes)
+const pingsFor = (base: number) => (base < 520 ? 4 : 10) // simultaneous mesh pings (comets)
 /** The phrase's own enter animation: 160 ms delay + 320 ms, cubic-bezier(0.22, 1, 0.36, 1) (app/styles/craft.css, --ease-out-soft). */
 const CUT_MS = 480
 const PUSH_RADIUS = 130 // CSS px (gaussian field)
@@ -32,7 +32,11 @@ const PUSH_MAX = 14 // CSS px
 const SPRING_W = 13 // rad/s, pointer field spring
 const SPRING_ZETA = 0.65 // under-damped: a little overshoot, a slow settle
 const WAKE_GAIN = 0.07 // px of drag per px/s of pointer velocity
-const PORTRAIT_REVEAL_MS = 900
+/** The portrait is sketched in character by character over this long (seconds), then stays still; a character re-types now and then. */
+const SKETCH_SECONDS = (box: number) => (box < 520 ? 2.2 : 3.4)
+const RETYPE_EVERY = 3.5
+/** How much of the photo's chroma the characters keep. */
+const PORTRAIT_CHROMA = 0.7
 /** The shell canvas (satellites, trails, pings) is drawn at low resolution: at most this many pixels, at most 1.25 device pixels per CSS pixel. */
 const shellDprFor = (box: number, deviceDpr: number) => {
   const cap = box < 520 ? 1.2e6 : 2.5e6
@@ -41,7 +45,7 @@ const shellDprFor = (box: number, deviceDpr: number) => {
 const PTR_IDLE_MS = 1500
 
 /** Portrait style shipped by default: 'dots' | 'glyphs' | 'mixed' (override with ?portrait=). */
-const PORTRAIT_DEFAULT: 'dots' | 'glyphs' | 'mixed' = 'dots'
+const PORTRAIT_DEFAULT: 'dots' | 'glyphs' = 'glyphs'
 /** Hero layout switch: below this the portrait is a small bust beside the name, from here it stands over the globe. */
 const FIGURE_MIN_WIDTH = 768
 
@@ -103,10 +107,12 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     sat: null as Packed | null, satFrom: 0,
     portrait: null as null | { aspect: number; from: number }, pspec: null as PortraitSpec | null, pstr: 0, globeA: 0.4,
     maskT0: -1e9,
+    glyphs: null as Glyphs | null,
+    retype: [-1, -99] as [number, number], nextRetype: 0,
     links: null as null | { a: Int32Array; b: Int32Array },
     pg: null as null | { a: Float32Array; ad: Float32Array; b: Float32Array; bd: Float32Array; t: Float32Array; next: Float32Array; hops: Int8Array; lastA: Int32Array; lastB: Int32Array },
     adj: null as null | Int32Array[],
-    stats: { frames: 0, satsDrawn: 0, portraitReveal: 0, pings: 0, firstFrameMs: 0, readyMs: 0 },
+    stats: { sketchFrom: 0, frames: 0, satsDrawn: 0, portraitReveal: 0, pings: 0, firstFrameMs: 0, readyMs: 0 },
     freeze: false, fine: false, pin: null as null | [number, number],
     px: { x: 0, v: 0 }, py: { x: 0, v: 0 }, pk: { x: 0, v: 0 }, tx: 0, ty: 0, over: false, lastMove: 0,
   })
@@ -147,7 +153,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     g.fillRect(0, 0, M, M)
     g.fillStyle = '#fff'
     g.shadowColor = '#fff'
-    g.shadowBlur = 15 * k
+    g.shadowBlur = 26 * k
     g.textBaseline = 'alphabetic'
     const range = document.createRange()
     const drawNode = (tn: Text) => {
@@ -164,6 +170,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
         const r = range.getBoundingClientRect()
         if (!r.width || !r.height) continue
         g.fillText(text[i], (r.left - w.left) * k, (r.top - w.top) * k + asc)
+        g.fillText(text[i], (r.left - w.left) * k, (r.top - w.top) * k + asc)   // twice: a denser, rounder cloud
       }
     }
     const drawIn = (root: Element | null) => {
@@ -201,7 +208,6 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     let crop: PortraitSpec['crop'] = [0, 0, 1, 1]
     let edge = 0
     let sideTaper = false
-    let glyphH = 5
     if (vw >= FIGURE_MIN_WIDTH) {
       const hb = document.getElementById('work-h')?.getBoundingClientRect()
       // He runs down behind the first card (the card is on top and crops him): bottom is 150px below the heading.
@@ -211,8 +217,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
       width = height * 0.75
       left = w.left + w.width / 2 + 0.04 * w.width - 0.44 * width
       cellW = sc >= 1.4 ? 2 : 2.4
-      glyphH = 5
-      sideTaper = true
+        sideTaper = true
       edge = 160 * sc // the figure dissolves over its last 160 CSS px (noise-broken), the card covers its upper part
     } else {
       // A small bust (head, neck, shoulders, upper jacket) at the top right. The picture is 3:4 and the head is about 0.56 of its
@@ -239,30 +244,26 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
       height = 0.57 * (4 / 3) * Wb
       bottom = top + height
       cellW = 1.1
-      glyphH = 3.5
       edge = 38 * sc // the bust dissolves over its last 38 CSS px (noise-broken), no straight cut
     }
-    // Style: halftone dots, characters sized by tone ("glyphs"), or fine dots in the face with characters elsewhere ("mixed"). Characters need
-    // device pixels to resolve (about 1.5x and up); at 1x the dots stand in. Whole device pixels everywhere (rect, cell): the grid lands on the
-    // pixel grid at every DPR and cannot beat against it into a moire.
+    // Style: baked terminal characters (crisp at any pixel ratio) or halftone dots (`?portrait=dots`, and the fallback if the baked data fails).
     const force = new URLSearchParams(window.location.search).get('portrait')
-    const want = force === 'dots' || force === 'glyphs' || force === 'mixed' ? force : PORTRAIT_DEFAULT
-    const canGlyph = (sc >= 1.4 && vw >= FIGURE_MIN_WIDTH) || (force !== null && force !== "dots")
-    const style: 0 | 1 | 2 = want === 'dots' || !canGlyph ? 0 : want === 'glyphs' ? 1 : 2
+    const want = force === 'dots' || force === 'glyphs' ? force : PORTRAIT_DEFAULT
+    // Characters need about 5 CSS px per cell to resolve the eyes and glasses; the phone bust is only about 150 px wide, so it keeps the halftone dots.
+    const style: 0 | 1 = want === 'dots' || !s.glyphs || (vw < FIGURE_MIN_WIDTH && force !== 'glyphs') ? 0 : 1
     const cellPx = Math.max(3, Math.round(cellW * sc))
-    const gh = Math.max(6, Math.round(glyphH * sc))
-    const gw = Math.max(4, Math.round(gh * s.portrait.aspect))
     const rx = Math.round((left - w.left) * sc)
     const ry = Math.round(px - (bottom - w.top) * sc)
     s.pspec = {
       rect: [rx, ry, Math.round(width * sc), Math.round(height * sc)],
       crop,
-      cell: style === 0 ? [cellPx, cellPx] : [gw, gh],
+      cell: [cellPx, cellPx],
       sideTaper,
       style,
-      time: 0,
-      reveal: 1,
-      anim: 0,
+      sketch: 0,
+      sketchDur: 0,
+      retype: [-1, 0],
+      chroma: PORTRAIT_CHROMA,
       strength: 1,
       edge,
       push: { radius: 90 * s.dpr, max: 5 * s.dpr },
@@ -398,9 +399,15 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
       if (!(s.pingDemo && s.devT !== null)) pings = { count: K, a: P.a, ad: P.ad, b: P.b, bd: P.bd, t: P.t, now: tNow }
     }
     const maskMix = s.reduced ? 1 : easeOutSoft(Math.min(1, (now - s.maskT0) / CUT_MS))
-    const reveal = s.reduced ? 1 : s.devT !== null ? Math.min(1, s.devT / (PORTRAIT_REVEAL_MS / 1000)) : Math.min(1, (now - (s.portrait?.from ?? now)) / PORTRAIT_REVEAL_MS)
-    const ptime = s.devT ?? (now / 1000) % 3600
-    const pspec = s.pspec && s.portrait ? { ...s.pspec, time: ptime, reveal, anim: s.reduced ? 0 : 1 } : undefined
+    const sketchDur = s.reduced || !s.glyphs ? 0 : SKETCH_SECONDS(base)
+    const sketchT = s.portrait ? (now - s.portrait.from) / 1000 : 0
+    const reveal = sketchDur > 0 ? Math.min(1, sketchT / (sketchDur + 0.4)) : 1
+    // after the sketch-in the portrait is still, except one character that re-types now and then (off under reduced motion)
+    if (sketchDur > 0 && s.glyphs && sketchT > sketchDur + 1 && sketchT > s.nextRetype) {
+      s.retype = [Math.floor(Math.random() * s.glyphs.count), sketchT]
+      s.nextRetype = sketchT + RETYPE_EVERY * (0.7 + Math.random() * 0.6)
+    }
+    const pspec = s.pspec && s.portrait ? { ...s.pspec, sketch: sketchT, sketchDur, retype: s.retype } : undefined
     // The globe canvas: the dot-matrix sphere and the portrait, at the device pixel ratio, the size of the globe box.
     s.r?.draw(lat, lon, { globeA: s.globeA, maskMix, portrait: pspec, ptr, wake, push: { radius: PUSH_RADIUS * s.dpr, max: PUSH_MAX * s.dpr } })
     // The shell canvas: satellites, trails and pings at low resolution on a box SHELL_SCALE times larger, same centre. Pointer, rect and
@@ -431,6 +438,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     }
     const stt = s.stats
     stt.frames++
+    stt.sketchFrom = s.portrait?.from ?? 0
     stt.satsDrawn = s.sr && sat && satAlpha > 0.05 ? Math.ceil(sat.count / thinFor(base)) : 0
     stt.portraitReveal = pspec ? reveal : 0
     stt.pings = pings ? pings.count : 0
@@ -511,12 +519,13 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
         // The portrait: picture + a glyph atlas from the system monospace, after the globe is up and fonts are ready.
         // Dev only: ?bare=1 draws the plain globe (no portrait, no satellites), which is how public/globe/fallback.png is regenerated.
         const bare = process.env.NODE_ENV !== 'production' && new URLSearchParams(window.location.search).get('bare') === '1'
-        if (!bare) void Promise.all([loadPortrait(), document.fonts?.ready]).then(([pic]) => {
-          const atlas = buildAtlas(st.current.dpr)
-          if (!pic || !atlas || st.current.r !== r) return
-          r.setPortrait(pic, atlas.canvas, atlas.n, atlas.box)
-          st.current.sr?.setPortrait(pic, null, 0)
-          st.current.portrait = { aspect: atlas.aspect, from: performance.now() }
+        if (!bare) void Promise.all([loadPortrait(), loadGlyphs()]).then(([pic, gl2]) => {
+          if (!pic || st.current.r !== r) return
+          r.setPortrait(pic)
+          st.current.sr?.setPortrait(pic)
+          r.setGlyphs(gl2)
+          st.current.glyphs = gl2
+          st.current.portrait = { aspect: gl2?.aspect ?? 0.6, from: performance.now() }
           layoutPortrait()
           kick()
         })

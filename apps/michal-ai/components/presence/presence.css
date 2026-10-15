@@ -55,10 +55,10 @@
    resolution. It sits above the globe canvas and has the figure cut out of it. */
 .hero-globe__canvas.hero-globe__shell {
   inset: auto;
-  left: -60%;
-  top: -60%;
-  width: 220%;
-  height: 220%;
+  left: -110%;
+  top: -110%;
+  width: 320%;
+  height: 320%;
 }
 /* Bleed: runs off the right and top edge (the parent must clip). Not used on the homepage. */
 .hero-globe--bleed {

@@ -1,0 +1,5 @@
+IBM Plex Mono (IBMPlexMono-Regular.ttf)
+Copyright 2017 IBM Corp. with Reserved Font Name "Plex".
+Licensed under the SIL Open Font License, Version 1.1: https://openfontlicense.org (full text: https://github.com/IBM/plex/blob/master/LICENSE.txt).
+Used by scripts/build-portrait-glyphs.mjs to bake public/globe/portrait-glyphs.webp (a glyph atlas) and by the share-card build. The baked atlas is a
+derivative image of the font's glyph shapes; the font file itself is not served to browsers.

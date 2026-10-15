@@ -49,8 +49,8 @@ export function projectPoint(lat: number, lon: number, rot: Float32Array): { x: 
 
 /** Fraction of the canvas half-size used by the sphere (the rest is margin, so dots fade out well inside the box). */
 /** The canvas is this much larger than the old globe box, so the exaggerated satellite shell fits; the sphere keeps its old CSS size. */
-export const SHELL_SCALE = 2.2 // the shell canvas is this many times the globe box (it is a separate, low-resolution canvas)
-export const PING_CAP = 48
+export const SHELL_SCALE = 3.2 // the shell canvas is this many times the globe box (it is a separate, low-resolution canvas)
+export const PING_CAP = 16
 export const SPHERE_FRACTION = 0.94
 
 // Shared by the land, satellite and portrait passes: the text halo and the pointer push.
@@ -63,7 +63,7 @@ float maskAt(vec2 c){
   return mix(texture(uMaskA, uv).r, texture(uMaskB, uv).r, uMaskMix);
 }
 // how much of a dot's size and alpha stays at a point: 1 in the open, 0 under and hugging the letters, following their contour
-float dimAt(vec2 c){ return 1. - clamp(maskAt(c) * 1.5, 0., 1.); }
+float dimAt(vec2 c){ return 1. - smoothstep(.06, .6, maskAt(c)); }
 uniform vec3 uPtr;    // pointer x, y (canvas px, origin bottom-left), strength 0..1 (0 = idle: the push code is skipped)
 uniform vec2 uPush;   // radius px, maximum displacement px
 uniform vec2 uWake;   // field velocity (px): the flow the pointer leaves behind it
@@ -191,14 +191,16 @@ void main(){
   vec2 p = (gl_PointCoord - .5) * (ceil(uPitch * .6) * 2. + 2.);
   p.y = -p.y;
   float d = length(p - vOff);
-  float rad = uPitch * .25 * vS * (.5 + .5 * vDim);
-  float a = (1. - smoothstep(rad - .55, rad + .55, d)) * vA;
+  // a '+': two thin strokes, crisp at any pixel ratio; size and strength come from depth
+  vec2 q = abs(p - vOff);
+  float L = max(2.4, uPitch * .3) * vS * (.5 + .5 * vDim);
+  float a = (1. - smoothstep(.5, 1.1, min(q.x, q.y))) * (1. - smoothstep(L, L + .8, max(q.x, q.y))) * vA;
   o = vec4(uInk * a, a);
 }`
 
 // Trails: each satellite's path over the last uTrail seconds, TRAIL_N segments, drawn as 1 px lines (instanced, one instance per
 // satellite; the two ends of each segment are the same elements evaluated at t - age). Fading towards the tail.
-const TRAIL_N = 28
+const TRAIL_N = 5
 const TRAIL_VS = `#version 300 es
 precision highp float;
 in vec4 aA; in float aB;
@@ -208,29 +210,30 @@ ${SATLIB}
 out float vA;
 void main(){
   vA = 0.;
-  gl_Position = vec4(2., 2., 2., 1.);
-  if (uThin > 1. && mod(float(gl_InstanceID), uThin) > .5) return;
-  float k = float((gl_VertexID >> 1) + (gl_VertexID & 1));
-  float f = k / ${TRAIL_N}.;
+  gl_Position = vec4(2., 2., 2., 1.); gl_PointSize = 1.;
+  // only a subset of the satellites leave a trail, a few specks behind them along their orbit (a short curved arc, not a line)
+  if (mod(float(gl_InstanceID), uThin) > .5) return;
+  float f = float(gl_VertexID + 1) / ${TRAIL_N}.;
   vec3 v = satView(aA, aB, uT - f * uTrail);
   vec2 px = .5 * uRes + v.xy * uR;
   float dim = dimAt(px);
   if (uPtr.z > 0.) px += pushAt(px);
-  vA = visAt(v) * uAlpha * dim * exp(-3.2 * f) * (1. - f);
-  gl_Position = vec4(px / uRes * 2. - 1., 0., 1.);
+  vA = visAt(v) * uAlpha * dim * (1. - f) * .9;
+  gl_Position = vec4((floor(px) + .5) / uRes * 2. - 1., 0., 1.);
+  gl_PointSize = max(2., uPitch * .24) * mix(1., .6, f);
 }`
 const LINE_FS = `#version 300 es
 precision highp float;
 uniform vec3 uInk;
 in float vA;
 out vec4 o;
-void main(){ if (vA <= .002) discard; o = vec4(uInk * vA, vA); }`
+void main(){ if (vA <= .002) discard; float d = length(gl_PointCoord - .5) * 2.; float a = vA * (1. - smoothstep(.55, 1., d)); o = vec4(uInk * a, a); }`
 
 // Mesh pings: soft comets gliding from one satellite to the next (chosen on the CPU from a precomputed neighbour table; chains of 1 to 4
 // hops). Both ends are evaluated here from their elements, so the comet stays attached as they move. No line is drawn: a bright soft head
 // with a quickly fading tail (point sprites, sub-pixel positions), eased in and out, and a small bloom on the receiving satellite.
-const PING_MAX = 48
-const PING_SEG = 14
+const PING_MAX = 16
+const PING_SEG = 7
 const PING_VS = `#version 300 es
 precision highp float;
 uniform vec4 uPA[${PING_MAX}]; uniform float uPAd[${PING_MAX}];
@@ -251,18 +254,18 @@ void main(){
   float tr = clamp(f, 0., 1.);
   float s = tr * tr * (3. - 2. * tr);
   float env = smoothstep(0., .2, f) * (1. - smoothstep(.78, 1., f));
-  float base = max(4., uPitch * .6);
+  float base = max(3., uPitch * .38);
   vec3 v; float al; float sz;
   if (uHead < .5) {
     float j = float(gl_VertexID) / ${PING_SEG - 1}.;
     v = mix(a, b, max(s - .3 * (1. - j), 0.));
-    al = pow(j, 2.6) * env;
-    sz = base * mix(.7, 1.9, j);
+    al = pow(j, 3.2) * env * .55;
+    sz = base * mix(.6, 1.3, j);
   } else {
     if (gl_VertexID != 0) return;
     v = b;
-    al = .9 * smoothstep(.82, 1., f) * (1. - smoothstep(1., 1.3, f));
-    sz = base * (1.6 + 3. * smoothstep(1., 1.3, f));
+    al = .2 * smoothstep(.82, 1., f) * (1. - smoothstep(1., 1.3, f));
+    sz = base * 1.6;
   }
   vec2 px = .5 * uRes + v.xy * uR;
   float dim = dimAt(px);
@@ -288,16 +291,15 @@ void main(){
 // its own (any size, glyph aspect); the pointer pushes individual glyphs apart exactly like the globe's dots, only gentler.
 const P_FS = `#version 300 es
 precision highp float;
-uniform sampler2D uPic; uniform sampler2D uAtlas;
-uniform vec4 uRect; uniform vec4 uCrop; uniform vec2 uCell; uniform vec4 uAtlasBox; uniform float uAtlasN;
-uniform float uMode; uniform float uStr; uniform float uStyle; uniform float uEdge; uniform float uSide; uniform vec3 uInk;
-uniform float uTime; uniform float uReveal; uniform float uAnim;
+uniform sampler2D uPic;
+uniform vec4 uRect; uniform vec4 uCrop; uniform vec2 uCell;
+uniform float uMode; uniform float uStr; uniform float uEdge; uniform float uSide; uniform vec3 uInk;
 ${COMMON}
 out vec4 o;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 vec2 picUV(vec2 p){ vec2 t = (p - uRect.xy) / uRect.zw; t.y = 1. - t.y; return mix(uCrop.xy, uCrop.zw, t); }
 // text over the figure: only the letters and a few px around them, so the face never fades near the name
-float dimTight(vec2 c){ return 1. - .75 * smoothstep(.5, .85, maskAt(c)); }
+float dimTight(vec2 c){ return 1. - .85 * smoothstep(.15, .65, maskAt(c)); }
 void main(){
   vec2 f = gl_FragCoord.xy;
   vec2 rel = f - uRect.xy;
@@ -308,9 +310,7 @@ void main(){
   if (uMode < .5) {
     // knockout by the real matte; it fades in step with the dissolve, so globe and satellites come back through the figure's end
     float a = smoothstep(.42, .58, texture(uPic, picUV(f)).a);
-    float v0 = 1. - rel.y / uRect.w;
-    float g0 = uAnim > .5 ? smoothstep(0., .5, clamp((uReveal * 1.3 - v0) / .3, 0., 1.)) : 1.;
-    o = vec4(0., 0., 0., a * smoothstep(0., .8, ee) * g0 * uStr);
+    o = vec4(0., 0., 0., a * smoothstep(0., .8, ee) * uStr);
     return;
   }
   vec2 src = f;
@@ -319,18 +319,8 @@ void main(){
   vec2 origin = uRect.xy + cell * uCell;
   vec2 centre = origin + .5 * uCell;
   vec2 uvc = (centre - uRect.xy) / uRect.zw;
-  float v = 1. - uvc.y;                               // 0 at the top of the figure
-  // hologram life (all subtle, all from uTime; uAnim = 0 under reduced motion): a slow scan band, a faint shimmer and a rare small ripple
-  float band = exp(-pow((v - (fract(uTime / 6.) * 1.5 - .25)) / .07, 2.)) * uAnim;
-  float tsh = uTime * .8;
-  float sh = 1. + .035 * uAnim * (mix(hash(cell + floor(tsh)), hash(cell + floor(tsh) + 1.), smoothstep(0., 1., fract(tsh))) - .5) * 2.;
-  float ph = fract(uTime / 11.);
-  float wave = sin(v * 28. - uTime * 2.2) * smoothstep(0., .1, ph) * (1. - smoothstep(.3, .45, ph)) * uAnim;
-  float sz = (1. + .10 * band) * sh;
-  float rv = uAnim > .5 ? clamp((uReveal * 1.3 - v) / .3, 0., 1.) : 1.;     // materialise: dots grow in along a sweep
   vec2 local = f - origin;
   if (uPtr.z > 0.) local -= pushAt(centre);
-  local.x -= wave * .18 * uCell.x;
   if (local.x < 0. || local.y < 0. || local.x >= uCell.x || local.y >= uCell.y) discard;
   vec2 q = .25 * uCell;
   vec4 t0 = texture(uPic, picUV(centre));
@@ -346,46 +336,13 @@ void main(){
   float h = hash(cell);
   // the end of the figure dissolves: cells drop out in a noise-broken order, and what is left shrinks, so there is no line
   float diss = smoothstep(h * .75, h * .75 + .25, ee) * mix(.45, 1., ee);
-  float life = diss * smoothstep(0., 1., rv) * m;
+  float life = diss * m;
   float d = clamp((1. - clamp(s.r, 0., 1.) - .25) * 1.28 + .25, 0., 1.);   // tone is baked into the texture (scripts/build-portrait.mjs): dark = ink
   vec2 cl = local - .5 * uCell;
   // halftone dot: area is the coverage
-  float rd = min(uCell.x, uCell.y) * sqrt(.66 * pow(d, .85) / 3.14159) * life * sz;
+  float rd = min(uCell.x, uCell.y) * sqrt(.66 * pow(d, .85) / 3.14159) * life;
   float dotCov = 1. - smoothstep(rd - .5, rd + .5, length(cl));
   float cov = dotCov;
-  if (uStyle > .5) {
-    // glyph cell: the glyph is scaled by tone like a halftone dot (dark = big and bold), and its character follows the tone band and the
-    // direction of a nearby edge; a few cells per second re-roll within their band
-    vec2 gp = vec2((t1.r + t3.r) - (t2.r + t4.r), (t1.r + t2.r) - (t3.r + t4.r));
-    float em = length(gp);
-    float rnd = hash(cell + floor(uTime * .15 * uAnim + h * 9.) * .37);
-    float gi;
-    if (em > .16 && d > .3) {
-      float ang = mod(atan(gp.y, gp.x) + 1.5708, 3.14159);            // direction of the line along the edge
-      gi = ang < .39 || ang > 2.75 ? 7. : (ang < 1.18 ? 9. : (ang < 1.96 ? 8. : 10.));     // the four stroke glyphs
-    } else if (d < .12) gi = floor(rnd * 4.);
-    else if (d < .55) gi = 4. + floor(rnd * 3.);
-    else gi = 11. + floor(rnd * 6.);
-    // size from tone like a halftone dot: area = coverage, so the glyph's own ink fraction sets its scale
-    float ink = gi < 4. ? .07 : (gi < 11. ? .2 : .36);
-    float sg = clamp(sqrt(.7 * pow(d, .85) / ink), 0., 1.12) * life * sz;
-    float gc = 0.;
-    if (d > .05 && sg > .12) {
-      vec2 lp = (local / uCell - .5) / sg + .5;
-      if (lp.x > 0. && lp.x < 1. && lp.y > 0. && lp.y < 1.) {
-        vec2 auv = vec2((gi + uAtlasBox.x + lp.x * uAtlasBox.y) / uAtlasN, uAtlasBox.z + (1. - lp.y) * uAtlasBox.w);
-        vec2 gx = vec2(uAtlasBox.y / uAtlasN / (uCell.x * sg), 0.);
-        vec2 gy = vec2(0., uAtlasBox.w / (uCell.y * sg));
-        gc = textureGrad(uAtlas, auv, gx, gy).a;
-      }
-    }
-    if (uStyle > 1.5) {
-      // mixed: fine dots in the face, characters in hair, jacket and hoodie, with a soft transition
-      vec2 pu = picUV(centre);
-      float face = 1. - smoothstep(.7, 1.1, length((pu - vec2(.396, .307)) / vec2(.174, .167)));
-      cov = mix(gc, dotCov, face);
-    } else cov = gc;
-  }
   float a = cov * uStr * dimTight(centre);
   o = vec4(uInk * a, a);
 }`
@@ -393,6 +350,75 @@ void main(){
 // Programs a canvas never uses are compiled as empty stand-ins: shader compilation is the slow part of start-up on software GL.
 const DUMMY_VS = `#version 300 es\nvoid main(){ gl_Position = vec4(2.); }`
 const DUMMY_FS = `#version 300 es\nprecision lowp float; out vec4 o; void main(){ o = vec4(0.); }`
+
+
+// Portrait as pre-baked multi-size terminal characters (scripts/build-portrait-glyphs.mjs): one instanced quad per character, sampling a mipmapped
+// glyph atlas, so it is crisp at any pixel ratio and has no per-pixel halftone to beat against the pixel grid. Per-instance data: position and
+// size in the portrait texture, glyph, ink, sketch-in start and the photo's own colour at that cell. The sketch-in is a compare of one clock
+// against the baked start; characters are moved whole by the pointer push, never distorted.
+const G_VS = `#version 300 es
+precision highp float;
+in vec4 aP;   // x, y (cell top-left, texture fractions), height fraction, glyph
+in vec4 aQ;   // ink, sketch start 0..1, unused, id
+in vec3 aC;   // photo colour
+uniform vec4 uRect; uniform vec4 uCrop; uniform float uTexAspect; uniform float uCharAspect;
+uniform vec4 uAtlasInfo;  // cols, rows, glyph count, unused
+uniform vec4 uAtlasBox;   // padX, width, padY, height (fractions of an atlas cell)
+uniform float uSketch; uniform float uDur; uniform vec2 uRetype; uniform float uEdge; uniform float uSide; uniform float uStr;
+${COMMON}
+out vec2 vUV; out float vA; out vec3 vCol; out float vCursor;
+float hash1(float n){ return fract(sin(n * 12.9898) * 43758.5453); }
+void main(){
+  vA = 0.; vCursor = 0.; vCol = vec3(0.); vUV = vec2(0.);
+  gl_Position = vec4(2., 2., 2., 1.);
+  vec2 v = vec2(float(gl_VertexID & 1), float((gl_VertexID >> 1) & 1));
+  vec2 crop = uCrop.zw - uCrop.xy;
+  float wTex = aP.z * uCharAspect / uTexAspect;
+  vec2 tl = vec2((aP.x - uCrop.x) / crop.x, (aP.y - uCrop.y) / crop.y);
+  vec2 sz = vec2(wTex / crop.x, aP.z / crop.y) * uRect.zw;
+  if (tl.y + aP.z / crop.y > 1.001 || tl.x < -.001 || tl.x + wTex / crop.x > 1.001) return;     // outside the shown crop
+  vec2 c = vec2(uRect.x + tl.x * uRect.z + .5 * sz.x, uRect.y + uRect.w - tl.y * uRect.w - .5 * sz.y);
+  float h = hash1(aQ.w + 1.);
+  float e = uEdge > 0. ? smoothstep(0., uEdge, c.y - uRect.y) : 1.;
+  float sd = uSide > .5 ? smoothstep(0., .07, (c.x - uRect.x) / uRect.z) * (1. - smoothstep(.93, 1., (c.x - uRect.x) / uRect.z)) : 1.;
+  float ee = min(e, sd);
+  // the end of the figure dissolves: characters drop out in a noise-broken order and shrink; the card or the page covers the rest
+  float keep = smoothstep(h * .8, h * .8 + .2, ee);
+  float scl = mix(.5, 1., ee) * keep;
+  float glyph = aP.w;
+  float tt = uSketch - aQ.y * uDur * .86;      // seconds since this character was typed
+  if (uDur > 0.) {
+    if (tt < 0.) return;
+    if (tt < .075) vCursor = 1.;
+    else if (tt < .34) glyph = floor(hash1(aQ.w * 7. + floor(tt * 16.)) * uAtlasInfo.z);   // a short flicker through other characters
+    float rt = uSketch - uRetype.y;
+    if (abs(aQ.w - uRetype.x) < .5 && rt > 0. && rt < .34) glyph = floor(hash1(aQ.w * 5. + floor(rt * 16.)) * uAtlasInfo.z);
+  }
+  vec2 p = c;
+  if (uPtr.z > 0.) p += pushAt(c);
+  vec2 corner = p + (v - .5) * sz * scl;
+  gl_Position = vec4(corner / uRes * 2. - 1., 0., 1.);
+  float col = mod(glyph, uAtlasInfo.x);
+  float row = floor(glyph / uAtlasInfo.x);
+  vUV = vec2((col + uAtlasBox.x + v.x * uAtlasBox.y) / uAtlasInfo.x, (row + uAtlasBox.z + (1. - v.y) * uAtlasBox.w) / uAtlasInfo.y);
+  vA = aQ.x * uStr * scl * (1. - .85 * smoothstep(.15, .65, maskAt(c)));
+  vCol = aC;
+}`
+const G_FS = `#version 300 es
+precision highp float;
+uniform sampler2D uAtlas; uniform vec3 uInk; uniform float uChroma;
+in vec2 vUV; in float vA; in vec3 vCol; in float vCursor;
+out vec4 o;
+void main(){
+  if (vA <= .003) discard;
+  // the photo's colour at this cell, brought to the ink's darkness (hue and chroma kept) and mixed with the globe ink
+  float li = dot(uInk, vec3(.299, .587, .114));
+  float lc = max(dot(vCol, vec3(.299, .587, .114)), .06);
+  vec3 tint = clamp(vCol * (li / lc) * 1.6, 0., 1.);
+  vec3 c = mix(uInk, tint, uChroma);
+  float a = vCursor > .5 ? .9 * vA / max(vA, .3) : pow(texture(uAtlas, vUV).a, .85) * min(pow(vA, .8), 1.);
+  o = vec4(c * a, a);
+}`
 
 function compile(gl: WebGL2RenderingContext, type: number, src: string): WebGLShader {
   const s = gl.createShader(type)!
@@ -432,16 +458,18 @@ export interface PortraitSpec {
   rect: [number, number, number, number]
   /** texture crop u0, v0, u1, v1 (v from the top) */
   crop: [number, number, number, number]
-  /** glyph cell, canvas px */
+  /** halftone dot cell (the fallback style), canvas px */
   cell: [number, number]
-  /** shrink the dots over the last 3.5% at the left and right of the picture (desktop figure, where the sleeve runs off the texture) */
+  /** shrink the figure over the last 7% at the left and right of the picture (desktop figure, where the sleeve runs off the texture) */
   sideTaper: boolean
-  /** 0 halftone dots, 1 monospace characters sized by tone, 2 mixed (dots in the face, characters elsewhere) */
-  style: 0 | 1 | 2
-  /** seconds (page clock), the materialise sweep 0..1, and whether the hologram life runs (0 under reduced motion) */
-  time: number
-  reveal: number
-  anim: number
+  /** 0 halftone dots, 1 baked terminal characters */
+  style: 0 | 1
+  /** characters: seconds since the sketch-in started (page clock), its duration (0 = already complete), a character to re-type and when */
+  sketch: number
+  sketchDur: number
+  retype: [number, number]
+  /** how much of the photo's chroma the characters keep (0..1) */
+  chroma: number
   /** 0..1 */
   strength: number
   /** fade the bottom edge over this many canvas px (0 = hard) */
@@ -493,7 +521,9 @@ export interface GlobeRenderer {
   /** Satellite elements (5 floats each, see lib/starlink/orbit.mjs) or null to remove them. */
   setSatellites(data: Float32Array | null): void
   /** Portrait picture (luminance in rgb, matte in alpha) and its glyph atlas (n glyphs side by side, lightest first). */
-  setPortrait(pic: ImageBitmap | null, atlas: HTMLCanvasElement | null, glyphs: number, box?: [number, number, number, number]): void
+  setPortrait(pic: ImageBitmap | null): void
+  /** The baked characters (see globe/portrait.ts loadGlyphs). */
+  setGlyphs(g: import('./portrait').Glyphs | null): void
   draw(lat0: number, lon0: number, extra?: DrawExtra): void
   /** Boxes (canvas px, origin bottom-left: x0, y0, x1, y1) behind which the dots thin out, with the factor that remains (0..1). */
   /** Text halo mask (single-channel in red, canvas px / 4). `fade` keeps the previous one for a cross-fade (draw `maskMix`). */
@@ -555,17 +585,30 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[] | null, 
     const tl = uloc(tprog, ['uThin', 'uTrail'])
     const qprog = role === 'shell' ? mk(PING_VS, PING_FS, false) : mk(DUMMY_VS, DUMMY_FS, false)
     const ql = uloc(qprog, ['uPA[0]', 'uPAd[0]', 'uPB[0]', 'uPBd[0]', 'uPT[0]', 'uNowP', 'uHead'])
+    const gprog = g.createProgram()!
+    g.attachShader(gprog, compile(g, g.VERTEX_SHADER, role === 'globe' ? G_VS : DUMMY_VS))
+    g.attachShader(gprog, compile(g, g.FRAGMENT_SHADER, role === 'globe' ? G_FS : DUMMY_FS))
+    g.bindAttribLocation(gprog, 0, 'aP')
+    g.bindAttribLocation(gprog, 1, 'aQ')
+    g.bindAttribLocation(gprog, 2, 'aC')
+    g.linkProgram(gprog)
+    if (!g.getProgramParameter(gprog, g.LINK_STATUS)) throw new Error(g.getProgramInfoLog(gprog) ?? 'link')
+    const gu: Record<string, WebGLUniformLocation | null> = {}
+    for (const n of ['uRect', 'uCrop', 'uTexAspect', 'uCharAspect', 'uAtlasInfo', 'uAtlasBox', 'uSketch', 'uDur', 'uRetype', 'uEdge', 'uSide', 'uStr', 'uAtlas', 'uInk', 'uChroma', 'uRes', 'uPtr', 'uPush', 'uWake', 'uMaskA', 'uMaskB', 'uMaskMix', 'uMaskScale']) gu[n] = g.getUniformLocation(gprog, n)
+    let glyphs: import('./portrait').Glyphs | null = null
+    let glyphTex: WebGLTexture | null = null
+    const gvao = g.createVertexArray()!
+    const gbufA = g.createBuffer()!
+    const gbufQ = g.createBuffer()!
+    const gbufC = g.createBuffer()!
     const pprog = g.createProgram()!
     g.attachShader(pprog, compile(g, g.VERTEX_SHADER, VS))
     g.attachShader(pprog, compile(g, g.FRAGMENT_SHADER, P_FS))
     g.linkProgram(pprog)
     if (!g.getProgramParameter(pprog, g.LINK_STATUS)) throw new Error(g.getProgramInfoLog(pprog) ?? 'link')
     const PU = (n: string) => g.getUniformLocation(pprog, n)
-    const pu = { pic: PU('uPic'), atlas: PU('uAtlas'), rect: PU('uRect'), crop: PU('uCrop'), cell: PU('uCell'), atlasN: PU('uAtlasN'), atlasBox: PU('uAtlasBox'), style: PU('uStyle'), time: PU('uTime'), reveal: PU('uReveal'), anim: PU('uAnim'), side: PU('uSide'), mode: PU('uMode'), str: PU('uStr'), edge: PU('uEdge'), ink: PU('uInk'), res: PU('uRes'), maskA: PU('uMaskA'), maskB: PU('uMaskB'), maskMix: PU('uMaskMix'), maskScale: PU('uMaskScale'), ptr: PU('uPtr'), push: PU('uPush'), wake: PU('uWake') }
+    const pu = { pic: PU('uPic'), rect: PU('uRect'), crop: PU('uCrop'), cell: PU('uCell'), side: PU('uSide'), mode: PU('uMode'), str: PU('uStr'), edge: PU('uEdge'), ink: PU('uInk'), res: PU('uRes'), maskA: PU('uMaskA'), maskB: PU('uMaskB'), maskMix: PU('uMaskMix'), maskScale: PU('uMaskScale'), ptr: PU('uPtr'), push: PU('uPush'), wake: PU('uWake') }
     let picTex: WebGLTexture | null = null
-    let atlasTex: WebGLTexture | null = null
-    let atlasN = 1
-    let atlasBox: [number, number, number, number] = [0, 1, 0, 1]
     const makeTex = (src: TexImageSource, wrapS: number, mips = false) => {
       const t = g.createTexture()!
       g.bindTexture(g.TEXTURE_2D, t)
@@ -645,13 +688,38 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[] | null, 
         }
         for (const t of old) freeMask(t)
       },
-      setPortrait(pic, atlas, glyphs, box) {
-        if (box) atlasBox = box
+      setPortrait(pic) {
         if (picTex) g.deleteTexture(picTex)
-        if (atlasTex) g.deleteTexture(atlasTex)
         picTex = pic ? makeTex(pic, g.CLAMP_TO_EDGE) : null
-        atlasTex = atlas ? makeTex(atlas, g.CLAMP_TO_EDGE, true) : null
-        atlasN = Math.max(1, glyphs)
+      },
+      setGlyphs(gl2) {
+        if (glyphTex) g.deleteTexture(glyphTex)
+        glyphs = gl2
+        if (!gl2 || role !== 'globe') return
+        glyphTex = makeTex(gl2.atlas, g.CLAMP_TO_EDGE, true)
+        g.bindVertexArray(gvao)
+        const up = (buf: WebGLBuffer | null, data: Float32Array, loc: number, size: number) => {
+          g.bindBuffer(g.ARRAY_BUFFER, buf)
+          g.bufferData(g.ARRAY_BUFFER, data, g.STATIC_DRAW)
+          g.enableVertexAttribArray(loc)
+          g.vertexAttribPointer(loc, size, g.FLOAT, false, 0, 0)
+          g.vertexAttribDivisor(loc, 1)
+        }
+        up(gbufA, gl2.a, 0, 4)
+        // aQ: ink, sketch start, unused, id; aC: photo colour
+        const q = new Float32Array(gl2.count * 4)
+        const c = new Float32Array(gl2.count * 3)
+        for (let i = 0; i < gl2.count; i++) {
+          q[i * 4] = gl2.q[i * 5]
+          q[i * 4 + 1] = gl2.q[i * 5 + 1]
+          q[i * 4 + 3] = i
+          c[i * 3] = gl2.q[i * 5 + 2]
+          c[i * 3 + 1] = gl2.q[i * 5 + 3]
+          c[i * 3 + 2] = gl2.q[i * 5 + 4]
+        }
+        up(gbufQ, q, 1, 4)
+        up(gbufC, c, 2, 3)
+        g.bindVertexArray(null)
       },
       setSatellites(data) {
         if (!data || data.length < 5) {
@@ -735,16 +803,16 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[] | null, 
           g.drawArrays(g.POINTS, 0, satCount)
           if ((extra.trailSeconds ?? 0) > 0) {
             g.useProgram(tprog)
-            common(tl, alphaBase * 0.34)
-            g.uniform1f(tl.uThin, (extra.satThin ?? 1) * 2)
+            common(tl, alphaBase * 0.75)
+            g.uniform1f(tl.uThin, (extra.satThin ?? 1) * 3)
             g.uniform1f(tl.uTrail, extra.trailSeconds ?? 0)
             g.bindVertexArray(tvao)
-            g.drawArraysInstanced(g.LINES, 0, TRAIL_N * 2, satCount)
+            g.drawArraysInstanced(g.POINTS, 0, TRAIL_N, satCount)
           }
           const pg = extra.pings
           if (pg && pg.count > 0) {
             g.useProgram(qprog)
-            common(ql, Math.min(1, alphaBase * 2))
+            common(ql, Math.min(1, alphaBase * 1.1))
             g.uniform4fv(ql['uPA[0]'], pg.a)
             g.uniform1fv(ql['uPAd[0]'], pg.ad)
             g.uniform4fv(ql['uPB[0]'], pg.b)
@@ -760,27 +828,19 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[] | null, 
           g.bindVertexArray(null)
         }
         const pt = extra.portrait
-        if (pt && picTex && pt.strength > 0.003 && (pt.knockoutOnly || pt.style === 0 || atlasTex)) {
+        const useGlyphs = !!pt && pt.style === 1 && !!glyphs && !!glyphTex && !pt.knockoutOnly
+        if (pt && picTex && pt.strength > 0.003) {
           g.useProgram(pprog)
           g.enable(g.SCISSOR_TEST)
           g.scissor(Math.floor(pt.rect[0]), Math.floor(pt.rect[1]), Math.ceil(pt.rect[2]) + 1, Math.ceil(pt.rect[3]) + 1)
           g.activeTexture(g.TEXTURE1)
           g.bindTexture(g.TEXTURE_2D, picTex)
           g.uniform1i(pu.pic, 1)
-          g.activeTexture(g.TEXTURE2)
-          g.bindTexture(g.TEXTURE_2D, atlasTex ?? picTex)
-          g.uniform1i(pu.atlas, 2)
           g.uniform4f(pu.rect, ...pt.rect)
           g.uniform4f(pu.crop, ...pt.crop)
           g.uniform2f(pu.cell, pt.cell[0], pt.cell[1])
-          g.uniform1f(pu.atlasN, atlasN)
-          g.uniform4f(pu.atlasBox, atlasBox[0], atlasBox[1], atlasBox[2], atlasBox[3])
-          g.uniform1f(pu.time, pt.time)
-          g.uniform1f(pu.reveal, pt.reveal)
-          g.uniform1f(pu.anim, pt.anim)
           g.uniform1f(pu.side, pt.sideTaper ? 1 : 0)
           g.uniform1f(pu.str, pt.strength)
-          g.uniform1f(pu.style, pt.style)
           g.uniform1f(pu.edge, pt.edge)
           g.uniform3fv(pu.ink, palette.ink)
           g.uniform2f(pu.res, px, px)
@@ -793,9 +853,36 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[] | null, 
           g.uniform1f(pu.mode, 0)
           g.drawArrays(g.TRIANGLES, 0, 3)
           g.blendFunc(g.ONE, g.ONE_MINUS_SRC_ALPHA)
-          if (!pt.knockoutOnly) {
+          if (!pt.knockoutOnly && !useGlyphs) {
             g.uniform1f(pu.mode, 1)
             g.drawArrays(g.TRIANGLES, 0, 3)
+          }
+          if (useGlyphs && glyphs) {
+            g.useProgram(gprog)
+            g.activeTexture(g.TEXTURE2)
+            g.bindTexture(g.TEXTURE_2D, glyphTex)
+            g.uniform1i(gu.uAtlas, 2)
+            g.uniform4f(gu.uRect, ...pt.rect)
+            g.uniform4f(gu.uCrop, ...pt.crop)
+            g.uniform1f(gu.uTexAspect, 0.75)
+            g.uniform1f(gu.uCharAspect, glyphs.aspect)
+            g.uniform4f(gu.uAtlasInfo, glyphs.atlasCols, glyphs.atlasRows, glyphs.glyphCount, 0)
+            g.uniform4f(gu.uAtlasBox, glyphs.box[0], glyphs.box[1], glyphs.box[2], glyphs.box[3])
+            g.uniform1f(gu.uSketch, pt.sketch)
+            g.uniform1f(gu.uDur, pt.sketchDur)
+            g.uniform2f(gu.uRetype, pt.retype[0], pt.retype[1])
+            g.uniform1f(gu.uEdge, pt.edge)
+            g.uniform1f(gu.uSide, pt.sideTaper ? 1 : 0)
+            g.uniform1f(gu.uStr, pt.strength)
+            g.uniform3fv(gu.uInk, palette.ink)
+            g.uniform1f(gu.uChroma, pt.chroma)
+            g.uniform2f(gu.uRes, px, px)
+            bindMasks({ a: gu.uMaskA, b: gu.uMaskB, mix: gu.uMaskMix, s: gu.uMaskScale }, extra.maskMix ?? 1)
+            g.uniform3f(gu.uPtr, ptr?.x ?? 0, ptr?.y ?? 0, ptr?.k ?? 0)
+            g.uniform2f(gu.uPush, pt.push.radius, pt.push.max)
+            g.uniform2f(gu.uWake, wake[0] * 0.5, wake[1] * 0.5)
+            g.bindVertexArray(gvao)
+            g.drawArraysInstanced(g.TRIANGLE_STRIP, 0, 4, glyphs.count)
           }
           g.bindVertexArray(null)
           g.disable(g.SCISSOR_TEST)
