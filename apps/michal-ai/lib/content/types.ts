@@ -48,4 +48,6 @@ export type PostFrontmatter = {
 export type Post = PostFrontmatter & {
   body: string /* markdown source */
   readingMinutes: number
+  /* First markdown image in the body (derived at load time, not frontmatter); lets list views show a picture without the body. */
+  firstImage?: { src: string; alt: string }
 }

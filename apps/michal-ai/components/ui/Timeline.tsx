@@ -12,7 +12,7 @@ export type { TimelineItem }
 
 const RULE_OVERSHOOT = 4000 // the rule runs far past both ends, so it always spans the whole strip edge to edge (the strip clips it)
 const RAIL_Y = 50 // centre line of the thumbnails (year row above, thumbnail below it)
-const TRACK_H = 170
+const TRACK_H = 192
 
 const ICONS: Record<TimelineIconName, LucideIcon> = { satellite: SatelliteDish, globe: Globe, file: FileText, users: Users, rocket: Rocket }
 

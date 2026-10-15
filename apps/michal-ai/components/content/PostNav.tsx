@@ -16,8 +16,7 @@ type Props = {
 function entryImage(c: Post): TimelineItem['image'] {
   if (c.cardImage && c.cardImage !== 'none') return { src: c.cardImage, alt: c.cardImageAlt ?? '' }
   if (c.cover) return { src: c.cover, alt: c.coverAlt ?? '', focus: c.coverFocus }
-  const m = /!\[([^\]]*)\]\((\/media\/[^)\s]+)/.exec(c.body)
-  return m ? { src: m[2], alt: m[1] } : undefined
+  return c.firstImage
 }
 
 /**

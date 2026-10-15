@@ -22,7 +22,7 @@
 }
 .tl-vp {
   position: relative;
-  height: 170px;
+  height: 192px;
   overflow: hidden;
   cursor: grab;
   touch-action: pan-y;
@@ -73,7 +73,7 @@
 .tl-tab {
   position: absolute;
   top: 24px;
-  height: 140px;
+  height: 162px;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
@@ -118,7 +118,7 @@
   letter-spacing: -0.005em;
   color: var(--ink-muted);
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
   overflow-wrap: normal;
