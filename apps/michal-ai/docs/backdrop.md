@@ -94,7 +94,8 @@ See the file for the current values; the important ones:
 | `rays.*` | strength, edge fringe, origin, dark strength |
 | `glyphs.cellPx / density / alpha` | grid pitch (12), chance per cell (0.034), opacity cap (0.22) |
 | `glyphs.constellationChance`, `shootingEvery` | constellations per 14x14 block (0.1), shooting star period (80s) |
-| `glyphs.thin*` | thinning behind the reading column |
+| `glyphs.thin*` | thinning behind the reading column (`thinFactor` 0.12) |
+| `tooth` | paper tooth amplitude, light 0.075 and dark 0.06 (`grain` 0.012 is only the dither) |
 | `lens.*` | edge band, bend, magnification, channel split, rim width and strength |
 | `parallax.*` | fraction of page scroll per layer |
 | `fps.idle / scroll` | redraw rates: 12 idle, 30 while scrolling with no glass on screen (60 with glass) |
@@ -163,6 +164,28 @@ on this GPU (with the readback overhead included in the number).
 The home page has three WebGL contexts (this canvas, the hero globe, the shared shader canvas). `scripts/backdrop-contextloss.mjs`
 loses and restores the backdrop's context: the CSS fallback appears at once, the globe and the shared shader canvas stay live,
 and the canvas returns after restore.
+
+## Paper tooth
+
+Why it had gone: the pre-shader CSS layer carried a 200px `feTurbulence` noise tile at about 2 to 3 percent ink alpha (a few levels of luma
+of variation per pixel). When the canvas became ready that whole CSS layer faded to opacity 0, and the shader's own `grain` was a
+single-pixel dither of 0.012 (plus or minus 1.5 levels of 255), which is below what an eye picks out. Measured on the live site: local
+luma standard deviation of 0.9 levels at 1440 @1x and 0.65 at @3x, against about 2.6 and 1.5 now.
+
+What it is now (`backdrop/tooth.ts`, `config.tooth`): one tileable 1024px 8-bit texture generated at start (no download, seeded, so identical
+everywhere), three scales in one channel: per-pixel grain (triangular distribution), soft mottle 30 to 70px across, and about 420
+short faint fibres (mostly darker, some lighter). Mean exactly 0.5, so the paper's average colour does not change. The composite pass
+fetches it with `texelFetch`, one texel per canvas pixel, in screen space (glass lensing does not bend it), at amplitude 0.075 (light)
+and 0.06 (dark) peak to peak. It is static: no animation, no shimmer; it is a fixed sheet, so no moire at any DPR (the canvas is capped at
+DPR 1.5, so on 2x and 3x screens the grain is a little softer than a single device pixel). On iOS the canvas is translated by the
+compositor for parallax; that offset is rounded to whole device pixels so the grain is not resampled mid-scroll. The old CSS noise tile
+still shows in the no-WebGL fallback.
+
+Contrast with the tooth (worst pixel from the report: `#f1dcd3` light, `#2d2e25` dark; glyph at the in-column cap 0.22 x 0.12 thinning; the
+tooth at its 0.1th percentile, which shifts a pixel by 9.2 levels darker in light and 7.3 lighter in dark, plus the dither):
+`--ink` 10.9 light / 9.3 dark; `--ink-muted` **4.62 light / 4.84 dark**. At the texture's hard minimum or maximum (a rare fibre crossing):
+4.53 / 4.71. To make room for this the in-column glyph thinning went from 0.3 to 0.12 (glyphs in the reading column are now almost gone;
+margins are unchanged, so the margin figures in the table above still apply: muted 3.1 light, 2.8 dark with a full-cap glyph).
 
 ## iOS Safari constraints
 
