@@ -1,0 +1,133 @@
+{
+  "name": "log-prev-next",
+  "profile": "desktop",
+  "throttle": 1,
+  "notes": [],
+  "inputType": "pointerdown",
+  "screencast": {
+    "frames": 67,
+    "durationMs": 1819.3,
+    "gapsMs": {
+      "p50": 16.8,
+      "p95": 82.3,
+      "max": 83.6,
+      "over25": 5,
+      "over40": 4
+    },
+    "motionFrames": 36
+  },
+  "responseMs": 45.9,
+  "motionMs": 795.9,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 57,
+    "p50": 16.7,
+    "p95": 16.8,
+    "max": 33.2,
+    "dropped": 1,
+    "over33": 0,
+    "over50": 0
+  },
+  "tracked": {
+    "scrollY": {
+      "range": 3199,
+      "moving": true,
+      "frames": 1,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 3199,
+      "maxJerkPx": 0,
+      "jerkRatio": 0
+    },
+    "pixelCentroid.cx": {
+      "range": 550.1,
+      "moving": true,
+      "frames": 8,
+      "reversals": 2,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 462.54,
+      "maxJerkPx": 435.99,
+      "jerkRatio": 0.793
+    },
+    "pixelCentroid.cy": {
+      "range": 491.2,
+      "moving": true,
+      "frames": 8,
+      "reversals": 3,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 444.6,
+      "maxJerkPx": 421.3,
+      "jerkRatio": 0.858
+    }
+  },
+  "flash": {
+    "screencastFrames": 0,
+    "details": [],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0.0006,
+    "entries": [
+      {
+        "t": 4780.200000047684,
+        "v": 0.0002949245541838135,
+        "src": [
+          {
+            "node": ".glass-surface",
+            "from": [
+              384,
+              0,
+              672,
+              100
+            ],
+            "to": [
+              376,
+              0,
+              688,
+              100
+            ]
+          }
+        ]
+      },
+      {
+        "t": 5295,
+        "v": 0.00030178326474622773,
+        "src": [
+          {
+            "node": ".glass-surface",
+            "from": [
+              376,
+              0,
+              688,
+              100
+            ],
+            "to": [
+              368,
+              0,
+              704,
+              100
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "longTasks": {
+    "count": 0,
+    "maxMs": 0,
+    "totalMs": 0
+  },
+  "loaf": {
+    "count": 0,
+    "maxMs": 0,
+    "worst": []
+  },
+  "trace": null,
+  "verdict": [
+    "DROPPED 1",
+    "CLS 0.0006"
+  ]
+}

@@ -1,0 +1,135 @@
+{
+  "name": "home-to-project",
+  "profile": "mobile",
+  "throttle": 4,
+  "notes": [],
+  "inputType": "pointerdown",
+  "screencast": {
+    "frames": 101,
+    "durationMs": 1903.4,
+    "gapsMs": {
+      "p50": 16.6,
+      "p95": 24.2,
+      "max": 247.6,
+      "over25": 2,
+      "over40": 1
+    },
+    "motionFrames": 69
+  },
+  "responseMs": -0.6,
+  "motionMs": 1366.4,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 72,
+    "p50": 16.7,
+    "p95": 16.7,
+    "max": 283.3,
+    "dropped": 17,
+    "over33": 1,
+    "over50": 1
+  },
+  "tracked": {
+    "pixelCentroid.cx": {
+      "range": 350.1,
+      "moving": true,
+      "frames": 41,
+      "reversals": 21,
+      "stalls": 0,
+      "jumps": 3,
+      "maxStepPx": 341.47,
+      "maxJerkPx": 535.42,
+      "jerkRatio": 1.53
+    },
+    "pixelCentroid.cy": {
+      "range": 743,
+      "moving": true,
+      "frames": 41,
+      "reversals": 18,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 468.26,
+      "maxJerkPx": 542.17,
+      "jerkRatio": 0.73
+    }
+  },
+  "flash": {
+    "screencastFrames": 25,
+    "details": [
+      {
+        "i": 23,
+        "t": -0.6,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 24,
+        "t": 16,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 25,
+        "t": 38.3,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 26,
+        "t": 53.6,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 27,
+        "t": 68.5,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 28,
+        "t": 82.1,
+        "why": "luminance-overshoot"
+      }
+    ],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 1,
+    "maxMs": 120,
+    "totalMs": 120
+  },
+  "loaf": {
+    "count": 1,
+    "maxMs": 280,
+    "worst": [
+      {
+        "d": 280,
+        "scripts": [
+          {
+            "src": "root-CfpndU8k.js",
+            "fn": "",
+            "d": 14.699999928474426,
+            "kind": "user-callback"
+          },
+          {
+            "src": "entry.client-BkILk6c9.js",
+            "fn": "bt",
+            "d": 5.799999952316284,
+            "kind": "event-listener"
+          },
+          {
+            "src": "entry.client-BkILk6c9.js",
+            "fn": "bt",
+            "d": 5.199999928474426,
+            "kind": "event-listener"
+          }
+        ]
+      }
+    ]
+  },
+  "trace": null,
+  "verdict": [
+    "DROPPED 17",
+    "FLASH 25/0",
+    "LONGTASK 1x max 120ms"
+  ]
+}

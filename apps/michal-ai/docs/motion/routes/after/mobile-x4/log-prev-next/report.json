@@ -1,0 +1,114 @@
+{
+  "name": "log-prev-next",
+  "profile": "mobile",
+  "throttle": 4,
+  "notes": [],
+  "inputType": "pointerdown",
+  "screencast": {
+    "frames": 39,
+    "durationMs": 1594.5,
+    "gapsMs": {
+      "p50": 16.6,
+      "p95": 53.6,
+      "max": 78.1,
+      "over25": 3,
+      "over40": 2
+    },
+    "motionFrames": 25
+  },
+  "responseMs": 107.5,
+  "motionMs": 494.1,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 37,
+    "p50": 16.7,
+    "p95": 33.3,
+    "max": 100,
+    "dropped": 6,
+    "over33": 1,
+    "over50": 1
+  },
+  "tracked": {
+    "scrollY": {
+      "range": 7301,
+      "moving": true,
+      "frames": 1,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 7301,
+      "maxJerkPx": 0,
+      "jerkRatio": 0
+    },
+    "pixelCentroid.cx": {
+      "range": 411.2,
+      "moving": true,
+      "frames": 20,
+      "reversals": 6,
+      "stalls": 0,
+      "jumps": 2,
+      "maxStepPx": 201.47,
+      "maxJerkPx": 263.04,
+      "jerkRatio": 0.64
+    },
+    "pixelCentroid.cy": {
+      "range": 403.6,
+      "moving": true,
+      "frames": 20,
+      "reversals": 11,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 265.91,
+      "maxJerkPx": 226.43,
+      "jerkRatio": 0.561
+    }
+  },
+  "flash": {
+    "screencastFrames": 0,
+    "details": [],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 0,
+    "maxMs": 0,
+    "totalMs": 0
+  },
+  "loaf": {
+    "count": 1,
+    "maxMs": 73.9,
+    "worst": [
+      {
+        "d": 73.9,
+        "scripts": [
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 6.700000047683716,
+            "kind": "event-listener"
+          },
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 6,
+            "kind": "event-listener"
+          },
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 5.300000071525574,
+            "kind": "event-listener"
+          }
+        ]
+      }
+    ]
+  },
+  "trace": null,
+  "verdict": [
+    "SLOW-RESPONSE 107.5ms",
+    "DROPPED 6"
+  ]
+}

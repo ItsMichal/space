@@ -1,0 +1,120 @@
+{
+  "name": "project-to-log-next",
+  "profile": "mobile",
+  "throttle": 4,
+  "notes": [],
+  "inputType": "pointerdown",
+  "screencast": {
+    "frames": 65,
+    "durationMs": 1628.7,
+    "gapsMs": {
+      "p50": 16.4,
+      "p95": 26.1,
+      "max": 135.2,
+      "over25": 3,
+      "over40": 2
+    },
+    "motionFrames": 56
+  },
+  "responseMs": 15.9,
+  "motionMs": 1061,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 72,
+    "p50": 16.7,
+    "p95": 16.8,
+    "max": 16.8,
+    "dropped": 0,
+    "over33": 0,
+    "over50": 0
+  },
+  "tracked": {
+    "scrollY": {
+      "range": 2633,
+      "moving": true,
+      "frames": 45,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 226,
+      "maxJerkPx": 15.5,
+      "jerkRatio": 0.006
+    },
+    "pixelCentroid.cx": {
+      "range": 70.7,
+      "moving": true,
+      "frames": 44,
+      "reversals": 16,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 41.14,
+      "maxJerkPx": 42.95,
+      "jerkRatio": 0.607
+    },
+    "pixelCentroid.cy": {
+      "range": 283.9,
+      "moving": true,
+      "frames": 44,
+      "reversals": 12,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 152.41,
+      "maxJerkPx": 138.77,
+      "jerkRatio": 0.489
+    }
+  },
+  "flash": {
+    "screencastFrames": 11,
+    "details": [
+      {
+        "i": 11,
+        "t": 61,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 12,
+        "t": 81,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 13,
+        "t": 96.6,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 14,
+        "t": 170.4,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 15,
+        "t": 171.1,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 16,
+        "t": 176.4,
+        "why": "luminance-overshoot"
+      }
+    ],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 0,
+    "maxMs": 0,
+    "totalMs": 0
+  },
+  "loaf": {
+    "count": 0,
+    "maxMs": 0,
+    "worst": []
+  },
+  "trace": null,
+  "verdict": [
+    "FLASH 11/0"
+  ]
+}

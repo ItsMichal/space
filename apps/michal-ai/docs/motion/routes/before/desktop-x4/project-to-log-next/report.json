@@ -1,0 +1,195 @@
+{
+  "name": "project-to-log-next",
+  "profile": "desktop",
+  "throttle": 4,
+  "notes": [],
+  "inputType": "pointerdown",
+  "screencast": {
+    "frames": 71,
+    "durationMs": 2035.1,
+    "gapsMs": {
+      "p50": 16.5,
+      "p95": 49.6,
+      "max": 89.8,
+      "over25": 3,
+      "over40": 2
+    },
+    "motionFrames": 37
+  },
+  "responseMs": 13.4,
+  "motionMs": 712.3,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 51,
+    "p50": 16.7,
+    "p95": 16.8,
+    "max": 16.8,
+    "dropped": 0,
+    "over33": 0,
+    "over50": 0
+  },
+  "tracked": {
+    "scrollY": {
+      "range": 664,
+      "moving": true,
+      "frames": 31,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 63,
+      "maxJerkPx": 1.5,
+      "jerkRatio": 0.002
+    },
+    "pixelCentroid.cx": {
+      "range": 174.2,
+      "moving": true,
+      "frames": 36,
+      "reversals": 12,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 53.6,
+      "maxJerkPx": 86.71,
+      "jerkRatio": 0.498
+    },
+    "pixelCentroid.cy": {
+      "range": 454.1,
+      "moving": true,
+      "frames": 36,
+      "reversals": 16,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 370.62,
+      "maxJerkPx": 369.04,
+      "jerkRatio": 0.813
+    }
+  },
+  "flash": {
+    "screencastFrames": 0,
+    "details": [],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0.0018,
+    "entries": [
+      {
+        "t": 2600.8000000715256,
+        "v": 0.00003319187242798354,
+        "src": [
+          {
+            "node": ".relative",
+            "from": [
+              545.859375,
+              12,
+              348.28125,
+              48
+            ],
+            "to": [
+              542.234375,
+              12,
+              355.515625,
+              48
+            ]
+          }
+        ]
+      },
+      {
+        "t": 3163.3000000715256,
+        "v": 0.00023319615912208505,
+        "src": [
+          {
+            "node": ".glass-surface",
+            "from": [
+              456,
+              0,
+              528,
+              100
+            ],
+            "to": [
+              448,
+              0,
+              544,
+              100
+            ]
+          }
+        ]
+      },
+      {
+        "t": 3214.600000023842,
+        "v": 0.00024005486968449932,
+        "src": [
+          {
+            "node": ".glass-surface",
+            "from": [
+              448,
+              0,
+              544,
+              100
+            ],
+            "to": [
+              440,
+              0,
+              560,
+              100
+            ]
+          }
+        ]
+      },
+      {
+        "t": 3278.7000000476837,
+        "v": 0.0002469135802469136,
+        "src": [
+          {
+            "node": ".glass-surface",
+            "from": [
+              440,
+              0,
+              560,
+              100
+            ],
+            "to": [
+              432,
+              0,
+              576,
+              100
+            ]
+          }
+        ]
+      },
+      {
+        "t": 3330.100000023842,
+        "v": 0.0002537722908093278,
+        "src": [
+          {
+            "node": ".glass-surface",
+            "from": [
+              432,
+              0,
+              576,
+              100
+            ],
+            "to": [
+              424,
+              0,
+              592,
+              100
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "longTasks": {
+    "count": 0,
+    "maxMs": 0,
+    "totalMs": 0
+  },
+  "loaf": {
+    "count": 0,
+    "maxMs": 0,
+    "worst": []
+  },
+  "trace": null,
+  "verdict": [
+    "CLS 0.0018"
+  ]
+}

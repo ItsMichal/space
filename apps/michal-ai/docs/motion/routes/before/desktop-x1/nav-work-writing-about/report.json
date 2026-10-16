@@ -1,0 +1,91 @@
+{
+  "name": "nav-work-writing-about",
+  "profile": "desktop",
+  "throttle": 1,
+  "notes": [],
+  "inputType": "pointerdown",
+  "screencast": {
+    "frames": 108,
+    "durationMs": 2948.3,
+    "gapsMs": {
+      "p50": 16.8,
+      "p95": 31,
+      "max": 49.9,
+      "over25": 2,
+      "over40": 1
+    },
+    "motionFrames": 26
+  },
+  "responseMs": 288.2,
+  "motionMs": 466.9,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 52,
+    "p50": 16.7,
+    "p95": 16.8,
+    "max": 33.3,
+    "dropped": 1,
+    "over33": 0,
+    "over50": 0
+  },
+  "tracked": {
+    "pixelCentroid.cx": {
+      "range": 262.7,
+      "moving": true,
+      "frames": 6,
+      "reversals": 4,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 262.73,
+      "maxJerkPx": 137.34,
+      "jerkRatio": 0.523
+    },
+    "pixelCentroid.cy": {
+      "range": 413.5,
+      "moving": true,
+      "frames": 6,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 138.29,
+      "maxJerkPx": 58.63,
+      "jerkRatio": 0.142
+    }
+  },
+  "flash": {
+    "screencastFrames": 2,
+    "details": [
+      {
+        "i": 67,
+        "t": 288.2,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 68,
+        "t": 305.3,
+        "why": "luminance-overshoot"
+      }
+    ],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 0,
+    "maxMs": 0,
+    "totalMs": 0
+  },
+  "loaf": {
+    "count": 0,
+    "maxMs": 0,
+    "worst": []
+  },
+  "trace": null,
+  "verdict": [
+    "SLOW-RESPONSE 288.2ms",
+    "DROPPED 1",
+    "FLASH 2/0"
+  ]
+}

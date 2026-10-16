@@ -1,0 +1,109 @@
+{
+  "name": "project-back",
+  "profile": "desktop",
+  "throttle": 1,
+  "notes": [],
+  "inputType": "popstate",
+  "screencast": {
+    "frames": 67,
+    "durationMs": 1660,
+    "gapsMs": {
+      "p50": 16.7,
+      "p95": 20,
+      "max": 20.5,
+      "over25": 0,
+      "over40": 0
+    },
+    "motionFrames": 25
+  },
+  "responseMs": 239.9,
+  "motionMs": 366.1,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 41,
+    "p50": 16.7,
+    "p95": 16.8,
+    "max": 66.6,
+    "dropped": 3,
+    "over33": 1,
+    "over50": 1
+  },
+  "tracked": {
+    "pixelCentroid.cx": {
+      "range": 376.7,
+      "moving": true,
+      "frames": 18,
+      "reversals": 5,
+      "stalls": 0,
+      "jumps": 2,
+      "maxStepPx": 191.74,
+      "maxJerkPx": 286.35,
+      "jerkRatio": 0.76
+    },
+    "pixelCentroid.cy": {
+      "range": 353.4,
+      "moving": true,
+      "frames": 18,
+      "reversals": 8,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 150.85,
+      "maxJerkPx": 177.4,
+      "jerkRatio": 0.502
+    }
+  },
+  "flash": {
+    "screencastFrames": 3,
+    "details": [
+      {
+        "i": 6,
+        "t": 239.9,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 7,
+        "t": 245.2,
+        "why": "content-missing"
+      },
+      {
+        "i": 8,
+        "t": 246.4,
+        "why": "content-missing"
+      }
+    ],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 1,
+    "maxMs": 78,
+    "totalMs": 78
+  },
+  "loaf": {
+    "count": 1,
+    "maxMs": 81.4,
+    "worst": [
+      {
+        "d": 81.4,
+        "scripts": [
+          {
+            "src": "entry.client-BkILk6c9.js",
+            "fn": "bt",
+            "d": 78.10000002384186,
+            "kind": "event-listener"
+          }
+        ]
+      }
+    ]
+  },
+  "trace": null,
+  "verdict": [
+    "SLOW-RESPONSE 239.9ms",
+    "DROPPED 3",
+    "FLASH 3/0",
+    "LONGTASK 1x max 78ms"
+  ]
+}

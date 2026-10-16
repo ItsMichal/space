@@ -1,0 +1,79 @@
+{
+  "name": "nav-work-writing-about",
+  "profile": "desktop",
+  "throttle": 1,
+  "notes": [],
+  "inputType": "pointerdown",
+  "screencast": {
+    "frames": 93,
+    "durationMs": 3002.7,
+    "gapsMs": {
+      "p50": 16.6,
+      "p95": 20.7,
+      "max": 20.7,
+      "over25": 0,
+      "over40": 0
+    },
+    "motionFrames": 19
+  },
+  "responseMs": 317.6,
+  "motionMs": 292.8,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 43,
+    "p50": 16.7,
+    "p95": 16.8,
+    "max": 33.3,
+    "dropped": 1,
+    "over33": 0,
+    "over50": 0
+  },
+  "tracked": {
+    "pixelCentroid.cx": {
+      "range": 327.7,
+      "moving": true,
+      "frames": 8,
+      "reversals": 3,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 206.55,
+      "maxJerkPx": 108.77,
+      "jerkRatio": 0.332
+    },
+    "pixelCentroid.cy": {
+      "range": 387.5,
+      "moving": true,
+      "frames": 8,
+      "reversals": 2,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 188.12,
+      "maxJerkPx": 125.23,
+      "jerkRatio": 0.323
+    }
+  },
+  "flash": {
+    "screencastFrames": 0,
+    "details": [],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 0,
+    "maxMs": 0,
+    "totalMs": 0
+  },
+  "loaf": {
+    "count": 0,
+    "maxMs": 0,
+    "worst": []
+  },
+  "trace": null,
+  "verdict": [
+    "SLOW-RESPONSE 317.6ms",
+    "DROPPED 1"
+  ]
+}
