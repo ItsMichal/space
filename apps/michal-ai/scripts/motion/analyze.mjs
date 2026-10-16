@@ -149,7 +149,9 @@ export async function analyze({ shots, probe, clean, trace, meta }) {
     ].includes(i.type)
   ) ?? { t: meta.tInput ?? probe.t0 }
   const mark = probe.marks.find((m) => m.name === 'input')
-  const tIn = mark ? mark.t : input.t
+  // a 'mark' says which input to time from; the moment is the first real input event after it (a hover dwell before the press is not latency)
+  const after = (pr, m) => pr.inputs.find((i) => i.t >= m.t && ['pointerdown', 'click', 'keydown', 'wheel', 'touchstart', 'mousedown', 'popstate'].includes(i.type))
+  const tIn = mark ? (after(probe, mark)?.t ?? mark.t) : input.t
   out.inputType = input.type
 
   // ---- visual change window (screencast) ----
@@ -197,7 +199,7 @@ export async function analyze({ shots, probe, clean, trace, meta }) {
       'popstate',
     ].includes(i.type)
   ) ?? { t: P.t0 }
-  const tIn2 = mark2 ? mark2.t : input2.t
+  const tIn2 = mark2 ? (after(P, mark2)?.t ?? mark2.t) : input2.t
   const span =
     firstIdx >= 0 ? (out.responseMs ?? 0) + (out.motionMs ?? 0) + 120 : 400
   const tStart = tIn2 - 4
@@ -226,7 +228,7 @@ export async function analyze({ shots, probe, clean, trace, meta }) {
 
   // ---- tracked elements ----
   out.tracked = {}
-  for (const sel of P.frames[0] ? Object.keys(P.frames[0].r) : []) {
+  for (const sel of fr[0] ? Object.keys(fr[0].r) : []) {
     const rows = fr.map((f) => f.r[sel])
     if (rows.some((r) => !r)) {
       const present = rows.filter(Boolean).length
@@ -247,6 +249,17 @@ export async function analyze({ shots, probe, clean, trace, meta }) {
       ...(out.tracked[sel] ?? {}),
       ...(best ?? { moving: false }),
     }
+  }
+  // first DOM response: the first frame at or after the input where a tracked element's box moved by more than half a pixel
+  {
+    let best = null
+    for (const sel of fr[0] ? Object.keys(fr[0].r) : []) {
+      const before = [...probe.frames].reverse().find((f) => f.t <= tIn && f.r[sel])
+      if (!before) continue
+      const hit = probe.frames.find((f) => f.t > tIn && f.r[sel] && [0, 1, 2, 3].some((i) => Math.abs(f.r[sel][i] - before.r[sel][i]) > 0.5))
+      if (hit && (best == null || hit.t - tIn < best)) best = hit.t - tIn
+    }
+    out.domResponseMs = best == null ? null : round(best)
   }
   // scroll as a tracked signal
   {
