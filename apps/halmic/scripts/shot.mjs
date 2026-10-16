@@ -1,5 +1,5 @@
 // Headless Chrome screenshot via CDP (uses the `ws` package from the portfolio repo, or any ws on the path).
-// pre=<js> runs after the wait and before resize=.
+// pre=<js> runs after the wait and before resize=. seek=<s>[,<frames>] freezes the reel on that video time (with ?reeldebug=1). A trailing * on a resize spec marks where rshots shoots.
 // resize=<WxH[xDPR][zZOOM]@ms,...>: after the wait, apply each size (device metrics; zoom shrinks the css size and grows the device ratio, like the browser's zoom), ms after the previous one; rshots saves a shot after each as <out>-r<i> once it has settled (rwait=ms, default 2500)
 // usage: node halmic/scripts/shot.mjs <url> <out.png> <width> <height> [full] [mobile] [wait-ms] [scrollY] [sel=css] [click=css] [clip=x,y,w,h]
 //   hover=<css>: scroll that element into view and move the mouse onto it (real mouse events) before the screenshot, after eval
@@ -50,20 +50,30 @@ try {
   if (flags.includes('nojs')) await send('Emulation.setScriptExecutionDisabled', { value: true });
   await send('Page.navigate', { url });
   await sleep(waitMs);
+  // seek=<seconds>[,<frames>]: freeze the reel video on that time and let the eased passes run that many frames (default 60) before anything else; needs ?reeldebug=1 in the url
+  const seek = flags.find((f) => f.startsWith('seek='))?.slice(5).split(',').map(Number);
+  if (seek) {
+    await send('Runtime.evaluate', { expression: `(() => { const v = document.querySelector('.reel video'); v.pause(); v.play = () => Promise.resolve(); v.pause = () => {}; v.currentTime = ${seek[0]}; })()` });
+    const fr = async () => (await send('Runtime.evaluate', { expression: 'window.__reel ? window.__reel.frames : 0', returnByValue: true })).result.result.value;
+    const f0 = await fr();
+    for (let i = 0; i < 400 && (await fr()) < f0 + (seek[1] ?? 60); i++) await sleep(500);
+  }
   const pre = flags.find((f) => f.startsWith('pre='))?.slice(4);   // pre=<js>: run after the wait, before resize=
   if (pre) await send('Runtime.evaluate', { expression: pre, awaitPromise: true });
   const rs = flags.find((f) => f.startsWith('resize='))?.slice(7);
   if (rs) {
     const settle = +(flags.find((f) => f.startsWith('rwait='))?.slice(6) ?? 2500);
     let i = 0;
-    for (const spec of rs.split(',')) {
+    const marked = rs.includes('*');   // a trailing * on a spec marks where rshots takes a shot (none marked: after every one)
+    for (const raw of rs.split(',')) {
+      const spec = raw.replace(/\*$/, ''), shoot = !marked || raw.endsWith('*');
       const m = spec.match(/^(\d+)x(\d+)(?:x([\d.]+))?(?:z([\d.]+))?(?:@(\d+))?$/);
       if (!m) { console.log('bad resize spec', spec); continue; }
       const z = +(m[4] ?? 1);
       await sleep(+(m[5] ?? 0));
       await send('Emulation.setDeviceMetricsOverride', { width: Math.round(+m[1] / z), height: Math.round(+m[2] / z), deviceScaleFactor: +(m[3] ?? dpr) * z, mobile: mobile && +m[1] < 900 });
       i++;
-      if (flags.includes('rshots')) { await sleep(settle); const sh = await send('Page.captureScreenshot', { format: flags.includes('jpg') ? 'jpeg' : 'png', ...(flags.includes('jpg') ? { quality: 82 } : {}) }); fs.writeFileSync(out.replace(/(\.\w+)$/, `-r${i}$1`), Buffer.from(sh.result.data, 'base64')); }
+      if (flags.includes('rshots') && shoot) { await sleep(settle); const sh = await send('Page.captureScreenshot', { format: flags.includes('jpg') ? 'jpeg' : 'png', ...(flags.includes('jpg') ? { quality: 82 } : {}) }); fs.writeFileSync(out.replace(/(\.\w+)$/, `-r${i}$1`), Buffer.from(sh.result.data, 'base64')); }
     }
     await sleep(settle);
   }

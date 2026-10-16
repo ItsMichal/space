@@ -44,20 +44,20 @@
    "site": "youtube",
    "id": "2jM2QSTSte4",
    "title": "FIFA With the Boys - Episode 3",
-   "in": 148.4,
+   "in": 148.9,
    "crop": "1280:720:0:0",
    "pcrop": "1280:720:0:0",
-   "why": "overhead replay, a scissor-kick over white and orange kits on bright grass; clean frame, no HUD or name tags in this stretch"
+   "why": "overhead replay, a scissor-kick over white and orange kits on bright grass; starts after the HUD and gamertag have gone, ends before the meme overlay"
   },
   {
    "src": "tw-3298804610",
    "site": "twitch",
    "id": "MistySleepyNuggetsWOOP",
    "title": "Barbarian Chop Off the Top",
-   "in": 7.2,
+   "in": 6.4,
    "crop": "900:506:80:0",
    "pcrop": "900:506:80:0",
-   "why": "Smash Ultimate on a lit stage at night: fighters trading hits on the platform; facecam, overlay bars, damage HUD and timer cropped"
+   "why": "Smash Ultimate on a lit stage at night: a big hit, a red orb, fighters trading blows on the platform; facecam, overlay bars, damage HUD and timer cropped; no name tags in this stretch"
   },
   {
    "src": "yt-Gv-xMeMM8m4",
@@ -75,8 +75,8 @@
    "id": "Et47QCJ3-3g",
    "title": "Robomaster highlight reel",
    "in": 223.4,
-   "crop": "960:540:20:130",
-   "pcrop": "960:540:20:130",
+   "crop": "960:540:100:130",
+   "pcrop": "960:540:100:130",
    "why": "lit robots in a firefight behind the mesh, red tower in frame; scoreboard and minimap cropped"
   },
   {
@@ -100,24 +100,24 @@
    "why": "second onboard stretch: sky, airfield and track around the hoop; lap timer cropped"
   },
   {
-   "src": "yt-N7HKj1dYZjU",
+   "src": "yt-qVEDjNc5Gmg",
    "site": "youtube",
-   "id": "N7HKj1dYZjU",
-   "title": "FIFA With The Boys - Episode 4(EVER)",
-   "in": 194.2,
+   "id": "qVEDjNc5Gmg",
+   "title": "Special Force: Origins",
+   "in": 30.4,
    "crop": "1280:720:0:0",
    "pcrop": "1280:720:0:0",
-   "why": "goal mouth from the side: keeper diving, orange and dark kits, crowd behind; clean frame"
+   "why": "two hooded figures leaning on the wall of a lit hallway, a long perspective down the corridor; no cards or text"
   },
   {
    "src": "tw-3298804610",
    "site": "twitch",
    "id": "MistySleepyNuggetsWOOP",
    "title": "Barbarian Chop Off the Top",
-   "in": 13.4,
+   "in": 8.3,
    "crop": "900:506:80:0",
    "pcrop": "900:506:80:0",
-   "why": "Smash Ultimate explosion over the stage, the biggest flash of the clip; overlays cropped"
+   "why": "Smash Ultimate: a leap, a purple slash and a flame burst over the platform; same tag-free stretch (the later explosion shots carry name tags and were dropped)"
   },
   {
    "src": "yt-qVEDjNc5Gmg",
@@ -134,7 +134,7 @@
   "Special Force 1 and 2 title and credit cards (real names): only mid-film action shots are cut, never the opening/closing cards",
   "FIFA episode intros, press-conference scenes and any frame with a username tag or HUD name bar (cropped or skipped)",
   "Twitch clips' facecam strips and overlay handles",
-  "VALORANT 4k clutch on Bind (dropped in this cut): spectator overlay with team and player names on every frame, 720p source, nothing wide enough to read without the HUD",
+  "VALORANT 4k clutch on Bind (dropped in this cut): spectator overlay with team and player names on every frame, 720p source, nothing wide enough to read without the HUD; the FIFA episode 4 goal-mouth pan near 194 s (motion smear at half speed, dark after the exposure stretch); Smash 13 to 16 s (player-name tags over the fighters)",
   "Robomaster 190.5 s (almost black) and the dark overhead wide shots; the previous cut's tight crops of the arena (action filled a fifth of the frame); the old hallway-silhouette Special Force moments, FIFA centre-circle shot and first onboard bend (dark, one-toned or too tight)",
   "any frame range with in-game handles large enough to read, scoreboards, captions or logos filling the frame"
  ]

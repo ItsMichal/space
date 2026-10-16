@@ -36,6 +36,7 @@
   const GLITCH = .26;      // seconds of slice offsets and ink split after a tap
   const WIN_UP = .12;      // phones: how much of the portrait picture (fraction of its height) rides above the top edge
   const PARALLAX = 7;      // css px the underlay drifts against the glyphs
+  const ZOOM_OUT = .72;    // desktop: the landscape picture is drawn at this fraction of the cover size, centred in the open band between the header and the wordmark (the wordmark hides the middle of the hero)
   // adaptive quality: device-pixel scale, buffer width, sim width and steps, bloom, neighbour merge; stepped down when frames take too long
   const QUALITY = [
     { d: 1, b: 1, sim: 256, steps: 3, bloom: 1, nb: 1 },
@@ -105,25 +106,26 @@ float ez(float o,float t,float k){float d=t-o;float s=d*k;float m=1.5/255.;s=abs
 `;
   // pass 1: video -> colour in the working buffer, cover-fitted, slowly drifting (4 taps against aliasing), then eased toward the previous frame
   // (exponential blend with a per-frame step cap) so cuts and bright moments can never strobe. Alpha carries the luminance change.
-  const FS1 = P + `varying vec2 v;uniform sampler2D vid,prev;uniform vec2 asp,px;uniform vec3 drift;uniform float k,cap,first;
+  const FS1 = P + `varying vec2 v;uniform sampler2D vid,prev;uniform vec2 asp,px;uniform vec3 drift,place;uniform float k,cap,first;
 vec3 T(vec2 u){return texture2D(vid,u).rgb;}
 void main(){
-  vec2 q=(v-.5)*asp/1.03+.5;               // cover fit, 3% overscan: just enough for the drift (the edges are dissolved to ink anyway)
+  vec2 q=(v-place.yz)*asp/(1.03*place.x)+.5;   // cover fit at place.x of the cover size (1 = full), centred on place.yz of the window; 3% overscan: just enough for the drift (the edges dissolve to ink anyway)
   q+=drift.xy;
   q.y=1.-q.y;
   vec3 c=(T(q+px)+T(q-px)+T(q+vec2(px.x,-px.y))+T(q+vec2(-px.x,px.y)))*.25;
+  if(place.x<.99){vec2 e=smoothstep(0.,.03,min(q,1.-q));c*=e.x*e.y;}   // a pulled-back picture ends in ink, not in smeared edge pixels
   vec3 o=texture2D(prev,v).rgb;
   vec3 t=first>.5?c:o+clamp((c-o)*k,-cap,cap);
   float dl=dot(t-o,vec3(.2126,.7152,.0722));
   gl_FragColor=vec4(t,clamp(.5+dl*3.,0.,1.));
 }`;
   // stats: mean and spread of the footage's luminance, eased slowly (the auto-exposure). One pixel.
-  const FSS = P + `varying vec2 v;uniform sampler2D img,prev;uniform float k,first;
+  const FSS = P + `varying vec2 v;uniform sampler2D img,prev;uniform float k,first;uniform vec4 sa;
 float ez(float o,float t,float k){float d=t-o;float s=d*k;float m=1.5/255.;s=abs(s)<m?sign(d)*min(abs(d),m):s;return o+s;}
 void main(){
   float s=0.,s2=0.;
   for(int j=0;j<8;j++)for(int i=0;i<8;i++){
-    vec3 c=texture2D(img,vec2((float(i)+.5)/8.,.22+(float(j)+.5)/8.*.68)).rgb;
+    vec3 c=texture2D(img,vec2(mix(sa.x,sa.y,(float(i)+.5)/8.),mix(sa.z,sa.w,(float(j)+.5)/8.))).rgb;
     float l=dot(c,vec3(.2126,.7152,.0722));s+=l;s2+=l*l;
   }
   float m=s/64.,sd=sqrt(max(s2/64.-m*m,0.));
@@ -313,7 +315,7 @@ void main(){
 
   let gl, progs = {}, vidTex, buf, W = 0, H = 0, BW = 0, BH = 0, running = false, raf = 0, last = 0, ready = false, started = false, fresh = true, liveV = 0, hasFrame = false, uploaded = -1, quietX = .4, quietY = .8, winCss = 0, winOff = 0;
   let qi = 0, bufType, q8 = false, assetKey = '', cadence = [], lastRaf = 0, probing = true, cell0 = 6;
-  let stillOn = false, ctxLost = false, curSc = 1, texW = 0, texH = 0, layoutDirty = false, resizeT = 0, resizeFirst = 0, quietUntil = 0, retryT = 0, retries = 0, goAt = 0, uploadedAt = 0, swapAt = 0, dpr0 = window.devicePixelRatio || 1;
+  let placeZ = 1, placeY = .5, stillOn = false, ctxLost = false, curSc = 1, texW = 0, texH = 0, layoutDirty = false, resizeT = 0, resizeFirst = 0, quietUntil = 0, retryT = 0, retries = 0, goAt = 0, uploadedAt = 0, swapAt = 0, dpr0 = window.devicePixelRatio || 1;
   const R = { buf: null, stat: null, cell: null, sim: null };   // ping-pong sets: { tex: [a, b], fbo: [a, b], cur, w, h }
   const loc = {};
   let cdimW = 0, cdimH = 0, simW = 0, simH = 0, cellFresh = true, statFresh = true, lastSim = 0, simAcc = 0, simUntil = 0, steps = 2;
@@ -373,8 +375,8 @@ void main(){
     try {
       bufType = probeFloat(); q8 = bufType === gl.UNSIGNED_BYTE;
       const common = ['res', 'quiet', 'sc', 'sideW', 'hdrE', 'winH', 'winO', 'time', 'ctr'];
-      progs.p1 = program(FS1, ['vid', 'prev', 'asp', 'px', 'drift', 'k', 'cap', 'first']);
-      progs.ps = program(FSS, ['img', 'prev', 'k', 'first']);
+      progs.p1 = program(FS1, ['vid', 'prev', 'asp', 'px', 'drift', 'place', 'k', 'cap', 'first']);
+      progs.ps = program(FSS, ['img', 'prev', 'k', 'first', 'sa']);
       progs.pc = program(FSC, [...common, 'img', 'prev', 'stat', 'cdim', 'cell', 'lean', 'k', 'first', 'idleOn']);
       progs.pw = program(FSW, ['st', 'px', 'dim', 'inj', 'c2', 'damp']);
       progs.p2 = program(FS2, [...common, 'img', 'cells', 'sim', 'stat', 'cdim', 'par', 'cell', 'live', 'lean', 'bt', 'amp', 'sgp', 'fx', 'bloom', 'nb', 'flowA', 'waveK', 'idleOn', 'tp']);
@@ -454,6 +456,13 @@ void main(){
     const sw = Math.max(64, Math.min(q.sim, Math.round(cssW / (phone ? 3 : 5.5)))), sh = Math.max(32, Math.round(sw * cssH / cssW));
     if (sw !== simW || sh !== simH) { simW = sw; simH = sh; alloc(R.sim, sw, sh, q8 ? 128 / 255 : 0); imps.length = 0; touches.length = 0; }
     steps = q.steps;
+    // where the picture sits: phones and portrait cuts fill the window; the landscape cut is pulled back and centred in the open band above the wordmark, so the action is not behind the letters
+    placeZ = 1; placeY = .5;
+    if (!portrait) {
+      const wm = hero.querySelector('.wm'), wb = wm && wm.getBoundingClientRect();
+      const bot = wb ? wb.top - r.top + wb.height * .1 : cssH * .4;
+      placeZ = ZOOM_OUT; placeY = Math.max(.2, Math.min(.5, (130 + bot) / 2 / cssH));
+    }
     zones(r);
     curSc = sc;
     if (dbg) { dbg.sc = sc; dbg.layouts++; dbg.qi = qi; }
@@ -536,6 +545,7 @@ void main(){
     gl.uniform2f(u.asp, ax, ay);
     gl.uniform2f(u.px, .5 * ax / BW, .5 * ay / BH);
     gl.uniform3f(u.drift, Math.sin(t * .045) * .009 + Math.sin(t * .11) * .003, Math.cos(t * .037) * .007, 0);
+    gl.uniform3f(u.place, placeZ, .5, 1 - placeY);
     gl.uniform1f(u.k, .4); gl.uniform1f(u.cap, .06); gl.uniform1f(u.first, fresh ? 1 : 0);
     draw();
     fresh = false;
@@ -545,6 +555,9 @@ void main(){
     u = progs.ps; const sn_ = 1 - R.stat.cur;
     gl.useProgram(u.prog); target(R.stat, sn_);
     tex2(u, 'img', 0, imgTex); tex2(u, 'prev', 1, R.stat.tex[R.stat.cur]);
+    // the auto-exposure measures the picture, not the ink around a pulled-back one: its footprint in window coordinates (v up), shrunk a little
+    if (placeZ < .99) { const hx = 1.03 * placeZ / (2 * ax), hy = 1.03 * placeZ / (2 * ay), cy = 1 - placeY; gl.uniform4f(u.sa, Math.max(0, .5 - hx * .8), Math.min(1, .5 + hx * .8), Math.max(0, cy - hy * .8), Math.min(1, cy + hy * .8)); }
+    else gl.uniform4f(u.sa, 0, 1, .22, .9);
     gl.uniform1f(u.k, .05); gl.uniform1f(u.first, statFresh ? 1 : 0);
     draw(); statFresh = false; R.stat.cur = sn_;
     // cells
