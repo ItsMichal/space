@@ -1,0 +1,114 @@
+{
+  "name": "log-prev-next",
+  "profile": "mobile",
+  "throttle": 4,
+  "notes": [],
+  "inputType": "pointerdown",
+  "screencast": {
+    "frames": 71,
+    "durationMs": 1596.4,
+    "gapsMs": {
+      "p50": 16.6,
+      "p95": 23,
+      "max": 26.5,
+      "over25": 1,
+      "over40": 0
+    },
+    "motionFrames": 42
+  },
+  "responseMs": 277.8,
+  "motionMs": 685.3,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 57,
+    "p50": 16.7,
+    "p95": 16.8,
+    "max": 149.9,
+    "dropped": 8,
+    "over33": 1,
+    "over50": 1
+  },
+  "tracked": {
+    "scrollY": {
+      "range": 3557,
+      "moving": true,
+      "frames": 1,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 3557,
+      "maxJerkPx": 0,
+      "jerkRatio": 0
+    },
+    "pixelCentroid.cx": {
+      "range": 582.8,
+      "moving": true,
+      "frames": 28,
+      "reversals": 13,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 423.12,
+      "maxJerkPx": 333.43,
+      "jerkRatio": 0.572
+    },
+    "pixelCentroid.cy": {
+      "range": 683.6,
+      "moving": true,
+      "frames": 28,
+      "reversals": 14,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 682.31,
+      "maxJerkPx": 818.65,
+      "jerkRatio": 1.198
+    }
+  },
+  "flash": {
+    "screencastFrames": 0,
+    "details": [],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 0,
+    "maxMs": 0,
+    "totalMs": 0
+  },
+  "loaf": {
+    "count": 1,
+    "maxMs": 136.5,
+    "worst": [
+      {
+        "d": 136.5,
+        "scripts": [
+          {
+            "src": "root-CfpndU8k.js",
+            "fn": "",
+            "d": 12.399999976158142,
+            "kind": "user-callback"
+          },
+          {
+            "src": "entry.client-BkILk6c9.js",
+            "fn": "bt",
+            "d": 5.600000023841858,
+            "kind": "event-listener"
+          },
+          {
+            "src": "entry.client-BkILk6c9.js",
+            "fn": "bt",
+            "d": 5.299999952316284,
+            "kind": "event-listener"
+          }
+        ]
+      }
+    ]
+  },
+  "trace": null,
+  "verdict": [
+    "SLOW-RESPONSE 277.8ms",
+    "DROPPED 8"
+  ]
+}

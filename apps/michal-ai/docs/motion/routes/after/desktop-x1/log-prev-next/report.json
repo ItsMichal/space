@@ -1,0 +1,228 @@
+{
+  "name": "log-prev-next",
+  "profile": "desktop",
+  "throttle": 1,
+  "notes": [],
+  "inputType": "pointerdown",
+  "screencast": {
+    "frames": 65,
+    "durationMs": 1883.9,
+    "gapsMs": {
+      "p50": 16.5,
+      "p95": 17.8,
+      "max": 19.7,
+      "over25": 0,
+      "over40": 0
+    },
+    "motionFrames": 25
+  },
+  "responseMs": 89.9,
+  "motionMs": 392.8,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 36,
+    "p50": 16.7,
+    "p95": 16.8,
+    "max": 33.3,
+    "dropped": 1,
+    "over33": 0,
+    "over50": 0
+  },
+  "tracked": {
+    "scrollY": {
+      "range": 7254,
+      "moving": true,
+      "frames": 1,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 7254,
+      "maxJerkPx": 0,
+      "jerkRatio": 0
+    },
+    "pixelCentroid.cx": {
+      "range": 349.3,
+      "moving": true,
+      "frames": 24,
+      "reversals": 11,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 182.83,
+      "maxJerkPx": 150.13,
+      "jerkRatio": 0.43
+    },
+    "pixelCentroid.cy": {
+      "range": 727.9,
+      "moving": true,
+      "frames": 24,
+      "reversals": 6,
+      "stalls": 0,
+      "jumps": 2,
+      "maxStepPx": 325.14,
+      "maxJerkPx": 294.62,
+      "jerkRatio": 0.405
+    }
+  },
+  "flash": {
+    "screencastFrames": 7,
+    "details": [
+      {
+        "i": 18,
+        "t": -2.6,
+        "why": "content-missing"
+      },
+      {
+        "i": 19,
+        "t": 19.6,
+        "why": "content-missing"
+      },
+      {
+        "i": 20,
+        "t": 43.2,
+        "why": "content-missing"
+      },
+      {
+        "i": 21,
+        "t": 71,
+        "why": "content-missing"
+      },
+      {
+        "i": 22,
+        "t": 89.9,
+        "why": "content-missing"
+      },
+      {
+        "i": 23,
+        "t": 102.9,
+        "why": "content-missing"
+      }
+    ],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0.0031,
+    "entries": [
+      {
+        "t": 4799,
+        "v": 0.0002537722908093278,
+        "src": [
+          {
+            "node": ".glass-surface",
+            "from": [
+              424,
+              0,
+              592,
+              100
+            ],
+            "to": [
+              432,
+              0,
+              576,
+              100
+            ]
+          }
+        ]
+      },
+      {
+        "t": 4816.600000023842,
+        "v": 0.0002469135802469136,
+        "src": [
+          {
+            "node": ".glass-surface",
+            "from": [
+              432,
+              0,
+              576,
+              100
+            ],
+            "to": [
+              440,
+              0,
+              560,
+              100
+            ]
+          }
+        ]
+      },
+      {
+        "t": 4831.800000071526,
+        "v": 0.00024005486968449932,
+        "src": [
+          {
+            "node": ".glass-surface",
+            "from": [
+              440,
+              0,
+              560,
+              100
+            ],
+            "to": [
+              448,
+              0,
+              544,
+              100
+            ]
+          }
+        ]
+      },
+      {
+        "t": 4865.600000023842,
+        "v": 0.00023319615912208505,
+        "src": [
+          {
+            "node": ".glass-surface",
+            "from": [
+              448,
+              0,
+              544,
+              100
+            ],
+            "to": [
+              456,
+              0,
+              528,
+              100
+            ]
+          }
+        ]
+      },
+      {
+        "t": 4882.200000047684,
+        "v": 0.0002263374485596708,
+        "src": [
+          {
+            "node": ".glass-surface",
+            "from": [
+              456,
+              0,
+              528,
+              100
+            ],
+            "to": [
+              464,
+              0,
+              512,
+              100
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "longTasks": {
+    "count": 0,
+    "maxMs": 0,
+    "totalMs": 0
+  },
+  "loaf": {
+    "count": 0,
+    "maxMs": 0,
+    "worst": []
+  },
+  "trace": null,
+  "verdict": [
+    "DROPPED 1",
+    "FLASH 7/0",
+    "CLS 0.0031"
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "name": "theme-dark-reading",
+  "profile": "mobile",
+  "throttle": 4,
+  "notes": [],
+  "inputType": "pointerdown",
+  "screencast": {
+    "frames": 77,
+    "durationMs": 3414.9,
+    "gapsMs": {
+      "p50": 16.9,
+      "p95": 39.1,
+      "max": 39.1,
+      "over25": 2,
+      "over40": 0
+    },
+    "motionFrames": 17
+  },
+  "responseMs": 217.1,
+  "motionMs": 299,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 35,
+    "p50": 16.7,
+    "p95": 33.4,
+    "max": 66.7,
+    "dropped": 4,
+    "over33": 1,
+    "over50": 1
+  },
+  "tracked": {
+    "scrollY": {
+      "range": 816,
+      "moving": true,
+      "frames": 1,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 816,
+      "maxJerkPx": 0,
+      "jerkRatio": 0
+    },
+    "pixelCentroid.cx": {
+      "range": 256.2,
+      "moving": true,
+      "frames": 11,
+      "reversals": 4,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 245.54,
+      "maxJerkPx": 183.1,
+      "jerkRatio": 0.715
+    },
+    "pixelCentroid.cy": {
+      "range": 274.5,
+      "moving": true,
+      "frames": 12,
+      "reversals": 5,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 163.36,
+      "maxJerkPx": 120.94,
+      "jerkRatio": 0.441
+    }
+  },
+  "flash": {
+    "screencastFrames": 21,
+    "details": [
+      {
+        "i": 42,
+        "t": 43.7,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 43,
+        "t": 58.1,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 44,
+        "t": 65.3,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 45,
+        "t": 107.2,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 46,
+        "t": 204.6,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 47,
+        "t": 217.1,
+        "why": "luminance-overshoot"
+      }
+    ],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 0,
+    "maxMs": 0,
+    "totalMs": 0
+  },
+  "loaf": {
+    "count": 0,
+    "maxMs": 0,
+    "worst": []
+  },
+  "trace": null,
+  "verdict": [
+    "SLOW-RESPONSE 217.1ms",
+    "DROPPED 4",
+    "FLASH 21/0"
+  ]
+}

@@ -1,0 +1,149 @@
+{
+  "name": "home-to-project",
+  "profile": "desktop",
+  "throttle": 1,
+  "notes": [],
+  "inputType": "pointerdown",
+  "screencast": {
+    "frames": 64,
+    "durationMs": 1967.6,
+    "gapsMs": {
+      "p50": 16.9,
+      "p95": 279,
+      "max": 279,
+      "over25": 4,
+      "over40": 3
+    },
+    "motionFrames": 18
+  },
+  "responseMs": 33.3,
+  "motionMs": 730.8,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 39,
+    "p50": 16.7,
+    "p95": 66.6,
+    "max": 216.7,
+    "dropped": 15,
+    "over33": 2,
+    "over50": 2
+  },
+  "tracked": {
+    "scrollY": {
+      "range": 835,
+      "moving": true,
+      "frames": 1,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 835,
+      "maxJerkPx": 0,
+      "jerkRatio": 0
+    },
+    "pixelCentroid.cx": {
+      "range": 293,
+      "moving": true,
+      "frames": 14,
+      "reversals": 3,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 120.85,
+      "maxJerkPx": 174.68,
+      "jerkRatio": 0.596
+    },
+    "pixelCentroid.cy": {
+      "range": 346.4,
+      "moving": true,
+      "frames": 14,
+      "reversals": 9,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 264.98,
+      "maxJerkPx": 301.23,
+      "jerkRatio": 0.87
+    }
+  },
+  "flash": {
+    "screencastFrames": 11,
+    "details": [
+      {
+        "i": 37,
+        "t": 5.6,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 38,
+        "t": 17.9,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 39,
+        "t": 33.3,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 40,
+        "t": 49.2,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 41,
+        "t": 76.6,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 42,
+        "t": 118.2,
+        "why": "luminance-overshoot"
+      }
+    ],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 0,
+    "maxMs": 0,
+    "totalMs": 0
+  },
+  "loaf": {
+    "count": 2,
+    "maxMs": 222.2,
+    "worst": [
+      {
+        "d": 222.2,
+        "scripts": []
+      },
+      {
+        "d": 63.9,
+        "scripts": [
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 5.100000023841858,
+            "kind": "event-listener"
+          },
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 14.299999952316284,
+            "kind": "event-listener"
+          },
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 32.60000002384186,
+            "kind": "event-listener"
+          }
+        ]
+      }
+    ]
+  },
+  "trace": null,
+  "verdict": [
+    "DROPPED 15",
+    "FLASH 11/0"
+  ]
+}

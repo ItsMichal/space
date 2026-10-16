@@ -1,9 +1,10 @@
 /* Card to page transitions. Names are set from script (components/site/CardTransitions.tsx), never here, because a
    view-transition-name must be unique in the document. This file only styles the pieces.
    Motion: 420ms on the app's critically damped settle (the same sampled curve as the nav fold); the rest of the page
-   fades out in 180ms and up in 380ms, 8px rise, like the route enter it replaces during a transition. */
+   cross-fades in 320ms with an 8px rise on the arriving page, like the route enter it replaces during a transition. */
 :root {
   --vt-settle: linear(0, 0.2743, 0.5788, 0.7927, 0.8917, 0.9441, 0.9713, 0.9853, 0.9925, 0.9965, 0.9982, 0.9991, 1);
+  --vt-fade: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* hard navigations (typed URL, external link, first load) cross-fade where the browser supports it */
@@ -13,17 +14,36 @@
   }
 }
 
-/* the route-enter fade would hide the new page at the moment it is captured */
-html[data-vt] .page-enter {
-  animation: none;
+/* A route change puts the page at the top or back where it was: always a jump, never the smooth scroll used for in-page links. */
+html[data-vt],
+html[data-route-jump] {
+  scroll-behavior: auto;
+}
+
+/* The nav is its own group: it does not ride the page's cross-fade or its 8px rise, so it stays put and crisp on every route
+   change (the old and new snapshots are the same pill, or the pill with its sheet closing). */
+.nav-glass {
+  view-transition-name: site-nav;
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  /* Page cross-fade. The two snapshots blend with plus-lighter (the default), so they must be exact complements: same duration, same
+     curve, 1 to 0 and 0 to 1. Different timings (the old 180ms fade-out and the delayed 380ms fade-in this replaces) do not sum to
+     one, and the page dips toward the background or washes out in the middle. The new page rises 8px as it arrives. */
   ::view-transition-old(root) {
-    animation: vt-out 180ms var(--craft-in) both;
+    animation: vt-out 320ms var(--vt-fade) both;
   }
   ::view-transition-new(root) {
-    animation: vt-in 380ms var(--craft-out) 60ms both;
+    animation: vt-in 320ms var(--vt-fade) both;
+  }
+  ::view-transition-group(site-nav) {
+    animation-duration: 320ms;
+    animation-timing-function: var(--vt-fade);
+  }
+  ::view-transition-old(site-nav),
+  ::view-transition-new(site-nav) {
+    animation-duration: 320ms;
+    animation-timing-function: var(--vt-fade);
   }
 
   ::view-transition-group(post-img),

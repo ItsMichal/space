@@ -1,0 +1,126 @@
+{
+  "name": "project-back",
+  "profile": "desktop",
+  "throttle": 4,
+  "notes": [],
+  "inputType": "popstate",
+  "screencast": {
+    "frames": 65,
+    "durationMs": 1662.3,
+    "gapsMs": {
+      "p50": 17.7,
+      "p95": 30.5,
+      "max": 31.9,
+      "over25": 3,
+      "over40": 0
+    },
+    "motionFrames": 29
+  },
+  "responseMs": 129.4,
+  "motionMs": 459.1,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 32,
+    "p50": 16.7,
+    "p95": 50,
+    "max": 166.7,
+    "dropped": 11,
+    "over33": 2,
+    "over50": 1
+  },
+  "tracked": {
+    "pixelCentroid.cx": {
+      "range": 390,
+      "moving": true,
+      "frames": 24,
+      "reversals": 7,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 171.17,
+      "maxJerkPx": 301.62,
+      "jerkRatio": 0.773
+    },
+    "pixelCentroid.cy": {
+      "range": 520.6,
+      "moving": true,
+      "frames": 24,
+      "reversals": 8,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 349.46,
+      "maxJerkPx": 395.91,
+      "jerkRatio": 0.761
+    }
+  },
+  "flash": {
+    "screencastFrames": 3,
+    "details": [
+      {
+        "i": 6,
+        "t": 129.4,
+        "why": "content-missing"
+      },
+      {
+        "i": 7,
+        "t": 135.3,
+        "why": "content-missing"
+      },
+      {
+        "i": 8,
+        "t": 139.9,
+        "why": "content-missing"
+      }
+    ],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 1,
+    "maxMs": 135,
+    "totalMs": 135
+  },
+  "loaf": {
+    "count": 2,
+    "maxMs": 153.7,
+    "worst": [
+      {
+        "d": 153.7,
+        "scripts": [
+          {
+            "src": "entry.client-BkILk6c9.js",
+            "fn": "bt",
+            "d": 134.39999997615814,
+            "kind": "event-listener"
+          }
+        ]
+      },
+      {
+        "d": 56.3,
+        "scripts": [
+          {
+            "src": "entry.client-BkILk6c9.js",
+            "fn": "bt",
+            "d": 5,
+            "kind": "event-listener"
+          },
+          {
+            "src": "entry.client-BkILk6c9.js",
+            "fn": "bt",
+            "d": 6.899999976158142,
+            "kind": "event-listener"
+          }
+        ]
+      }
+    ]
+  },
+  "trace": null,
+  "verdict": [
+    "SLOW-RESPONSE 129.4ms",
+    "DROPPED 11",
+    "FLASH 3/0",
+    "LONGTASK 1x max 135ms"
+  ]
+}

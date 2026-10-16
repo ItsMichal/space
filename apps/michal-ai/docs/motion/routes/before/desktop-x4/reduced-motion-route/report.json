@@ -1,0 +1,75 @@
+{
+  "name": "reduced-motion-route",
+  "profile": "desktop",
+  "throttle": 4,
+  "notes": [],
+  "inputType": "pointerdown",
+  "screencast": {
+    "frames": 34,
+    "durationMs": 952.6,
+    "gapsMs": {
+      "p50": 0,
+      "p95": 0,
+      "max": 0,
+      "over25": 0,
+      "over40": 0
+    },
+    "motionFrames": 1
+  },
+  "responseMs": 242.3,
+  "motionMs": 0,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 17,
+    "p50": 16.7,
+    "p95": 83.2,
+    "max": 83.2,
+    "dropped": 5,
+    "over33": 1,
+    "over50": 1
+  },
+  "tracked": {},
+  "flash": {
+    "screencastFrames": 0,
+    "details": [],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 1,
+    "maxMs": 73,
+    "totalMs": 73
+  },
+  "loaf": {
+    "count": 1,
+    "maxMs": 100.4,
+    "worst": [
+      {
+        "d": 100.4,
+        "scripts": [
+          {
+            "src": "entry.client-BkILk6c9.js",
+            "fn": "bt",
+            "d": 73.5,
+            "kind": "event-listener"
+          },
+          {
+            "src": "home-BzYFabGt.js",
+            "fn": "u",
+            "d": 11.100000023841858,
+            "kind": "user-callback"
+          }
+        ]
+      }
+    ]
+  },
+  "trace": null,
+  "verdict": [
+    "SLOW-RESPONSE 242.3ms",
+    "DROPPED 5",
+    "LONGTASK 1x max 73ms"
+  ]
+}

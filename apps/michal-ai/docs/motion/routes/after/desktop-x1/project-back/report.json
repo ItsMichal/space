@@ -1,0 +1,103 @@
+{
+  "name": "project-back",
+  "profile": "desktop",
+  "throttle": 1,
+  "notes": [],
+  "inputType": "popstate",
+  "screencast": {
+    "frames": 84,
+    "durationMs": 1659.3,
+    "gapsMs": {
+      "p50": 17.3,
+      "p95": 22.1,
+      "max": 22.1,
+      "over25": 0,
+      "over40": 0
+    },
+    "motionFrames": 21
+  },
+  "responseMs": 110,
+  "motionMs": 334.6,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 31,
+    "p50": 16.7,
+    "p95": 33.3,
+    "max": 33.4,
+    "dropped": 2,
+    "over33": 0,
+    "over50": 0
+  },
+  "tracked": {
+    "scrollY": {
+      "range": 835,
+      "moving": true,
+      "frames": 1,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 835,
+      "maxJerkPx": 0,
+      "jerkRatio": 0
+    },
+    "pixelCentroid.cx": {
+      "range": 643.6,
+      "moving": true,
+      "frames": 16,
+      "reversals": 8,
+      "stalls": 0,
+      "jumps": 2,
+      "maxStepPx": 643.6,
+      "maxJerkPx": 829.43,
+      "jerkRatio": 1.289
+    },
+    "pixelCentroid.cy": {
+      "range": 776.2,
+      "moving": true,
+      "frames": 16,
+      "reversals": 7,
+      "stalls": 0,
+      "jumps": 2,
+      "maxStepPx": 776.24,
+      "maxJerkPx": 1095.65,
+      "jerkRatio": 1.411
+    }
+  },
+  "flash": {
+    "screencastFrames": 0,
+    "details": [],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 1,
+    "maxMs": 51,
+    "totalMs": 51
+  },
+  "loaf": {
+    "count": 1,
+    "maxMs": 54.8,
+    "worst": [
+      {
+        "d": 54.8,
+        "scripts": [
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 51.40000009536743,
+            "kind": "event-listener"
+          }
+        ]
+      }
+    ]
+  },
+  "trace": null,
+  "verdict": [
+    "SLOW-RESPONSE 110ms",
+    "DROPPED 2",
+    "LONGTASK 1x max 51ms"
+  ]
+}

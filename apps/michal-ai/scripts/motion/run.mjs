@@ -175,7 +175,12 @@ try {
         if (quick && !sc.quick) continue
         if (sc.profiles && !sc.profiles.includes(profileName)) continue
         const t = Date.now()
-        const r = await runScenario(server.base, sc, profileName, cpu, outRoot)
+        // last-resort watchdog: a wedged Chrome or Worker must cost one scenario, not the run
+        let wd
+        const r = await Promise.race([
+          runScenario(server.base, sc, profileName, cpu, outRoot),
+          new Promise((res) => (wd = setTimeout(() => res({ name: sc.name, profile: profileName, throttle: cpu, error: 'watchdog: scenario exceeded 400 s' }), 400000))),
+        ]).finally(() => clearTimeout(wd))
         rows.push(r)
         console.log(
           `${profileName} x${cpu} ${sc.name.padEnd(24)} ${r.error ? 'ERROR ' + r.error : `resp ${r.responseMs}ms  motion ${r.motionMs}ms  dropped ${r.raf?.dropped}  cls ${r.cls?.value}  ${r.verdict.join(' | ')}`}  (${((Date.now() - t) / 1000).toFixed(1)}s)`

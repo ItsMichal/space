@@ -1,0 +1,116 @@
+{
+  "name": "nav-work-writing-about",
+  "profile": "desktop",
+  "throttle": 4,
+  "notes": [],
+  "inputType": "pointerdown",
+  "screencast": {
+    "frames": 107,
+    "durationMs": 3153.4,
+    "gapsMs": {
+      "p50": 17.9,
+      "p95": 33.2,
+      "max": 77.4,
+      "over25": 3,
+      "over40": 1
+    },
+    "motionFrames": 23
+  },
+  "responseMs": 427.9,
+  "motionMs": 453,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 58,
+    "p50": 16.7,
+    "p95": 16.8,
+    "max": 50,
+    "dropped": 2,
+    "over33": 1,
+    "over50": 0
+  },
+  "tracked": {
+    "pixelCentroid.cx": {
+      "range": 262.9,
+      "moving": true,
+      "frames": 3,
+      "reversals": 1,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 262.87,
+      "maxJerkPx": 144.77,
+      "jerkRatio": 0.551
+    },
+    "pixelCentroid.cy": {
+      "range": 174,
+      "moving": true,
+      "frames": 3,
+      "reversals": 1,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 138.3,
+      "maxJerkPx": 30.29,
+      "jerkRatio": 0.174
+    }
+  },
+  "flash": {
+    "screencastFrames": 2,
+    "details": [
+      {
+        "i": 70,
+        "t": 427.9,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 71,
+        "t": 431.8,
+        "why": "luminance-overshoot"
+      }
+    ],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 1,
+    "maxMs": 53,
+    "totalMs": 53
+  },
+  "loaf": {
+    "count": 1,
+    "maxMs": 56.8,
+    "worst": [
+      {
+        "d": 56.8,
+        "scripts": [
+          {
+            "src": "entry.client-BkILk6c9.js",
+            "fn": "bt",
+            "d": 5.599999904632568,
+            "kind": "event-listener"
+          },
+          {
+            "src": "entry.client-BkILk6c9.js",
+            "fn": "bt",
+            "d": 6.399999976158142,
+            "kind": "event-listener"
+          },
+          {
+            "src": "",
+            "fn": "",
+            "d": 38.89999997615814,
+            "kind": "user-callback"
+          }
+        ]
+      }
+    ]
+  },
+  "trace": null,
+  "verdict": [
+    "SLOW-RESPONSE 427.9ms",
+    "DROPPED 2",
+    "FLASH 2/0",
+    "LONGTASK 1x max 53ms"
+  ]
+}

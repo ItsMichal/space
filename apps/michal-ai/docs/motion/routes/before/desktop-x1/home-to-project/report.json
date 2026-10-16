@@ -1,0 +1,119 @@
+{
+  "name": "home-to-project",
+  "profile": "desktop",
+  "throttle": 1,
+  "notes": [],
+  "inputType": "pointerdown",
+  "screencast": {
+    "frames": 26,
+    "durationMs": 1676,
+    "gapsMs": {
+      "p50": 16.6,
+      "p95": 522.3,
+      "max": 522.3,
+      "over25": 5,
+      "over40": 5
+    },
+    "motionFrames": 19
+  },
+  "responseMs": 69.5,
+  "motionMs": 1300.1,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 61,
+    "p50": 16.7,
+    "p95": 83.3,
+    "max": 200,
+    "dropped": 23,
+    "over33": 3,
+    "over50": 3
+  },
+  "tracked": {
+    "pixelCentroid.cx": {
+      "range": 282.6,
+      "moving": true,
+      "frames": 18,
+      "reversals": 9,
+      "stalls": 0,
+      "jumps": 2,
+      "maxStepPx": 198.03,
+      "maxJerkPx": 273.59,
+      "jerkRatio": 0.968
+    },
+    "pixelCentroid.cy": {
+      "range": 717.7,
+      "moving": true,
+      "frames": 18,
+      "reversals": 9,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 430.26,
+      "maxJerkPx": 594.03,
+      "jerkRatio": 0.828
+    }
+  },
+  "flash": {
+    "screencastFrames": 7,
+    "details": [
+      {
+        "i": 9,
+        "t": 597.5,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 10,
+        "t": 613.4,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 11,
+        "t": 856.7,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 12,
+        "t": 930,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 13,
+        "t": 1088,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 14,
+        "t": 1089.1,
+        "why": "luminance-overshoot"
+      }
+    ],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 0,
+    "maxMs": 0,
+    "totalMs": 0
+  },
+  "loaf": {
+    "count": 3,
+    "maxMs": 204.1,
+    "worst": [
+      {
+        "d": 204.1,
+        "scripts": []
+      },
+      {
+        "d": 127.6,
+        "scripts": []
+      }
+    ]
+  },
+  "trace": null,
+  "verdict": [
+    "DROPPED 23",
+    "FLASH 7/0"
+  ]
+}

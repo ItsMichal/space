@@ -1,0 +1,73 @@
+{
+  "name": "reduced-motion-route",
+  "profile": "desktop",
+  "throttle": 4,
+  "notes": [],
+  "inputType": "pointerdown",
+  "screencast": {
+    "frames": 31,
+    "durationMs": 943.9,
+    "gapsMs": {
+      "p50": 0,
+      "p95": 0,
+      "max": 0,
+      "over25": 0,
+      "over40": 0
+    },
+    "motionFrames": 1
+  },
+  "responseMs": 249.4,
+  "motionMs": 0,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 1,
+    "p50": 0,
+    "p95": 0,
+    "max": 0,
+    "dropped": 0,
+    "over33": 0,
+    "over50": 0
+  },
+  "tracked": {
+    "scrollY": {
+      "range": 482,
+      "moving": true,
+      "frames": 1,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 482,
+      "maxJerkPx": 0,
+      "jerkRatio": 0
+    }
+  },
+  "flash": {
+    "screencastFrames": 0,
+    "details": [],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 2,
+    "maxMs": 127,
+    "totalMs": 190
+  },
+  "loaf": {
+    "count": 1,
+    "maxMs": 170.3,
+    "worst": [
+      {
+        "d": 170.3,
+        "scripts": []
+      }
+    ]
+  },
+  "trace": null,
+  "verdict": [
+    "SLOW-RESPONSE 249.4ms",
+    "LONGTASK 2x max 127ms"
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "name": "menu-navigate",
+  "profile": "mobile",
+  "throttle": 4,
+  "notes": [],
+  "inputType": "pointerdown",
+  "screencast": {
+    "frames": 99,
+    "durationMs": 1827.9,
+    "gapsMs": {
+      "p50": 16.4,
+      "p95": 36.5,
+      "max": 112.9,
+      "over25": 6,
+      "over40": 2
+    },
+    "motionFrames": 52
+  },
+  "responseMs": 118.6,
+  "motionMs": 1001.5,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 66,
+    "p50": 16.7,
+    "p95": 16.7,
+    "max": 133.3,
+    "dropped": 9,
+    "over33": 2,
+    "over50": 1
+  },
+  "tracked": {
+    "pixelCentroid.cx": {
+      "range": 402.8,
+      "moving": true,
+      "frames": 47,
+      "reversals": 28,
+      "stalls": 1,
+      "jumps": 0,
+      "maxStepPx": 264.73,
+      "maxJerkPx": 291.33,
+      "jerkRatio": 0.723
+    },
+    "pixelCentroid.cy": {
+      "range": 537.7,
+      "moving": true,
+      "frames": 46,
+      "reversals": 3,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 291.04,
+      "maxJerkPx": 316.4,
+      "jerkRatio": 0.588
+    }
+  },
+  "flash": {
+    "screencastFrames": 0,
+    "details": [],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 0,
+    "maxMs": 0,
+    "totalMs": 0
+  },
+  "loaf": {
+    "count": 2,
+    "maxMs": 114.7,
+    "worst": [
+      {
+        "d": 114.7,
+        "scripts": [
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 5,
+            "kind": "event-listener"
+          },
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 12.5,
+            "kind": "event-listener"
+          },
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 5,
+            "kind": "event-listener"
+          }
+        ]
+      },
+      {
+        "d": 54.7,
+        "scripts": [
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "jh",
+            "d": 42.60000002384186,
+            "kind": "event-listener"
+          }
+        ]
+      }
+    ]
+  },
+  "trace": null,
+  "verdict": [
+    "SLOW-RESPONSE 118.6ms",
+    "DROPPED 9"
+  ]
+}
