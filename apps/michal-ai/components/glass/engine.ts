@@ -301,7 +301,13 @@ class ShapeState {
       this.snap()
       return false
     }
-    const cfg: SpringConfig = this.soft || this.cfg?.id ? MORPH : FOLLOW
+    // Geometry has ONE source of truth: the DOM box. The content, the ::before sheen and the pill's own layout all change size
+    // at once, so the glass layers (frost box, canvas rim/tint/shadow, lens) must land on the new box in the same frame, not
+    // spring after it. Only two things are allowed to animate geometry: a matched-geometry handoff (soft) and a fold in flight
+    // (the phone menu surface grows while its rows fade). Everything else (late fonts, route change, status chip, breakpoint)
+    // snaps to the measured box.
+    const cfg: SpringConfig = this.soft || this.fold.x > 0.02 || this.tfold > 0.02 ? MORPH : FOLLOW
+    const spring = this.soft || this.fold.x > 0.02 || this.tfold > 0.02
     let moving = false
     const go = (s: Spring, t: number, c: SpringConfig, eps = 0.02) => {
       if (springSettled(s, t, eps)) {
@@ -317,13 +323,24 @@ class ShapeState {
       this.cx.x = this.tcx
       this.cy.x = this.tcy
       this.cx.v = this.cy.v = 0
-    } else {
+    } else if (spring) {
       go(this.cx, this.tcx, cfg)
       go(this.cy, this.tcy, cfg)
+    } else {
+      this.cx.x = this.tcx
+      this.cy.x = this.tcy
+      this.cx.v = this.cy.v = 0
     }
-    go(this.hx, this.thx, cfg)
-    go(this.hy, this.thy, cfg)
-    go(this.r, this.tr, cfg)
+    if (spring) {
+      go(this.hx, this.thx, cfg)
+      go(this.hy, this.thy, cfg)
+      go(this.r, this.tr, cfg)
+    } else {
+      this.hx.x = this.thx
+      this.hy.x = this.thy
+      this.r.x = this.tr
+      this.hx.v = this.hy.v = this.r.v = 0
+    }
     go(this.mat, this.tmat, MORPH, 0.004)
     go(this.press, this.tpress, MORPH, 0.004)
     go(this.fold, this.tfold, MORPH, 0.004)
@@ -610,7 +627,11 @@ export class Field {
       { rootMargin: '120px' },
     )
     this.io.observe(host)
-    this.ro = new ResizeObserver(() => this.invalidate())
+    // Runs after layout and before paint in the same frame: update and draw now, so the glass is never one frame behind the DOM.
+    this.ro = new ResizeObserver(() => {
+      this.invalidate()
+      if (!this.disposed && this.visible && this.mode !== 'flat') this.update(performance.now(), 0)
+    })
     this.ro.observe(host)
     // React (or a text update) can wipe foreign children; put the layer back.
     this.mo = new MutationObserver(() => {

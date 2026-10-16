@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, type ElementType, type HTMLAttributes, type ReactNode } from 'react'
+import { useLayoutEffect, useRef, type ElementType, type HTMLAttributes, type ReactNode } from 'react'
 import { Glass } from './react'
 import { glass, type Glass as GlassEffect } from './glass'
 import type { GlassShape } from './geometry'
@@ -49,7 +49,8 @@ export function GlassFold({
   const head = useRef<HTMLDivElement | null>(null)
   const first = useRef(true)
 
-  useEffect(() => {
+  // layout effect: the fold impulse must be registered before the resize observer sees the new height, or the surface snaps instead of unfolding
+  useLayoutEffect(() => {
     if (first.current) {
       first.current = false
       return

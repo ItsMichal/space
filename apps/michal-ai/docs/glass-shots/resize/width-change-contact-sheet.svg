@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="670" font-family="monospace" font-size="12"><rect width="100%" height="100%" fill="#121612"/><text x="10" y="24" fill="#ebe7da" font-size="14">BEFORE: red = glass (frost box + canvas rim/shadow), green dashed = DOM box (content + sheen). Glass springs about 600ms behind.</text>
+<text x="10" y="58" fill="#a4ab99">frame base</text>
+<rect x="559.1" y="38" width="281.7" height="28" rx="14" fill="none" stroke="#e5484d" stroke-width="2"/>
+<rect x="559.1" y="38" width="281.7" height="28" rx="14" fill="#ffffff" fill-opacity="0.12" stroke="#9cc68a" stroke-dasharray="4 3"/>
+<text x="1010" y="57" fill="#a4ab99">dom 282  glass 282  gap 0</text>
+<text x="10" y="92" fill="#a4ab99">frame 0</text>
+<rect x="547.5" y="72" width="305.1" height="28" rx="14" fill="none" stroke="#e5484d" stroke-width="2"/>
+<rect x="450.0" y="72" width="500.0" height="28" rx="14" fill="#ffffff" fill-opacity="0.12" stroke="#9cc68a" stroke-dasharray="4 3"/>
+<text x="1010" y="91" fill="#a4ab99">dom 500  glass 305  gap 195</text>
+<text x="10" y="126" fill="#a4ab99">frame 1</text>
+<rect x="543.2" y="106" width="313.6" height="28" rx="14" fill="none" stroke="#e5484d" stroke-width="2"/>
+<rect x="450.0" y="106" width="500.0" height="28" rx="14" fill="#ffffff" fill-opacity="0.12" stroke="#9cc68a" stroke-dasharray="4 3"/>
+<text x="1010" y="125" fill="#a4ab99">dom 500  glass 314  gap 186</text>
+<text x="10" y="160" fill="#a4ab99">frame 3</text>
+<rect x="534.0" y="140" width="332.0" height="28" rx="14" fill="none" stroke="#e5484d" stroke-width="2"/>
+<rect x="450.0" y="140" width="500.0" height="28" rx="14" fill="#ffffff" fill-opacity="0.12" stroke="#9cc68a" stroke-dasharray="4 3"/>
+<text x="1010" y="159" fill="#a4ab99">dom 500  glass 332  gap 168</text>
+<text x="10" y="194" fill="#a4ab99">frame 8</text>
+<rect x="511.1" y="174" width="377.8" height="28" rx="14" fill="none" stroke="#e5484d" stroke-width="2"/>
+<rect x="450.0" y="174" width="500.0" height="28" rx="14" fill="#ffffff" fill-opacity="0.12" stroke="#9cc68a" stroke-dasharray="4 3"/>
+<text x="1010" y="193" fill="#a4ab99">dom 500  glass 378  gap 122</text>
+<text x="10" y="228" fill="#a4ab99">frame 13</text>
+<rect x="492.1" y="208" width="415.7" height="28" rx="14" fill="none" stroke="#e5484d" stroke-width="2"/>
+<rect x="450.0" y="208" width="500.0" height="28" rx="14" fill="#ffffff" fill-opacity="0.12" stroke="#9cc68a" stroke-dasharray="4 3"/>
+<text x="1010" y="227" fill="#a4ab99">dom 500  glass 416  gap 84</text>
+<text x="10" y="262" fill="#a4ab99">frame 18</text>
+<rect x="478.1" y="242" width="443.8" height="28" rx="14" fill="none" stroke="#e5484d" stroke-width="2"/>
+<rect x="450.0" y="242" width="500.0" height="28" rx="14" fill="#ffffff" fill-opacity="0.12" stroke="#9cc68a" stroke-dasharray="4 3"/>
+<text x="1010" y="261" fill="#a4ab99">dom 500  glass 444  gap 56</text>
+<text x="10" y="296" fill="#a4ab99">frame 23</text>
+<rect x="468.4" y="276" width="463.3" height="28" rx="14" fill="none" stroke="#e5484d" stroke-width="2"/>
+<rect x="450.0" y="276" width="500.0" height="28" rx="14" fill="#ffffff" fill-opacity="0.12" stroke="#9cc68a" stroke-dasharray="4 3"/>
+<text x="1010" y="295" fill="#a4ab99">dom 500  glass 463  gap 37</text>
+<text x="10" y="330" fill="#a4ab99">frame 28</text>
+<rect x="461.8" y="310" width="476.4" height="28" rx="14" fill="none" stroke="#e5484d" stroke-width="2"/>
+<rect x="450.0" y="310" width="500.0" height="28" rx="14" fill="#ffffff" fill-opacity="0.12" stroke="#9cc68a" stroke-dasharray="4 3"/>
+<text x="1010" y="329" fill="#a4ab99">dom 500  glass 476  gap 24</text>
+<text x="10" y="364" fill="#a4ab99">frame 33</text>
+<rect x="457.5" y="344" width="485.0" height="28" rx="14" fill="none" stroke="#e5484d" stroke-width="2"/>
+<rect x="450.0" y="344" width="500.0" height="28" rx="14" fill="#ffffff" fill-opacity="0.12" stroke="#9cc68a" stroke-dasharray="4 3"/>
+<text x="1010" y="363" fill="#a4ab99">dom 500  glass 485  gap 15</text>
+<text x="10" y="398" fill="#a4ab99">frame 38</text>
+<rect x="454.8" y="378" width="490.5" height="28" rx="14" fill="none" stroke="#e5484d" stroke-width="2"/>
+<rect x="450.0" y="378" width="500.0" height="28" rx="14" fill="#ffffff" fill-opacity="0.12" stroke="#9cc68a" stroke-dasharray="4 3"/>
+<text x="1010" y="397" fill="#a4ab99">dom 500  glass 490  gap 10</text>
+<text x="10" y="432" fill="#a4ab99">frame 43</text>
+<rect x="452.9" y="412" width="494.1" height="28" rx="14" fill="none" stroke="#e5484d" stroke-width="2"/>
+<rect x="450.0" y="412" width="500.0" height="28" rx="14" fill="#ffffff" fill-opacity="0.12" stroke="#9cc68a" stroke-dasharray="4 3"/>
+<text x="1010" y="431" fill="#a4ab99">dom 500  glass 494  gap 6</text>
+<text x="10" y="466" fill="#ebe7da" font-size="14">AFTER: both layers land on the DOM box in the same frame.</text>
+<text x="10" y="500" fill="#a4ab99">frame base</text>
+<rect x="559.1" y="480" width="281.7" height="28" rx="14" fill="none" stroke="#e5484d" stroke-width="2"/>
+<rect x="559.1" y="480" width="281.7" height="28" rx="14" fill="#ffffff" fill-opacity="0.12" stroke="#9cc68a" stroke-dasharray="4 3"/>
+<text x="1010" y="499" fill="#a4ab99">dom 282  glass 282  gap 0</text>
+<text x="10" y="534" fill="#a4ab99">frame 0</text>
+<rect x="450.0" y="514" width="500.0" height="28" rx="14" fill="none" stroke="#e5484d" stroke-width="2"/>
+<rect x="450.0" y="514" width="500.0" height="28" rx="14" fill="#ffffff" fill-opacity="0.12" stroke="#9cc68a" stroke-dasharray="4 3"/>
+<text x="1010" y="533" fill="#a4ab99">dom 500  glass 500  gap 0</text>
+<text x="10" y="568" fill="#a4ab99">frame 1</text>
+<rect x="450.0" y="548" width="500.0" height="28" rx="14" fill="none" stroke="#e5484d" stroke-width="2"/>
+<rect x="450.0" y="548" width="500.0" height="28" rx="14" fill="#ffffff" fill-opacity="0.12" stroke="#9cc68a" stroke-dasharray="4 3"/>
+<text x="1010" y="567" fill="#a4ab99">dom 500  glass 500  gap 0</text>
+<text x="10" y="602" fill="#a4ab99">frame 2</text>
+<rect x="450.0" y="582" width="500.0" height="28" rx="14" fill="none" stroke="#e5484d" stroke-width="2"/>
+<rect x="450.0" y="582" width="500.0" height="28" rx="14" fill="#ffffff" fill-opacity="0.12" stroke="#9cc68a" stroke-dasharray="4 3"/>
+<text x="1010" y="601" fill="#a4ab99">dom 500  glass 500  gap 0</text>
+<text x="10" y="636" fill="#a4ab99">frame 3</text>
+<rect x="450.0" y="616" width="500.0" height="28" rx="14" fill="none" stroke="#e5484d" stroke-width="2"/>
+<rect x="450.0" y="616" width="500.0" height="28" rx="14" fill="#ffffff" fill-opacity="0.12" stroke="#9cc68a" stroke-dasharray="4 3"/>
+<text x="1010" y="635" fill="#a4ab99">dom 500  glass 500  gap 0</text></svg>
