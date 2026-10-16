@@ -1,8 +1,8 @@
 // Smoke test for the hero canvases against a BUILT site (npm run build:michal && next start, or any deployed URL). Exits non-zero if the
-// portrait or the satellite shell did not render. Usage:
+// globe or the satellite shell did not render. Usage:
 //   node scripts/hero-smoke.mjs [url] [--phone] [--dpr 2] [--timeout 120] [--shot out.png]
 // It reads window.__hero() (a non-enumerable, read-only snapshot defined by HeroGlobe.tsx in every build: frames drawn, satellites drawn,
-// portrait reveal 0..1, both contexts alive, last GL error), listens for console errors, and checks the screenshot for the figure's ink.
+// both contexts alive, last GL error), listens for console errors, and checks the rotating phrase is visible.
 import { createRequire } from 'node:module'
 import { spawn } from 'node:child_process'
 import fs from 'node:fs'
@@ -10,7 +10,6 @@ import path from 'node:path'
 
 const require = createRequire(import.meta.url)
 const WS = require('ws')
-const sharp = require('sharp')
 const args = process.argv.slice(2)
 const flag = (n) => args.includes(`--${n}`)
 const opt = (n, d) => (flag(n) ? args[args.indexOf(`--${n}`) + 1] : d)
@@ -63,7 +62,8 @@ while (Date.now() - t0 < timeout) {
   await sleep(1000)
   const raw = await ev("typeof window.__hero === 'function' ? JSON.stringify(window.__hero()) : null")
   st = raw ? JSON.parse(raw) : null
-  if (st && st.readyMs > 0) break
+  const phrase = await ev("(() => { const w = document.querySelector('.hook__item[data-current] .hook__w'); return !!w && parseFloat(getComputedStyle(w).opacity) > 0.95 })()")
+  if (st && st.readyMs > 0 && phrase) break
 }
 const took = ((Date.now() - t0) / 1000).toFixed(1)
 if (!st) fail('window.__hero is missing (HeroGlobe did not mount)')
@@ -73,20 +73,11 @@ if (!st.hasShell) fail('the satellite shell canvas has no WebGL context')
 if (st.globe?.lost || st.shell?.lost) fail('a WebGL context was lost')
 if (st.globe?.error || st.shell?.error) fail(`GL error ${st.globe?.error || st.shell?.error}`)
 if (!(st.satsDrawn > 0)) fail('no satellites drawn')
-if (!(st.portraitReveal >= 1)) fail(`portrait not fully revealed (${st.portraitReveal})`)
+if (!(await ev("(() => { const w = document.querySelector('.hook__item[data-current] .hook__w'); return !!w && parseFloat(getComputedStyle(w).opacity) > 0.95 })()"))) fail('the rotating phrase is not visible (opacity under 0.95)')
 await sleep(1500)
-// pixels: the figure is ink-coloured dots on the page tint; the right of the hero must hold a substantial amount of dark ink
 const shot = await send('Page.captureScreenshot', { format: 'png', clip: { x: 0, y: 0, width: W, height: H, scale: 1 } })
-const buf = Buffer.from(shot.result.data, 'base64')
-if (opt('shot')) fs.writeFileSync(opt('shot'), buf)
-const region = phone ? { left: Math.round(W * dpr * 0.6), top: Math.round(60 * dpr), width: Math.round(W * dpr * 0.4), height: Math.round(150 * dpr) } : { left: Math.round(W * dpr * 0.58), top: Math.round(80 * dpr), width: Math.round(W * dpr * 0.32), height: Math.round(480 * dpr) }
-const { data, info } = await sharp(buf).extract(region).greyscale().raw().toBuffer({ resolveWithObject: true })
-let dark = 0
-for (let i = 0; i < data.length; i++) if (data[i] < 130) dark++
-const frac = dark / (info.width * info.height)
-console.log(`dark-ink fraction in the figure area: ${(frac * 100).toFixed(2)}%`)
-if (frac < (phone ? 0.04 : 0.06)) fail('the portrait area has almost no ink (figure not drawn)')
+if (opt('shot')) fs.writeFileSync(opt('shot'), Buffer.from(shot.result.data, 'base64'))
 if (errors.length) fail(`console errors: ${errors.slice(0, 3).join(' | ')}`)
-console.log('ok: portrait and satellite shell rendered, both contexts alive, no console errors')
+console.log('ok: globe and satellite shell rendered, both contexts alive, no console errors')
 try { process.kill(chrome.pid, 'SIGKILL') } catch {}
 process.exit(0)
