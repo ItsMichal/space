@@ -7,6 +7,7 @@
   ],
   "scripts": {
     "dev:michal": "npm run dev -w @space/michal-ai",
+    "motion:audit": "npm run motion:audit -w @space/michal-ai --",
     "dev:halmic": "npm run dev -w @space/halmic",
     "build:michal": "npm run build -w @space/michal-ai",
     "build:halmic": "npm run build -w @space/halmic",

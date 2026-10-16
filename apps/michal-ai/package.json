@@ -21,7 +21,8 @@
     "check:social": "node scripts/check-social.mjs",
     "check:do": "node scripts/check-do-exports.mjs",
     "typecheck": "react-router typegen && tsc --noEmit && tsc --noEmit -p worker/tsconfig.json",
-    "build:redirects": "node scripts/build-worker-redirects.mjs"
+    "build:redirects": "node scripts/build-worker-redirects.mjs",
+    "motion:audit": "node scripts/motion/run.mjs"
   },
   "dependencies": {
     "@react-router/node": "^7.18.4",
