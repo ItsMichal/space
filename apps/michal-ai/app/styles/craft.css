@@ -39,17 +39,15 @@
 /* One rule per line of text, the width of that line's text, at the same offset under every line: a 1px text-decoration on
    each word (the words are inline-blocks, which a decoration on the link would not reach). No borders, no backgrounds,
    no pseudo-elements. */
-.hook__link,
-.hook__w {
+.hook__link {
+  text-decoration-skip-ink: none;
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
   text-decoration-color: color-mix(in srgb, currentColor 34%, transparent);
 }
 .hook__link:hover,
-.hook__link:focus-visible,
-.hook__link:hover .hook__w,
-.hook__link:focus-visible .hook__w {
+.hook__link:focus-visible {
   text-decoration-color: currentColor;
 }
 /* The last word and the arrow stay together. */
@@ -76,50 +74,47 @@
    screen reader still finds every project), so nothing of a stacked neighbour can show under the current phrase. Positions come from data-slot, so every change is a CSS
    transition that retargets from wherever it is (interruptible). Reference: the rotating headline on linear.app and the
    text swap on apple.com's iPhone page. */
-.hook__item {
-  transition: none;
-}
-.hook__item:not([data-current]) .hook__link,
-.hook__item:not([data-current]) .hook__w {
+.hook__item:not([data-current]) .hook__link {
   text-decoration: none;
 }
-.hook__w {
-  display: inline-block;
-  white-space: pre;
+.hook__item {
   transition:
     transform 140ms var(--ease-out-soft),
     opacity 140ms linear;
 }
-.hook__item[data-slot='-1'] .hook__w {
+.hook__item[data-slot='-1'] {
   opacity: 0;
   transform: translate3d(0, -8px, 0);
 }
-.hook__item[data-slot='1'] .hook__w {
+.hook__item[data-slot='1'] {
   opacity: 0;
   transform: translate3d(0, 8px, 0);
 }
-.hook__item[data-current] .hook__w {
+.hook__item[data-current] {
   opacity: 1;
   transform: none;
   transition:
     transform 320ms var(--ease-out-soft) 160ms,
     opacity 280ms var(--ease-out-soft) 160ms;
 }
-.hook__roll[data-dragging] .hook__item[data-current] .hook__w {
+.hook__roll[data-dragging] .hook__item[data-current] {
   transition: none;
 }
-.hook[data-reduced] .hook__w,
-.hook[data-reduced] .hook__item[data-current] .hook__w {
+/* The motion is on the phrase (the list item), not on each word: words as inline-blocks drew one underline piece per word with the
+   spaces undrawn or doubled (broken dashes), and a transform on inline-blocks inside the line made Chrome count a layout shift of the
+   line's text each time a phrase rolled (CLS 0.02 on a phone). Plain inline words under one link decoration: one unbroken rule. */
+.hook__w {
+  white-space: normal;
+}
+.hook[data-reduced] .hook__item,
+.hook[data-reduced] .hook__item[data-current] {
   transform: none !important;
   transition: opacity 300ms linear;
   transition-delay: 0ms;
 }
 @media (prefers-reduced-motion: reduce) {
-  .hook__item {
-    transition: none;
-  }
-  .hook__w,
-  .hook__item[data-current] .hook__w {
+  .hook__item,
+  .hook__item[data-current] {
     transform: none !important;
     transition: opacity 300ms linear;
     transition-delay: 0ms;

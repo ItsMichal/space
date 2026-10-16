@@ -1,0 +1,115 @@
+{
+  "name": "hero-phrase",
+  "profile": "mobile",
+  "throttle": 4,
+  "notes": [],
+  "screencast": {
+    "frames": 455,
+    "durationMs": 7749.4,
+    "gapsMs": {
+      "p50": 16.7,
+      "p95": 17.8,
+      "max": 243,
+      "over25": 1,
+      "over40": 1
+    },
+    "motionFrames": 125
+  },
+  "responseMs": 3189,
+  "motionMs": 2236.6,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 333,
+    "p50": 16.7,
+    "p95": 16.7,
+    "max": 16.8,
+    "dropped": 0,
+    "over33": 0,
+    "over50": 0
+  },
+  "tracked": {
+    "pixelCentroid.cx": {
+      "range": 385.8,
+      "moving": true,
+      "frames": 11,
+      "reversals": 7,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 371.06,
+      "maxJerkPx": 229.47,
+      "jerkRatio": 0.595
+    },
+    "pixelCentroid.cy": {
+      "range": 155,
+      "moving": true,
+      "frames": 11,
+      "reversals": 1,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 125.33,
+      "maxJerkPx": 53.39,
+      "jerkRatio": 0.344
+    }
+  },
+  "flash": {
+    "screencastFrames": 0,
+    "details": [],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0.0227,
+    "entries": [
+      {
+        "t": 5539.5,
+        "v": 0.022656621581450653,
+        "src": [
+          {
+            "node": "#text",
+            "from": [
+              16,
+              273.953125,
+              343,
+              53
+            ],
+            "to": [
+              16,
+              265.953125,
+              343,
+              53
+            ]
+          },
+          {
+            "node": "#text",
+            "from": [
+              16,
+              303.34375,
+              343,
+              53
+            ],
+            "to": [
+              16,
+              303.34375,
+              343,
+              53
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "longTasks": {
+    "count": 0,
+    "maxMs": 0,
+    "totalMs": 0
+  },
+  "loaf": {
+    "count": 0,
+    "maxMs": 0,
+    "worst": []
+  },
+  "trace": null,
+  "verdict": [
+    "SLOW-RESPONSE 3189ms",
+    "CLS 0.0227"
+  ]
+}
