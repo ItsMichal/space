@@ -10,7 +10,8 @@ function readPost(file: string): Post {
   const raw = fs.readFileSync(path.join(POSTS_DIR, file), 'utf8')
   const { frontmatter, body } = parsePost(raw, file.replace(/\.md$/, ''))
   const words = body.split(/\s+/).filter(Boolean).length
-  return { ...frontmatter, body, readingMinutes: Math.max(1, Math.round(words / 220)) }
+  const m = /!\[([^\]]*)\]\((\/media\/[^)\s]+)/.exec(body)
+  return { ...frontmatter, body, readingMinutes: Math.max(1, Math.round(words / 220)), ...(m ? { firstImage: { src: m[2], alt: m[1] } } : {}) }
 }
 
 export function loadPosts(includeDrafts: boolean): Post[] {
@@ -20,7 +21,7 @@ export function loadPosts(includeDrafts: boolean): Post[] {
     .filter((f) => f.endsWith('.md'))
     .map(readPost)
     .filter((p) => includeDrafts || !p.draft)
-    .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0) || b.date.localeCompare(a.date))
+    .sort((a, b) => Number(Boolean(a.minor)) - Number(Boolean(b.minor)) || (b.priority ?? 0) - (a.priority ?? 0) || b.date.localeCompare(a.date))
 }
 
 /** Browser-only hook (see source.client.ts); nothing to do where posts are read straight from disk. */

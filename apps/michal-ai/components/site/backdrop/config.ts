@@ -73,7 +73,7 @@ export const BACKDROP = {
     /** Glyphs thin out behind the reading column: half width (CSS px, capped at half the viewport, so on phones it covers everything), feather, and the factor in the middle. */
     thinHalfWidth: 540,
     thinFeather: 140,
-    thinFactor: 0.3,
+    thinFactor: 0.12,
   },
 
   /** Shader lensing of the backdrop under glass elements (`[data-glass-lens]`, `.tile`). */
@@ -89,7 +89,9 @@ export const BACKDROP = {
     rimDark: 0.16, // rim strength, dark mode (no milky veil)
   },
 
-  grain: 0.012, // static per-pixel paper noise amplitude
+  grain: 0.012, // dither: a hair of per-pixel noise so the soft washes do not band
+  /** Paper tooth (tooth.ts), peak-to-peak amplitude in 0..1 colour units; the texture has mean 0.5, so the paper keeps its colour. */
+  tooth: { light: 0.075, dark: 0.06 },
   parallax: { blobs: 0.15, glyphs: 0.32, rays: 0.06, still: 0.2 }, // fraction of page scroll; `still` is the one rate used on iOS WebKit
   /** iOS WebKit: spare canvas height (CSS px, half above, half below) for the transform parallax. Keep in sync with paper-grid.css. */
   stillPad: 480,

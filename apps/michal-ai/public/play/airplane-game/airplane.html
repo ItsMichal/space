@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Airplane Game</title>
+        <style>
+            * { margin:0; padding:0; } /* to remove the top and left whitespace */
+
+            html, body { width:100%; height:100%; } /* just to be sure these are full screen*/
+
+            canvas { display:block; } /* To remove the scrollbars */
+
+            @font-face { 
+                font-family: "silkscreen"; 
+                src: url('https://static.tumblr.com/1kdckk4/9yjlolf0w/slkscr.ttf'); /*maybe replace this...*/
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="canvas"></canvas>
+        <script>
+
+            // Game Settings
+            
+            const X_TILES = 24;
+            const Y_TILES = 32;
+            const TOP_MARGIN = 11; //Must be odd. Plane starts in middle. Scrapers will not be higher than this
+            const STARTING_HEIGHT = (TOP_MARGIN-1)/2;
+            
+            //Do not modify.
+            const NUM_BUILDINGS = X_TILES;
+
+            //Game vars
+            var X_TILE_SIZE = window.innerWidth/X_TILES;
+            var Y_TILE_SIZE = window.innerHeight/Y_TILES;
+
+            var SCRAPER_HEIGHTS = []
+            var gameSetup = false;
+            var gameStarted = false;
+            var gameOver = false;
+            var goingRight = true;
+            var planeHeight = STARTING_HEIGHT;
+            var planeX = 1
+            var bombX = 0
+            var bombY = 0
+            var bombActive = false;
+            var points = 0;
+            var round = 0;
+            var hiscore = 0;
+            var fgColor = "#000000";
+            var bgColor = "#FFFFFF";
+
+            //Canvas
+            var canvas = document.getElementById("canvas");
+            var ctx = canvas.getContext("2d");
+
+            setupGame();
+
+            // resize the canvas to fill browser window dynamically
+            window.addEventListener('resize', resizeCanvas, false);
+            function resizeCanvas() {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+
+                    /**
+                     * Your drawings need to be inside this function otherwise they will be reset when 
+                     * you resize the browser window and the canvas goes will be cleared.
+                     */
+                    X_TILE_SIZE = canvas.width/X_TILES;
+                    Y_TILE_SIZE = canvas.height/Y_TILES;
+                    
+            }
+            resizeCanvas();
+
+            
+            function readHiScore(){
+                var allCookies = document.cookie;
+
+                cookiearr = allCookies.split(";");
+                console.log(cookiearr);
+                for(cookie in cookiearr){
+                    cookie_str = cookiearr[cookie];
+                    var name = cookie_str.split("=")[0];
+                    if(name == "plhiscore"){
+                        return parseInt(cookie_str.split("=")[1]);
+                    }
+                    
+                }
+                return 0;
+            }
+            
+            function resetGame(){
+
+                //Game vars
+                X_TILE_SIZE = window.innerWidth/X_TILES;
+                Y_TILE_SIZE = window.innerHeight/Y_TILES;
+
+                SCRAPER_HEIGHTS = []
+                gameSetup = false;
+                gameStarted = false;
+                gameOver = false;
+                goingRight = true;
+                planeHeight = STARTING_HEIGHT;
+                planeX = 1
+                bombX = 0
+                bombY = 0
+                bombActive = false;
+                if(points > hiscore){
+                    hiscore = points;
+                    document.cookie = "plhiscore=" + hiscore;
+                }
+                points = 0;
+                round = 0;
+                clearInterval(gameClock);
+                gameClock = setInterval(gameLoop, 200);
+                setupGame();
+            }
+            
+            function nextLevel(){
+                SCRAPER_HEIGHTS = []
+                gameSetup = false;
+                gameStarted = false;
+                goingRight = true;
+                planeHeight = STARTING_HEIGHT;
+                planeX = 1
+                bombX = 0
+                bombY = 0
+                bombActive = false;
+                round += 1;
+                clearInterval(gameClock);
+                gameClock = setInterval(gameLoop, 250/round);
+                setupGame();
+            }
+
+            function setupGame() {
+                hiscore = readHiScore();
+
+                //Setup skyscraper heights
+                for(var i = 0; i < NUM_BUILDINGS; i++){
+                    SCRAPER_HEIGHTS.push(Math.floor(Math.random()*(Y_TILES-TOP_MARGIN+1)))
+                }
+                // console.log(SCRAPER_HEIGHTS)
+                gameSetup = true;
+                window.requestAnimationFrame(draw);
+            }
+
+            function rx(x){
+                return x*X_TILE_SIZE;
+            }
+            function ry(y){
+                return y*Y_TILE_SIZE;
+            }
+
+            function drawPlane(x, y){
+                ctx.beginPath();
+                //body
+                ctx.rect(rx(x-1), ry(y), X_TILE_SIZE*3, Y_TILE_SIZE);
+
+                //tail
+                if(goingRight){
+                    ctx.rect(rx(x-1), ry(y-1), X_TILE_SIZE, Y_TILE_SIZE);
+                }else{
+                    ctx.rect(rx(x+1), ry(y-1), X_TILE_SIZE, Y_TILE_SIZE);
+                }
+                
+
+                ctx.fill();
+            }
+
+            function drawScrapers(){
+                //Draw test buildings
+                ctx.beginPath();
+                
+
+                for(var i = 0; i < NUM_BUILDINGS; i++){
+                    var tile_height = SCRAPER_HEIGHTS[i]*Y_TILE_SIZE;
+                    var tile_width = X_TILE_SIZE*Math.round(X_TILES/NUM_BUILDINGS)*i
+                    // console.log(tile_height)
+                    
+                    ctx.rect(tile_width, canvas.height-tile_height, X_TILE_SIZE*Math.round(X_TILES/NUM_BUILDINGS), tile_height);
+                }
+
+                ctx.fill();
+            }
+
+            function drawText(){
+                ctx.font = (Y_TILE_SIZE*2) + "px silkscreen";
+                var roundstring = (round+1).toString();
+                while(roundstring.length < 2){
+                    roundstring = "0"+roundstring;
+                }
+                //4+2+1 = 7
+                roundstring = "LVL "+roundstring+" "
+                for(var i = 0; i < roundstring.length;i++){
+                    ctx.fillText(roundstring[i], 0 + rx(i),Y_TILE_SIZE*2, X_TILE_SIZE);
+                }
+
+                var hiscorestring = hiscore.toString();
+                while (hiscorestring.length < 5){
+                    hiscorestring = "0"+hiscorestring
+                }
+                //3+5+1 = 9
+                hiscorestring = "HI " + hiscorestring + " ";
+
+                for(var i = 0; i < hiscorestring.length;i++){
+                    ctx.fillText(hiscorestring[i], 0 + rx(i+7),Y_TILE_SIZE*2, X_TILE_SIZE);
+                }
+
+                var scorestring = points.toString();
+                
+
+                while(scorestring.length < 5){
+                    scorestring = "0"+scorestring;
+                }
+                //8
+                scorestring = "SC " + scorestring;
+
+                for(var i = 0; i < scorestring.length;i++){
+                    ctx.fillText(scorestring[i], 0 + rx(i+16),Y_TILE_SIZE*2, X_TILE_SIZE);
+                }
+                
+            }
+            
+
+            function swapFgBg(){
+                temp = fgColor;
+                fgColor = bgColor;
+                bgColor = temp;
+            }
+
+            function drawStartText(){
+                ctx.font = (Y_TILE_SIZE*2) + "px silkscreen";
+                var start = "Space or Tap";
+                var credit1="1985 -- 2021";
+                var credit2="Bodzianowski";
+                for(var i = 0; i < start.length; i++){
+                    ctx.fillText(start[i], rx((i)+6), Y_TILE_SIZE*6, X_TILE_SIZE);
+                    
+                }
+                ctx.font = (Y_TILE_SIZE) + "px silkscreen";
+                for(var i = 0; i < credit1.length; i++){
+                    ctx.fillText(credit1[i], rx(i+6), Y_TILE_SIZE*8, X_TILE_SIZE);
+                }
+                for(var i = 0; i < credit2.length; i++){
+                    ctx.fillText(credit2[i], rx(i+6), Y_TILE_SIZE*9, X_TILE_SIZE);
+                }
+            }
+
+            function drawGameOverText(){
+                ctx.font = (Y_TILE_SIZE*2) + "px silkscreen";
+                var scorestring = points.toString();
+                while(scorestring.length < 5){
+                    scorestring = "0"+scorestring;
+                }
+                var gameover = "GAME OVER!";
+                var score =    "SCORE- " + scorestring;
+                var tagain = "Space or Tap to Retry";
+                for(var i = 0; i < gameover.length; i++){
+                    ctx.fillText(gameover[i], rx((i)+7), Y_TILE_SIZE*6, X_TILE_SIZE);   
+                }
+                ctx.font = (Y_TILE_SIZE) + "px silkscreen";
+                for(var i = 0; i < score.length; i++){
+                    ctx.fillText(score[i], rx(i+6), Y_TILE_SIZE*8, X_TILE_SIZE);
+                }
+                for(var i = 0; i < tagain.length; i++){
+                    ctx.fillText(tagain[i], rx(i+1), Y_TILE_SIZE*10, X_TILE_SIZE);
+                }
+            }
+            
+
+            function drawBomb(x,y) {
+                ctx.beginPath();
+                ctx.rect(rx(x), ry(y), X_TILE_SIZE, Y_TILE_SIZE);
+                ctx.fill();
+            }
+
+            function dropBomb(){
+                
+                if(!bombActive){
+                    console.log("DROPPING BOMB")
+                    bombX = planeX;
+                    bombY = planeHeight+1;
+                    bombActive = true;
+                }
+                
+            }
+
+            function handleClick(evt){
+                evt.stopPropagation();
+                console.log(gameOver);
+                console.log(gameStarted);
+                if(!gameOver && gameStarted){
+                    dropBomb();
+                }else if(!gameStarted){
+                    gameStarted = true;
+                }else{
+                    swapFgBg();
+                    resetGame();
+                }
+            }
+
+            canvas.addEventListener("touchstart", handleClick, false);
+            // canvas.addEventListener("click", handleClick, false);
+            document.addEventListener("keydown", (ev)=>{
+                if(ev.keyCode == 32){
+                    console.log("eh?")
+                    handleClick(ev);
+                }
+            });
+
+
+            function draw() {
+                ctx.fillStyle = bgColor;
+                ctx.fillRect(0,0, canvas.width, canvas.height);
+                ctx.fillStyle = fgColor;
+                drawScrapers();
+                if(bombActive){
+                    drawBomb(bombX, bombY);
+                }
+                if(!gameStarted){
+                    drawStartText();
+                }else if(gameOver){
+                    drawGameOverText();
+                }
+                drawPlane(planeX,planeHeight);
+                drawText();
+                window.requestAnimationFrame(draw);
+            }
+
+            function lostGame(){
+                gameOver = true;
+                swapFgBg();
+                setTimeout(swapFgBg, 150);
+                setTimeout(swapFgBg, 300);
+                setTimeout(swapFgBg, 450);
+                setTimeout(swapFgBg, 600);
+                clearInterval(gameClock);
+            }
+
+            function checkPlaneCol(){
+
+                //Check if forward X in skyscraper
+                
+                //Get skyscraper height at forward x
+                skyscraper_height_1 = Y_TILES - SCRAPER_HEIGHTS[planeX+1];
+                skyscraper_height_2 = Y_TILES - SCRAPER_HEIGHTS[planeX];
+                skyscraper_height_3 = Y_TILES - SCRAPER_HEIGHTS[planeX-1];
+                // console.log("SCRAPER - " + skyscraper_height);
+                // console.log("PLANE - " +planeHeight)
+
+                if (skyscraper_height_1 <= planeHeight || skyscraper_height_2 <= planeHeight || skyscraper_height_3 <= planeHeight){
+                    //Boom! Game over.
+                    // resetGame();
+                    //gameOver = true;
+                    lostGame();
+                }
+            }
+
+            function checkBombCol(){
+                if(bombActive){
+                    skyscraper_height = Y_TILES - SCRAPER_HEIGHTS[bombX];
+
+                    if(bombY == skyscraper_height){
+                        //Hit building
+                        points += SCRAPER_HEIGHTS[bombX];
+                        SCRAPER_HEIGHTS[bombX] = 0;
+                        bombActive = false;
+                    }
+
+                    if(bombY == 0){
+                        bombActive = false;
+                    }
+                }
+            }
+            
+            function gameLoop(){
+                if(gameStarted){
+                    if(goingRight){
+                        planeX++;
+                    }else{
+                        planeX--;
+                    }
+
+                    if(goingRight && planeX == X_TILES-1){
+                        goingRight = false;
+                        planeHeight++;
+                    }else if(!goingRight && planeX == 0){
+                        goingRight = true;
+                        planeHeight++;
+                    }
+
+                    if(bombActive){
+                        bombY++;
+                    }
+
+                    checkBombCol();
+                    checkPlaneCol();
+                    
+                    var roundFinished = true;
+                    for(var i = 0; roundFinished && i < SCRAPER_HEIGHTS.length; i++){
+                        if(SCRAPER_HEIGHTS[i] > 0){
+                            roundFinished = false;
+                        }
+                    }
+
+                    if(roundFinished){
+                        nextLevel();
+                    }
+                }
+                    
+            }
+            var gameClock = setInterval(gameLoop,200);
+            
+        </script>
+    </body>
+</html>
