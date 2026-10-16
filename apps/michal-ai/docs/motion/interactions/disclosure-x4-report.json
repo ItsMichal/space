@@ -1,0 +1,104 @@
+{
+  "name": "writing-disclosure",
+  "profile": "desktop",
+  "throttle": 4,
+  "notes": [],
+  "inputType": "pointerdown",
+  "screencast": {
+    "frames": 104,
+    "durationMs": 3182.7,
+    "gapsMs": {
+      "p50": 16.8,
+      "p95": 47.1,
+      "max": 48,
+      "over25": 3,
+      "over40": 2
+    },
+    "motionFrames": 37
+  },
+  "responseMs": 41.5,
+  "motionMs": 681.6,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 50,
+    "p50": 16.7,
+    "p95": 16.7,
+    "max": 16.8,
+    "dropped": 0,
+    "over33": 0,
+    "over50": 0
+  },
+  "tracked": {
+    ".dc-box": {
+      "axis": "h",
+      "range": 854.8,
+      "moving": true,
+      "frames": 40,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 73.36,
+      "maxJerkPx": 6.16,
+      "jerkRatio": 0.007
+    },
+    ".dc-caret": {
+      "axis": "w",
+      "range": 6.5,
+      "moving": true,
+      "frames": 24,
+      "reversals": 5,
+      "stalls": 0,
+      "jumps": 3,
+      "maxStepPx": 4.38,
+      "maxJerkPx": 5.4,
+      "jerkRatio": 0.825
+    },
+    "pixelCentroid.cx": {
+      "range": 358.4,
+      "moving": true,
+      "frames": 23,
+      "reversals": 7,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 132.1,
+      "maxJerkPx": 180.43,
+      "jerkRatio": 0.503
+    },
+    "pixelCentroid.cy": {
+      "range": 344.5,
+      "moving": true,
+      "frames": 23,
+      "reversals": 7,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 288.85,
+      "maxJerkPx": 249.49,
+      "jerkRatio": 0.724
+    }
+  },
+  "domResponseMs": 10,
+  "flash": {
+    "screencastFrames": 0,
+    "details": [],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 0,
+    "maxMs": 0,
+    "totalMs": 0
+  },
+  "loaf": {
+    "count": 0,
+    "maxMs": 0,
+    "worst": []
+  },
+  "trace": null,
+  "verdict": [
+    "REVERSAL .dc-caret x5",
+    "JUMP .dc-caret x3"
+  ]
+}
