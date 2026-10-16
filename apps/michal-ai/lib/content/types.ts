@@ -21,6 +21,9 @@ export type PostFrontmatter = {
   priority?: number
   /* Projects: shown large at the top of Selected work. Articles: listed first on /writing. */
   featured?: boolean
+  /* Projects: a smaller project. Listed on /projects after the main projects, and kept off the home page (Selected work,
+     hero phrases) and the menu previews. Never set together with `featured` or `hook`. */
+  minor?: boolean
   /* Slug of a parent project. The post then lives at /projects/<parent>/<slug>, is listed on the parent's page
      (not in /writing or the project index) and gets prev/next navigation among its siblings. */
   parent?: string
@@ -48,4 +51,6 @@ export type PostFrontmatter = {
 export type Post = PostFrontmatter & {
   body: string /* markdown source */
   readingMinutes: number
+  /* First markdown image in the body (derived at load time, not frontmatter); lets list views show a picture without the body. */
+  firstImage?: { src: string; alt: string }
 }

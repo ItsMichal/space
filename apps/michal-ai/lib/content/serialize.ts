@@ -19,6 +19,7 @@ const KEY_ORDER: (keyof PostFrontmatter)[] = [
   'cardImageAlt',
   'priority',
   'featured',
+  'minor',
   'parent',
   'series',
   'order',
@@ -62,6 +63,7 @@ function entry(key: keyof PostFrontmatter, value: unknown): string | null {
       return `${key}: ${value}`
     case 'draft':
     case 'featured':
+    case 'minor':
       return value ? `${key}: true` : null
     case 'links':
       return (value as PostLink[]).length
@@ -120,6 +122,7 @@ export function frontmatterFromData(data: Record<string, unknown>, fileSlug: str
     ...(data.cardImageAlt ? { cardImageAlt: String(data.cardImageAlt) } : {}),
     ...(typeof data.priority === 'number' ? { priority: data.priority } : {}),
     ...(data.featured ? { featured: true } : {}),
+    ...(data.minor ? { minor: true } : {}),
     ...(data.parent ? { parent: String(data.parent) } : {}),
     ...(data.series ? { series: String(data.series) } : {}),
     ...(typeof data.order === 'number' ? { order: data.order } : {}),

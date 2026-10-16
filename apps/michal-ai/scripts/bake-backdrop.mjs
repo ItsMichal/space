@@ -77,8 +77,10 @@ if (bench) {
     light: { paper: hex('#f4f1e8'), ink: hex('#18211b'), muted: hex('#525c4f'), glyph: [0.13 * 255, 0.13 * 255, 0.11 * 255] },
     dark: { paper: hex('#121612'), ink: hex('#ebe7da'), muted: hex('#a4ab99'), glyph: [0.92 * 255, 0.91 * 255, 0.85 * 255] },
   }
-  const GLYPH_ALPHA = 0.22, THIN = 0.3 // glyph alpha cap, and the factor it is thinned by inside the reading column (config.ts)
-  const GRAIN = 0.012 * 255 / 2 // grain adds up to +-0.006 of full scale
+  const GLYPH_ALPHA = 0.22, THIN = 0.12 // glyph alpha cap, and the factor it is thinned by inside the reading column (config.ts)
+  // Paper tooth (tooth.ts, config.tooth): the texture's 0.1th / 99.9th percentile is -0.40 / +0.38 of its amplitude (its hard min and max are +-0.5), plus the dither grain (+-0.006).
+  const TOOTH = { light: 0.075, dark: 0.06 }
+  const grainWorst = (scheme) => (scheme === 'light' ? 0.40 * TOOTH.light : 0.38 * TOOTH.dark) * 255 + 0.006 * 255
   for (const scheme of ['light', 'dark']) {
     const t = T[scheme]
     let min = Infinity, max = -Infinity, minPx, maxPx, minLuma = Infinity, maxLuma = -Infinity
@@ -105,7 +107,7 @@ if (bench) {
     }
     const Yp = lum(...t.paper), Lp = luma(...t.paper)
     // Worst case for text: the extreme backdrop pixel, a glyph at the alpha cap on top of it, and grain pushing the wrong way.
-    const worst = (px, a) => px.map((c, k) => c * (1 - a) + t.glyph[k] * a + (scheme === 'light' ? -GRAIN : GRAIN))
+    const worst = (px, a) => px.map((c, k) => c * (1 - a) + t.glyph[k] * a + (scheme === 'light' ? -grainWorst(scheme) : grainWorst(scheme)))
     const bad = scheme === 'light' ? minPx : maxPx
     const bgCol = worst(bad, GLYPH_ALPHA * THIN) // inside the thinned reading column
     const bgMargin = worst(bad, GLYPH_ALPHA) // outside it, where there is no body text
