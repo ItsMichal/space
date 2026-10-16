@@ -239,3 +239,12 @@ References were fetched as text on 2026-10-13 where marked "fetched"; none was m
 | Small portrait thumbnail beside the first paragraph of a bio | read.cv and github.com profile headers (memory) | | 88 to 104px, 4:5, floated left of the first paragraph on the home intro card |
 | Mark at the foot of a generated share card, name and domain beside it | vercel.com and linear.app Open Graph cards (memory, not opened): logo in a corner, title large | | Mark bottom left on every card (post, list, home, About), 40px tall, ink on paper, with the name or domain beside it |
 | Portrait panel on the right of a card, text left | The post cards already in `lib/og.tsx` (a cover panel at 456 by 534, radius 28) | | The home and About cards reuse that panel for the photograph |
+
+## Page control dots and timeline cards (michal-page-dots, 2026-10-14)
+
+None of these was opened in this pass (the sandbox has no browser access to the sites); the patterns are from memory and the numbers are mine.
+
+| Element | Reference | What the reference does | Ours |
+| --- | --- | --- | --- |
+| Gallery page control | iOS `UIPageControl` and the gallery dots on apple.com product pages | Identical small circles, the current one at full strength and the rest dimmed; on apple.com the current dot stretches into a capsule and fills as the slideshow advances | 7px circles in ink at 0.38 opacity, the current page a 7px-tall capsule about 2.7 times wide in full ink. The capsule keeps the two-edge spring stretch (leading edge leads and overshoots, trailing edge follows). Autoplay progress is a plain left-to-right fill clipped by the capsule. No tip, skew, pinch or per-index randomness. Reduced motion jumps |
+| Timeline of dated entries with a thumbnail each | Apple Newsroom archive cards, Linear changelog, GitHub release timeline | A small image or icon marker per dated entry on a rule, date and one title line, a larger image beside the text for the selected entry | 44px rounded thumbnails (the entry's card image, cover or first picture, else a lucide icon) threaded on a hairline rule; date and a two-line title under each; the selected entry wears an ink ring and full-ink text, the others are muted ink (at least 3:1). The detail shows a 4:3 picture left and text right (stacked on phones) and swaps with a short crossfade |

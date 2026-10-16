@@ -47,6 +47,7 @@ export const press: readonly PressItem[] = [
       'Names Creatle, which his Devpost profile and GitHub repo list; credits a CS and CTD major; photo alt text names him.',
     archiveUrl:
       'https://web.archive.org/web/20260509140326/https://www.colorado.edu/atlas/2022/04/04/atlas-students-take-home-hackcus-top-awards',
+    relatedPostSlug: 'creatle',
     sources: [
       'https://www.colorado.edu/atlas/2022/04/04/atlas-students-take-home-hackcus-top-awards',
       'https://devpost.com/software/creatle',
@@ -164,6 +165,7 @@ export const press: readonly PressItem[] = [
       'His own repository README (ItsMichal/pilsudski) links this article and says it was made in his sophomore year of high school; the article names him as a sophomore at STEM School Academy.',
     archiveUrl:
       'https://web.archive.org/web/20260503094433/https://www.denverpost.com/2017/02/21/highlands-ranch-history-class-artificial-intelligence/',
+    relatedPostSlug: 'pilsudski',
     sources: [
       'https://www.denverpost.com/2017/02/21/highlands-ranch-history-class-artificial-intelligence/',
       'https://github.com/ItsMichal/pilsudski',

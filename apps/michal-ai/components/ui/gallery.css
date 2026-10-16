@@ -86,13 +86,13 @@
   overflow: visible;
   pointer-events: none;
 }
-.pc-seed {
+.pc-dot {
   fill: var(--ink);
-  opacity: 0.32;
+  opacity: 0.38;
 }
 .pc-body {
   fill: var(--ink);
-  opacity: 0.2;
+  opacity: 0.38;
 }
 .pc-fillp {
   fill: var(--ink);
