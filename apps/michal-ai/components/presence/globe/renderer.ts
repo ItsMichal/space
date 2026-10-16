@@ -425,18 +425,6 @@ export function createRenderer(canvas: HTMLCanvasElement, rings: Ring[] | null, 
     const tl = uloc(tprog, ['uThin', 'uTrail'])
     const qprog = role === 'shell' ? mk(PING_VS, PING_FS, false) : mk(DUMMY_VS, DUMMY_FS, false)
     const ql = uloc(qprog, ['uPA[0]', 'uPAd[0]', 'uPB[0]', 'uPBd[0]', 'uPT[0]', 'uNowP', 'uHead'])
-    const makeTex = (src: TexImageSource, wrapS: number, mips = false) => {
-      const t = g.createTexture()!
-      g.bindTexture(g.TEXTURE_2D, t)
-      g.pixelStorei(g.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false)
-      g.texImage2D(g.TEXTURE_2D, 0, g.RGBA, g.RGBA, g.UNSIGNED_BYTE, src)
-      if (mips) g.generateMipmap(g.TEXTURE_2D)
-      g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MIN_FILTER, mips ? g.LINEAR_MIPMAP_LINEAR : g.LINEAR)
-      g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MAG_FILTER, g.LINEAR)
-      g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_S, wrapS)
-      g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_T, g.CLAMP_TO_EDGE)
-      return t
-    }
     const svao = g.createVertexArray()!
     const tvao = g.createVertexArray()!
     const sbuf = g.createBuffer()!

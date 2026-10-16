@@ -51,8 +51,8 @@
   }
 }
 /* The satellite shell (dots, trails, pings) lives on its own canvas, 2.2 times the globe box and centred on it, drawn at low resolution
-   (globe/renderer.ts SHELL_SCALE, HeroGlobe.tsx shellDprFor): the big area costs few pixels, the globe and the portrait keep their
-   resolution. It sits above the globe canvas and has the figure cut out of it. */
+   (globe/renderer.ts SHELL_SCALE, HeroGlobe.tsx shellDprFor): the big area costs few pixels, the globe keeps its
+   resolution. It sits above the globe canvas. */
 .hero-globe__canvas.hero-globe__shell {
   inset: auto;
   left: -110%;
@@ -93,7 +93,7 @@
 .hero-globe[data-mode='gl'] .hero-globe__canvas {
   opacity: 1;
 }
-/* With WebGL the shader applies the globe's opacity itself (uGlobeA, read from --hero-globe-opacity) so the portrait can be stronger. */
+/* With WebGL the shader applies the globe's opacity itself (uGlobeA, read from --hero-globe-opacity) */
 .hero-globe[data-mode='gl'] {
   opacity: 1;
 }
