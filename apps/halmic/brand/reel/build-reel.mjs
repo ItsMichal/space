@@ -1,6 +1,6 @@
 // Rebuilds the hero reel (public/hero/reel-1080.webm, reel-720.webm, reel-m.webm, reel-720.mp4, reel-m.mp4, reel-poster.jpg, reel-poster-m.jpg) from edl.json.
 // usage: REEL_SRC=/path/to/dir-with-source-mp4s node brand/reel/build-reel.mjs   (needs ffmpeg with libvpx-vp9, libx264, minterpolate)
-// Optional env: REEL_TMP (scratch dir), REEL_ONLY=3,5 (re-cut just these moment indices, reuse the rest from REEL_TMP), REEL_SKIP_ENC=1 (stop after the two loops),
+// Optional env: REEL_VARIANT=L|P (cut only that variant), REEL_JOBS (parallel cuts, default 3), REEL_NOLOOP=1 (stop after the segments), REEL_TMP (scratch dir), REEL_ONLY=3,5 (re-cut just these moment indices, reuse the rest from REEL_TMP), REEL_SKIP_ENC=1 (stop after the two loops),
 // CRF1080 CRF720 CRFM CRFMP4 CRFMMP4, POSTER_Q. Source footage is never committed; see README.md.
 import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -36,19 +36,35 @@ function levels(m, file, w) {
   return { lo: Math.round(lo), hi: Math.round(hi) };
 }
 const only = process.env.REEL_ONLY?.split(',').map(Number);
-const VARIANTS = [{ k: 'L', crop: 'crop', size: '1920:1080' }, { k: 'P', crop: 'pcrop', size: '540:960' }];
+// Landscape: the crop, scaled to 1920x1080. Portrait: a WIDE crop (any aspect, usually 16:10) laid across the phone frame at width 540 with its centre at `pc` of the 960 px
+// height (default .295: the open window above the wordmark on a phone, see WIN_UP in hero.js), feathered into a dark blurred copy of itself that fills the rest. The subject is
+// seen whole instead of a tight 9:16 slice.
+const PW = 540, PH = 960;
+function chain(m, k, lv, w) {
+  const exposure = `lutyuv=y='clip((val-${lv.lo})*219/(${lv.hi}-${lv.lo})+16,16,235)'`;
+  const slow = `setpts=PTS/${speed},minterpolate=fps=${fps}:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,${GRADE},format=yuv420p`;
+  if (k === 'L') return ['-vf', `crop=${scaleCrop(m.crop, w)},scale=1920:1080:flags=lanczos,${exposure},${slow}`];
+  const [cw, ch] = m.pcrop.split(':').map(Number);
+  const fgh = 2 * Math.round(PW * ch / cw / 2), pc = m.pc ?? 0.295;
+  const y = Math.max(0, Math.min(PH - fgh, Math.round(PH * pc - fgh / 2)));
+  return ['-filter_complex', `[0:v]crop=${scaleCrop(m.pcrop, w)},${exposure},split=2[a][b];` +
+    `[a]scale=${PW}:${PH}:force_original_aspect_ratio=increase:flags=bilinear,crop=${PW}:${PH},boxblur=22:3,eq=brightness=-0.32:saturation=0.8[bg];` +
+    `[b]scale=${PW}:${fgh}:flags=lanczos,format=yuva420p,geq=lum='lum(X,Y)':cb='cb(X,Y)':cr='cr(X,Y)':a='255*min(1,min(Y,H-1-Y)/44)'[fg];` +
+    `[bg][fg]overlay=0:${y}:format=auto,${slow}[o]`, '-map', '[o]'];
+}
+const VARIANTS = [{ k: 'L' }, { k: 'P' }].filter((v) => !process.env.REEL_VARIANT || process.env.REEL_VARIANT === v.k);
 const jobs = [];
 edl.moments.forEach((m, i) => {
   if (only && !only.includes(i)) return;
   const file = path.join(src, `${m.src}.mp4`), { w } = srcDims(file);
   const lv = levels(m, file, w); console.log(`moment ${i}: levels ${lv.lo}..${lv.hi}`);
   for (const v of VARIANTS) {
-    jobs.push(() => ff(['-ss', String(m.in), '-t', String(srcSeconds + 0.2), '-i', file, '-an',
-      '-vf', `crop=${scaleCrop(m[v.crop], w)},scale=${v.size}:flags=lanczos,lutyuv=y='clip((val-${lv.lo})*219/(${lv.hi}-${lv.lo})+16,16,235)',setpts=PTS/${speed},minterpolate=fps=${fps}:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,${GRADE},format=yuv420p`,
+    jobs.push(() => ff(['-ss', String(m.in), '-t', String(srcSeconds + 0.2), '-i', file, '-an', ...chain(m, v.k, lv, w),
       '-frames:v', String(N), '-c:v', 'libx264', '-preset', 'fast', '-crf', '6', path.join(tmp, `seg${v.k}${i}.mp4`)]));
   }
 });
-await pool(jobs, 3);
+await pool(jobs, +(process.env.REEL_JOBS ?? 3));
+if (process.env.REEL_NOLOOP) process.exit(0);   // segments only
 
 // chain the crossfades with the first moment repeated at the end, then cut one full cycle out of the middle so the last frame leads into the first
 const n = edl.moments.length, ins = [...Array(n).keys(), 0], cycle = (N - X) * n;

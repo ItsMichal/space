@@ -29,8 +29,19 @@ local static server (port 4310, `PORT=` to change). The package depends on `@spa
 
 - Hero: inline SVG wordmark from `brand/wordmark-parts.json`, a status pill and a leaning-bar meter driven by `data-live` on
   `<html>`, and a WebGL highlights reel (`hero.js`, media in `public/hero/`, built by `brand/reel/`). The reel starts only
-  after load, while the hero is visible and the tab is shown. It falls back to a poster for reduced motion, data saver, no
-  WebGL, or refused autoplay. A portrait cut serves phones.
+  after load, while the hero is visible and the tab is shown. A portrait cut serves phones. The poster (a baked render of the shader on one frame, `brand/reel/bake-poster.mjs`)
+  is a TEMPORARY state except for reduced motion, data saver and no WebGL: a video error, refused autoplay, a source that decodes nothing for 8 s or a lost GL context show it, and the reel
+  retries (back-off 3/6/12/24 s, and on resize, tab/scroll return and bfcache `pageshow`).
+- Hero resize contract (`hero.js`): ONE path. A ResizeObserver on `.reel` (plus window `resize`, `orientationchange`, DPR change polled per frame) calls `onResize`, which only arms a
+  timer; `settle()` runs 150 ms after the last event (at most 500 ms into a burst) and calls `layout()`. In between the canvas is just CSS-stretched and the fade zones are re-read per frame.
+  `layout()` sets the canvas backing size (css size x `min(dpr, 2, 1920/width) x tier scale`), reallocates each render target ONLY when its own size changed (buffer, cell grid, wave field,
+  which restarts still), and calls `swapSource()`, which changes `video.src` in place (portrait/landscape with hysteresis, 1080/720 with hysteresis): the GL pipeline stays, the last good frame
+  stays on screen until the new source decodes. Never call `video.load()` outside `swapSource`, and never treat `play()` rejecting with `AbortError` as a failure (a swap or a pause interrupts it;
+  that was the original bug). Frame times during a burst plus 900 ms after never count toward adaptive quality. The no-frame watchdog only counts while running and restarts on every swap.
+- `node scripts/check-hero.mjs <url> [--desktop] [--mobile] [--auto] [--quick]` (headless Chrome with software WebGL, a running server, NOT in `npm test`): resize sequence (narrower, wider,
+  desktop to phone and back, tall and short windows, orientation flip, a 20-size drag in 1 s, DPR changes, browser zoom), scroll away and straight back, lost and restored GL context, a bfcache
+  `pageshow`, a swap flip-flop; after every step it asserts canvas backing size = css size x scale, the loop is advancing, the video plays the source the loop asked for, the hero is not in the
+  poster state, and the console is clean. It reads `window.__reel` (only with `?reeldebug=1`): `frames state sc src qi resizes layouts swaps fallbacks reason lost`.
 - Never edit the wordmark or anything in `brand/svg/`. They are generated geometry (`brand/build-logotype.mjs`).
 - Below the hero are bentos: Watch (YouTube and Twitch mixed, round platform badges, the Special Force films lead), Play
   (Project Mountaintop leads), Work (Pokemon Phoenix Rising, the dental logo), Posts (`content/posts.json`; not rendered
@@ -149,14 +160,15 @@ PORT=4563 node apps/halmic/serve.mjs &
 node apps/halmic/scripts/check-holes.mjs http://localhost:4563   # bento packing; needs Chrome and a running server; NOT in npm test
 node apps/halmic/scripts/check-spacing.mjs http://localhost:4563  # one spacing system, at 1440/1024/768/390; same needs; NOT in npm test
 node apps/halmic/scripts/check-motion.mjs http://localhost:4563   # scroll integrity, reduced motion, no-JS, long tasks, CLS; same needs; NOT in npm test
+node apps/halmic/scripts/check-hero.mjs http://localhost:4563     # hero reel survives resizing, zoom, DPR, context loss; same needs; NOT in npm test
 ```
 
 - `scripts/shot.mjs <url> <out> <w> <h> [flags]` takes headless Chrome screenshots over CDP. Flags: `full`, `mobile`, `jpg`,
   `gl` (software WebGL, needed to see the reel), `nogl`, `rm` (reduced motion), `eval=<js>`, `click=<css>`, `hover=<css>`,
-  `netlog`, `console`, `nojs` (scripts disabled), `wheel=<dy>` (a real wheel event, prints scrollY before and after), `tap=x,y` + `strip=ms,ms,...` (touch the hero and save timed shots), `clip=x,y,w,h`, `sel=<css>`, a bare number for wait in ms. Chrome comes from `CHROME_PATH` or the macOS default;
+  `netlog`, `console`, `nojs` (scripts disabled), `wheel=<dy>` (a real wheel event, prints scrollY before and after), `tap=x,y` + `strip=ms,ms,...` (touch the hero and save timed shots), `clip=x,y,w,h`, `sel=<css>`, `resize=WxH[xDPR][zZOOM][@ms],...` (apply sizes after the wait; zoom shrinks the css size and grows the device ratio like browser zoom) with `rshots` (a shot after each, `<out>-r<i>`) and `rwait=ms`, a bare number for wait in ms. Chrome comes from `CHROME_PATH` or the macOS default;
   `ws` and `sharp` resolve from the root `node_modules`.
 - Test overrides (not linked from the UI): `?live=1&game=<name>` forces the on-air look, `?live=0` offline;
-  `?clips=demo&n=0..6` fake clips, `?clips=none` none; `?reelq=0..3` pins the reel quality; `?reelfx=0` turns off the hero's wave field, idle flow and touch/pointer input (A/B against the plain glyph screen); `?reelhf=0` forces the RGBA8 (no half-float) field path; `?motion=0` turns every animation and transition off and leaves the DOM as built (use it for any measurement); `?reelclock=frame` (with `reelq`) advances effect time one tick per rendered frame, which `shot.mjs tap=x,y strip=0,150,500` uses to photograph a ripple on slow software GL.
+  `?clips=demo&n=0..6` fake clips, `?clips=none` none; `?reelq=0..3` pins the reel quality; `?reelfx=0` turns off the hero's wave field, idle flow and touch/pointer input (A/B against the plain glyph screen); `?reelhf=0` forces the RGBA8 (no half-float) field path; `?motion=0` turns every animation and transition off and leaves the DOM as built (use it for any measurement); `?reelclock=frame` (with `reelq`) advances effect time one tick per rendered frame, which `shot.mjs tap=x,y strip=0,150,500` uses to photograph a ripple on slow software GL; `?reeldebug=1` exposes `window.__reel` (frame counter, state, canvas scale, source, swaps, fallbacks; used by `check-hero.mjs` and `bake-poster.mjs`).
 - `.claude/launch.json` (local, gitignored) can run `halmic` (`npm run dev:halmic`, port 4310) and `halmic-worker`
   (`wrangler dev --cwd apps/halmic --port 8788`, the real `_headers` and Worker).
 - Social cards: `scripts/build-og.mjs` writes `public/og/*.jpg`; `check-social.mjs` audits OG/Twitter tags and images for every

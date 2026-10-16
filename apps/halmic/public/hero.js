@@ -7,7 +7,12 @@
 // and by its own luminance, so no rectangle ever shows; the quiet zones (nav, status, topline, buttons) stay near pure ink.
 // No dependencies. Starts after load and idle, only while the hero is on screen and the tab is visible; reduced motion, data saver,
 // a missing WebGL or a refused autoplay show a still of the poster instead (styled in CSS). Quality adapts to the GPU in the first seconds.
-// Test overrides: ?reelq=0..3 pins the quality tier, ?reelfx=0 turns off the field, the flow and all input, ?reelhf=0 forces the RGBA8 field path.
+// Resizing: one ResizeObserver on the hero (plus window resize, orientation and DPR changes) feeds a debounced layout pass (150 ms trailing, never later than 500 ms into a
+// burst); in between the canvas is only stretched by CSS and the cheap zone uniforms follow. Layout reallocates a render target only when its size really changed, and a
+// portrait/landscape or 1080/720 source change swaps the video source in place: the GL pipeline stays up and the last good frame stays on screen until the new source decodes.
+// The poster is a temporary state (video error, refused autoplay, a stalled source, a lost context), never a terminal one: the reel retries with a back-off and on every
+// resize, visibility, scroll-back and bfcache return. Only reduced motion, data saver and a missing WebGL keep the poster for good.
+// Test overrides: ?reelq=0..3 pins the quality tier, ?reelfx=0 turns off the field, the flow and all input, ?reelhf=0 forces the RGBA8 field path, ?reeldebug=1 exposes window.__reel.
 (() => {
   const hero = document.querySelector('.hero');
   const box = hero && hero.querySelector('[data-reel]');
@@ -31,6 +36,7 @@
   const GLITCH = .26;      // seconds of slice offsets and ink split after a tap
   const WIN_UP = .12;      // phones: how much of the portrait picture (fraction of its height) rides above the top edge
   const PARALLAX = 7;      // css px the underlay drifts against the glyphs
+  const ZOOM_OUT = .72;    // desktop: the landscape picture is drawn at this fraction of the cover size, centred in the open band between the header and the wordmark (the wordmark hides the middle of the hero)
   // adaptive quality: device-pixel scale, buffer width, sim width and steps, bloom, neighbour merge; stepped down when frames take too long
   const QUALITY = [
     { d: 1, b: 1, sim: 256, steps: 3, bloom: 1, nb: 1 },
@@ -45,21 +51,34 @@
   const stepClock = params.get('reelclock') === 'frame';   // test only: time advances one tick per rendered frame (software GL is far below 30 fps)
   let clk = 0;
   const nowMs = () => (stepClock ? clk : performance.now());
+  // ?reeldebug=1: counters for tools/check-hero.mjs (frames rendered, state, canvas scale, source, swaps, fallbacks)
+  const dbg = params.get('reeldebug') === '1' ? (window.__reel = { frames: 0, state: 'idle', sc: 0, src: '', qi: 0, resizes: 0, layouts: 0, swaps: 0, fallbacks: 0, reason: '', lost: false }) : null;
+  const setState = (st) => { if (dbg) dbg.state = st; };
 
   // the poster as a real <img>, added after load so it can never be the page's LCP; CSS gives it the same duotone
   function still() {
-    if (box.querySelector('.reel-still')) return;
     const portrait = wantPortrait();
-    const img = new Image();
-    img.className = 'reel-still'; img.alt = ''; img.width = portrait ? 540 : 1280; img.height = portrait ? 960 : 720; img.decoding = 'async';
-    img.src = portrait ? '/hero/reel-poster-m.jpg' : video.dataset.poster;
-    box.appendChild(img);
+    let img = box.querySelector('.reel-still');
+    if (!img) { img = new Image(); img.className = 'reel-still'; img.alt = ''; img.decoding = 'async'; box.appendChild(img); }
+    if (img.dataset.p !== (portrait ? '1' : '0')) {   // the right poster for the current shape (it follows a resize)
+      img.dataset.p = portrait ? '1' : '0'; img.width = portrait ? 540 : 1280; img.height = portrait ? 960 : 720;
+      img.src = portrait ? '/hero/reel-poster-m.jpg' : video.dataset.poster;
+    }
     box.classList.add('is-still');
   }
-  // tall boxes (phones, tablets held upright) get the portrait cut
+  // the poster fades out under the first frames of a recovered reel, then goes
+  let stillT = 0;
+  function dropStill() {
+    box.classList.remove('is-still');
+    clearTimeout(stillT);
+    stillT = setTimeout(() => { const i = box.querySelector('.reel-still'); if (i && !box.classList.contains('is-still')) i.remove(); }, 1800);
+  }
+  // tall boxes (phones, tablets held upright) get the portrait cut; a little hysteresis so a window dragged across a square does not flip the source back and forth
+  let wasPortrait = false;
   function wantPortrait() {
     const r = box.getBoundingClientRect();
-    return innerWidth <= 700 || r.height > r.width * 1.05;
+    wasPortrait = innerWidth <= (wasPortrait ? 740 : 700) || r.height > r.width * (wasPortrait ? .95 : 1.05);
+    return wasPortrait;
   }
 
   const P = '#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\n';
@@ -87,25 +106,26 @@ float ez(float o,float t,float k){float d=t-o;float s=d*k;float m=1.5/255.;s=abs
 `;
   // pass 1: video -> colour in the working buffer, cover-fitted, slowly drifting (4 taps against aliasing), then eased toward the previous frame
   // (exponential blend with a per-frame step cap) so cuts and bright moments can never strobe. Alpha carries the luminance change.
-  const FS1 = P + `varying vec2 v;uniform sampler2D vid,prev;uniform vec2 asp,px;uniform vec3 drift;uniform float k,cap,first;
+  const FS1 = P + `varying vec2 v;uniform sampler2D vid,prev;uniform vec2 asp,px;uniform vec3 drift,place;uniform float k,cap,first;
 vec3 T(vec2 u){return texture2D(vid,u).rgb;}
 void main(){
-  vec2 q=(v-.5)*asp/1.06+.5;               // cover fit, 6% overscan for the drift
+  vec2 q=(v-place.yz)*asp/(1.03*place.x)+.5;   // cover fit at place.x of the cover size (1 = full), centred on place.yz of the window; 3% overscan: just enough for the drift (the edges dissolve to ink anyway)
   q+=drift.xy;
   q.y=1.-q.y;
   vec3 c=(T(q+px)+T(q-px)+T(q+vec2(px.x,-px.y))+T(q+vec2(-px.x,px.y)))*.25;
+  if(place.x<.99){vec2 e=smoothstep(0.,.03,min(q,1.-q));c*=e.x*e.y;}   // a pulled-back picture ends in ink, not in smeared edge pixels
   vec3 o=texture2D(prev,v).rgb;
   vec3 t=first>.5?c:o+clamp((c-o)*k,-cap,cap);
   float dl=dot(t-o,vec3(.2126,.7152,.0722));
   gl_FragColor=vec4(t,clamp(.5+dl*3.,0.,1.));
 }`;
   // stats: mean and spread of the footage's luminance, eased slowly (the auto-exposure). One pixel.
-  const FSS = P + `varying vec2 v;uniform sampler2D img,prev;uniform float k,first;
+  const FSS = P + `varying vec2 v;uniform sampler2D img,prev;uniform float k,first;uniform vec4 sa;
 float ez(float o,float t,float k){float d=t-o;float s=d*k;float m=1.5/255.;s=abs(s)<m?sign(d)*min(abs(d),m):s;return o+s;}
 void main(){
   float s=0.,s2=0.;
   for(int j=0;j<8;j++)for(int i=0;i<8;i++){
-    vec3 c=texture2D(img,vec2((float(i)+.5)/8.,.22+(float(j)+.5)/8.*.68)).rgb;
+    vec3 c=texture2D(img,vec2(mix(sa.x,sa.y,(float(i)+.5)/8.),mix(sa.z,sa.w,(float(j)+.5)/8.))).rgb;
     float l=dot(c,vec3(.2126,.7152,.0722));s+=l;s2+=l*l;
   }
   float m=s/64.,sd=sqrt(max(s2/64.-m*m,0.));
@@ -295,6 +315,7 @@ void main(){
 
   let gl, progs = {}, vidTex, buf, W = 0, H = 0, BW = 0, BH = 0, running = false, raf = 0, last = 0, ready = false, started = false, fresh = true, liveV = 0, hasFrame = false, uploaded = -1, quietX = .4, quietY = .8, winCss = 0, winOff = 0;
   let qi = 0, bufType, q8 = false, assetKey = '', cadence = [], lastRaf = 0, probing = true, cell0 = 6;
+  let placeZ = 1, placeY = .5, stillOn = false, ctxLost = false, curSc = 1, texW = 0, texH = 0, layoutDirty = false, resizeT = 0, resizeFirst = 0, quietUntil = 0, retryT = 0, retries = 0, goAt = 0, uploadedAt = 0, swapAt = 0, dpr0 = window.devicePixelRatio || 1;
   const R = { buf: null, stat: null, cell: null, sim: null };   // ping-pong sets: { tex: [a, b], fbo: [a, b], cur, w, h }
   const loc = {};
   let cdimW = 0, cdimH = 0, simW = 0, simH = 0, cellFresh = true, statFresh = true, lastSim = 0, simAcc = 0, simUntil = 0, steps = 2;
@@ -354,8 +375,8 @@ void main(){
     try {
       bufType = probeFloat(); q8 = bufType === gl.UNSIGNED_BYTE;
       const common = ['res', 'quiet', 'sc', 'sideW', 'hdrE', 'winH', 'winO', 'time', 'ctr'];
-      progs.p1 = program(FS1, ['vid', 'prev', 'asp', 'px', 'drift', 'k', 'cap', 'first']);
-      progs.ps = program(FSS, ['img', 'prev', 'k', 'first']);
+      progs.p1 = program(FS1, ['vid', 'prev', 'asp', 'px', 'drift', 'place', 'k', 'cap', 'first']);
+      progs.ps = program(FSS, ['img', 'prev', 'k', 'first', 'sa']);
       progs.pc = program(FSC, [...common, 'img', 'prev', 'stat', 'cdim', 'cell', 'lean', 'k', 'first', 'idleOn']);
       progs.pw = program(FSW, ['st', 'px', 'dim', 'inj', 'c2', 'damp']);
       progs.p2 = program(FS2, [...common, 'img', 'cells', 'sim', 'stat', 'cdim', 'par', 'cell', 'live', 'lean', 'bt', 'amp', 'sgp', 'fx', 'bloom', 'nb', 'flowA', 'waveK', 'idleOn', 'tp']);
@@ -377,28 +398,48 @@ void main(){
     const ua = navigator.userAgent;
     const apple = /iPhone|iPad|iPod/.test(ua) || (/Apple/.test(navigator.vendor || '') && !/Chrome|Chromium|Edg|Android/.test(ua));
     const vp9 = !apple && !!video.canPlayType('video/webm; codecs="vp9"');
-    const big = !portrait && Math.min(cssW * (devicePixelRatio || 1), MAX_W) >= 1400 && !slowNet && !saveData;
+    const dev = Math.min(cssW * (devicePixelRatio || 1), MAX_W);
+    const big = !portrait && dev >= (/reel-1080/.test(assetKey) ? 1150 : 1400) && !slowNet && !saveData;   // hysteresis: a window dragged near the threshold does not re-download
     if (portrait) return vp9 ? '/hero/reel-m.webm' : '/hero/reel-m.mp4';
     if (vp9) return big ? '/hero/reel-1080.webm' : '/hero/reel-720.webm';
     return '/hero/reel-720.mp4';
   }
-  function load(cssW) {
-    const f = pick(cssW);
+  // play() can be interrupted by a load() or pause() that follows it (a source swap, scrolling away): that AbortError is not a failure
+  function playVideo() {
+    if (!running) return;
+    const p = video.play();
+    if (p && p.catch) p.catch((e) => { if (e && e.name === 'AbortError') return; fallback('play: ' + (e && e.name)); });
+  }
+  // a different source (portrait/landscape, 1080/720): swap in place. The GL pipeline, the buffers and the last good frame stay; the loop keeps drawing that frame until the new source has one.
+  function swapSource(f) {
     if (f === assetKey) return;
-    assetKey = f;
+    assetKey = f; swapAt = performance.now();
+    if (dbg) { dbg.swaps++; dbg.src = f; }
     video.src = f; video.muted = true; video.load();
     uploaded = -1;
-    if (running) { const p = video.play(); if (p && p.catch) p.catch(() => { stop(); fallback(); }); }
+    playVideo();
   }
 
-  function size() {
+  // the fade-to-ink zones, as fractions of the canvas. Cheap, and re-read every frame: the wordmark moves with the scroll hand-off.
+  function zones(r) {
+    const phone = cell0 < 6, cssH = Math.max(1, r.height);
+    const ft = hero.querySelector('.hero-foot'), wm = hero.querySelector('.wm');
+    const end = ft ? Math.min(0.94, Math.max(0.4, (ft.getBoundingClientRect().top - r.top) / cssH)) : 0.8;
+    const wb = wm ? wm.getBoundingClientRect() : null;
+    const start = wb ? (wb.top + wb.height * (phone ? .8 : .45) - r.top) / cssH : end - .25;
+    quietY = end; quietX = Math.max(0.2, Math.min(start, end - .06));
+  }
+  // the full pass: canvas backing size, then every size-dependent target, each reallocated only when its own size changed
+  function layout() {
+    layoutDirty = false;
     const r = canvas.getBoundingClientRect();
-    const cssW = Math.max(1, r.width), cssH = Math.max(1, r.height);
+    if (r.width < 2 || r.height < 2) return curSc;   // hidden or collapsed: keep what is there
+    const cssW = r.width, cssH = r.height;
     const q = QUALITY[qi];
     const portrait = wantPortrait();
     const phone = portrait && innerWidth <= 900;
     const sc = Math.min(window.devicePixelRatio || 1, MAX_DPR, MAX_W / cssW) * q.d;
-    const w = Math.round(cssW * sc), h = Math.round(cssH * sc);
+    const w = Math.max(1, Math.round(cssW * sc)), h = Math.max(1, Math.round(cssH * sc));
     if (w !== W || h !== H) { W = w; H = h; canvas.width = w; canvas.height = h; }
     // the footage window: the whole canvas, or on phones the portrait picture's own height from the top (the rest is field only)
     winCss = phone ? Math.min(cssH, cssW * 16 / 9) : cssH;
@@ -411,18 +452,42 @@ void main(){
     const cell = cell0 * sc;
     const cw = Math.ceil((W + H * LEAN) / cell) + 3, ch = Math.ceil(H / cell) + 3;
     if (cw !== cdimW || ch !== cdimH) { cdimW = cw; cdimH = ch; alloc(R.cell, cw, ch, 0); cellFresh = true; }
-    // the wave field: about 5 css px per texel on desktop, 3 on phones
+    // the wave field: about 5 css px per texel on desktop, 3 on phones. A new size starts a still field (the old one would be stretched nonsense) and drops pending touches.
     const sw = Math.max(64, Math.min(q.sim, Math.round(cssW / (phone ? 3 : 5.5)))), sh = Math.max(32, Math.round(sw * cssH / cssW));
-    if (sw !== simW || sh !== simH) { simW = sw; simH = sh; alloc(R.sim, sw, sh, q8 ? 128 / 255 : 0); }
+    if (sw !== simW || sh !== simH) { simW = sw; simH = sh; alloc(R.sim, sw, sh, q8 ? 128 / 255 : 0); imps.length = 0; touches.length = 0; }
     steps = q.steps;
-    // the fade to ink: from behind the wordmark to where .hero-foot starts (fractions of the canvas)
-    const ft = hero.querySelector('.hero-foot'), wm = hero.querySelector('.wm');
-    const end = ft ? Math.min(0.94, Math.max(0.4, (ft.getBoundingClientRect().top - r.top) / cssH)) : 0.8;
-    const wb = wm ? wm.getBoundingClientRect() : null;
-    const start = wb ? (wb.top + wb.height * (phone ? .8 : .45) - r.top) / cssH : end - .25;
-    quietY = end; quietX = Math.max(0.2, Math.min(start, end - .06));
-    load(cssW);
+    // where the picture sits: phones and portrait cuts fill the window; the landscape cut is pulled back and centred in the open band above the wordmark, so the action is not behind the letters
+    placeZ = 1; placeY = .5;
+    if (!portrait) {
+      const wm = hero.querySelector('.wm'), wb = wm && wm.getBoundingClientRect();
+      const bot = wb ? wb.top - r.top + wb.height * .1 : cssH * .4;
+      placeZ = ZOOM_OUT; placeY = Math.max(.2, Math.min(.5, (130 + bot) / 2 / cssH));
+    }
+    zones(r);
+    curSc = sc;
+    if (dbg) { dbg.sc = sc; dbg.layouts++; dbg.qi = qi; }
+    swapSource(pick(cssW));
     return sc;
+  }
+  // resize path: ResizeObserver, window resize, orientation and DPR changes all land here. The canvas is only CSS-stretched meanwhile; the real pass runs 150 ms after the last
+  // event (at most 500 ms into a burst), and frame times measured during the burst never count toward the adaptive quality.
+  function onResize() {
+    const now = performance.now();
+    if (dbg) dbg.resizes++;
+    quietUntil = now + 900; cadence = []; lastRaf = 0;
+    if (!resizeFirst) resizeFirst = now;
+    clearTimeout(resizeT);
+    resizeT = setTimeout(settle, Math.max(0, Math.min(150, resizeFirst + 500 - now)));
+  }
+  function settle() {
+    resizeT = 0; resizeFirst = 0;
+    if (!started || ctxLost) return;
+    layout();
+    if (!probing && pinned === null && qi < QUALITY.length - 1) { probing = true; cadence = []; lastRaf = 0; }   // measure the new size once (steps down only, and only after the quiet window)
+    if (stillOn) { still(); recover(); }   // a resize is a good moment to retry
+  }
+  function watchDpr() {
+    try { const mq = matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`); mq.addEventListener('change', () => { onResize(); watchDpr(); }, { once: true }); } catch { /* old engine: resize events still arrive */ }
   }
 
   function setCommon(u, sc, t) {
@@ -438,14 +503,14 @@ void main(){
     raf = 0;
     if (!running) return;
     raf = requestAnimationFrame(frame);
-    // adaptive quality: rAF cadence over the first seconds; steps down when frames run long (> ~20 ms on average)
-    if (probing && hasFrame) {
+    // adaptive quality: rAF cadence over the first seconds (and once after each resize, outside its quiet window); steps down when frames run long (> ~20 ms on average)
+    if (probing && hasFrame && now > quietUntil) {
       if (lastRaf) cadence.push(now - lastRaf);
       lastRaf = now;
       if (cadence.length >= 40) {
         const avg = cadence.reduce((x, y) => x + y, 0) / cadence.length;
         cadence = [];
-        if (avg > 20 && qi < QUALITY.length - 1 && pinned === null) qi++; else probing = false;
+        if (avg > 20 && qi < QUALITY.length - 1 && pinned === null) { qi++; layoutDirty = true; } else probing = false;
         if (qi >= QUALITY.length - 1) probing = false;
       }
     }
@@ -453,14 +518,17 @@ void main(){
     if (now - last < 1000 / FPS - 2) return;
     last = now;
     if (stepClock) { clk += 1000 / FPS; now = clk; window.__reelClock = clk; }
-    const sc = size();
-    const vw = video.videoWidth || 1280, vh = video.videoHeight || 720;
+    if ((window.devicePixelRatio || 1) !== dpr0) { dpr0 = window.devicePixelRatio || 1; onResize(); }   // a DPR change at the same css size (moving between screens, some zoom paths) fires no resize
+    if (layoutDirty) layout();
+    const sc = curSc;
+    const rr = canvas.getBoundingClientRect(); zones(rr);
+    const vw = texW || 1280, vh = texH || 720;
     // new video frame? (the footage is slowed to 24 fps, so some ticks reuse the last upload)
     const ct = video.currentTime;
     if (video.readyState >= 2 && ct !== uploaded) {
       gl.bindTexture(gl.TEXTURE_2D, vidTex);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-      try { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video); uploaded = ct; hasFrame = true; } catch { stop(); fallback(); return; }
+      try { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video); uploaded = ct; hasFrame = true; uploadedAt = performance.now(); texW = video.videoWidth || texW; texH = video.videoHeight || texH; } catch (e) { fallback('upload: ' + (e && e.name)); return; }
     }
     if (!hasFrame) return;
     const t = now / 1000;
@@ -476,7 +544,8 @@ void main(){
     const ax = ca > va ? 1 : ca / va, ay = ca > va ? va / ca : 1;
     gl.uniform2f(u.asp, ax, ay);
     gl.uniform2f(u.px, .5 * ax / BW, .5 * ay / BH);
-    gl.uniform3f(u.drift, Math.sin(t * .045) * .016 + Math.sin(t * .11) * .005, Math.cos(t * .037) * .012, 0);
+    gl.uniform3f(u.drift, Math.sin(t * .045) * .009 + Math.sin(t * .11) * .003, Math.cos(t * .037) * .007, 0);
+    gl.uniform3f(u.place, placeZ, .5, 1 - placeY);
     gl.uniform1f(u.k, .4); gl.uniform1f(u.cap, .06); gl.uniform1f(u.first, fresh ? 1 : 0);
     draw();
     fresh = false;
@@ -486,6 +555,9 @@ void main(){
     u = progs.ps; const sn_ = 1 - R.stat.cur;
     gl.useProgram(u.prog); target(R.stat, sn_);
     tex2(u, 'img', 0, imgTex); tex2(u, 'prev', 1, R.stat.tex[R.stat.cur]);
+    // the auto-exposure measures the picture, not the ink around a pulled-back one: its footprint in window coordinates (v up), shrunk a little
+    if (placeZ < .99) { const hx = 1.03 * placeZ / (2 * ax), hy = 1.03 * placeZ / (2 * ay), cy = 1 - placeY; gl.uniform4f(u.sa, Math.max(0, .5 - hx * .8), Math.min(1, .5 + hx * .8), Math.max(0, cy - hy * .8), Math.min(1, cy + hy * .8)); }
+    else gl.uniform4f(u.sa, 0, 1, .22, .9);
     gl.uniform1f(u.k, .05); gl.uniform1f(u.first, statFresh ? 1 : 0);
     draw(); statFresh = false; R.stat.cur = sn_;
     // cells
@@ -525,7 +597,8 @@ void main(){
     for (let i = 0; i < Math.min(6, touches.length); i++) { const k = touches[touches.length - 1 - i]; tp.set([k.u, k.v, (now - k.t0) / 1000, k.s], i * 4); }
     gl.uniform4fv(u.tp, tp);
     draw();
-    if (!ready) { ready = true; box.classList.add('is-on'); }
+    if (dbg) dbg.frames++;
+    if (!ready) { ready = true; retries = 0; stillOn = false; box.classList.add('is-on'); dropStill(); }
   }
 
   // ---- input: listened on the hero (the canvas sits behind its content), passive, never prevented, so scrolling and clicks work as ever
@@ -579,9 +652,10 @@ void main(){
   }
 
   function go() {
-    if (running || !started || document.hidden || !inView || rm.matches) return;
-    running = true; last = 0; lastRaf = 0; lastSim = 0;
-    const p = video.play(); if (p && p.catch) p.catch(() => { stop(); fallback(); });   // autoplay refused (data saver, low power mode): the poster stays
+    if (running || !started || document.hidden || !inView || rm.matches || ctxLost) return;
+    running = true; last = 0; lastRaf = 0; lastSim = 0; goAt = performance.now();
+    setState('run');
+    playVideo();
     raf = requestAnimationFrame(frame);
   }
   function stop() {
@@ -589,33 +663,61 @@ void main(){
     if (raf) cancelAnimationFrame(raf); raf = 0;
     if (!video.paused) video.pause();
     ptrs.clear();
+    if (dbg && dbg.state === 'run') dbg.state = 'idle';
   }
-  function fallback() { started = false; box.classList.remove('is-on'); still(); }
+  // the poster, as a TEMPORARY state: the pipeline is kept (unless the context is gone), and retries come on a back-off (3, 6, 12, 24 s) and on every resize, visibility change, scroll-back and bfcache return
+  function fallback(reason, retry = true) {
+    stop(); ready = false; stillOn = true;
+    box.classList.remove('is-on'); still(); setState('still');
+    if (dbg) { dbg.fallbacks++; dbg.reason = reason; }
+    clearTimeout(retryT);
+    if (retry && retries < 4 && !rm.matches && !saveData) retryT = setTimeout(recover, 3000 * (1 << retries++));
+  }
+  function recover() {
+    clearTimeout(retryT);
+    if (!stillOn || !started || running || rm.matches || saveData || ctxLost || document.hidden || !inView) return;
+    if (!gl || gl.isContextLost()) return;   // waiting for webglcontextrestored
+    video.muted = true;
+    layout();
+    go();   // the poster stays until the first frame is drawn, then fades out under it
+  }
+  const resume = () => { if (stillOn && !running) recover(); else go(); };
 
   let inView = false;
   function boot() {
     started = true;
     if (pinned !== null && QUALITY[+pinned]) { qi = +pinned; probing = false; }
-    if (!init()) { fallback(); return; }
+    if (!init()) { fallback('shader setup failed', false); return; }
     video.muted = true; video.defaultMuted = true;
-    video.addEventListener('error', () => { stop(); fallback(); }, { once: true });
+    video.addEventListener('error', () => { if (video.error && video.error.code !== 1) fallback('video error ' + video.error.code); });   // code 1 = aborted by a source swap
+    video.addEventListener('canplay', () => { if (running && video.paused) playVideo(); });
     // a lost GPU context: stop and show the poster; if the browser restores it, rebuild everything and carry on
-    canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); stop(); fallback(); });
+    canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); ctxLost = true; if (dbg) dbg.lost = true; fallback('context lost', false); });
     canvas.addEventListener('webglcontextrestored', () => {
-      const s = box.querySelector('.reel-still'); if (s) s.remove(); box.classList.remove('is-still');
-      if (init()) { started = true; go(); } else fallback();
+      ctxLost = false; if (dbg) dbg.lost = false;
+      if (!init()) { fallback('shader setup failed after restore', false); return; }
+      assetKey = ''; retries = 0; recover();
     });
     bindInput();
-    load(canvas.getBoundingClientRect().width);   // the source must be set before the first play()
+    layout();   // sets the source before the first play()
     go();
-    // no decoded frame within a few seconds (blocked autoplay, stalled network): keep the poster
-    setTimeout(() => { if (started && !hasFrame) { stop(); fallback(); } }, pinned !== null ? 60000 : 8000);   // a pinned tier means a test run, maybe on a slow software GPU
+    // a source that decodes nothing for a while (stalled network, blocked autoplay): the poster, and a retry later. Only counts while the reel is running; a swap or a restart resets it.
+    setInterval(() => {
+      if (!running || document.hidden) return;
+      if (performance.now() - Math.max(goAt, uploadedAt, swapAt) > (pinned !== null ? 60000 : 8000)) fallback('no decoded frame');
+    }, 1000);
+    // the resize path
+    if ('ResizeObserver' in window) new ResizeObserver(onResize).observe(box);
+    addEventListener('resize', onResize); addEventListener('orientationchange', onResize); watchDpr();
+    // bfcache: stop on the way out, and on the way back re-measure and resume
+    addEventListener('pagehide', () => stop());
+    addEventListener('pageshow', (e) => { if (e.persisted) { onResize(); resume(); } });
   }
 
-  const io = new IntersectionObserver((es) => { inView = es[es.length - 1].isIntersecting; if (inView) go(); else if (started) stop(); });
+  const io = new IntersectionObserver((es) => { inView = es[es.length - 1].isIntersecting; if (inView) resume(); else if (started) stop(); });
   io.observe(hero);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else go(); });
-  rm.addEventListener('change', () => { if (rm.matches) { stop(); fallback(); } });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else resume(); });
+  rm.addEventListener('change', () => { if (rm.matches) { if (started) fallback('reduced motion', false); } else if (started) { retries = 0; recover(); } });
 
   // nothing starts before the page has loaded and gone idle, so the wordmark's paint and LCP are untouched
   function start() {

@@ -10,7 +10,8 @@
 .reel.is-on .reel-cv { opacity: 1; }
 .reel-vid { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 /* fallback (reduced motion, data saver, no WebGL): the poster as a real image, same ink and cobalt duotone via filter (grayscale, sepia, hue-rotate), faded to ink by a mask, no blend modes */
-.reel-still { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) sepia(1) hue-rotate(185deg) saturate(1.8) brightness(.55) contrast(.9); opacity: .3; -webkit-mask-image: radial-gradient(130% 80% at 50% 25%, #000 25%, transparent 80%); mask-image: radial-gradient(130% 80% at 50% 25%, #000 25%, transparent 80%); }
+.reel-still { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 1; transition: opacity 1.6s var(--ease); }   /* the poster is a baked render of the shader itself (brand/reel/bake-poster.mjs), so no filter; it fades out under a reel that starts or recovers */
+.reel.is-on .reel-still { opacity: 0; }
 @media (prefers-reduced-motion: reduce) { .reel-cv { display: none; } }
 .hero-in { display: flex; flex-direction: column; gap: var(--s4); }
 .hero-in .status { align-self: flex-start; }

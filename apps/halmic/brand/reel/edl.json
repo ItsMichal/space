@@ -1,9 +1,9 @@
 {
- "note": "Moments cut from the owner's own published videos and clips (YouTube @halmic, Twitch halmictv). Source footage is not in the repo; download video-only up to 1080p (see README.md). Times are source seconds. crop (landscape, 16:9) and pcrop (portrait, 9:16) are w:h:x:y in a 1280x720 reference frame (scaled to the real source size) and always exclude HUD text, captions, credits and facecam.",
+ "note": "Moments cut from the owner's own published videos and clips (YouTube @halmic, Twitch halmictv). Source footage is not in the repo; download video-only up to 1080p (see README.md). Times are source seconds. crop (landscape, 16:9) and pcrop (portrait, any aspect, usually 3:2) are w:h:x:y in a 1280x720 reference frame (scaled to the real source size) and always exclude HUD text, captions, credits, name tags and facecam. The portrait cut lays the pcrop across the phone frame at full width with its centre at pc (fraction of the 960 px height, default 0.295) over a dark blurred copy of itself.",
  "fps": 24,
  "speed": 0.5,
  "poster": [
-  3,
+  2,
   30
  ],
  "srcSeconds": 1.4,
@@ -14,127 +14,128 @@
    "site": "youtube",
    "id": "Et47QCJ3-3g",
    "title": "Robomaster 2019 Robotics Competition - Highlight Reel",
-   "in": 121,
-   "crop": "604:340:200:175",
-   "why": "arena fight, robots clustering around the red tower; \"Base Shield\" caption cropped",
-   "pcrop": "225:400:400:215"
+   "in": 128.6,
+   "crop": "960:540:0:130",
+   "pcrop": "960:540:0:130",
+   "why": "the whole arena from above: lit red tower, blue robots closing in; scoreboard strip, minimap and captions cropped"
   },
   {
    "src": "yt-pl6lJAYPLgc",
    "site": "youtube",
    "id": "pl6lJAYPLgc",
    "title": "CU Boulder Racing Team - IMI Motorsports 01:09:59 (PB)",
-   "in": 10,
-   "crop": "960:540:0:0",
-   "why": "onboard, hard corner, sky and track sweeping past; lap timer cropped out",
-   "pcrop": "405:720:300:0"
+   "in": 5.4,
+   "crop": "1280:720:0:0",
+   "pcrop": "1280:720:0:0",
+   "why": "onboard, banking into a bend: bright sky and track against the black roll hoop (no lap timer yet at this point)"
+  },
+  {
+   "src": "yt-qVEDjNc5Gmg",
+   "site": "youtube",
+   "id": "qVEDjNc5Gmg",
+   "title": "Special Force: Origins",
+   "in": 47.4,
+   "crop": "1280:720:0:0",
+   "pcrop": "1280:720:0:0",
+   "why": "wall-run along a lit hallway: a dark silhouette against bright walls; action shot, no cards or text"
   },
   {
    "src": "yt-2jM2QSTSte4",
    "site": "youtube",
    "id": "2jM2QSTSte4",
    "title": "FIFA With the Boys - Episode 3",
-   "in": 226,
-   "crop": "800:450:240:130",
-   "why": "gameplay only, centre circle, players moving; scoreboard banner and crest cropped out",
-   "pcrop": "270:480:480:150"
-  },
-  {
-   "src": "yt-qVEDjNc5Gmg",
-   "site": "youtube",
-   "id": "qVEDjNc5Gmg",
-   "title": "Special Force: Origins",
-   "in": 43.6,
+   "in": 148.9,
    "crop": "1280:720:0:0",
-   "pcrop": "405:720:437:0",
-   "why": "wall-run down the dorm hallway; action shot, no cards or text"
-  },
-  {
-   "src": "tw-3935634116",
-   "site": "twitch",
-   "id": "GlamorousFrozenStorkBloodTrail",
-   "title": "4k clutch on Bind",
-   "in": 17,
-   "crop": "800:450:300:140",
-   "why": "first-person fight with an ability burst; HUD and name overlay cropped out",
-   "pcrop": "253:450:420:140"
+   "pcrop": "1280:720:0:0",
+   "why": "overhead replay, a scissor-kick over white and orange kits on bright grass; starts after the HUD and gamertag have gone, ends before the meme overlay"
   },
   {
    "src": "tw-3298804610",
    "site": "twitch",
    "id": "MistySleepyNuggetsWOOP",
    "title": "Barbarian Chop Off the Top",
-   "in": 6,
-   "crop": "800:450:100:60",
-   "why": "Smash Ultimate exchange with light effects; facecam, overlay and names cropped out",
-   "pcrop": "253:450:380:60"
+   "in": 6.4,
+   "crop": "900:506:80:0",
+   "pcrop": "900:506:80:0",
+   "why": "Smash Ultimate on a lit stage at night: a big hit, a red orb, fighters trading blows on the platform; facecam, overlay bars, damage HUD and timer cropped; no name tags in this stretch"
   },
   {
-   "src": "yt-IIJVKHEtawU",
+   "src": "yt-Gv-xMeMM8m4",
    "site": "youtube",
-   "id": "IIJVKHEtawU",
-   "title": "Special Force 2: The Array",
-   "in": 258,
-   "crop": "1024:576:128:72",
-   "pcrop": "324:576:478:72",
-   "why": "white-hoodie scuffle; letterbox cropped; after the credit cards"
-  },
-  {
-   "src": "yt-N7HKj1dYZjU",
-   "site": "youtube",
-   "id": "N7HKj1dYZjU",
-   "title": "FIFA With The Boys - Episode 4(EVER)",
-   "in": 376,
-   "crop": "960:540:150:90",
-   "why": "gameplay only, wide pitch and goal",
-   "pcrop": "338:600:400:90"
-  },
-  {
-   "src": "yt-pl6lJAYPLgc",
-   "site": "youtube",
-   "id": "pl6lJAYPLgc",
-   "title": "CU Boulder Racing Team onboard",
-   "in": 54.5,
-   "crop": "960:540:0:0",
-   "why": "second onboard stretch, wide bend",
-   "pcrop": "405:720:300:0"
-  },
-  {
-   "src": "yt-IIJVKHEtawU",
-   "site": "youtube",
-   "id": "IIJVKHEtawU",
-   "title": "Special Force 2: The Array",
-   "in": 201,
-   "crop": "1024:576:128:72",
-   "pcrop": "324:576:478:72",
-   "why": "sunglasses aiming the foam blaster"
-  },
-  {
-   "src": "yt-qVEDjNc5Gmg",
-   "site": "youtube",
-   "id": "qVEDjNc5Gmg",
-   "title": "Special Force: Origins",
-   "in": 52,
-   "crop": "1280:720:0:0",
-   "pcrop": "405:720:437:0",
-   "why": "second wall-run"
+   "id": "Gv-xMeMM8m4",
+   "title": "Project Mountaintop",
+   "in": 53.2,
+   "crop": "1000:562:260:0",
+   "pcrop": "1000:562:260:0",
+   "why": "the rhythm-game screen in full colour, a player seen from behind; captions and logo cropped"
   },
   {
    "src": "yt-Et47QCJ3-3g",
    "site": "youtube",
    "id": "Et47QCJ3-3g",
    "title": "Robomaster highlight reel",
-   "in": 329,
-   "crop": "604:340:200:100",
-   "why": "multi-robot melee; lower-third caption cropped out; lower-third counter cropped",
-   "pcrop": "225:400:385:100"
+   "in": 223.4,
+   "crop": "960:540:100:130",
+   "pcrop": "960:540:100:130",
+   "why": "lit robots in a firefight behind the mesh, red tower in frame; scoreboard and minimap cropped"
+  },
+  {
+   "src": "yt-IIJVKHEtawU",
+   "site": "youtube",
+   "id": "IIJVKHEtawU",
+   "title": "Special Force 2: The Array",
+   "in": 252.4,
+   "crop": "1024:576:128:72",
+   "pcrop": "1024:576:128:72",
+   "why": "white-hoodie scuffle, bright shapes on a dark room; letterbox cropped; after the credit cards"
+  },
+  {
+   "src": "yt-pl6lJAYPLgc",
+   "site": "youtube",
+   "id": "pl6lJAYPLgc",
+   "title": "CU Boulder Racing Team onboard",
+   "in": 39.4,
+   "crop": "1040:585:0:0",
+   "pcrop": "1040:585:0:0",
+   "why": "second onboard stretch: sky, airfield and track around the hoop; lap timer cropped"
+  },
+  {
+   "src": "yt-qVEDjNc5Gmg",
+   "site": "youtube",
+   "id": "qVEDjNc5Gmg",
+   "title": "Special Force: Origins",
+   "in": 30.4,
+   "crop": "1280:720:0:0",
+   "pcrop": "1280:720:0:0",
+   "why": "two hooded figures leaning on the wall of a lit hallway, a long perspective down the corridor; no cards or text"
+  },
+  {
+   "src": "tw-3298804610",
+   "site": "twitch",
+   "id": "MistySleepyNuggetsWOOP",
+   "title": "Barbarian Chop Off the Top",
+   "in": 8.3,
+   "crop": "900:506:80:0",
+   "pcrop": "900:506:80:0",
+   "why": "Smash Ultimate: a leap, a purple slash and a flame burst over the platform; same tag-free stretch (the later explosion shots carry name tags and were dropped)"
+  },
+  {
+   "src": "yt-qVEDjNc5Gmg",
+   "site": "youtube",
+   "id": "qVEDjNc5Gmg",
+   "title": "Special Force: Origins",
+   "in": 57.4,
+   "crop": "1280:720:0:0",
+   "pcrop": "1280:720:0:0",
+   "why": "second wall-run, two silhouettes crossing a lit hallway"
   }
  ],
  "excluded": [
   "Special Force 1 and 2 title and credit cards (real names): only mid-film action shots are cut, never the opening/closing cards",
-  "FIFA episode intros and press-conference scenes (faces, names); any HUD name bar (cropped)",
+  "FIFA episode intros, press-conference scenes and any frame with a username tag or HUD name bar (cropped or skipped)",
   "Twitch clips' facecam strips and overlay handles",
-  "Robomaster 190.5 s (almost black at full definition) and Project Mountaintop 26 s (monitor photo, flat blue wash): dropped in the HD cut",
+  "VALORANT 4k clutch on Bind (dropped in this cut): spectator overlay with team and player names on every frame, 720p source, nothing wide enough to read without the HUD; the FIFA episode 4 goal-mouth pan near 194 s (motion smear at half speed, dark after the exposure stretch); Smash 13 to 16 s (player-name tags over the fighters)",
+  "Robomaster 190.5 s (almost black) and the dark overhead wide shots; the previous cut's tight crops of the arena (action filled a fifth of the frame); the old hallway-silhouette Special Force moments, FIFA centre-circle shot and first onboard bend (dark, one-toned or too tight)",
   "any frame range with in-game handles large enough to read, scoreboards, captions or logos filling the frame"
  ]
 }
