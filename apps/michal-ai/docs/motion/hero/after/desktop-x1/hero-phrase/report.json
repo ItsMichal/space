@@ -1,0 +1,77 @@
+{
+  "name": "hero-phrase",
+  "profile": "desktop",
+  "throttle": 1,
+  "notes": [],
+  "screencast": {
+    "frames": 452,
+    "durationMs": 7501.2,
+    "gapsMs": {
+      "p50": 16.6,
+      "p95": 20.2,
+      "max": 22.6,
+      "over25": 0,
+      "over40": 0
+    },
+    "motionFrames": 133
+  },
+  "responseMs": 2831.8,
+  "motionMs": 2196.4,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 309,
+    "p50": 16.7,
+    "p95": 16.8,
+    "max": 16.8,
+    "dropped": 0,
+    "over33": 0,
+    "over50": 0
+  },
+  "tracked": {
+    "pixelCentroid.cx": {
+      "range": 216.7,
+      "moving": true,
+      "frames": 6,
+      "reversals": 3,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 128.22,
+      "maxJerkPx": 101.35,
+      "jerkRatio": 0.468
+    },
+    "pixelCentroid.cy": {
+      "range": 8.8,
+      "moving": true,
+      "frames": 5,
+      "reversals": 1,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 8.77,
+      "maxJerkPx": 11.78,
+      "jerkRatio": 1.343
+    }
+  },
+  "flash": {
+    "screencastFrames": 0,
+    "details": [],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 0,
+    "maxMs": 0,
+    "totalMs": 0
+  },
+  "loaf": {
+    "count": 0,
+    "maxMs": 0,
+    "worst": []
+  },
+  "trace": null,
+  "verdict": [
+    "SLOW-RESPONSE 2831.8ms"
+  ]
+}
