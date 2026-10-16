@@ -49,7 +49,7 @@ if (/class="[^"]*\b(ey|cb|card|ct|cx)\b/.test(home)) bad.push('index.html: old c
 if (/\b(clip|video)\b/i.test([...home.matchAll(/<span class="chip">[\s\S]*?<\/span><\/span>/g)].map((m) => m[0]).join(''))) bad.push('index.html: a chip says clip/video (platforms are shown by icon)');
 for (const m of home.matchAll(/<span class="bdg[^>]*>/g)) if (!/role="img"/.test(m[0]) || !/aria-label="[^"]+"/.test(m[0])) bad.push(`index.html: badge without an accessible name ${m[0].slice(0, 70)}`);
 for (const [id, name] of [['tw', 'Twitch'], ['yt', 'YouTube']]) if (!new RegExp(`class="bdg bdg-${id}" role="img" aria-label="${name}"`).test(home)) bad.push(`index.html: no ${name} badge`);
-for (const [kind, href, extra] of [['tw', 'https://www.twitch.tv/halmictv', 'id="twitch"'], ['yt', 'https://www.youtube.com/@halmic', ''], ['itch', 'https://halmic.itch.io/', ''], ['x', 'https://x.com/halmicc', 'id="hi"'], ['rd', 'https://www.reddit.com/r/pokemonphoenixrising/', ''], ['md', 'https://halmic.medium.com/', '']]) {
+for (const [kind, href, extra] of [['tw', 'https://www.twitch.tv/halmictv', 'id="twitch"'], ['yt', 'https://www.youtube.com/@halmic', ''], ['itch', 'https://halmic.itch.io/', ''], ['x', 'https://x.com/halmicc', 'id="hi"'], ['rd', 'https://www.reddit.com/r/pokemonphoenixrising/comments/8m5eew/phoenix_rising_demo_megathread/', ''], ['md', 'https://halmic.medium.com/', '']]) {
   const m = home.match(new RegExp(`<a class="tile t-link tl-${kind}[^"]*" href="([^"]+)"[^>]*${extra ? extra.replace(/"/g, '"') : ''}[^>]*>`)) ?? home.match(new RegExp(`<a class="tile t-link tl-${kind}[^"]*" href="([^"]+)"[^>]*>`)); // the Posts bento has its own link tile for the same network, so look for the tagged one first
   if (!m) bad.push(`index.html: link tile ${kind} missing`);
   else { if (m[1] !== href) bad.push(`index.html: link tile ${kind} points at ${m[1]}`); if (extra && !m[0].includes(extra)) bad.push(`index.html: link tile ${kind} lost ${extra}`); }
@@ -127,7 +127,7 @@ for (const f of walk(mtDir).filter((x) => x.endsWith('.html'))) { const h = fs.r
   if (!/<a class="tile t-stat tdim\s+lead w2" href="\/work\/pokemon-phoenix-rising\/"/.test(work) || !/QA developer/.test(work)) bad.push('index.html: Phoenix Rising 2x2 lead with the QA developer role missing from Work');
   if (/data-vid="/.test(work)) bad.push('index.html: the Phoenix Rising videos live on its page, not as Work tiles');
   if (/Episode 1 of the game|>2018</.test(home)) bad.push('index.html: the 2018 stat tile is back');
-  if (!/<a class="tile t-link tl-rd[^"]*" href="https:\/\/www\.reddit\.com\/r\/pokemonphoenixrising\/"/.test(work)) bad.push('index.html: subreddit link tile missing from Work');
+  if (!/<a class="tile t-link tl-rd[^"]*" href="https:\/\/www\.reddit\.com\/r\/pokemonphoenixrising\/comments\/8m5eew\/phoenix_rising_demo_megathread\/"/.test(work)) bad.push('index.html: demo megathread link tile missing from Work');
   const gamesOrder = [...play.matchAll(/<a class="tile [^"]*" href="([^"]+)"/g)].map((m) => m[1]).filter((h) => !h.includes('#logs'));
   if (gamesOrder[1] !== '/games/glass-gunslinger-dod/' || gamesOrder[2] !== '/games/lvasion-du-criminel-de-sa-prison/') bad.push(`index.html: Play order after the lead should be Glass Gunslinger, L'évasion (got ${gamesOrder.slice(1, 3)})`);
   for (const f of walk(pub).filter((x) => /\.(html|txt|xml|js|css)$/.test(x))) if (/discord/i.test(fs.readFileSync(f, 'utf8'))) bad.push(`${path.relative(pub, f)}: mentions Discord`);
