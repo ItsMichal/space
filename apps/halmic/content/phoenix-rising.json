@@ -34,14 +34,22 @@
     }
   ],
   "reddit": {
-    "url": "https://www.reddit.com/r/pokemonphoenixrising/",
-    "title": "The game on Reddit",
-    "verified": "link only: the subreddit is the one the official YouTube channel header and the game's demo-release videos point at (see verifiedAt_note). Reddit was blocked in the research browser and by network policy on 2026-10-12, so no member count or posts were read."
+    "url": "https://www.reddit.com/r/pokemonphoenixrising/comments/8m5eew/phoenix_rising_demo_megathread/",
+    "title": "Demo megathread on Reddit",
+    "verified": "link only (the demo megathread URL was given by the site owner; the subreddit is the one the channel points at): the subreddit is the one the official YouTube channel header and the game's demo-release videos point at (see verifiedAt_note). Reddit was blocked in the research browser and by network policy on 2026-10-12, so no member count or posts were read."
   },
   "episode1": {
     "year": "2018",
     "source": "PokéCommunity release thread (https://www.pokecommunity.com/threads/phoenix-rising.425404/, lists Episode 1 for 25 May 2018) and a GameWave article dated 4 June 2018 saying Episode 1 can be downloaded for free (https://gamewave.fr/phoenix-rising/pokemon-phoenix-rising-le-jeu-est-enfin-disponible/); read via web search on 2026-10-12. Only the year is claimed."
   },
   "about": "Phoenix Rising is a free, fan-made Pokémon RPG, built with RPG Maker XP and Pokémon Essentials and released in episodes. Episode 1 came out in 2018. The team shares trailers on the game’s YouTube channel and talks with players on its subreddit. It is a fan project, not made by or affiliated with Nintendo, Game Freak or The Pokémon Company.",
-  "redditPosts": []
+  "redditPosts": [
+    {
+      "url": "https://www.reddit.com/r/pokemonphoenixrising/comments/8m5eew/phoenix_rising_demo_megathread/",
+      "title": "Phoenix Rising demo megathread",
+      "sub": "r/pokemonphoenixrising",
+      "date": "May 2018",
+      "dateNote": "approximate: inferred from the post id (8m5eew, late May 2018) and the Episode 1 demo release; Reddit is blocked for agents so the post was not read."
+    }
+  ]
 }
