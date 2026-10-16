@@ -1,0 +1,257 @@
+[
+  {
+    "name": "cold-load-home",
+    "profile": "desktop",
+    "throttle": 4,
+    "notes": [],
+    "screencast": {
+      "frames": 172,
+      "durationMs": 4573,
+      "gapsMs": {
+        "p50": 18.7,
+        "p95": 257.5,
+        "max": 288.7,
+        "over25": 9,
+        "over40": 6
+      },
+      "motionFrames": 24
+    },
+    "responseMs": 714.8,
+    "motionMs": 1326.6,
+    "timingFrom": "clean pass",
+    "raf": {
+      "frames": 61,
+      "p50": 16.7,
+      "p95": 83.4,
+      "max": 200,
+      "dropped": 33,
+      "over33": 6,
+      "over50": 4
+    },
+    "tracked": {
+      "h1": {
+        "moving": false
+      },
+      ".hook__roll": {
+        "moving": false
+      },
+      ".tile__img": {
+        "moving": false
+      },
+      "pixelCentroid.cx": {
+        "range": 496.3,
+        "moving": true,
+        "frames": 8,
+        "reversals": 3,
+        "stalls": 0,
+        "jumps": 1,
+        "maxStepPx": 495.55,
+        "maxJerkPx": 745.93,
+        "jerkRatio": 1.503
+      },
+      "pixelCentroid.cy": {
+        "range": 825.6,
+        "moving": true,
+        "frames": 8,
+        "reversals": 3,
+        "stalls": 0,
+        "jumps": 0,
+        "maxStepPx": 825.57,
+        "maxJerkPx": 1071.05,
+        "jerkRatio": 1.297
+      }
+    },
+    "domResponseMs": null,
+    "flash": {
+      "screencastFrames": 0,
+      "details": [],
+      "blankDomFrames": 0
+    },
+    "cls": {
+      "value": 0,
+      "entries": []
+    },
+    "longTasks": {
+      "count": 5,
+      "maxMs": 188,
+      "totalMs": 438
+    },
+    "loaf": {
+      "count": 6,
+      "maxMs": 638.2,
+      "worst": [
+        {
+          "d": 638.2,
+          "scripts": [
+            {
+              "src": "",
+              "fn": "",
+              "d": 33.800000071525574,
+              "kind": "user-callback"
+            }
+          ]
+        },
+        {
+          "d": 198.9,
+          "scripts": [
+            {
+              "src": "entry.client-Drh284G9.js",
+              "fn": "bt",
+              "d": 188.39999997615814,
+              "kind": "event-listener"
+            }
+          ]
+        }
+      ]
+    },
+    "load": {
+      "fcpMs": 820,
+      "lcpMs": 820,
+      "lcpEl": "IMG",
+      "clsWholeLoad": 0,
+      "shifts": [],
+      "fontLoads": [
+        {
+          "t": 953.9,
+          "faces": [
+            "display Fallback normal normal",
+            "display 400 normal",
+            "Newsreader Fallback normal normal",
+            "Newsreader 200 800 normal",
+            "Newsreader 200 800 normal",
+            "display 400 italic"
+          ]
+        }
+      ],
+      "tbtMs": 188,
+      "longTaskCount": 5,
+      "longTasks": [
+        {
+          "at": 1826.8,
+          "ms": 188
+        },
+        {
+          "at": 2149.2,
+          "ms": 72
+        },
+        {
+          "at": 1757.9,
+          "ms": 66
+        },
+        {
+          "at": 640.9,
+          "ms": 62
+        },
+        {
+          "at": 1703.2,
+          "ms": 50
+        }
+      ],
+      "loafTotalMs": 1226.5,
+      "lastFontMs": 953.9,
+      "resources": [
+        {
+          "n": "fallback.png",
+          "s": 92,
+          "e": 333
+        },
+        {
+          "n": "3792c5f0958f6bcc-s.p.woff2",
+          "s": 93,
+          "e": 413
+        },
+        {
+          "n": "5ed7d4ff5e59016d-s.p.woff2",
+          "s": 93,
+          "e": 633
+        },
+        {
+          "n": "84adbee2f2a7cb50-s.p.woff2",
+          "s": 94,
+          "e": 832
+        },
+        {
+          "n": "8edf6d3506a17285-s.p.woff2",
+          "s": 94,
+          "e": 896
+        },
+        {
+          "n": "92eeb95d069020cc-s.p.woff2",
+          "s": 94,
+          "e": 650
+        },
+        {
+          "n": "98e207f02528a563-s.p.woff2",
+          "s": 94,
+          "e": 730
+        },
+        {
+          "n": "99dcf268bda04fe5-s.p.woff2",
+          "s": 94,
+          "e": 743
+        },
+        {
+          "n": "d3ebbfd689654d3a-s.p.woff2",
+          "s": 94,
+          "e": 787
+        },
+        {
+          "n": "bb2798ad86f95cff-s.p.woff2",
+          "s": 94,
+          "e": 940
+        },
+        {
+          "n": "fe6c4b8cc116014d-s.p.woff2",
+          "s": 94,
+          "e": 1226
+        },
+        {
+          "n": "starlink-night-sky-2400.avif",
+          "s": 113,
+          "e": 1892
+        },
+        {
+          "n": "blobs-light.webp",
+          "s": 628,
+          "e": 1379
+        },
+        {
+          "n": "cover-960.avif",
+          "s": 762,
+          "e": 1492
+        },
+        {
+          "n": "cover-623.avif",
+          "s": 763,
+          "e": 1448
+        },
+        {
+          "n": "screenshot-2023-02-15-at-2-50-18-pm-7b96",
+          "s": 763,
+          "e": 1512
+        },
+        {
+          "n": "cover-960.avif",
+          "s": 763,
+          "e": 1648
+        },
+        {
+          "n": "cover-960.avif",
+          "s": 763,
+          "e": 1623
+        },
+        {
+          "n": "cover-960.avif",
+          "s": 763,
+          "e": 1666
+        }
+      ]
+    },
+    "trace": null,
+    "verdict": [
+      "SLOW-RESPONSE 714.8ms",
+      "DROPPED 33",
+      "LONGTASK 5x max 188ms"
+    ]
+  }
+]

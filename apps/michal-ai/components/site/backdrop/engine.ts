@@ -114,16 +114,22 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
   const compile = (g: WebGL2RenderingContext, type: number, src: string) => {
     const s = g.createShader(type)!
     g.shaderSource(s, src)
-    g.compileShader(s)
-    if (!g.getShaderParameter(s, g.COMPILE_STATUS)) throw new Error(g.getShaderInfoLog(s) ?? 'shader')
+    g.compileShader(s) // status is read after linking (below); asking now would stall until the driver finished compiling
     return s
   }
-  const program = (g: WebGL2RenderingContext, fs: string, names: string[]): Prog => {
+  // Both programs are compiled and linked before either is queried, so the driver can work on them at the same time.
+  const build = (g: WebGL2RenderingContext, fs: string): WebGLProgram => {
     const p = g.createProgram()!
     g.attachShader(p, compile(g, g.VERTEX_SHADER, VERT))
     g.attachShader(p, compile(g, g.FRAGMENT_SHADER, fs))
     g.linkProgram(p)
-    if (!g.getProgramParameter(p, g.LINK_STATUS)) throw new Error(g.getProgramInfoLog(p) ?? 'link')
+    return p
+  }
+  const finish = (g: WebGL2RenderingContext, p: WebGLProgram, names: string[]): Prog => {
+    if (!g.getProgramParameter(p, g.LINK_STATUS)) {
+      const logs = g.getAttachedShaders(p)?.map((sh) => g.getShaderInfoLog(sh)).join(' ') ?? ''
+      throw new Error(`${g.getProgramInfoLog(p) ?? 'link'} ${logs}`)
+    }
     const u: Record<string, WebGLUniformLocation | null> = {}
     for (const n of names) u[n.replace('[0]', '')] = g.getUniformLocation(p, n)
     return { p, u }
@@ -134,8 +140,10 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
     })
     if (!gl) return false
     try {
-      low = program(gl, FS_LOW, UNIFORMS_LOW)
-      comp = program(gl, FS_COMP, UNIFORMS_COMP)
+      const pl = build(gl, FS_LOW)
+      const pc = build(gl, FS_COMP)
+      low = finish(gl, pl, UNIFORMS_LOW)
+      comp = finish(gl, pc, UNIFORMS_COMP)
     } catch (e) {
       console.warn('[backdrop] disabled:', e)
       return false

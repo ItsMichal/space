@@ -368,6 +368,11 @@ export async function analyze({ shots, probe, clean, trace, meta }) {
         .map((s) => ({ t: round(s.t), v: round(s.v, 4) }))
         .slice(0, 8),
       fontLoads: fontDone.slice(0, 12),
+      // whole-load main-thread blocking (not windowed): total blocking time and the longest tasks
+      tbtMs: round(P.longtasks.reduce((x, l) => x + Math.max(0, l.d - 50), 0)),
+      longTaskCount: P.longtasks.length,
+      longTasks: [...P.longtasks].sort((x, y) => y.d - x.d).slice(0, 5).map((l) => ({ at: round(l.t), ms: round(l.d) })),
+      loafTotalMs: round(P.loafs.reduce((x, l) => x + l.d, 0)),
       lastFontMs: fontDone.length
         ? Math.max(...fontDone.map((f) => f.t))
         : null,

@@ -405,18 +405,29 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
         st.current.r = r
         r.resize(st.current.size || 300, st.current.dpr)
         // The satellite shell gets its own larger canvas at low resolution (and its own context); without it the globe simply has no shell.
-        const sr = shellCanvas.current ? createRenderer(shellCanvas.current, null, { ink }, 'shell') : null
-        st.current.sr = sr
-        st.current.sdpr = shellDprFor(st.current.size || 300, window.devicePixelRatio || 1)
-        sr?.resize((st.current.size || 300) * SHELL_SCALE, st.current.sdpr)
+        // It is created a task later (its own WebGL context and shader compile are a long task on a phone), and the text halo mask
+        // (a per-glyph blurred canvas draw, tens of ms) waits for idle time: the globe fades in over a second anyway.
+        const ensureShell = () => {
+          if (st.current.sr || st.current.r !== r || !shellCanvas.current) return st.current.sr
+          const sr = createRenderer(shellCanvas.current, null, { ink }, 'shell')
+          st.current.sr = sr
+          st.current.sdpr = shellDprFor(st.current.size || 300, window.devicePixelRatio || 1)
+          sr?.resize((st.current.size || 300) * SHELL_SCALE, st.current.sdpr)
+          return sr
+        }
+        const later = (f: () => void, timeout: number) => ('requestIdleCallback' in window ? requestIdleCallback(f, { timeout }) : setTimeout(f, 50))
         setMode('gl')
-        void document.fonts?.ready.then(() => measureText())
+        later(() => {
+          if (cancelled) return
+          ensureShell()
+          void document.fonts?.ready.then(() => later(() => !cancelled && measureText(), 500))
+        }, 300)
         // The constellation arrives after the globe is up and fades in; without it (offline, stale elements) nothing is drawn.
         // Dev only: ?bare=1 draws the plain globe (no satellites), which is how public/globe/fallback.png is regenerated.
         const bare = process.env.NODE_ENV !== 'production' && new URLSearchParams(window.location.search).get('bare') === '1'
         if (!bare) void loadStarlink().then((p) => {
           if (!p || st.current.r !== r) return
-          st.current.sr?.setSatellites(p.data)
+          ensureShell()?.setSatellites(p.data)
           st.current.sat = p
           const lk = buildLinks(p.data, p.count)
           st.current.links = lk
