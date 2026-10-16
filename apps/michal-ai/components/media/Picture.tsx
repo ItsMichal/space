@@ -32,6 +32,7 @@ export function Picture({ src, alt, sizes, priority = false, className, aspect, 
   const common = {
     className,
     style,
+    'data-lqip': info ? '' : undefined,
     decoding: 'async' as const,
     loading: priority ? ('eager' as const) : ('lazy' as const),
     fetchPriority: priority ? ('high' as const) : undefined,
