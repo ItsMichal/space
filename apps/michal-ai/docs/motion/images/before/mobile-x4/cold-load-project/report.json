@@ -1,0 +1,224 @@
+{
+  "name": "cold-load-project",
+  "profile": "mobile",
+  "throttle": 4,
+  "notes": [],
+  "screencast": {
+    "frames": 83,
+    "durationMs": 4507.8,
+    "gapsMs": {
+      "p50": 17.1,
+      "p95": 215,
+      "max": 218.2,
+      "over25": 11,
+      "over40": 6
+    },
+    "motionFrames": 38
+  },
+  "responseMs": 802.1,
+  "motionMs": 1478.7,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 84,
+    "p50": 16.7,
+    "p95": 33.4,
+    "max": 200,
+    "dropped": 28,
+    "over33": 4,
+    "over50": 3
+  },
+  "tracked": {
+    ".reading__head h1": {
+      "moving": false
+    },
+    ".hero__img": {
+      "moving": false
+    },
+    ".reading__surface": {
+      "moving": false
+    },
+    "pixelCentroid.cx": {
+      "range": 395.2,
+      "moving": true,
+      "frames": 4,
+      "reversals": 2,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 282.48,
+      "maxJerkPx": 325.58,
+      "jerkRatio": 0.824
+    },
+    "pixelCentroid.cy": {
+      "range": 567.6,
+      "moving": true,
+      "frames": 4,
+      "reversals": 1,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 567.61,
+      "maxJerkPx": 786.04,
+      "jerkRatio": 1.385
+    }
+  },
+  "flash": {
+    "screencastFrames": 0,
+    "details": [],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 5,
+    "maxMs": 205,
+    "totalMs": 511
+  },
+  "loaf": {
+    "count": 4,
+    "maxMs": 655.3,
+    "worst": [
+      {
+        "d": 655.3,
+        "scripts": [
+          {
+            "src": "",
+            "fn": "",
+            "d": 113.89999997615814,
+            "kind": "user-callback"
+          }
+        ]
+      },
+      {
+        "d": 213,
+        "scripts": [
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 205.89999997615814,
+            "kind": "event-listener"
+          }
+        ]
+      }
+    ]
+  },
+  "load": {
+    "fcpMs": 904,
+    "lcpMs": 1684,
+    "lcpEl": "IMG",
+    "clsWholeLoad": 0,
+    "shifts": [],
+    "fontLoads": [
+      {
+        "t": 1207.1,
+        "faces": [
+          "Newsreader Fallback normal normal",
+          "display 400 normal",
+          "Newsreader 200 800 normal",
+          "Newsreader 200 800 normal",
+          "Newsreader 200 800 italic",
+          "Newsreader 200 800 italic"
+        ]
+      }
+    ],
+    "lastFontMs": 1207.1,
+    "resources": [
+      {
+        "n": "3792c5f0958f6bcc-s.p.woff2",
+        "s": 120,
+        "e": 436
+      },
+      {
+        "n": "5ed7d4ff5e59016d-s.p.woff2",
+        "s": 120,
+        "e": 661
+      },
+      {
+        "n": "84adbee2f2a7cb50-s.p.woff2",
+        "s": 121,
+        "e": 932
+      },
+      {
+        "n": "8edf6d3506a17285-s.p.woff2",
+        "s": 121,
+        "e": 1014
+      },
+      {
+        "n": "98e207f02528a563-s.p.woff2",
+        "s": 121,
+        "e": 283
+      },
+      {
+        "n": "92eeb95d069020cc-s.p.woff2",
+        "s": 121,
+        "e": 287
+      },
+      {
+        "n": "99dcf268bda04fe5-s.p.woff2",
+        "s": 121,
+        "e": 675
+      },
+      {
+        "n": "bb2798ad86f95cff-s.p.woff2",
+        "s": 121,
+        "e": 891
+      },
+      {
+        "n": "d3ebbfd689654d3a-s.p.woff2",
+        "s": 122,
+        "e": 719
+      },
+      {
+        "n": "fe6c4b8cc116014d-s.p.woff2",
+        "s": 122,
+        "e": 1195
+      },
+      {
+        "n": "cover-1528.avif",
+        "s": 124,
+        "e": 1559
+      },
+      {
+        "n": "blobs-dark.webp",
+        "s": 610,
+        "e": 1377
+      },
+      {
+        "n": "starlink-night-sky-480.webp",
+        "s": 827,
+        "e": 1470
+      },
+      {
+        "n": "cover-480.webp",
+        "s": 828,
+        "e": 1440
+      },
+      {
+        "n": "cover-480.webp",
+        "s": 828,
+        "e": 1460
+      },
+      {
+        "n": "cover-480.webp",
+        "s": 828,
+        "e": 1437
+      },
+      {
+        "n": "cover-475.webp",
+        "s": 828,
+        "e": 1522
+      },
+      {
+        "n": "cover-480.webp",
+        "s": 828,
+        "e": 1555
+      }
+    ]
+  },
+  "trace": null,
+  "verdict": [
+    "SLOW-RESPONSE 802.1ms",
+    "DROPPED 28",
+    "LONGTASK 5x max 205ms"
+  ]
+}

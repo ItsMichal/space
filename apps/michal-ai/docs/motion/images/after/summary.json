@@ -1,0 +1,487 @@
+[
+  {
+    "name": "cold-load-home",
+    "profile": "mobile",
+    "throttle": 4,
+    "notes": [],
+    "screencast": {
+      "frames": 120,
+      "durationMs": 4604.6,
+      "gapsMs": {
+        "p50": 18,
+        "p95": 272.2,
+        "max": 598.3,
+        "over25": 17,
+        "over40": 8
+      },
+      "motionFrames": 45
+    },
+    "responseMs": 804.8,
+    "motionMs": 2373.8,
+    "timingFrom": "clean pass",
+    "raf": {
+      "frames": 114,
+      "p50": 16.7,
+      "p95": 50,
+      "max": 233.3,
+      "dropped": 48,
+      "over33": 7,
+      "over50": 5
+    },
+    "tracked": {
+      "h1": {
+        "moving": false
+      },
+      ".hook__roll": {
+        "moving": false
+      },
+      ".tile__img": {
+        "moving": false
+      },
+      "pixelCentroid.cx": {
+        "range": 447.9,
+        "moving": true,
+        "frames": 14,
+        "reversals": 6,
+        "stalls": 0,
+        "jumps": 2,
+        "maxStepPx": 369.16,
+        "maxJerkPx": 552.72,
+        "jerkRatio": 1.234
+      },
+      "pixelCentroid.cy": {
+        "range": 857.6,
+        "moving": true,
+        "frames": 14,
+        "reversals": 8,
+        "stalls": 0,
+        "jumps": 0,
+        "maxStepPx": 695.15,
+        "maxJerkPx": 1204.86,
+        "jerkRatio": 1.405
+      }
+    },
+    "flash": {
+      "screencastFrames": 0,
+      "details": [],
+      "blankDomFrames": 0
+    },
+    "cls": {
+      "value": 0,
+      "entries": []
+    },
+    "longTasks": {
+      "count": 5,
+      "maxMs": 255,
+      "totalMs": 677
+    },
+    "loaf": {
+      "count": 6,
+      "maxMs": 642.9,
+      "worst": [
+        {
+          "d": 642.9,
+          "scripts": [
+            {
+              "src": "",
+              "fn": "",
+              "d": 8.299999952316284,
+              "kind": "classic-script"
+            },
+            {
+              "src": "",
+              "fn": "",
+              "d": 36,
+              "kind": "user-callback"
+            }
+          ]
+        },
+        {
+          "d": 342.8,
+          "scripts": [
+            {
+              "src": "home-DyKnyP6c.js",
+              "fn": "",
+              "d": 255.39999997615814,
+              "kind": "resolve-promise"
+            }
+          ]
+        }
+      ]
+    },
+    "load": {
+      "fcpMs": 908,
+      "lcpMs": 908,
+      "lcpEl": "IMG",
+      "clsWholeLoad": 0,
+      "shifts": [],
+      "fontLoads": [
+        {
+          "t": 999.6,
+          "faces": [
+            "display Fallback normal normal",
+            "display 400 normal",
+            "Newsreader 200 800 normal",
+            "Newsreader Fallback normal normal",
+            "Newsreader 200 800 normal",
+            "display 400 italic"
+          ]
+        }
+      ],
+      "lastFontMs": 999.6,
+      "resources": [
+        {
+          "n": "fallback.png",
+          "s": 122,
+          "e": 357
+        },
+        {
+          "n": "3792c5f0958f6bcc-s.p.woff2",
+          "s": 122,
+          "e": 449
+        },
+        {
+          "n": "5ed7d4ff5e59016d-s.p.woff2",
+          "s": 122,
+          "e": 663
+        },
+        {
+          "n": "84adbee2f2a7cb50-s.p.woff2",
+          "s": 122,
+          "e": 878
+        },
+        {
+          "n": "92eeb95d069020cc-s.p.woff2",
+          "s": 123,
+          "e": 678
+        },
+        {
+          "n": "8edf6d3506a17285-s.p.woff2",
+          "s": 123,
+          "e": 954
+        },
+        {
+          "n": "98e207f02528a563-s.p.woff2",
+          "s": 123,
+          "e": 733
+        },
+        {
+          "n": "99dcf268bda04fe5-s.p.woff2",
+          "s": 123,
+          "e": 763
+        },
+        {
+          "n": "bb2798ad86f95cff-s.p.woff2",
+          "s": 123,
+          "e": 983
+        },
+        {
+          "n": "d3ebbfd689654d3a-s.p.woff2",
+          "s": 124,
+          "e": 813
+        },
+        {
+          "n": "fe6c4b8cc116014d-s.p.woff2",
+          "s": 124,
+          "e": 1259
+        },
+        {
+          "n": "starlink-night-sky-960.avif",
+          "s": 127,
+          "e": 1562
+        },
+        {
+          "n": "blobs-light.webp",
+          "s": 694,
+          "e": 1415
+        },
+        {
+          "n": "starlink-night-sky-480.webp",
+          "s": 830,
+          "e": 1477
+        },
+        {
+          "n": "cover-480.webp",
+          "s": 830,
+          "e": 1547
+        },
+        {
+          "n": "cover-480.webp",
+          "s": 830,
+          "e": 1555
+        },
+        {
+          "n": "cover-480.webp",
+          "s": 833,
+          "e": 1482
+        },
+        {
+          "n": "cover-475.webp",
+          "s": 833,
+          "e": 1531
+        },
+        {
+          "n": "cover-480.webp",
+          "s": 833,
+          "e": 1580
+        },
+        {
+          "n": "cover-960.avif",
+          "s": 833,
+          "e": 1604
+        },
+        {
+          "n": "cover-623.avif",
+          "s": 833,
+          "e": 1673
+        },
+        {
+          "n": "screenshot-2023-02-15-at-2-50-18-pm-7b96",
+          "s": 834,
+          "e": 1675
+        },
+        {
+          "n": "portrait-480.avif",
+          "s": 834,
+          "e": 1690
+        }
+      ]
+    },
+    "trace": null,
+    "verdict": [
+      "SLOW-RESPONSE 804.8ms",
+      "DROPPED 48",
+      "LONGTASK 5x max 255ms"
+    ]
+  },
+  {
+    "name": "cold-load-project",
+    "profile": "mobile",
+    "throttle": 4,
+    "notes": [],
+    "screencast": {
+      "frames": 83,
+      "durationMs": 4582.1,
+      "gapsMs": {
+        "p50": 18.5,
+        "p95": 214.8,
+        "max": 227.9,
+        "over25": 13,
+        "over40": 9
+      },
+      "motionFrames": 36
+    },
+    "responseMs": 787.3,
+    "motionMs": 1498.2,
+    "timingFrom": "clean pass",
+    "raf": {
+      "frames": 83,
+      "p50": 16.7,
+      "p95": 33.4,
+      "max": 216.7,
+      "dropped": 29,
+      "over33": 4,
+      "over50": 3
+    },
+    "tracked": {
+      ".reading__head h1": {
+        "moving": false
+      },
+      ".hero__img": {
+        "moving": false
+      },
+      ".reading__surface": {
+        "moving": false
+      },
+      "pixelCentroid.cx": {
+        "range": 455.5,
+        "moving": true,
+        "frames": 12,
+        "reversals": 4,
+        "stalls": 0,
+        "jumps": 0,
+        "maxStepPx": 282.48,
+        "maxJerkPx": 409.31,
+        "jerkRatio": 0.899
+      },
+      "pixelCentroid.cy": {
+        "range": 567.6,
+        "moving": true,
+        "frames": 12,
+        "reversals": 5,
+        "stalls": 0,
+        "jumps": 0,
+        "maxStepPx": 567.61,
+        "maxJerkPx": 786.04,
+        "jerkRatio": 1.385
+      }
+    },
+    "flash": {
+      "screencastFrames": 0,
+      "details": [],
+      "blankDomFrames": 0
+    },
+    "cls": {
+      "value": 0,
+      "entries": []
+    },
+    "longTasks": {
+      "count": 5,
+      "maxMs": 210,
+      "totalMs": 517
+    },
+    "loaf": {
+      "count": 5,
+      "maxMs": 663.2,
+      "worst": [
+        {
+          "d": 663.2,
+          "scripts": [
+            {
+              "src": "frogchamp",
+              "fn": "",
+              "d": 11.600000023841858,
+              "kind": "classic-script"
+            },
+            {
+              "src": "",
+              "fn": "",
+              "d": 117.89999997615814,
+              "kind": "user-callback"
+            }
+          ]
+        },
+        {
+          "d": 215.9,
+          "scripts": [
+            {
+              "src": "entry.client-Drh284G9.js",
+              "fn": "bt",
+              "d": 210.09999990463257,
+              "kind": "event-listener"
+            }
+          ]
+        }
+      ]
+    },
+    "load": {
+      "fcpMs": 884,
+      "lcpMs": 1660,
+      "lcpEl": "IMG",
+      "clsWholeLoad": 0,
+      "shifts": [],
+      "fontLoads": [
+        {
+          "t": 1203.7,
+          "faces": [
+            "Newsreader Fallback normal normal",
+            "display 400 normal",
+            "Newsreader 200 800 normal",
+            "Newsreader 200 800 normal",
+            "Newsreader 200 800 italic",
+            "Newsreader 200 800 italic"
+          ]
+        }
+      ],
+      "lastFontMs": 1203.7,
+      "resources": [
+        {
+          "n": "3792c5f0958f6bcc-s.p.woff2",
+          "s": 106,
+          "e": 423
+        },
+        {
+          "n": "5ed7d4ff5e59016d-s.p.woff2",
+          "s": 107,
+          "e": 652
+        },
+        {
+          "n": "92eeb95d069020cc-s.p.woff2",
+          "s": 107,
+          "e": 266
+        },
+        {
+          "n": "98e207f02528a563-s.p.woff2",
+          "s": 107,
+          "e": 277
+        },
+        {
+          "n": "84adbee2f2a7cb50-s.p.woff2",
+          "s": 107,
+          "e": 907
+        },
+        {
+          "n": "8edf6d3506a17285-s.p.woff2",
+          "s": 107,
+          "e": 993
+        },
+        {
+          "n": "99dcf268bda04fe5-s.p.woff2",
+          "s": 108,
+          "e": 655
+        },
+        {
+          "n": "d3ebbfd689654d3a-s.p.woff2",
+          "s": 108,
+          "e": 705
+        },
+        {
+          "n": "bb2798ad86f95cff-s.p.woff2",
+          "s": 108,
+          "e": 871
+        },
+        {
+          "n": "fe6c4b8cc116014d-s.p.woff2",
+          "s": 108,
+          "e": 1191
+        },
+        {
+          "n": "cover-1528.avif",
+          "s": 110,
+          "e": 1534
+        },
+        {
+          "n": "blobs-dark.webp",
+          "s": 600,
+          "e": 1370
+        },
+        {
+          "n": "cover-480.webp",
+          "s": 810,
+          "e": 1450
+        },
+        {
+          "n": "starlink-night-sky-480.webp",
+          "s": 810,
+          "e": 1452
+        },
+        {
+          "n": "cover-475.webp",
+          "s": 810,
+          "e": 1482
+        },
+        {
+          "n": "cover-480.webp",
+          "s": 810,
+          "e": 1556
+        },
+        {
+          "n": "cover-480.webp",
+          "s": 810,
+          "e": 1463
+        },
+        {
+          "n": "cover-480.webp",
+          "s": 810,
+          "e": 1488
+        }
+      ]
+    },
+    "trace": null,
+    "verdict": [
+      "SLOW-RESPONSE 787.3ms",
+      "DROPPED 29",
+      "LONGTASK 5x max 210ms"
+    ]
+  }
+]

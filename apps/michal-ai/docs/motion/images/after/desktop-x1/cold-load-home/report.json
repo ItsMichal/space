@@ -1,0 +1,229 @@
+{
+  "name": "cold-load-home",
+  "profile": "desktop",
+  "throttle": 1,
+  "notes": [],
+  "screencast": {
+    "frames": 150,
+    "durationMs": 4576.5,
+    "gapsMs": {
+      "p50": 16.4,
+      "p95": 201,
+      "max": 774.1,
+      "over25": 9,
+      "over40": 7
+    },
+    "motionFrames": 51
+  },
+  "responseMs": 707.6,
+  "motionMs": 2152.4,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 138,
+    "p50": 16.7,
+    "p95": 16.8,
+    "max": 66.6,
+    "dropped": 5,
+    "over33": 1,
+    "over50": 1
+  },
+  "tracked": {
+    "h1": {
+      "moving": false
+    },
+    ".hook__roll": {
+      "moving": false
+    },
+    ".tile__img": {
+      "moving": false
+    },
+    "pixelCentroid.cx": {
+      "range": 496.3,
+      "moving": true,
+      "frames": 8,
+      "reversals": 3,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 495.55,
+      "maxJerkPx": 745.93,
+      "jerkRatio": 1.503
+    },
+    "pixelCentroid.cy": {
+      "range": 849,
+      "moving": true,
+      "frames": 8,
+      "reversals": 2,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 576.61,
+      "maxJerkPx": 606.53,
+      "jerkRatio": 0.714
+    }
+  },
+  "flash": {
+    "screencastFrames": 0,
+    "details": [],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 1,
+    "maxMs": 67,
+    "totalMs": 67
+  },
+  "loaf": {
+    "count": 3,
+    "maxMs": 602.5,
+    "worst": [
+      {
+        "d": 602.5,
+        "scripts": [
+          {
+            "src": "",
+            "fn": "",
+            "d": 5.900000095367432,
+            "kind": "user-callback"
+          }
+        ]
+      },
+      {
+        "d": 70,
+        "scripts": [
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 67.39999997615814,
+            "kind": "event-listener"
+          }
+        ]
+      }
+    ]
+  },
+  "load": {
+    "fcpMs": 800,
+    "lcpMs": 800,
+    "lcpEl": "IMG",
+    "clsWholeLoad": 0,
+    "shifts": [],
+    "fontLoads": [
+      {
+        "t": 933.7,
+        "faces": [
+          "display Fallback normal normal",
+          "display 400 normal",
+          "Newsreader Fallback normal normal",
+          "Newsreader 200 800 normal",
+          "Newsreader 200 800 normal",
+          "display 400 italic"
+        ]
+      }
+    ],
+    "lastFontMs": 933.7,
+    "resources": [
+      {
+        "n": "fallback.png",
+        "s": 98,
+        "e": 333
+      },
+      {
+        "n": "3792c5f0958f6bcc-s.p.woff2",
+        "s": 98,
+        "e": 425
+      },
+      {
+        "n": "5ed7d4ff5e59016d-s.p.woff2",
+        "s": 98,
+        "e": 633
+      },
+      {
+        "n": "92eeb95d069020cc-s.p.woff2",
+        "s": 98,
+        "e": 654
+      },
+      {
+        "n": "98e207f02528a563-s.p.woff2",
+        "s": 98,
+        "e": 748
+      },
+      {
+        "n": "84adbee2f2a7cb50-s.p.woff2",
+        "s": 98,
+        "e": 836
+      },
+      {
+        "n": "8edf6d3506a17285-s.p.woff2",
+        "s": 98,
+        "e": 896
+      },
+      {
+        "n": "99dcf268bda04fe5-s.p.woff2",
+        "s": 99,
+        "e": 758
+      },
+      {
+        "n": "bb2798ad86f95cff-s.p.woff2",
+        "s": 99,
+        "e": 929
+      },
+      {
+        "n": "d3ebbfd689654d3a-s.p.woff2",
+        "s": 99,
+        "e": 797
+      },
+      {
+        "n": "fe6c4b8cc116014d-s.p.woff2",
+        "s": 99,
+        "e": 1237
+      },
+      {
+        "n": "starlink-night-sky-2400.avif",
+        "s": 102,
+        "e": 2042
+      },
+      {
+        "n": "blobs-light.webp",
+        "s": 629,
+        "e": 1396
+      },
+      {
+        "n": "cover-623.avif",
+        "s": 732,
+        "e": 1456
+      },
+      {
+        "n": "cover-960.avif",
+        "s": 732,
+        "e": 1481
+      },
+      {
+        "n": "screenshot-2023-02-15-at-2-50-18-pm-7b96",
+        "s": 732,
+        "e": 1525
+      },
+      {
+        "n": "cover-960.avif",
+        "s": 732,
+        "e": 1655
+      },
+      {
+        "n": "cover-960.avif",
+        "s": 732,
+        "e": 1671
+      },
+      {
+        "n": "cover-960.avif",
+        "s": 733,
+        "e": 1695
+      }
+    ]
+  },
+  "trace": null,
+  "verdict": [
+    "SLOW-RESPONSE 707.6ms",
+    "DROPPED 5",
+    "LONGTASK 1x max 67ms"
+  ]
+}
