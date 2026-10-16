@@ -40,6 +40,8 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
   let fbo: WebGLFramebuffer | null = null
   let toothTex: WebGLTexture | null = null
   let toothData: Uint8Array | null = null
+  let toothReady = false
+  let toothWorker: Worker | null = null
   let lowW = 1
   let lowH = 1
   let cssW = 1
@@ -138,8 +140,21 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
       console.warn('[backdrop] disabled:', e)
       return false
     }
-    toothData ??= makeTooth()
     toothTex = gl.createTexture()
+    if (bake) toothData ??= makeTooth() // screenshots need it in the first draw
+    if (toothData) uploadTooth()
+    else requestTooth()
+    tex = gl.createTexture()
+    fbo = gl.createFramebuffer()
+    gl.bindVertexArray(gl.createVertexArray())
+    sizeTargets()
+    return true
+  }
+  // The tooth texture is 1024 x 1024 of arithmetic. It is made in a worker and uploaded when it arrives; the first draw (and with it the
+  // backdrop fade-in) waits for it, so the paper never shows without its grain and then gains it. If the worker cannot start, the same
+  // function runs on the main thread once the page is idle. After 1.5 s the backdrop draws without it rather than not at all.
+  const uploadTooth = () => {
+    if (!gl || !toothData) return
     gl.activeTexture(gl.TEXTURE1)
     gl.bindTexture(gl.TEXTURE_2D, toothTex)
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1)
@@ -147,11 +162,39 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
     gl.activeTexture(gl.TEXTURE0)
-    tex = gl.createTexture()
-    fbo = gl.createFramebuffer()
-    gl.bindVertexArray(gl.createVertexArray())
-    sizeTargets()
-    return true
+    toothReady = true
+    needsDraw = true
+  }
+  const requestTooth = () => {
+    const fallback = () => {
+      if (toothData || disposed) return
+      const run = () => {
+        toothData ??= makeTooth()
+        uploadTooth()
+      }
+      'requestIdleCallback' in window ? requestIdleCallback(run, { timeout: 800 }) : setTimeout(run, 0)
+    }
+    window.setTimeout(() => {
+      toothReady = true // give up waiting: draw without the grain
+      needsDraw = true
+    }, 1500)
+    try {
+      toothWorker = new Worker(new URL('./tooth.worker.ts', import.meta.url), { type: 'module' })
+      toothWorker.onmessage = (e: MessageEvent<Uint8Array>) => {
+        toothData = e.data
+        toothWorker?.terminate()
+        toothWorker = null
+        if (!disposed) uploadTooth()
+      }
+      toothWorker.onerror = () => {
+        toothWorker?.terminate()
+        toothWorker = null
+        fallback()
+      }
+      toothWorker.postMessage(0)
+    } catch {
+      fallback()
+    }
   }
   const sizeTargets = () => {
     if (!gl) return
@@ -193,7 +236,7 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
   let glyphsOn = qs.get('glyphs') !== '0'
 
   const draw = (now: number) => {
-    if (!gl || lost) return
+    if (!gl || lost || !toothReady) return
     const t = reduced ? bakeT : C.staticTime + (now - t0) / 1000
     const sy = reduced ? bakeScroll : still ? sBase : window.scrollY
     lastScrollY = sy
@@ -423,6 +466,7 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
 
   return () => {
     disposed = true
+    toothWorker?.terminate()
     cancelAnimationFrame(raf)
     clearTimeout(rescanTimer)
     canvas.removeEventListener('webglcontextlost', onLost)
