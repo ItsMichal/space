@@ -132,6 +132,32 @@
 .ab-edu .t-ui {
   margin: 0;
 }
+.ab-bp > .t-meta {
+  margin-top: var(--space-3);
+}
+.ab-bp__list {
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-3);
+}
+.ab-bp__list li {
+  display: grid;
+  gap: 2px;
+}
+.ab-bp__list p {
+  margin: 0;
+}
+.ab-bp__list a:not(:hover):not(:focus-visible) {
+  text-decoration-color: transparent;
+}
+@media (min-width: 900px) {
+  .ab-bp__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-8);
+  }
+}
 .ab-side {
   display: grid;
   gap: var(--card-gap);
@@ -258,6 +284,7 @@
       'contact contact'
       'xp xp'
       'edu pubs'
+      'bp bp'
       'hacks side'
       'press press'
       'x x';
@@ -267,6 +294,7 @@
   .ab-contact { grid-area: contact; }
   .ab-xp { grid-area: xp; }
   .ab-edu { grid-area: edu; }
+  .ab-bp { grid-area: bp; }
   .ab-pubs { grid-area: pubs; }
   .ab-hacks { grid-area: hacks; }
   .ab-side { grid-area: side; }
@@ -280,6 +308,7 @@
       'photo intro contact'
       'xp xp xp'
       'edu pubs pubs'
+      'bp bp bp'
       'hacks hacks side'
       'press press press'
       'x x x';

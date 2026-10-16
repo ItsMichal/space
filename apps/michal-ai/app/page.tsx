@@ -1,6 +1,6 @@
 import Link from '@/lib/nav'
 import { ArrowRight } from 'lucide-react'
-import { getAllPosts, getBlogPosts, getTopLevel } from '@/lib/content'
+import { getAllPosts, getBlogPosts, getMainProjects } from '@/lib/content'
 import { HeroGlobe } from '@/components/presence/HeroGlobe'
 import { HeroHook } from '@/components/site/HeroHook'
 import { HeroAtmosphere } from '@/components/site/HeroAtmosphere'
@@ -36,7 +36,7 @@ const experience: ExperienceItem[] = profile.experience.map((e) => ({
 const h2 = 'reveal mb-space-6 font-display text-title'
 
 export default function Home() {
-  const projects = getTopLevel('project')
+  const projects = getMainProjects()
   const articles = getBlogPosts()
   // Rotating hero line: every post that sets `hook`, in the site's own order (priority, then newest).
   const hookPosts = getAllPosts().filter((p) => p.hook)

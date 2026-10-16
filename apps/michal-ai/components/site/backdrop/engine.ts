@@ -1,4 +1,5 @@
 import { BACKDROP as C, PIGMENT } from './config'
+import { makeTooth, TOOTH_SIZE } from './tooth'
 import { FS_COMP, FS_LOW, NB, NL, VERT } from './shaders'
 
 export type EngineHooks = {
@@ -9,7 +10,7 @@ export type EngineHooks = {
 type Prog = { p: WebGLProgram; u: Record<string, WebGLUniformLocation | null> }
 
 const UNIFORMS_LOW = ['uLow', 'uView', 'uUnit', 'uT', 'uScrollB', 'uScrollR', 'uRepeat', 'uWarp', 'uCut', 'uWarm', 'uFloorL', 'uCeilD', 'uGlowD', 'uDark', 'uBlob[0]', 'uPig[0]', 'uPaperL', 'uPaperHi', 'uPaperD', 'uRay', 'uRayD', 'uDens']
-const UNIFORMS_COMP = ['uLowTex', 'uRes', 'uDpr', 'uCell', 'uOff', 'uT', 'uDark', 'uGlyphOn', 'uShootOn', 'uInkL', 'uInkD', 'uMax', 'uDensity', 'uTwinkle', 'uConst', 'uGrain', 'uThin', 'uShoot', 'uLens[0]', 'uLensR[0]', 'uLensN', 'uLensP', 'uRim']
+const UNIFORMS_COMP = ['uLowTex', 'uRes', 'uDpr', 'uCell', 'uOff', 'uT', 'uDark', 'uGlyphOn', 'uShootOn', 'uInkL', 'uInkD', 'uMax', 'uDensity', 'uTwinkle', 'uConst', 'uGrain', 'uTooth', 'uToothA', 'uThin', 'uShoot', 'uLens[0]', 'uLensR[0]', 'uLensN', 'uLensP', 'uRim']
 
 /**
  * Page backdrop: one fixed canvas, one WebGL2 context, two passes. Returns a disposer.
@@ -37,6 +38,8 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
   let comp!: Prog
   let tex: WebGLTexture | null = null
   let fbo: WebGLFramebuffer | null = null
+  let toothTex: WebGLTexture | null = null
+  let toothData: Uint8Array | null = null
   let lowW = 1
   let lowH = 1
   let cssW = 1
@@ -135,6 +138,15 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
       console.warn('[backdrop] disabled:', e)
       return false
     }
+    toothData ??= makeTooth()
+    toothTex = gl.createTexture()
+    gl.activeTexture(gl.TEXTURE1)
+    gl.bindTexture(gl.TEXTURE_2D, toothTex)
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, TOOTH_SIZE, TOOTH_SIZE, 0, gl.RED, gl.UNSIGNED_BYTE, toothData)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+    gl.activeTexture(gl.TEXTURE0)
     tex = gl.createTexture()
     fbo = gl.createFramebuffer()
     gl.bindVertexArray(gl.createVertexArray())
@@ -238,6 +250,11 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, tex)
     gl.uniform1i(b.uLowTex, 0)
+    gl.activeTexture(gl.TEXTURE1)
+    gl.bindTexture(gl.TEXTURE_2D, toothTex)
+    gl.activeTexture(gl.TEXTURE0)
+    gl.uniform1i(b.uTooth, 1)
+    gl.uniform1f(b.uToothA, bake && !glyphsOn ? 0 : C.tooth.light + (C.tooth.dark - C.tooth.light) * darkNow)
     gl.uniform2f(b.uRes, canvas.width, canvas.height)
     gl.uniform1f(b.uDpr, dpr)
     gl.uniform1f(b.uCell, cell)
@@ -346,7 +363,9 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
     lastScrollEvt = performance.now()
     const d = (window.scrollY - sBase) * C.parallax.still
     if (Math.abs(d) > C.stillPad * 0.45) return recentre() // the spare margin is nearly used up (about 1000px of scrolling)
-    canvas.style.transform = `translate3d(0, ${(-d).toFixed(1)}px, 0)`
+    // whole device pixels only: a fractional offset would resample the fine grain and make it shimmer mid-scroll
+    const ddpr = window.devicePixelRatio || 1
+    canvas.style.transform = `translate3d(0, ${(Math.round(-d * ddpr) / ddpr).toFixed(3)}px, 0)`
   }
   const onResize = () => {
     // The layer is sized in lvh, so the toolbar collapsing on iOS does not change it. Where lvh is missing, ignore small

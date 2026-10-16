@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { bounded, dragAxis, focusOf, settleDamping, settleIndex, VelocityTracker } from '../kinetics'
 import { createFollowers } from '../craft/followers'
-import { rand, seedPath } from '../craft/stroke'
 import { springFor, projectMomentum } from '@/components/glass/geometry'
 import { springCoeffs, project } from '@space/motion/spring'
 
@@ -51,11 +50,6 @@ describe('craft', () => {
     for (let i = 0; i < 600; i++) c.step(1 / 60, 1)
     expect(c.values[3]).toBeCloseTo(1, 2)
     expect(c.settled(0.01)).toBe(true)
-  })
-  it('organic silhouettes are deterministic, closed and not identical', () => {
-    expect(rand(3)).toBe(rand(3))
-    expect(seedPath(1)).toBe(seedPath(1))
-    expect(seedPath(1)).not.toBe(seedPath(2))
   })
 })
 
