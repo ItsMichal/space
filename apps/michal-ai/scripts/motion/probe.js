@@ -27,29 +27,28 @@
   }
   const loop = (t) => {
     if (m.armed) {
-      const f = {
-        t,
-        sy: scrollY,
-        sx: scrollX,
-        h: document.documentElement.scrollHeight,
-        a: 0,
-        r: {},
+      // light mode (the clean pass) stores only the frame time and scroll offset: nothing here may force style or layout
+      const f = { t, sy: scrollY, r: {} }
+      if (!m.light) {
+        f.sx = scrollX
+        f.h = document.documentElement.scrollHeight
+        try {
+          f.a = document.getAnimations().length
+        } catch {}
+        for (const s of m.sel) f.r[s] = box(document.querySelector(s))
+        f.vt = document.documentElement.hasAttribute('data-vt') ? 1 : 0
+        f.n = document.getElementById('main')
+          ? document.getElementById('main').getBoundingClientRect().height
+          : 0
+        f.p = location.pathname
       }
-      try {
-        f.a = document.getAnimations().length
-      } catch {}
-      for (const s of m.sel) f.r[s] = box(document.querySelector(s))
-      f.vt = document.documentElement.hasAttribute('data-vt') ? 1 : 0
-      f.n = document.getElementById('main')
-        ? document.getElementById('main').getBoundingClientRect().height
-        : 0
-      f.p = location.pathname
       m.frames.push(f)
     }
     m.raf = requestAnimationFrame(loop)
   }
   m.raf = requestAnimationFrame(loop)
-  m.arm = (sel) => {
+  m.arm = (sel, light) => {
+    m.light = !!light
     m.sel = sel || []
     m.frames = []
     m.shifts = []
@@ -139,14 +138,12 @@
       t: e.startTime,
       d: e.duration,
       block: e.blockingDuration,
-      scripts: (e.scripts || [])
-        .slice(0, 3)
-        .map((s) => ({
-          src: s.sourceURL && s.sourceURL.split('/').pop(),
-          fn: s.sourceFunctionName,
-          d: s.duration,
-          kind: s.invokerType,
-        })),
+      scripts: (e.scripts || []).slice(0, 3).map((s) => ({
+        src: s.sourceURL && s.sourceURL.split('/').pop(),
+        fn: s.sourceFunctionName,
+        d: s.duration,
+        kind: s.invokerType,
+      })),
     })
   )
   obs('paint', (e) => m.paints.push({ name: e.name, t: e.startTime }))

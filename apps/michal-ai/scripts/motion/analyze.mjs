@@ -205,15 +205,17 @@ export async function analyze({ shots, probe, clean, trace, meta }) {
   out.timingFrom = clean ? 'clean pass' : 'screencast pass'
 
   // ---- rAF cadence in the motion window ----
-  const fr = P.frames.filter((f) => f.t >= tStart && f.t <= tEnd)
+  const frCad = P.frames.filter((f) => f.t >= tStart && f.t <= tEnd)
+  // geometry (tracked elements, #main height) comes from the screencast pass's probe, which reads layout every frame
+  const fr = probe.frames.filter((f) => f.t >= tIn - 4 && f.t <= tIn + span)
   const dts = []
-  for (let i = 1; i < fr.length; i++) dts.push(fr[i].t - fr[i - 1].t)
+  for (let i = 1; i < frCad.length; i++) dts.push(frCad[i].t - frCad[i - 1].t)
   const dropped = dts.reduce(
     (a, d) => a + (d > FRAME_MS * 1.5 ? Math.round(d / FRAME_MS) - 1 : 0),
     0
   )
   out.raf = {
-    frames: fr.length,
+    frames: frCad.length,
     p50: round(pct(dts, 50)),
     p95: round(pct(dts, 95)),
     max: round(Math.max(0, ...dts)),
@@ -368,7 +370,8 @@ export async function analyze({ shots, probe, clean, trace, meta }) {
       cx: diffs[i].cx,
       cy: diffs[i].cy,
     })),
-    fr: fr.map((f) => ({ t: f.t - tIn2, r: f.r, sy: f.sy })),
+    fr: fr.map((f) => ({ t: f.t - tIn, r: f.r, sy: f.sy })),
+    cad: frCad.map((f) => f.t - tIn2),
     tIn,
     firstIdx,
     lastIdx,
@@ -519,7 +522,7 @@ export async function contactSheet(
 
 /** Position / velocity / frame-time plot as SVG (and a PNG next to it). */
 export async function plot(o, file) {
-  const { fr, dts, firstIdx, lastIdx } = o._series
+  const { fr, cad, dts, firstIdx, lastIdx } = o._series
   const sc = o._sc
   const W = 960
   const H = 440
@@ -581,7 +584,7 @@ export async function plot(o, file) {
   const fbars = dts
     .map(
       (d, i) =>
-        `<rect x="${(xs(fr[i + 1].t) - 2).toFixed(1)}" y="${(fy0 - Math.min(d, 66) * 0.9).toFixed(1)}" width="4" height="${(Math.min(d, 66) * 0.9).toFixed(1)}" fill="${d > 25 ? '#d4402f' : '#9aa0a6'}"/>`
+        `<rect x="${(xs(cad[i + 1]) - 2).toFixed(1)}" y="${(fy0 - Math.min(d, 66) * 0.9).toFixed(1)}" width="4" height="${(Math.min(d, 66) * 0.9).toFixed(1)}" fill="${d > 25 ? '#d4402f' : '#9aa0a6'}"/>`
     )
     .join('')
   const ticks = sc

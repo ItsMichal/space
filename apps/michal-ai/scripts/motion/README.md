@@ -13,6 +13,7 @@ npm run motion:audit -- --trace            # adds a third pass with a devtools.t
 
 Needs Google Chrome (or `CHROME=/path`). Chrome and `wrangler dev` bind local ports, so run it outside restricted sandboxes.
 `MOTION_GPU=swiftshader` forces software GL (slow with the WebGL hero; the default uses the machine's GPU through Metal).
+`MOTION_KEEP_TRACE=1` (with `--trace`) saves the raw `trace.json` (open it in DevTools Performance).
 `MOTION_KEEP_FRAMES=1` also writes every screencast frame as a JPEG next to the report.
 
 Profiles: `desktop` 1440x900 @2x mouse; `mobile` 375x812 @3x, touch, iPhone user agent. `--throttle` is the CDP CPU
@@ -22,11 +23,11 @@ throttling rate (`1,4` by default). Not in CI: a full run takes far more than 3 
 
 Each scenario runs in a fresh Chrome tab, in up to three passes, each from a freshly loaded and hydrated page:
 
-| pass | records | used for |
-| --- | --- | --- |
-| `screencast` | `Page.startScreencast`, every compositor frame with its timestamp | contact sheet, first-visual-response latency, change window, flash and blank frames |
-| `clean` | only the in-page probe (`probe.js`), nothing else competing for the machine | dropped frames (rAF gaps), long tasks, long animation frames, layout shift, tracked element motion |
-| `trace` (`--trace`) | `Tracing` with `devtools.timeline` | main-thread breakdown (Layout, UpdateLayoutTree, Paint, FunctionCall), the longest tasks |
+| pass                | records                                                                     | used for                                                                                           |
+| ------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `screencast`        | `Page.startScreencast`, every compositor frame with its timestamp           | contact sheet, first-visual-response latency, change window, flash and blank frames                |
+| `clean`             | only the in-page probe (`probe.js`), nothing else competing for the machine | dropped frames (rAF gaps), long tasks, long animation frames, layout shift, tracked element motion |
+| `trace` (`--trace`) | `Tracing` with `devtools.timeline`                                          | main-thread breakdown (Layout, UpdateLayoutTree, Paint, FunctionCall), the longest tasks           |
 
 The probe is injected before the app runs. Per animation frame it stores the time, scroll offset, border box and opacity of the
 scenario's tracked selectors, the number of running animations and the height of `#main`; it also keeps `layout-shift`,

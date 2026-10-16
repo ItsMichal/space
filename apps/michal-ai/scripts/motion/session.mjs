@@ -229,6 +229,7 @@ export async function openPage(base, profileName, cpu) {
       settle = 1000,
       screencast = true,
       trace = false,
+      light = false,
     }) {
       const shots = []
       let off
@@ -267,7 +268,9 @@ export async function openPage(base, profileName, cpu) {
           options: 'sampling-frequency=10000',
         })
       }
-      await evaluate(`window.__m.arm(${JSON.stringify(tracked)})`)
+      await evaluate(
+        `window.__m.arm(${JSON.stringify(light ? [] : tracked)}, ${light})`
+      )
       await act()
       await sleep(settle)
       const probe = await evaluate(`window.__m.disarm()`)

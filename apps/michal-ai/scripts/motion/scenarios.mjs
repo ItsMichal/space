@@ -10,6 +10,7 @@ const cap = (ctx, pass, o) =>
   ctx.capture({
     screencast: pass === 'screencast',
     trace: pass === 'trace',
+    light: pass !== 'screencast', // the clean and trace passes read no layout per frame
     ...o,
   })
 

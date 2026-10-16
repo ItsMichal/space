@@ -127,6 +127,11 @@ async function runScenario(base, sc, profileName, cpu, outDir) {
   }
   const get = (n) => passes.find((p) => p.pass === n)?.cap
   const sp = get('screencast')
+  if (process.env.MOTION_KEEP_TRACE && get('trace')?.events)
+    fs.writeFileSync(
+      path.join(dir, 'trace.json'),
+      JSON.stringify({ traceEvents: get('trace').events })
+    ) // opens in chrome://tracing or DevTools
   const o = await analyze({
     shots: sp.shots,
     probe: sp.probe,
