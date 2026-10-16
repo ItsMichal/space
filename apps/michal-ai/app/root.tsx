@@ -4,7 +4,7 @@ import './styles/craft.css'
 import './styles/type.css'
 import './styles/card.css'
 import './styles/transition.css'
-import { Links, Meta, Outlet, Scripts, useLoaderData, useLocation, type LinksFunction } from 'react-router'
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData, useLocation, type LinksFunction } from 'react-router'
 import { registerPosts } from '@/lib/content'
 import { NavBar } from '@/components/site/NavBar'
 import { CardTransitions } from '@/components/site/CardTransitions'
@@ -49,6 +49,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body className="flex min-h-screen flex-col font-sans text-ink">
         {children}
+        <ScrollRestoration />
         <Scripts />
       </body>
     </html>

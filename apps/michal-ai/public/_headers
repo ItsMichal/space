@@ -17,3 +17,9 @@
 
 /motion/*
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+# Client navigations fetch <route>.data (loader results). Revalidating every one costs a round trip before a route change can start;
+# a minute of freshness (and a stale copy while it refreshes) lets intent-prefetched and repeat navigations start at once. The data
+# only changes at a deploy, and a stale copy of last deploy's data renders fine.
+/*.data
+  Cache-Control: public, max-age=60, stale-while-revalidate=600

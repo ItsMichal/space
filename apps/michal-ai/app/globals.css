@@ -75,8 +75,12 @@ body {
   }
 }
 
-/* Route enter: content fades up 8px over 600ms (app/template.tsx re-mounts per navigation). */
-.page-enter {
+/* Route enter, for a client navigation that is not a view transition (no API, reduced motion has none either): content fades up 8px
+   over 600ms when the page mounts (the wrapper re-mounts per route). Never on the first load: the HTML is already the page, and
+   fading it in from nothing only delays what the visitor came for. <html data-fade> is set by components/site/CardTransitions.tsx
+   in the commit of a navigation that has no view transition, and removed by the next one that has. It must not hang on <html data-vt>:
+   when that attribute went away at the end of a transition the animation would start from invisible again. */
+html[data-fade] .page-enter {
   animation: fade-up 600ms var(--ease-out-soft) both;
 }
 @keyframes fade-up {
@@ -90,7 +94,7 @@ body {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .page-enter {
+  html[data-fade] .page-enter {
     animation: none;
   }
 }
