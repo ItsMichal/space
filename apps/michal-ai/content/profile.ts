@@ -33,7 +33,9 @@ export type Publication = {
   issue?: string
   article?: string
   publisher?: string
-  doi: string
+  /** Absent for work with no DOI (a conference demo or interactive event). `url` is then the page to link to. */
+  doi?: string
+  url?: string
   /** His own words about his part, from his LinkedIn. Only set where he has said something. */
   role?: string
 }
@@ -61,7 +63,7 @@ export type CareerEntry = {
 export type Skill = { group: string; items: readonly string[] }
 
 export type VolunteerEntry = { org: string; role: string; dates: string; start: string; end: string; note?: string }
-export type Award = { id: string; title: string; context: string; year: string; postId?: string; hackathonId?: string }
+export type Award = { id: string; title: string; context: string; year: string; postId?: string; hackathonId?: string; url?: string }
 
 export const profile = {
   /** Displayed name (Polish ł). */
@@ -274,6 +276,13 @@ export const profile = {
   awards: [
     { id: 'aied-2022', title: 'Best Interactive Event', context: 'AI in Education Conference (AIED), for the iSAT dashboard display', year: '2022', postId: 'isat-dashboard' },
     { id: 'hackcu-8', title: 'HackCU 8: 2nd place overall, and Best Games, Music, and Entertainment Hack', context: 'for Creatle, a solo project', year: '2022', hackathonId: 'hackcu-8-creatle' },
+    {
+      id: 'congressional-record-2014',
+      title: 'Tribute in the Congressional Record',
+      context: 'by Rep. Mike Coffman of Colorado, Extensions of Remarks, Vol. 160, p. E1105, for winning the Student Spaceflight Experiments Program',
+      year: '2014',
+      url: 'https://www.govinfo.gov/link/crec/160/e/1105',
+    },
   ] satisfies Award[],
   /** Skills grouped as his LinkedIn, resume and project pages list them. No ratings. */
   skills: [
@@ -328,6 +337,29 @@ export const profile = {
       issue: '2',
       article: '71',
       doi: '10.3847/1538-4357/accc89',
+    },
+    {
+      id: 'lak-2023-isat-pipeline',
+      title: 'The iSAT Collaboration Analytics Pipeline',
+      authors: ['John Weatherley', 'Rachel Dickler', 'Peter W. Foltz', 'Aravind B. Srinivas', 'Samuel Pugh', 'Nikhil Krishnaswamy', 'Jacob Whitehill', 'Michal Bodzianowski', 'Maggie Perkoff', 'Rosy Southwell', 'Jeff Bush', 'Michael Chang', 'Leanne Hirshfield', 'Daeja Showers', 'Ananya Ganesh', 'Zeqian Li', 'Elita Danilyuk', 'Xinlu He', 'Ibrahim Khalil Khebour', 'Indrani Dey', 'Sidney K. D\u2019Mello'],
+      year: '2023',
+      published: '2023-03',
+      venue: 'Companion Proceedings of the 13th International Conference on Learning Analytics & Knowledge (LAK23), Demos',
+      venueShort: 'LAK 2023',
+      pages: '176',
+      publisher: 'Society for Learning Analytics Research',
+      url: 'https://www.solaresearch.org/wp-content/uploads/2023/03/LAK23_CompanionProceedings.pdf',
+    },
+    {
+      id: 'aied-2022-isat-display',
+      title: 'iSAT Speech-based AI Display for Small Group Collaboration in Classrooms',
+      authors: ['Rachel Dickler', 'Peter Foltz', 'Nikhil Krishnaswamy', 'Jacob Whitehill', 'John Weatherly', 'Michal Bodzianowski', 'Margaret Perkoff', 'Rosy Southwell', 'Sam Pugh', 'Jeff Bush', 'Michael Chang', 'Leanne Hirshfield', 'Daeja Showers', 'Ananya Ganesh', 'Zeqian Li', 'Elita Danilyuk', 'Xinlu He', 'Ibrahim Khalil Khebour', 'Indrani Dey', 'Sadhana Puntambekar', 'Sidney K. D\u2019Mello'],
+      year: '2022',
+      published: '2022-07',
+      venue: 'Interactive event at the International Conference on Artificial Intelligence in Education (AIED)',
+      venueShort: 'AIED 2022',
+      publisher: 'International AIEd Society',
+      url: 'https://www.colorado.edu/research/ai-institute/2022/07/14/july-23-31-2022-isat-presents-international-conference-educational-data-mining-edm-and',
     },
   ] satisfies Publication[],
 } as const

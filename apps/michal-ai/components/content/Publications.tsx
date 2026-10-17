@@ -28,7 +28,7 @@ export function Publications({ ids }: { ids?: string[] }) {
             . {p.year}. {p.title}. In <em>{venueLine(p)}</em>
             {p.publisher ? `. ${p.publisher}` : ''}.{' '}
             <a href={doiUrl(p)} className="link" target="_blank" rel="noopener noreferrer">
-              doi:{p.doi}
+              {p.doi ? `doi:${p.doi}` : 'link'}
               <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden className="pubs__arrow" />
             </a>
           </p>

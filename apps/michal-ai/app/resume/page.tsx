@@ -106,7 +106,7 @@ export default function ResumePage() {
           <ul className="rs-b rs-b--plain">
             {profile.publications.map((p) => (
               <li key={p.id}>
-                {authorLine(p).replace(/\.$/, "")}. {p.year}. {p.title}. {venueLine(p)}. <a href={doiUrl(p)}>doi:{p.doi}</a>
+                {authorLine(p).replace(/\.$/, "")}. {p.year}. {p.title}. {venueLine(p)}. <a href={doiUrl(p)}>{p.doi ? `doi:${p.doi}` : 'link'}</a>
               </li>
             ))}
           </ul>
