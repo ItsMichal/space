@@ -548,10 +548,16 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
   useEffect(
     () => () => {
       const s = st.current
-      s.r?.destroy()
-      s.sr?.destroy()
+      const { r, sr } = s
       s.r = null
       s.sr = null
+      // Losing a WebGL context is synchronous and costs tens of ms (180 ms at 4x CPU), which landed in the commit of the route change that
+      // leaves the home page and froze the view transition. The canvases are already out of the document; release them when idle.
+      const release = () => {
+        r?.destroy()
+        sr?.destroy()
+      }
+      'requestIdleCallback' in window ? requestIdleCallback(release, { timeout: 1500 }) : setTimeout(release, 600)
     },
     [],
   )

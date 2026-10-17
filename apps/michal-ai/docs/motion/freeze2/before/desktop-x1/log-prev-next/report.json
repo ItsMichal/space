@@ -1,0 +1,146 @@
+{
+  "name": "log-prev-next",
+  "profile": "desktop",
+  "throttle": 1,
+  "notes": [],
+  "inputType": "pointerdown",
+  "screencast": {
+    "frames": 59,
+    "durationMs": 1864.6,
+    "gapsMs": {
+      "p50": 16.4,
+      "p95": 19.3,
+      "max": 20.4,
+      "over25": 0,
+      "over40": 0
+    },
+    "motionFrames": 25
+  },
+  "responseMs": 90,
+  "motionMs": 392.2,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 35,
+    "p50": 16.7,
+    "p95": 16.8,
+    "max": 33.3,
+    "dropped": 1,
+    "over33": 0,
+    "over50": 0
+  },
+  "tracked": {
+    ".reading__surface": {
+      "axis": "y",
+      "range": 7254,
+      "moving": true,
+      "frames": 1,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 7254,
+      "maxJerkPx": 0,
+      "jerkRatio": 0
+    },
+    ".reading__head h1": {
+      "axis": "y",
+      "range": 7254,
+      "moving": true,
+      "frames": 1,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 7254,
+      "maxJerkPx": 0,
+      "jerkRatio": 0
+    },
+    "scrollY": {
+      "range": 7254,
+      "moving": true,
+      "frames": 1,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 7254,
+      "maxJerkPx": 0,
+      "jerkRatio": 0
+    },
+    "pixelCentroid.cx": {
+      "range": 349.5,
+      "moving": true,
+      "frames": 24,
+      "reversals": 10,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 183.45,
+      "maxJerkPx": 150.44,
+      "jerkRatio": 0.43
+    },
+    "pixelCentroid.cy": {
+      "range": 728.6,
+      "moving": true,
+      "frames": 24,
+      "reversals": 6,
+      "stalls": 1,
+      "jumps": 2,
+      "maxStepPx": 319.47,
+      "maxJerkPx": 285.5,
+      "jerkRatio": 0.392
+    }
+  },
+  "domResponseMs": 59.6,
+  "flash": {
+    "screencastFrames": 6,
+    "details": [
+      {
+        "i": 17,
+        "t": -1.8,
+        "why": "content-missing"
+      },
+      {
+        "i": 18,
+        "t": 19.7,
+        "why": "content-missing"
+      },
+      {
+        "i": 19,
+        "t": 48.3,
+        "why": "content-missing"
+      },
+      {
+        "i": 20,
+        "t": 72,
+        "why": "content-missing"
+      },
+      {
+        "i": 21,
+        "t": 90,
+        "why": "content-missing"
+      },
+      {
+        "i": 22,
+        "t": 104.6,
+        "why": "content-missing"
+      }
+    ],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 0,
+    "maxMs": 0,
+    "totalMs": 0
+  },
+  "loaf": {
+    "count": 0,
+    "maxMs": 0,
+    "worst": []
+  },
+  "trace": null,
+  "verdict": [
+    "DROPPED 1",
+    "FLASH 6/0"
+  ]
+}

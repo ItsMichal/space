@@ -1,0 +1,246 @@
+{
+  "name": "log-prev-next",
+  "profile": "desktop",
+  "throttle": 4,
+  "notes": [],
+  "inputType": "pointerdown",
+  "screencast": {
+    "frames": 58,
+    "durationMs": 1894.9,
+    "gapsMs": {
+      "p50": 16.7,
+      "p95": 23.3,
+      "max": 66.7,
+      "over25": 1,
+      "over40": 1
+    },
+    "motionFrames": 25
+  },
+  "responseMs": 201.3,
+  "motionMs": 442.2,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 41,
+    "p50": 16.7,
+    "p95": 16.8,
+    "max": 100.1,
+    "dropped": 5,
+    "over33": 1,
+    "over50": 1
+  },
+  "tracked": {
+    ".reading__surface": {
+      "axis": "y",
+      "range": 7254,
+      "moving": true,
+      "frames": 1,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 7254,
+      "maxJerkPx": 0,
+      "jerkRatio": 0
+    },
+    ".reading__head h1": {
+      "axis": "y",
+      "range": 7254,
+      "moving": true,
+      "frames": 1,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 7254,
+      "maxJerkPx": 0,
+      "jerkRatio": 0
+    },
+    "scrollY": {
+      "range": 7254,
+      "moving": true,
+      "frames": 1,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 7254,
+      "maxJerkPx": 0,
+      "jerkRatio": 0
+    },
+    "pixelCentroid.cx": {
+      "range": 346.3,
+      "moving": true,
+      "frames": 23,
+      "reversals": 10,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 207.17,
+      "maxJerkPx": 173.67,
+      "jerkRatio": 0.502
+    },
+    "pixelCentroid.cy": {
+      "range": 726.6,
+      "moving": true,
+      "frames": 23,
+      "reversals": 5,
+      "stalls": 1,
+      "jumps": 2,
+      "maxStepPx": 350.08,
+      "maxJerkPx": 335.23,
+      "jerkRatio": 0.461
+    }
+  },
+  "domResponseMs": 155.5,
+  "flash": {
+    "screencastFrames": 0,
+    "details": [],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0.0025,
+    "entries": [
+      {
+        "t": 4926.700000047684,
+        "v": 0.00032110018004115223,
+        "src": [
+          {
+            "node": ".glass-surface",
+            "from": [
+              448,
+              0,
+              544,
+              100
+            ],
+            "to": [
+              456,
+              0,
+              528,
+              100
+            ]
+          }
+        ]
+      },
+      {
+        "t": 4942.799999952316,
+        "v": 0.0004526748971193416,
+        "src": [
+          {
+            "node": ".glass-surface",
+            "from": [
+              456,
+              0,
+              528,
+              100
+            ],
+            "to": [
+              472,
+              0,
+              496,
+              100
+            ]
+          }
+        ]
+      },
+      {
+        "t": 4960,
+        "v": 0.00042524005486968455,
+        "src": [
+          {
+            "node": ".glass-surface",
+            "from": [
+              472,
+              0,
+              496,
+              100
+            ],
+            "to": [
+              488,
+              0,
+              464,
+              100
+            ]
+          }
+        ]
+      },
+      {
+        "t": 4977.899999976158,
+        "v": 0.0003978052126200275,
+        "src": [
+          {
+            "node": ".glass-surface",
+            "from": [
+              488,
+              0,
+              464,
+              100
+            ],
+            "to": [
+              504,
+              0,
+              432,
+              100
+            ]
+          }
+        ]
+      },
+      {
+        "t": 4992.899999976158,
+        "v": 0.00039605034722222217,
+        "src": [
+          {
+            "node": ".glass-surface",
+            "from": [
+              504,
+              0,
+              432,
+              100
+            ],
+            "to": [
+              520,
+              0,
+              400,
+              100
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "longTasks": {
+    "count": 0,
+    "maxMs": 0,
+    "totalMs": 0
+  },
+  "loaf": {
+    "count": 1,
+    "maxMs": 91.9,
+    "worst": [
+      {
+        "d": 91.9,
+        "scripts": [
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 5.100000023841858,
+            "kind": "event-listener"
+          },
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 5.100000023841858,
+            "kind": "event-listener"
+          },
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 29.100000023841858,
+            "kind": "event-listener"
+          }
+        ]
+      }
+    ]
+  },
+  "trace": null,
+  "verdict": [
+    "SLOW-RESPONSE 201.3ms",
+    "DROPPED 5",
+    "CLS 0.0025"
+  ]
+}

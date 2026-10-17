@@ -1,0 +1,140 @@
+{
+  "name": "project-back",
+  "profile": "desktop",
+  "throttle": 4,
+  "notes": [],
+  "inputType": "popstate",
+  "screencast": {
+    "frames": 80,
+    "durationMs": 1633.2,
+    "gapsMs": {
+      "p50": 16.6,
+      "p95": 29.2,
+      "max": 56.3,
+      "over25": 2,
+      "over40": 1
+    },
+    "motionFrames": 29
+  },
+  "responseMs": 199.3,
+  "motionMs": 488.9,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 37,
+    "p50": 16.7,
+    "p95": 66.7,
+    "max": 116.7,
+    "dropped": 12,
+    "over33": 3,
+    "over50": 3
+  },
+  "tracked": {
+    ".hero__img": {
+      "presentFrames": 2,
+      "of": 35
+    },
+    ".tile__img": {
+      "presentFrames": 33,
+      "of": 35,
+      "moving": false
+    },
+    ".reading__surface": {
+      "presentFrames": 2,
+      "of": 35
+    },
+    "scrollY": {
+      "range": 835,
+      "moving": true,
+      "frames": 1,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 835,
+      "maxJerkPx": 0,
+      "jerkRatio": 0
+    },
+    "pixelCentroid.cx": {
+      "range": 639.6,
+      "moving": true,
+      "frames": 21,
+      "reversals": 11,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 633.46,
+      "maxJerkPx": 744.86,
+      "jerkRatio": 1.165
+    },
+    "pixelCentroid.cy": {
+      "range": 788.9,
+      "moving": true,
+      "frames": 20,
+      "reversals": 9,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 697.92,
+      "maxJerkPx": 1130.29,
+      "jerkRatio": 1.433
+    }
+  },
+  "domResponseMs": null,
+  "flash": {
+    "screencastFrames": 0,
+    "details": [],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 1,
+    "maxMs": 104,
+    "totalMs": 104
+  },
+  "loaf": {
+    "count": 2,
+    "maxMs": 110.5,
+    "worst": [
+      {
+        "d": 110.5,
+        "scripts": [
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 104.20000004768372,
+            "kind": "event-listener"
+          }
+        ]
+      },
+      {
+        "d": 73.3,
+        "scripts": [
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 5.299999952316284,
+            "kind": "event-listener"
+          },
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 40.10000002384186,
+            "kind": "event-listener"
+          },
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 7.200000047683716,
+            "kind": "event-listener"
+          }
+        ]
+      }
+    ]
+  },
+  "trace": null,
+  "verdict": [
+    "SLOW-RESPONSE 199.3ms",
+    "DROPPED 12",
+    "LONGTASK 1x max 104ms"
+  ]
+}

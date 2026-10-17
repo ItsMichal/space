@@ -1,0 +1,174 @@
+{
+  "name": "home-to-project",
+  "profile": "desktop",
+  "throttle": 4,
+  "notes": [],
+  "inputType": "pointerdown",
+  "screencast": {
+    "frames": 78,
+    "durationMs": 2049.9,
+    "gapsMs": {
+      "p50": 17.2,
+      "p95": 31.7,
+      "max": 50.2,
+      "over25": 3,
+      "over40": 1
+    },
+    "motionFrames": 24
+  },
+  "responseMs": 408.1,
+  "motionMs": 429.4,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 39,
+    "p50": 16.7,
+    "p95": 33.4,
+    "max": 266.7,
+    "dropped": 19,
+    "over33": 1,
+    "over50": 1
+  },
+  "tracked": {
+    ".tile__img": {
+      "presentFrames": 7,
+      "of": 42,
+      "moving": false
+    },
+    ".hero__img": {
+      "presentFrames": 35,
+      "of": 42,
+      "moving": false
+    },
+    ".reading__surface": {
+      "presentFrames": 35,
+      "of": 42,
+      "moving": false
+    },
+    "scrollY": {
+      "range": 835,
+      "moving": true,
+      "frames": 1,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 835,
+      "maxJerkPx": 0,
+      "jerkRatio": 0
+    },
+    "pixelCentroid.cx": {
+      "range": 552.3,
+      "moving": true,
+      "frames": 23,
+      "reversals": 7,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 184.73,
+      "maxJerkPx": 291.21,
+      "jerkRatio": 0.527
+    },
+    "pixelCentroid.cy": {
+      "range": 511.9,
+      "moving": true,
+      "frames": 23,
+      "reversals": 10,
+      "stalls": 0,
+      "jumps": 2,
+      "maxStepPx": 267.19,
+      "maxJerkPx": 344.8,
+      "jerkRatio": 0.674
+    }
+  },
+  "domResponseMs": null,
+  "flash": {
+    "screencastFrames": 14,
+    "details": [
+      {
+        "i": 36,
+        "t": 9.1,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 37,
+        "t": 25.5,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 38,
+        "t": 54.6,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 39,
+        "t": 72.7,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 40,
+        "t": 75.3,
+        "why": "luminance-overshoot"
+      },
+      {
+        "i": 41,
+        "t": 89.1,
+        "why": "luminance-overshoot"
+      }
+    ],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 2,
+    "maxMs": 108,
+    "totalMs": 160
+  },
+  "loaf": {
+    "count": 2,
+    "maxMs": 252.8,
+    "worst": [
+      {
+        "d": 252.8,
+        "scripts": [
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 5.400000095367432,
+            "kind": "event-listener"
+          },
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 5.5,
+            "kind": "event-listener"
+          },
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 8.299999952316284,
+            "kind": "event-listener"
+          }
+        ]
+      },
+      {
+        "d": 55.5,
+        "scripts": [
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "jh",
+            "d": 36.10000002384186,
+            "kind": "event-listener"
+          }
+        ]
+      }
+    ]
+  },
+  "trace": null,
+  "verdict": [
+    "SLOW-RESPONSE 408.1ms",
+    "DROPPED 19",
+    "FLASH 14/0",
+    "LONGTASK 2x max 108ms"
+  ]
+}

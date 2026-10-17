@@ -1,0 +1,94 @@
+{
+  "name": "nav-work-writing-about",
+  "profile": "desktop",
+  "throttle": 1,
+  "notes": [],
+  "inputType": "pointerdown",
+  "screencast": {
+    "frames": 103,
+    "durationMs": 2956.5,
+    "gapsMs": {
+      "p50": 16.6,
+      "p95": 19.1,
+      "max": 19.1,
+      "over25": 0,
+      "over40": 0
+    },
+    "motionFrames": 19
+  },
+  "responseMs": 88.8,
+  "motionMs": 293.3,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 29,
+    "p50": 16.7,
+    "p95": 16.8,
+    "max": 33.3,
+    "dropped": 1,
+    "over33": 0,
+    "over50": 0
+  },
+  "tracked": {
+    "main > .page-enter": {
+      "axis": "h",
+      "range": 4102.8,
+      "moving": true,
+      "frames": 1,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 4102.78,
+      "maxJerkPx": 0,
+      "jerkRatio": 0
+    },
+    "main h1": {
+      "moving": false
+    },
+    "pixelCentroid.cx": {
+      "range": 332.2,
+      "moving": true,
+      "frames": 8,
+      "reversals": 3,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 211.93,
+      "maxJerkPx": 114.59,
+      "jerkRatio": 0.345
+    },
+    "pixelCentroid.cy": {
+      "range": 388,
+      "moving": true,
+      "frames": 8,
+      "reversals": 2,
+      "stalls": 0,
+      "jumps": 1,
+      "maxStepPx": 191.62,
+      "maxJerkPx": 127.51,
+      "jerkRatio": 0.329
+    }
+  },
+  "domResponseMs": 59.1,
+  "flash": {
+    "screencastFrames": 0,
+    "details": [],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 0,
+    "maxMs": 0,
+    "totalMs": 0
+  },
+  "loaf": {
+    "count": 0,
+    "maxMs": 0,
+    "worst": []
+  },
+  "trace": null,
+  "verdict": [
+    "DROPPED 1"
+  ]
+}
