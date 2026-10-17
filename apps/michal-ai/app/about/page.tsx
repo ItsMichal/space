@@ -269,7 +269,9 @@ export default function AboutPage() {
           <ul className="ab-plain t-text">
             {profile.awards.map((a) => (
               <li key={a.id}>
-                <span className="t-ui">{a.postId ? <Link href={hrefById(a.postId)} className="link">{a.title}</Link> : a.title}</span>
+                <span className="t-ui">
+                  {a.postId ? <Link href={hrefById(a.postId)} className="link">{a.title}</Link> : a.url ? <Ext href={a.url}>{a.title}</Ext> : a.title}
+                </span>
                 <span className="t-meta">
                   {a.context}, <time dateTime={a.year}>{a.year}</time>
                 </span>

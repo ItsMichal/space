@@ -3,7 +3,7 @@ import { SITE_URL } from '@/lib/seo'
 
 export const getPublication = (id: string): Publication | undefined => (profile.publications as readonly Publication[]).find((p) => p.id === id)
 
-export const doiUrl = (p: Publication) => `https://doi.org/${p.doi}`
+export const doiUrl = (p: Publication) => (p.doi ? `https://doi.org/${p.doi}` : (p.url as string))
 
 const isJournal = (p: Publication) => Boolean(p.volume)
 
@@ -27,8 +27,7 @@ export function publicationJsonLd(p: Publication) {
     name: p.title,
     datePublished: p.published,
     inLanguage: 'en',
-    identifier: { '@type': 'PropertyValue', propertyID: 'DOI', value: p.doi },
-    sameAs: doiUrl(p),
+    ...(p.doi ? { identifier: { '@type': 'PropertyValue', propertyID: 'DOI', value: p.doi }, sameAs: doiUrl(p) } : {}),
     url: doiUrl(p),
     ...(p.publisher ? { publisher: { '@type': 'Organization', name: p.publisher } } : {}),
     isPartOf: isJournal(p)
