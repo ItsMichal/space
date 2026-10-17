@@ -10,6 +10,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import matter from 'gray-matter'
+import { SAFE_MATTER } from '../lib/content/rules.mjs'
 process.chdir(new URL('..', import.meta.url).pathname)
 
 const POSTS = path.join('content', 'posts')
@@ -32,7 +33,7 @@ const sorted = (o) => Object.fromEntries(Object.entries(o).sort(([a], [b]) => a.
 const ids = new Set()
 const urls = new Set()
 for (const f of fs.readdirSync(POSTS).filter((x) => x.endsWith('.md'))) {
-  const { data, content } = matter(fs.readFileSync(path.join(POSTS, f), 'utf8'))
+  const { data, content } = matter(fs.readFileSync(path.join(POSTS, f), 'utf8'), SAFE_MATTER)
   if (data.draft) continue
   for (const m of content.matchAll(/^::youtube\{[^}]*\bid="([^"]+)"/gm)) ids.add(m[1])
   for (const m of content.matchAll(/^::embed\{[^}]*\burl="([^"]+)"/gm)) urls.add(m[1])
