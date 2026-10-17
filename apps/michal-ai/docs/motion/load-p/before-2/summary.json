@@ -1,0 +1,222 @@
+[
+  {
+    "name": "cold-load-project",
+    "profile": "desktop",
+    "throttle": 4,
+    "notes": [],
+    "screencast": {
+      "frames": 104,
+      "durationMs": 4520.8,
+      "gapsMs": {
+        "p50": 17.6,
+        "p95": 182.1,
+        "max": 197.6,
+        "over25": 9,
+        "over40": 9
+      },
+      "motionFrames": 36
+    },
+    "responseMs": 648.2,
+    "motionMs": 1362.6,
+    "timingFrom": "clean pass",
+    "raf": {
+      "frames": 71,
+      "p50": 16.7,
+      "p95": 83.3,
+      "max": 200.1,
+      "dropped": 29,
+      "over33": 5,
+      "over50": 4
+    },
+    "tracked": {
+      ".reading__head h1": {
+        "moving": false
+      },
+      ".hero__img": {
+        "moving": false
+      },
+      ".reading__surface": {
+        "moving": false
+      },
+      "pixelCentroid.cx": {
+        "range": 409.7,
+        "moving": true,
+        "frames": 8,
+        "reversals": 3,
+        "stalls": 0,
+        "jumps": 0,
+        "maxStepPx": 400.23,
+        "maxJerkPx": 538.66,
+        "jerkRatio": 1.315
+      },
+      "pixelCentroid.cy": {
+        "range": 868.8,
+        "moving": true,
+        "frames": 8,
+        "reversals": 6,
+        "stalls": 0,
+        "jumps": 0,
+        "maxStepPx": 868.75,
+        "maxJerkPx": 505.2,
+        "jerkRatio": 0.582
+      }
+    },
+    "domResponseMs": null,
+    "flash": {
+      "screencastFrames": 0,
+      "details": [],
+      "blankDomFrames": 0
+    },
+    "cls": {
+      "value": 0,
+      "entries": []
+    },
+    "longTasks": {
+      "count": 5,
+      "maxMs": 195,
+      "totalMs": 478
+    },
+    "loaf": {
+      "count": 5,
+      "maxMs": 577.9,
+      "worst": [
+        {
+          "d": 577.9,
+          "scripts": [
+            {
+              "src": "",
+              "fn": "",
+              "d": 84.09999990463257,
+              "kind": "user-callback"
+            }
+          ]
+        },
+        {
+          "d": 200.4,
+          "scripts": [
+            {
+              "src": "entry.client-Drh284G9.js",
+              "fn": "bt",
+              "d": 195.20000004768372,
+              "kind": "event-listener"
+            }
+          ]
+        }
+      ]
+    },
+    "load": {
+      "fcpMs": 760,
+      "lcpMs": 1472,
+      "lcpEl": "IMG",
+      "clsWholeLoad": 0,
+      "shifts": [],
+      "fontLoads": [
+        {
+          "t": 1210.2,
+          "faces": [
+            "Newsreader Fallback normal normal",
+            "display 400 normal",
+            "Newsreader 200 800 normal",
+            "Newsreader 200 800 normal",
+            "Newsreader 200 800 italic",
+            "Newsreader 200 800 italic"
+          ]
+        }
+      ],
+      "tbtMs": 228,
+      "longTaskCount": 5,
+      "longTasks": [
+        {
+          "at": 1662.7,
+          "ms": 195
+        },
+        {
+          "at": 612.5,
+          "ms": 96
+        },
+        {
+          "at": 711.4,
+          "ms": 77
+        },
+        {
+          "at": 1602.1,
+          "ms": 59
+        },
+        {
+          "at": 919.1,
+          "ms": 51
+        }
+      ],
+      "loafTotalMs": 1021.9,
+      "lastFontMs": 1210.2,
+      "resources": [
+        {
+          "n": "3792c5f0958f6bcc-s.p.woff2",
+          "s": 100,
+          "e": 407
+        },
+        {
+          "n": "5ed7d4ff5e59016d-s.p.woff2",
+          "s": 101,
+          "e": 648
+        },
+        {
+          "n": "84adbee2f2a7cb50-s.p.woff2",
+          "s": 101,
+          "e": 904
+        },
+        {
+          "n": "8edf6d3506a17285-s.p.woff2",
+          "s": 101,
+          "e": 988
+        },
+        {
+          "n": "92eeb95d069020cc-s.p.woff2",
+          "s": 101,
+          "e": 256
+        },
+        {
+          "n": "98e207f02528a563-s.p.woff2",
+          "s": 102,
+          "e": 577
+        },
+        {
+          "n": "99dcf268bda04fe5-s.p.woff2",
+          "s": 102,
+          "e": 637
+        },
+        {
+          "n": "bb2798ad86f95cff-s.p.woff2",
+          "s": 102,
+          "e": 838
+        },
+        {
+          "n": "d3ebbfd689654d3a-s.p.woff2",
+          "s": 102,
+          "e": 713
+        },
+        {
+          "n": "fe6c4b8cc116014d-s.p.woff2",
+          "s": 103,
+          "e": 1198
+        },
+        {
+          "n": "cover-1528.avif",
+          "s": 106,
+          "e": 1429
+        },
+        {
+          "n": "blobs-dark.webp",
+          "s": 531,
+          "e": 1358
+        }
+      ]
+    },
+    "trace": null,
+    "verdict": [
+      "SLOW-RESPONSE 648.2ms",
+      "DROPPED 29",
+      "LONGTASK 5x max 195ms"
+    ]
+  }
+]

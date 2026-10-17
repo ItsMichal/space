@@ -1,0 +1,8 @@
+[
+  {
+    "name": "cold-load-home",
+    "profile": "mobile",
+    "throttle": 4,
+    "error": "watchdog: scenario exceeded 400 s"
+  }
+]

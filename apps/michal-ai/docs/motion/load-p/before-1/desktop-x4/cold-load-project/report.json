@@ -1,0 +1,216 @@
+{
+  "name": "cold-load-project",
+  "profile": "desktop",
+  "throttle": 4,
+  "notes": [],
+  "screencast": {
+    "frames": 102,
+    "durationMs": 4524.7,
+    "gapsMs": {
+      "p50": 17.1,
+      "p95": 81.3,
+      "max": 117.4,
+      "over25": 7,
+      "over40": 7
+    },
+    "motionFrames": 36
+  },
+  "responseMs": 1102.6,
+  "motionMs": 996.1,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 79,
+    "p50": 16.7,
+    "p95": 83.3,
+    "max": 200.1,
+    "dropped": 26,
+    "over33": 4,
+    "over50": 4
+  },
+  "tracked": {
+    ".reading__head h1": {
+      "moving": false
+    },
+    ".hero__img": {
+      "moving": false
+    },
+    ".reading__surface": {
+      "moving": false
+    },
+    "pixelCentroid.cx": {
+      "range": 409.7,
+      "moving": true,
+      "frames": 8,
+      "reversals": 4,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 374.1,
+      "maxJerkPx": 493.18,
+      "jerkRatio": 1.204
+    },
+    "pixelCentroid.cy": {
+      "range": 868.8,
+      "moving": true,
+      "frames": 8,
+      "reversals": 6,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 868.75,
+      "maxJerkPx": 449.44,
+      "jerkRatio": 0.517
+    }
+  },
+  "domResponseMs": null,
+  "flash": {
+    "screencastFrames": 0,
+    "details": [],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 4,
+    "maxMs": 191,
+    "totalMs": 409
+  },
+  "loaf": {
+    "count": 5,
+    "maxMs": 576.3,
+    "worst": [
+      {
+        "d": 576.3,
+        "scripts": [
+          {
+            "src": "",
+            "fn": "",
+            "d": 79.59999990463257,
+            "kind": "user-callback"
+          }
+        ]
+      },
+      {
+        "d": 195.6,
+        "scripts": [
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 191.10000002384186,
+            "kind": "event-listener"
+          }
+        ]
+      }
+    ]
+  },
+  "load": {
+    "fcpMs": 1204,
+    "lcpMs": 1476,
+    "lcpEl": "IMG",
+    "clsWholeLoad": 0,
+    "shifts": [],
+    "fontLoads": [
+      {
+        "t": 1337.7,
+        "faces": [
+          "Newsreader Fallback normal normal",
+          "display 400 normal",
+          "Newsreader 200 800 normal",
+          "Newsreader 200 800 normal",
+          "Newsreader 200 800 italic",
+          "Newsreader 200 800 italic"
+        ]
+      }
+    ],
+    "tbtMs": 209,
+    "longTaskCount": 4,
+    "longTasks": [
+      {
+        "at": 1587.5,
+        "ms": 191
+      },
+      {
+        "at": 607.2,
+        "ms": 90
+      },
+      {
+        "at": 701,
+        "ms": 75
+      },
+      {
+        "at": 1533.8,
+        "ms": 53
+      }
+    ],
+    "loafTotalMs": 1006.7,
+    "lastFontMs": 1337.7,
+    "resources": [
+      {
+        "n": "3792c5f0958f6bcc-s.p.woff2",
+        "s": 93,
+        "e": 400
+      },
+      {
+        "n": "5ed7d4ff5e59016d-s.p.woff2",
+        "s": 94,
+        "e": 639
+      },
+      {
+        "n": "84adbee2f2a7cb50-s.p.woff2",
+        "s": 94,
+        "e": 896
+      },
+      {
+        "n": "8edf6d3506a17285-s.p.woff2",
+        "s": 94,
+        "e": 984
+      },
+      {
+        "n": "92eeb95d069020cc-s.p.woff2",
+        "s": 94,
+        "e": 251
+      },
+      {
+        "n": "98e207f02528a563-s.p.woff2",
+        "s": 94,
+        "e": 570
+      },
+      {
+        "n": "99dcf268bda04fe5-s.p.woff2",
+        "s": 94,
+        "e": 631
+      },
+      {
+        "n": "d3ebbfd689654d3a-s.p.woff2",
+        "s": 94,
+        "e": 703
+      },
+      {
+        "n": "bb2798ad86f95cff-s.p.woff2",
+        "s": 94,
+        "e": 833
+      },
+      {
+        "n": "fe6c4b8cc116014d-s.p.woff2",
+        "s": 94,
+        "e": 1194
+      },
+      {
+        "n": "cover-1528.avif",
+        "s": 111,
+        "e": 1434
+      },
+      {
+        "n": "blobs-dark.webp",
+        "s": 521,
+        "e": 1360
+      }
+    ]
+  },
+  "trace": null,
+  "verdict": [
+    "SLOW-RESPONSE 1102.6ms",
+    "DROPPED 26",
+    "LONGTASK 4x max 191ms"
+  ]
+}

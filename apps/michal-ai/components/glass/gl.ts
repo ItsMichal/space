@@ -96,15 +96,17 @@ export class GlassGL {
         const s = gl.createShader(type)!
         gl.shaderSource(s, src)
         gl.compileShader(s)
-        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s) ?? 'shader')
-        return s
+        return s // status is read after linking: querying it here would stall the thread until the driver finished compiling
       }
       const prog = gl.createProgram()!
       gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT))
       gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG))
       gl.bindAttribLocation(prog, 0, 'aPos')
       gl.linkProgram(prog)
-      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog) ?? 'link')
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+        const logs = gl.getAttachedShaders(prog)?.map((sh) => gl.getShaderInfoLog(sh)).join(' ') ?? ''
+        throw new Error(`${gl.getProgramInfoLog(prog) ?? 'link'} ${logs}`)
+      }
       const vao = gl.createVertexArray()
       gl.bindVertexArray(vao)
       const buf = gl.createBuffer()
