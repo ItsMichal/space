@@ -66,7 +66,7 @@ post folder in `public/media/` with the content repo's copy. It never touches `a
 it refuses symlinks. `.content/` is gitignored.
 
 In CI and deploy, `.github/actions/content` checks space-content out with the read-only deploy key in secret
-`CONTENT_DEPLOY_KEY` (no persisted credentials) and runs `content:pull`. Without the secret it prints a notice and the build
+`CONTENT_DEPLOY_KEY` or the read-only fine-grained token `CONTENT_TOKEN` (no persisted credentials) and runs `content:pull`. Without the secret it prints a notice and the build
 uses the content in this repo, which is the state until the cutover. Pull requests from forks never see the secret.
 
 ## Deploys
@@ -79,9 +79,9 @@ uses the content in this repo, which is the state until the cutover. Pull reques
 
 ## Cutover order
 
-1. Owner completes the setup checklist in the space-content `README.md` (repo seeded, deploy key, `CONTENT_DEPLOY_KEY` here).
+1. Owner completes the setup checklist in the space-content `README.md` (repo seeded, then either a deploy key as `CONTENT_DEPLOY_KEY` or a fine-grained token, space-content only, Contents read, as `CONTENT_TOKEN` here).
 2. Merge this change. Builds still use the content in this repo, now validated by `prebuild`.
-3. With `CONTENT_DEPLOY_KEY` set, the next CI build and deploy pull from space-content. Since the seed is a copy of this
+3. With `CONTENT_DEPLOY_KEY` or `CONTENT_TOKEN` set, the next CI build and deploy pull from space-content. Since the seed is a copy of this
    repo's posts and media, the output is identical; check the deploy summary and the parity smoke test.
 4. Freeze edits to `content/posts` and post media here. From now on posts change only through space-content.
 5. Follow-up PR here (not part of this change):

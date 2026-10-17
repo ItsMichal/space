@@ -104,6 +104,7 @@ jobs:
       - uses: ./.github/actions/content
         with:
           deploy-key: ${{ secrets.CONTENT_DEPLOY_KEY }}
+          token: ${{ secrets.CONTENT_TOKEN }}
       - uses: ./.github/actions/media-cache
       - name: Build and deploy (react-router build, then wrangler deploy)
         run: npm run deploy:michal 2>&1 | tee deploy.log

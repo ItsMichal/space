@@ -62,6 +62,7 @@ jobs:
       - uses: ./.github/actions/content
         with:
           deploy-key: ${{ secrets.CONTENT_DEPLOY_KEY }}
+          token: ${{ secrets.CONTENT_TOKEN }}
       - uses: ./.github/actions/media-cache
       - name: Prerender the site (react-router build) and generate share cards
         run: npm run build:michal
