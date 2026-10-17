@@ -53,8 +53,9 @@ export const personJsonLd = {
   // 4:5 photograph (square or 4:5 is what search results crop well), metadata stripped.
   image: absoluteUrl(profile.portrait.jsonLd),
   jobTitle: profile.jobTitle,
-  worksFor: profile.worksFor.map((o) => ({ '@type': 'Organization', ...o })),
-  alumniOf: profile.alumniOf.map((name) => ({ '@type': 'CollegeOrUniversity', name })),
+  // worksFor only when profile.worksFor names a current employer (SpaceX ended in 2026 and is listed under alumniOf).
+  ...(profile.worksFor.length ? { worksFor: profile.worksFor.map((o) => ({ '@type': 'Organization', ...o })) } : {}),
+  alumniOf: profile.alumniOf.map(({ type, ...o }) => ({ '@type': type, ...o })),
   knowsAbout: [...profile.knowsAbout],
   description: siteConfig.description,
   // State only, never a city.
@@ -105,7 +106,7 @@ export function aboutMetadata(): Metadata {
 }
 
 const RESUME_TITLE = `Resume · ${profile.name}`
-export const RESUME_DESCRIPTION = `Resume of ${profile.name}, software engineer at SpaceX: experience, education, publications, selected projects and skills.`
+export const RESUME_DESCRIPTION = `Resume of ${profile.name}, software engineer: experience, education, publications, selected projects and skills.`
 export function resumeMetadata(): Metadata {
   const url = absoluteUrl('/resume')
   return {

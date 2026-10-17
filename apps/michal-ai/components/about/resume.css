@@ -1,4 +1,6 @@
-/* /resume: a document card on screen, a clean one or two page sheet in print (US Letter or A4). Same data as /about. */
+/* /resume: a document card on screen, a clean one or two page sheet in print (US Letter or A4). Same data as /about.
+   Hierarchy: name (title), section labels (small caps over a hairline), entry heads (body strong) with dates flush right,
+   everything else at the small step. Screen sizes come from the four-step scale; print uses its own pt sizes. */
 .rs-actions {
   display: flex;
   align-items: center;
@@ -31,16 +33,16 @@
   margin: 0 auto;
   padding: var(--space-6) var(--card-pad) var(--space-8);
   background: var(--paper-raised);
+  color: var(--ink);
+  font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
 }
 @media (min-width: 640px) {
   .rs {
-    padding: var(--space-8) var(--space-12);
+    padding: var(--space-8) var(--space-12) var(--space-12);
   }
 }
-.rs-head {
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--hairline);
-}
+
+/* ---- header ---- */
 .rs-name {
   margin: 0;
   font-family: var(--font-display);
@@ -49,17 +51,32 @@
   font-weight: 400;
   letter-spacing: var(--type-title-tracking);
 }
-.rs-role {
-  margin: var(--space-1) 0 0;
-  font: 500 var(--type-body-strong-size) / var(--type-body-strong-line) var(--font-serif);
-}
 .rs-contact {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 var(--space-4);
-  margin: var(--space-1) 0 0;
+  margin: var(--space-2) 0 0;
   font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
   color: var(--ink-muted);
+}
+/* Phones wrap the line, so plain gaps there; a middle dot between items once it fits on one line (and in print). */
+.rs-contact {
+  gap: 0 1em;
+}
+@media (min-width: 640px), print {
+  .rs-contact {
+    gap: 0;
+  }
+  .rs-contact > * + *::before {
+    content: '\00b7';
+    display: inline-block;
+    padding: 0 0.6em;
+    color: var(--ink-muted);
+    text-decoration: none;
+  }
+}
+.rs-contact > :first-child {
+  color: var(--ink);
+  font-weight: 500;
 }
 .rs-contact a {
   color: inherit;
@@ -67,12 +84,19 @@
   text-decoration-color: var(--hairline);
   text-underline-offset: 0.2em;
 }
+
+/* ---- sections ---- */
+.rs-sec {
+  margin-top: var(--space-6);
+}
 .rs-h {
-  margin: var(--space-6) 0 var(--space-2);
+  margin: 0 0 var(--space-3);
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid var(--hairline);
   font: 500 var(--type-small-size) / var(--type-small-line) var(--font-serif);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ink-muted);
+  color: var(--ink);
 }
 .rs-list {
   margin: 0;
@@ -82,6 +106,9 @@
 .rs-item + .rs-item {
   margin-top: var(--space-4);
 }
+.rs-compact .rs-item + .rs-item {
+  margin-top: var(--space-2);
+}
 .rs-line {
   display: flex;
   flex-wrap: wrap;
@@ -89,13 +116,25 @@
   justify-content: space-between;
   gap: 0 var(--space-4);
 }
+.rs-line > :first-child {
+  flex: 1 1 24rem;
+  min-width: 0;
+}
 .rs-t {
   margin: 0;
   font: 500 var(--type-body-strong-size) / var(--type-body-strong-line) var(--font-serif);
 }
+.rs-cite .rs-t {
+  font: 500 var(--type-small-size) / var(--type-small-line) var(--font-serif);
+}
 .rs-r {
   font-weight: 400;
+  font-style: italic;
   color: var(--ink-muted);
+}
+.rs-k {
+  font-weight: 500;
+  color: var(--ink);
 }
 .rs-d {
   margin: 0;
@@ -103,21 +142,30 @@
   color: var(--ink-muted);
   font-variant-numeric: tabular-nums lining-nums;
   white-space: nowrap;
+  text-align: right;
 }
 .rs-p,
 .rs-s {
-  margin: var(--space-1) 0 0;
-  font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
-  color: var(--ink);
+  margin: 0;
 }
 .rs-s {
   color: var(--ink-muted);
 }
+.rs-s .rs-k {
+  color: var(--ink-muted);
+}
+.rs-item > .rs-p,
+.rs-item > .rs-s,
+.rs-item > .rs-b {
+  margin-top: var(--space-1);
+}
+.rs-item > .rs-p + .rs-s {
+  margin-top: 0;
+}
 .rs-b {
-  margin: var(--space-1) 0 0;
+  margin: 0;
   padding-left: 1.1em;
   list-style: disc;
-  font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
 }
 .rs-b li + li {
   margin-top: 2px;
@@ -125,24 +173,24 @@
 .rs-b li::marker {
   color: var(--ink-muted);
 }
-.rs-b a,
-.rs-p a {
+.rs a {
   color: inherit;
   text-decoration: underline;
   text-decoration-color: var(--hairline);
   text-underline-offset: 0.2em;
   overflow-wrap: anywhere;
 }
-.rs-b--plain {
-  padding-left: 0;
-  list-style: none;
+.rs a.rs-k {
+  text-decoration: none;
 }
-.rs-b--plain li + li {
-  margin-top: var(--space-2);
+.rs a:hover {
+  text-decoration-color: currentColor;
 }
 .rs-skills {
   margin: 0;
-  font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
+}
+.rs-skills > div + div {
+  margin-top: var(--space-1);
 }
 .rs-skills dt {
   display: inline;
@@ -156,22 +204,11 @@
   margin: 0;
   color: var(--ink-muted);
 }
-.rs-skills dd::after {
-  content: '';
-  display: block;
-  height: var(--space-2);
-}
-@media (min-width: 760px) {
-  .rs-two {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
-    gap: 0 var(--space-8);
-  }
-}
 
-/* ---- print: only the sheet. Chrome (nav, footer, page end, backdrop, grid, buttons) is hidden; type drops to 9.5/10pt. ---- */
+/* ---- print: only the sheet. Chrome (nav, footer, page end, backdrop, grid, buttons) is hidden. Margins come from @page (or the
+   PDF script); type is set in pt for paper: 10pt text, 11pt entry heads, 21pt name. ---- */
 @page {
-  margin: 13mm 15mm;
+  margin: 12mm 14mm;
 }
 @media print {
   :root:has(.rs) body > :not(main),
@@ -198,51 +235,84 @@
     box-shadow: none;
     overflow: visible;
     color: #111;
+    font-size: 10pt;
+    line-height: 1.36;
   }
   .rs::before {
     display: none;
   }
   .rs-name {
-    font-size: 26pt;
+    font-size: 21pt;
+    line-height: 1.05;
   }
-  .rs-role,
-  .rs-t {
-    font-size: 10.5pt;
-    line-height: 1.35;
+  .rs-contact {
+    margin-top: 3pt;
+    font-size: 10pt;
+    line-height: 1.3;
   }
-  .rs-contact,
-  .rs-d,
-  .rs-p,
-  .rs-s,
-  .rs-b,
-  .rs-skills {
-    font-size: 9.5pt;
-    line-height: 1.38;
-  }
-  .rs-contact,
-  .rs-d,
-  .rs-s,
-  .rs-r,
-  .rs-skills dd {
-    color: #444;
+  .rs-sec {
+    margin-top: 12pt;
   }
   .rs-h {
-    margin-top: 11pt;
-    font-size: 8.5pt;
-    color: #444;
+    margin-bottom: 4pt;
+    padding-bottom: 1.5pt;
+    border-bottom-color: #bbb;
+    font-size: 9pt;
+    line-height: 1.3;
+    letter-spacing: 0.12em;
+    color: #111;
     break-after: avoid;
+    page-break-after: avoid;
+  }
+  .rs-t {
+    font-size: 11pt;
+    line-height: 1.3;
+    font-weight: 600;
+  }
+  .rs-cite .rs-t {
+    font-size: 10pt;
+  }
+  .rs-k,
+  .rs-skills dt,
+  .rs-contact > :first-child {
+    font-weight: 600;
+  }
+  .rs-d {
+    font-size: 10pt;
+    line-height: 1.36;
+  }
+  .rs-contact,
+  .rs-d,
+  .rs-s,
+  .rs-s .rs-k,
+  .rs-r,
+  .rs-skills dd,
+  .rs-b li::marker {
+    color: #444;
+  }
+  .rs-contact > :first-child {
+    color: #111;
   }
   .rs-item {
     break-inside: avoid;
+    page-break-inside: avoid;
   }
   .rs-item + .rs-item {
     margin-top: 7pt;
   }
-  .rs-b--plain li + li {
+  .rs-compact .rs-item + .rs-item {
     margin-top: 3pt;
   }
-  .rs-b li {
-    break-inside: avoid;
+  .rs-item > .rs-p,
+  .rs-item > .rs-s,
+  .rs-item > .rs-b {
+    margin-top: 2pt;
+  }
+  .rs-b li + li {
+    margin-top: 1pt;
+  }
+  .rs-skills > div + div {
+    margin-top: 2pt;
   }
   .rs a {
     text-decoration: none;

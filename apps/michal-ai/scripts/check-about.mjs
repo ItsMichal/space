@@ -54,7 +54,7 @@ for (const route of ['/about', '/resume']) {
       for (const k of ['@id', 'url', 'name', 'mainEntity']) if (!page[k]) fail(`ProfilePage missing ${k}`)
       const p = page.mainEntity
       if (p['@type'] !== 'Person' || p['@id'] !== 'https://michal.ai/#person') fail('mainEntity is not the site Person node')
-      for (const k of ['name', 'url', 'jobTitle', 'sameAs', 'worksFor', 'alumniOf']) if (!p[k]) fail(`Person missing ${k}`)
+      for (const k of ['name', 'url', 'jobTitle', 'sameAs', 'alumniOf']) if (!p[k]) fail(`Person missing ${k}`)
       for (const s of ['https://x.com/ItsMichal', 'https://github.com/ItsMichal', 'https://www.linkedin.com/in/mbodzianowski/']) if (!p.sameAs.includes(s)) fail(`sameAs missing ${s}`)
       if (JSON.stringify(p).match(CITIES)) fail('Person JSON-LD names a city')
     }
