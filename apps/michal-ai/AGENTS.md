@@ -29,7 +29,7 @@ here, so keep diffs narrow and fetch before branching.
   production builds never contain them (`lib/rr/routes.test.ts`).
 - The writing editor (write.michal.ai) is not in this repo. It lives in the private ItsMichal/space-content repo, with the
   posts and media, and is built by laying its `editor/` folder over this app. Content split, `npm run content:pull`, the
-  content rules (`lib/content/rules.mjs`) and the cutover order: `docs/monorepo/content.md`.
+  content rules (`lib/content/rules.mjs`) and the cutover order: `docs/content-repo.md`.
 - No em dash or en dash anywhere in shipped copy or source (`npm run check:dashes`).
 
 ## Build pipeline

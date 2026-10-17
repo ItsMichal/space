@@ -1,0 +1,31 @@
+name: Content
+description: >
+  Check out posts and post media from the private ItsMichal/space-content repo with a read-only deploy key and lay them into
+  apps/michal-ai (npm run content:pull, which validates them with lib/content/rules.mjs first). Without a key (fork pull requests,
+  or before the content split is set up) it does nothing and the build uses the content still in this repo. Run it after
+  ./.github/actions/setup and before ./.github/actions/media-cache (the cache key hashes public/media). See apps/michal-ai/docs/content-repo.md.
+inputs:
+  deploy-key:
+    description: Private half of the read-only deploy key on ItsMichal/space-content (secret CONTENT_DEPLOY_KEY).
+    required: false
+    default: ''
+runs:
+  using: composite
+  steps:
+    - name: No content key
+      if: inputs.deploy-key == ''
+      shell: bash
+      run: echo "::notice title=Content::CONTENT_DEPLOY_KEY is not set; building with the posts and media in this repo."
+    - uses: actions/checkout@v4
+      if: inputs.deploy-key != ''
+      with:
+        repository: ItsMichal/space-content
+        ref: main
+        ssh-key: ${{ inputs.deploy-key }}
+        path: apps/michal-ai/.content
+        persist-credentials: false
+    - name: Lay content into the app (validated first)
+      if: inputs.deploy-key != ''
+      shell: bash
+      working-directory: apps/michal-ai
+      run: CONTENT_DIR=.content npm run content:pull

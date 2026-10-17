@@ -1,6 +1,9 @@
 name: Deploy
 
 # Merges to main deploy the Workers whose files changed. Manual runs: Actions -> Deploy -> Run workflow.
+# ItsMichal/space-content dispatches this workflow (app=michal) when posts or media change on its main branch.
+# Content comes from that repo through ./.github/actions/content when CONTENT_DEPLOY_KEY is set (apps/michal-ai/docs/content-repo.md).
+# The writing editor (write.michal.ai) is deployed from space-content, never from here.
 # Needs repository secret CLOUDFLARE_API_TOKEN and repository variable CLOUDFLARE_ACCOUNT_ID (see "Deploying" in the
 # root README). Without the token the deploy jobs are skipped with a notice instead of failing.
 on:
@@ -98,6 +101,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - uses: ./.github/actions/checks
+      - uses: ./.github/actions/content
+        with:
+          deploy-key: ${{ secrets.CONTENT_DEPLOY_KEY }}
       - uses: ./.github/actions/media-cache
       - name: Build and deploy (react-router build, then wrangler deploy)
         run: npm run deploy:michal 2>&1 | tee deploy.log
