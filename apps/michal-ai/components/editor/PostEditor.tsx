@@ -1,11 +1,13 @@
 'use client'
 import { EditorContent, useEditor } from '@tiptap/react'
-import { ArrowLeft, Eye, Focus, PanelRight, TriangleAlert } from 'lucide-react'
+import { ArrowLeft, Eye, Focus, GitPullRequestArrow, PanelRight, TriangleAlert } from 'lucide-react'
 import Link from '@/lib/nav'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { PostFrontmatter } from '@/lib/content/types'
 import { slugify } from '@/lib/content/serialize'
 import { ApiError, api, type LoadedPost } from '@/lib/editor/client/api'
+import { editorHost } from '@/lib/editor/client/host'
+import type { PostStatus } from '@/lib/editor/wire'
 import { buildTiptapExtensions } from '@/lib/editor/extensions'
 import { docToMarkdown, markdownToDoc } from '@/lib/editor/markdown'
 import { docStats, type DocStats } from '@/lib/editor/seo'
@@ -19,7 +21,8 @@ import { Bubble, Toolbar } from './Toolbar'
 
 type Status = 'idle' | 'dirty' | 'saving' | 'saved' | 'error' | 'conflict'
 
-const AUTOSAVE_MS = 1200
+// Hosted saves are commits (folded into one per branch, see write/worker/repo.ts), so they wait for a longer pause.
+const autosaveMs = () => (editorHost().hosted ? 4000 : 1200)
 const today = () => new Date().toLocaleDateString('en-CA')
 
 function ago(ms: number): string {
@@ -33,6 +36,8 @@ function ago(ms: number): string {
 type Props = { post: LoadedPost; allTags: string[]; otherSlugs: string[]; projects: { slug: string; title: string }[] }
 
 export function PostEditor({ post, allTags, otherSlugs, projects }: Props) {
+  const { hosted, siteOrigin } = editorHost()
+  const where = hosted ? 'on GitHub' : 'on disk'
   const [slug, setSlug] = useState(post.id)
   const slugRef = useRef(slug)
   slugRef.current = slug
@@ -46,6 +51,8 @@ export function PostEditor({ post, allTags, otherSlugs, projects }: Props) {
   const [tab, setTab] = useState<'post' | 'seo'>('post')
   const [focusMode, setFocusMode] = useState(false)
   const [stats, setStats] = useState<DocStats>(() => docStats(markdownToDoc(post.body)))
+  const [git, setGit] = useState<PostStatus | null>(null)
+  const [shipping, setShipping] = useState(false)
 
   const fmRef = useRef(fm)
   fmRef.current = fm
@@ -59,7 +66,8 @@ export function PostEditor({ post, allTags, otherSlugs, projects }: Props) {
   const statsTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const titleRef = useRef<HTMLTextAreaElement>(null)
   const panelRef = useRef<HTMLElement>(null)
-  const autoSlugRef = useRef(post.frontmatter.slug === slugify(post.frontmatter.title) || /^untitled(-\d+)?$/.test(post.frontmatter.slug))
+  // Hosted renames move a branch-only draft; a post that is already on main keeps its slug here.
+  const autoSlugRef = useRef(!(hosted && post.source?.onMain) && (post.frontmatter.slug === slugify(post.frontmatter.title) || /^untitled(-\d+)?$/.test(post.frontmatter.slug)))
 
   const extensions = useMemo(
     () =>
@@ -91,11 +99,11 @@ export function PostEditor({ post, allTags, otherSlugs, projects }: Props) {
 
   /* ------------------------------------------------------------------ saving */
   const save = useCallback(
-    async (opts: { force?: boolean } = {}) => {
-      if (!editor) return
+    async (opts: { force?: boolean } = {}): Promise<boolean> => {
+      if (!editor) return false
       if (savingRef.current) {
         queuedRef.current = true
-        return
+        return false
       }
       clearTimeout(timer.current)
       savingRef.current = true
@@ -109,17 +117,19 @@ export function PostEditor({ post, allTags, otherSlugs, projects }: Props) {
         setError('')
         setStatus(versionRef.current === startedAt ? 'saved' : 'dirty')
         if (versionRef.current !== startedAt) queuedRef.current = true
+        return true
       } catch (err) {
         if (err instanceof ApiError && err.status === 409) setStatus('conflict')
         else {
           setStatus('error')
           setError(err instanceof Error ? err.message : 'Save failed')
         }
+        return false
       } finally {
         savingRef.current = false
         if (queuedRef.current) {
           queuedRef.current = false
-          timer.current = setTimeout(() => void save(), AUTOSAVE_MS)
+          timer.current = setTimeout(() => void save(), autosaveMs())
         }
       }
     },
@@ -130,7 +140,7 @@ export function PostEditor({ post, allTags, otherSlugs, projects }: Props) {
     versionRef.current += 1
     setStatus((s) => (s === 'conflict' ? s : 'dirty'))
     clearTimeout(timer.current)
-    timer.current = setTimeout(() => void save(), AUTOSAVE_MS)
+    timer.current = setTimeout(() => void save(), autosaveMs())
   }, [save])
 
   // `onUpdate` above closes over the first render's markDirty, so route through a ref.
@@ -176,7 +186,7 @@ export function PostEditor({ post, allTags, otherSlugs, projects }: Props) {
         const disk = await api.read(slug)
         if (disk.hash === hashRef.current) return
         if (statusRef.current === 'saved' || statusRef.current === 'idle') {
-          uiBus.emit('toast', { message: 'File changed on disk. Reloaded.' })
+          uiBus.emit('toast', { message: `The post changed ${where}. Reloaded.` })
           window.location.reload()
         } else setStatus('conflict')
       } catch {}
@@ -189,7 +199,19 @@ export function PostEditor({ post, allTags, otherSlugs, projects }: Props) {
       window.removeEventListener('beforeunload', onUnload)
       window.removeEventListener('focus', onFocus)
     }
-  }, [save, slug])
+  }, [save, slug, where])
+
+  // Hosted: which branch and pull request this post has. Refreshed after the first commit creates the branch and after Ship.
+  const refreshGit = useCallback(async () => {
+    if (!hosted) return
+    try {
+      setGit(await api.status(slugRef.current))
+    } catch {}
+  }, [hosted])
+  useEffect(() => void refreshGit(), [refreshGit, slug])
+  useEffect(() => {
+    if (status === 'saved' && hosted && git && !git.branch) void refreshGit()
+  }, [status, hosted, git, refreshGit])
   /* -------------------------------------------------------------- actions */
   const published = !fm.draft
 
@@ -197,7 +219,7 @@ export function PostEditor({ post, allTags, otherSlugs, projects }: Props) {
     update(published ? { draft: true } : { draft: undefined, ...(fm.date !== today() ? { updated: today() } : {}) })
     await save()
     uiBus.emit('toast', {
-      message: published ? 'Back to draft.' : 'Published. Commit the change to ship it.',
+      message: published ? 'Back to draft.' : hosted ? 'Published. Ship it to open a pull request.' : 'Published. Commit the change to ship it.',
     })
   }
 
@@ -233,15 +255,35 @@ export function PostEditor({ post, allTags, otherSlugs, projects }: Props) {
       savingRef.current = false
       if (queuedRef.current) {
         queuedRef.current = false
-        timer.current = setTimeout(() => void save(), AUTOSAVE_MS)
+        timer.current = setTimeout(() => void save(), autosaveMs())
       }
     }
   }
 
   const livePath = fm.parent ? `/projects/${fm.parent}/${slug}` : `${fm.kind === 'article' ? '/writing' : '/projects'}/${slug}`
+  // Hosted: the live page shows main, not this branch, so preview always renders the branch copy.
+  const previewLive = published && !hosted
   const preview = async () => {
     await save()
-    window.open(published ? livePath : `/write/${slug}/preview`, '_blank', 'noopener')
+    window.open(previewLive ? `${siteOrigin}${livePath}` : `/write/${slug}/preview`, '_blank', 'noopener')
+  }
+
+  /** Hosted: commit what is on screen, then open (or update) the pull request. Never merges. */
+  const ship = async () => {
+    setShipping(true)
+    try {
+      clearTimeout(timer.current)
+      while (savingRef.current) await new Promise((r) => setTimeout(r, 60))
+      if (!(await save())) throw new Error('Save failed; nothing was shipped')
+      const res = await api.ship(slugRef.current)
+      uiBus.emit('toast', { message: `Pull request #${res.number} ${res.created ? 'opened' : 'updated'}` })
+      window.open(res.url, '_blank', 'noopener')
+      await refreshGit()
+    } catch (err) {
+      uiBus.emit('toast', { message: err instanceof Error ? err.message : 'Ship failed', kind: 'error' })
+    } finally {
+      setShipping(false)
+    }
   }
 
   // The slug follows the title (applied on blur) until it is edited by hand or the post is published.
@@ -283,7 +325,16 @@ export function PostEditor({ post, allTags, otherSlugs, projects }: Props) {
         <button type="button" className={`ed-btn-text${focusMode ? ' is-on' : ''}`} aria-pressed={focusMode} onClick={() => setFocusMode((v) => !v)}>
           <Focus size={16} strokeWidth={1.5} aria-hidden /> Focus
         </button>
-        <button type="button" className="ed-btn-text" onClick={() => void preview()} title={published ? 'Open the live route' : 'Drafts are not routable; opens the draft preview'}>
+        {git?.pr ? (
+          <a className="ed-btn-text" href={git.pr.url} target="_blank" rel="noopener noreferrer" title={`Branch ${git.branch}`}>
+            <GitPullRequestArrow size={16} strokeWidth={1.5} aria-hidden /> PR #{git.pr.number}
+          </a>
+        ) : git?.branch && git.branchUrl ? (
+          <a className="ed-btn-text" href={git.branchUrl} target="_blank" rel="noopener noreferrer">
+            {git.branch}
+          </a>
+        ) : null}
+        <button type="button" className="ed-btn-text" onClick={() => void preview()} title={previewLive ? 'Open the live route' : 'Opens the draft preview'}>
           <Eye size={16} strokeWidth={1.5} aria-hidden /> Preview
         </button>
         <button type="button" className={`ed-btn-text${panelOpen ? ' is-on' : ''}`} aria-pressed={panelOpen} aria-label="Toggle side panel" onClick={() => setPanelOpen((v) => !v)}>
@@ -295,10 +346,10 @@ export function PostEditor({ post, allTags, otherSlugs, projects }: Props) {
         <div className="ed-banner" role="alert">
           <TriangleAlert size={16} strokeWidth={1.5} aria-hidden />
           <span>
-            <code>{slug}.md</code> changed on disk since you opened it (another editor or a git checkout).
+            <code>{slug}.md</code> changed {where} since you opened it ({hosted ? 'another tab or a push to its branch' : 'another editor or a git checkout'}).
           </span>
           <button type="button" className="ed-btn-text" onClick={() => window.location.reload()}>
-            Reload from disk
+            Reload {hosted ? 'from GitHub' : 'from disk'}
           </button>
           <button type="button" className="ed-btn-text ed-btn-text--solid" onClick={() => void save({ force: true })}>
             Overwrite with mine
@@ -361,9 +412,14 @@ export function PostEditor({ post, allTags, otherSlugs, projects }: Props) {
                 <span className={`ed-status is-${status}`} aria-live="polite">
                   {statusText[status]}
                 </span>
-                <button type="button" className="ed-publish" onClick={() => void publish()}>
+                <button type="button" className={hosted ? 'ed-btn-text' : 'ed-publish'} onClick={() => void publish()}>
                   {published ? 'Unpublish' : 'Publish'}
                 </button>
+                {hosted ? (
+                  <button type="button" className="ed-publish" onClick={() => void ship()} disabled={shipping} title="Commit and open a pull request against main">
+                    {shipping ? 'Shipping…' : git?.pr ? 'Update PR' : 'Ship'}
+                  </button>
+                ) : null}
               </>
             }
           />

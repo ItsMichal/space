@@ -5,12 +5,14 @@ import { useRouter } from '@/lib/nav'
 import { useMemo, useState } from 'react'
 import type { PostKind } from '@/lib/content/types'
 import { api } from '@/lib/editor/client/api'
-import type { PostSummary } from '@/lib/editor/server/posts'
+import { editorHost } from '@/lib/editor/client/host'
+import type { PostSummary } from '@/lib/editor/wire'
 
 type Filter = 'all' | 'draft' | 'published'
 
 export function PostIndex({ initial }: { initial: PostSummary[] }) {
   const router = useRouter()
+  const { hosted } = editorHost()
   const [filter, setFilter] = useState<Filter>('all')
   const [kind, setKind] = useState<PostKind>('article')
   const [busy, setBusy] = useState(false)
@@ -47,7 +49,7 @@ export function PostIndex({ initial }: { initial: PostSummary[] }) {
     <div className="ed-index">
       <header className="ed-index__head">
         <div>
-          <p className="ed-eyebrow">Writing tool · local only</p>
+          <p className="ed-eyebrow">Writing tool · {hosted ? 'ships as pull requests' : 'local only'}</p>
           <h1 className="ed-display">Posts</h1>
         </div>
         <div className="ed-row">
@@ -79,11 +81,22 @@ export function PostIndex({ initial }: { initial: PostSummary[] }) {
             </Link>
             <span className="ed-prow__meta">
               <span className={`ed-pill ${p.draft ? 'is-draft' : 'is-live'}`}>{p.draft ? 'Draft' : 'Published'}</span>
+              {p.source?.pr ? (
+                <a className="ed-pill" href={p.source.pr.url} target="_blank" rel="noopener noreferrer">
+                  PR #{p.source.pr.number}
+                </a>
+              ) : p.source?.branch ? (
+                <span className="ed-pill" title={p.source.branch}>
+                  Unshipped
+                </span>
+              ) : null}
               {p.kind} · {p.updated ?? p.date} · {p.words.toLocaleString()} words
             </span>
-            <button type="button" className="ed-btn ed-prow__trash" aria-label={`Move ${p.title} to trash`} title="Move to trash" onClick={() => void trash(p.id, p.title)}>
-              <Trash2 size={16} strokeWidth={1.5} />
-            </button>
+            {hosted ? null : (
+              <button type="button" className="ed-btn ed-prow__trash" aria-label={`Move ${p.title} to trash`} title="Move to trash" onClick={() => void trash(p.id, p.title)}>
+                <Trash2 size={16} strokeWidth={1.5} />
+              </button>
+            )}
           </li>
         ))}
         {!posts.length ? <li className="ed-hint">Nothing here yet.</li> : null}

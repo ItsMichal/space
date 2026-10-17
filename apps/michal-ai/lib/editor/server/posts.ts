@@ -5,6 +5,8 @@ import path from 'node:path'
 import sharp, { type Metadata } from 'sharp'
 import type { PostFrontmatter, PostKind } from '@/lib/content/types'
 import { SLUG_RE, parsePost, serializePost, slugify } from '@/lib/content/serialize'
+import { frontmatterProblem } from '@/lib/editor/validate'
+import type { PostFile, PostSummary } from '@/lib/editor/wire'
 
 const ROOT = process.cwd()
 export const POSTS_DIR = path.join(ROOT, 'content', 'posts')
@@ -21,27 +23,7 @@ export class HttpError extends Error {
   }
 }
 
-export type PostSummary = {
-  id: string
-  title: string
-  slug: string
-  kind: PostKind
-  date: string
-  updated?: string
-  draft: boolean
-  tags: string[]
-  description: string
-  words: number
-  mtimeMs: number
-}
-
-export type PostFile = {
-  id: string
-  frontmatter: PostFrontmatter
-  body: string
-  hash: string
-  mtimeMs: number
-}
+export type { PostFile, PostSummary } from '@/lib/editor/wire'
 
 /* ------------------------------------------------------------------ helpers */
 
@@ -119,19 +101,9 @@ export function allTags(): string[] {
 }
 
 function validateFrontmatter(id: string, fm: PostFrontmatter) {
-  if (typeof fm.title !== 'string') throw new HttpError(400, 'title is required')
-  if (fm.slug !== id) throw new HttpError(400, 'slug differs from the file; use rename to change it')
-  if (fm.kind !== 'project' && fm.kind !== 'article') throw new HttpError(400, 'kind must be project or article')
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(fm.date)) throw new HttpError(400, 'date must be yyyy-mm-dd')
-  if (fm.updated && !/^\d{4}-\d{2}-\d{2}$/.test(fm.updated)) throw new HttpError(400, 'updated must be yyyy-mm-dd')
-  if (!Array.isArray(fm.tags)) throw new HttpError(400, 'tags must be a list')
-  if (fm.cover && !fm.cover.startsWith('/media/')) throw new HttpError(400, 'cover must live under /media/')
-  if (fm.parent) {
-    if (!SLUG_RE.test(fm.parent) || fm.parent === id) throw new HttpError(400, 'parent must be the slug of another project')
-    const parentFile = path.join(POSTS_DIR, `${fm.parent}.md`)
-    if (!fs.existsSync(parentFile)) throw new HttpError(400, `parent project "${fm.parent}" does not exist`)
-  }
-  for (const g of fm.gallery ?? []) if (!g.src.startsWith('/media/')) throw new HttpError(400, 'gallery images must live under /media/')
+  const problem = frontmatterProblem(id, fm)
+  if (problem) throw new HttpError(400, problem)
+  if (fm.parent && !fs.existsSync(path.join(POSTS_DIR, `${fm.parent}.md`))) throw new HttpError(400, `parent project "${fm.parent}" does not exist`)
 }
 
 export function writePost(
