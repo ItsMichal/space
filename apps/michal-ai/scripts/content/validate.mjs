@@ -47,7 +47,7 @@ const report = (file, msg) => problems.push(`${file}: ${msg}`)
 const ids = new Map()
 
 if (!fs.existsSync(postsDir)) {
-  console.error(`content: no posts folder at ${postsDir}. Run npm run content:pull (see docs/write.md).`)
+  console.error(`content: no posts folder at ${postsDir}. Run npm run content:pull (see docs/monorepo/content.md).`)
   process.exit(1)
 }
 

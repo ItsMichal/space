@@ -1,10 +1,12 @@
 // Content rules: the one definition of what a post file and a media file may contain. Posts and media are untrusted input (they
 // live in the ItsMichal/space-content repo, which the hosted editor can write to), so the same rules run in four places:
-//   - space-content CI (scripts/validate.mjs there, a copy of scripts/content/validate.mjs here, see scripts/content/make-seed.mjs)
+//   - space-content CI (its validate check runs scripts/content/validate.mjs from a checkout of ItsMichal/space main, so a pull
+//     request there cannot change the rules it is checked against)
 //   - the space build (prebuild runs scripts/content/validate.mjs), which refuses to build content that breaks them
 //   - the renderer (lib/content/render.tsx drops anything unsafe that got this far)
-//   - the hosted editor's Worker (write/worker/repo.ts), before it commits or opens a pull request
-// Plain JavaScript with no dependencies so the content repo can run it without the rest of this app. Types: rules.d.mts.
+//   - the hosted editor's Worker (space-content editor/write/worker/repo.ts, built on top of this app), before it commits or
+//     opens a pull request
+// Plain JavaScript with no dependencies, so it runs from scripts and from the Worker alike. Types: rules.d.mts.
 
 /* ------------------------------------------------------------------ limits */
 

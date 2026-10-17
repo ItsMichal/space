@@ -8,7 +8,6 @@
 apps/michal-ai/lib/og.tsx
 
 # Dev-only routes: never built for production (pageExtensions only registers *.dev.tsx under `next dev`) and the labs they use.
-apps/michal-ai/app/write/
 apps/michal-ai/app/ui/
 apps/michal-ai/app/cards/
 apps/michal-ai/app/mood/

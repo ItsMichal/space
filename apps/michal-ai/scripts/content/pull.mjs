@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // npm run content:pull: bring posts and post media in from ItsMichal/space-content (private) and lay them out where the build reads
 // them, content/posts/*.md and public/media/<slug>/*. The site keeps reading those two folders; this script is the only way
-// content gets there once the content repo is the source of truth (docs/write.md, "Content repo").
+// content gets there once the content repo is the source of truth (docs/monorepo/content.md).
 //
 // Source, in order:
 //   --from <dir> or CONTENT_DIR=<dir>   an existing checkout (CI checks it out with a read-only deploy key and passes its path)
