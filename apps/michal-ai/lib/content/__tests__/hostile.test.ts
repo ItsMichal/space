@@ -122,7 +122,6 @@ describe('dash rule', () => {
   it('matches scripts/check-dashes.mjs', () => {
     const src = fs.readFileSync(path.resolve(__dirname, '../../../../../scripts/check-dashes.mjs'), 'utf8')
     const m = /const DASH = (\/.*\/i)\n/.exec(src)!
-    // eslint-disable-next-line no-new-func
     const guard = new Function(`return ${m[1]}`)() as RegExp
     expect(guard.source).toBe(DASH_RE.source)
     expect(dashLines(`ok\nA ${EM} B`)).toEqual([{ line: 2, text: `A ${EM} B` }])

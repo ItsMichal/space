@@ -50,7 +50,6 @@ export function dashLines(text) {
 /* -------------------------------------------------------------------- URLs */
 
 // Browsers drop ASCII whitespace and control characters inside a scheme ("java\tscript:"), so they are removed before looking at it.
-// eslint-disable-next-line no-control-regex
 const strip = (url) => String(url).replace(/[\u0000- \u007f]+/g, '')
 const schemeOf = (url) => /^([a-z][a-z0-9+.-]*):/i.exec(strip(url))?.[1]?.toLowerCase() ?? null
 
