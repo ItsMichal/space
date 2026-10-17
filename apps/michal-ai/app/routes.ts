@@ -1,15 +1,11 @@
-import { index, layout, route, type RouteConfig } from '@react-router/dev/routes'
+import { index, route, type RouteConfig } from '@react-router/dev/routes'
 
-// Dev-only tools (the writing editor and the design labs). Only `react-router dev` sets NODE_ENV to "development"; any build leaves
-// them out, so production output can never contain them (asserted by lib/rr/routes.test.ts).
+// Dev-only tools (the design labs). Only `react-router dev` sets NODE_ENV to "development"; any build leaves them out, so
+// production output can never contain them (asserted by lib/rr/routes.test.ts). The writing editor is not here at all: it lives
+// in ItsMichal/space-content and is served at write.michal.ai.
 const dev: RouteConfig =
   process.env.NODE_ENV === 'development'
     ? [
-        layout('dev/write-layout.tsx', [
-          route('write', 'dev/write-index.tsx'),
-          route('write/:slug', 'dev/write-edit.tsx'),
-          route('write/:slug/preview', 'dev/write-preview.tsx'),
-        ]),
         route('cards', 'cards/page.dev.tsx'),
         route('glass', 'glass/page.dev.tsx'),
         route('glass/matrix', 'glass/matrix/page.dev.tsx'),

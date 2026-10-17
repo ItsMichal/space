@@ -6,6 +6,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import matter from 'gray-matter'
+import { SAFE_MATTER } from './content/rules.mjs'
 
 export function readRedirectMap(root = process.cwd()) {
   return JSON.parse(fs.readFileSync(path.join(root, 'content', 'redirects.json'), 'utf8'))
@@ -17,7 +18,7 @@ export function readPostPaths(root = process.cwd()) {
   return fs
     .readdirSync(dir)
     .filter((f) => f.endsWith('.md'))
-    .map((f) => ({ f, data: matter(fs.readFileSync(path.join(dir, f), 'utf8')).data }))
+    .map((f) => ({ f, data: matter(fs.readFileSync(path.join(dir, f), 'utf8'), SAFE_MATTER).data }))
     .filter(({ data }) => !data.draft)
     .map(({ f, data }) => {
       const slug = String(data.slug ?? f.replace(/\.md$/, ''))

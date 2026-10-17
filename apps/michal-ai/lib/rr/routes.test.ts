@@ -13,7 +13,7 @@ async function table(env: string) {
 afterEach(() => vi.unstubAllEnvs())
 
 describe('route table', () => {
-  const DEV_ONLY = ['write', 'cards', 'glass', 'kitchen-sink', 'micro', 'mood', 'motion', 'presence', 'shaders', 'ui']
+  const DEV_ONLY = ['cards', 'glass', 'kitchen-sink', 'micro', 'mood', 'motion', 'presence', 'shaders', 'ui']
 
   it('has no dev tools in a production (or any non-development) build', async () => {
     for (const env of ['production', 'test']) {
@@ -25,8 +25,15 @@ describe('route table', () => {
 
   it('adds them under `react-router dev`', async () => {
     const paths = (await table('development')).map((r) => r.path)
-    expect(paths).toContain('write')
     expect(paths).toContain('kitchen-sink')
+  })
+
+  it('never serves the writing editor or its API, in any environment (it lives in ItsMichal/space-content)', async () => {
+    for (const env of ['development', 'production', 'test']) {
+      const rs = await table(env)
+      expect(rs.filter((r) => /^(write|api)(\/|$)/.test(r.path ?? ''))).toEqual([])
+      expect(rs.some((r) => /write/.test(r.file))).toBe(false)
+    }
   })
 
   it('always has every public route', async () => {

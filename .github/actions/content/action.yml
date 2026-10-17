@@ -1,0 +1,45 @@
+name: Content
+description: >
+  Check out posts and post media from the private ItsMichal/space-content repo with read-only credentials and lay them into
+  apps/michal-ai (npm run content:pull, which validates them with lib/content/rules.mjs first). Credentials are either a
+  read-only deploy key (CONTENT_DEPLOY_KEY) or a fine-grained token limited to ItsMichal/space-content with Contents read
+  only (CONTENT_TOKEN, can be created from a phone); the key wins when both are set. Without either (fork pull requests,
+  or before the content split is set up) it does nothing and the build uses the content still in this repo. Run it after
+  ./.github/actions/setup and before ./.github/actions/media-cache (the cache key hashes public/media). See apps/michal-ai/docs/content-repo.md.
+inputs:
+  deploy-key:
+    description: Private half of the read-only deploy key on ItsMichal/space-content (secret CONTENT_DEPLOY_KEY).
+    required: false
+    default: ''
+  token:
+    description: Fine-grained token, repository ItsMichal/space-content only, Contents read only (secret CONTENT_TOKEN).
+    required: false
+    default: ''
+runs:
+  using: composite
+  steps:
+    - name: No content credentials
+      if: inputs.deploy-key == '' && inputs.token == ''
+      shell: bash
+      run: echo "::notice title=Content::CONTENT_DEPLOY_KEY / CONTENT_TOKEN not set; building with the posts and media in this repo."
+    - uses: actions/checkout@v4
+      if: inputs.deploy-key != ''
+      with:
+        repository: ItsMichal/space-content
+        ref: main
+        ssh-key: ${{ inputs.deploy-key }}
+        path: apps/michal-ai/.content
+        persist-credentials: false
+    - uses: actions/checkout@v4
+      if: inputs.deploy-key == '' && inputs.token != ''
+      with:
+        repository: ItsMichal/space-content
+        ref: main
+        token: ${{ inputs.token }}
+        path: apps/michal-ai/.content
+        persist-credentials: false
+    - name: Lay content into the app (validated first)
+      if: inputs.deploy-key != '' || inputs.token != ''
+      shell: bash
+      working-directory: apps/michal-ai
+      run: CONTENT_DIR=.content npm run content:pull

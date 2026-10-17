@@ -126,7 +126,10 @@ These describe the sandboxed agent harness used on this repo; they may not apply
 - Root `scripts/`: `check-identity.mjs` + `identity-lib.mjs` (guard), `check-dashes.mjs`, `check-slugs.mjs`, `smoke.sh`
   (post-deploy curl checks), allow/deny lists.
 - `.github/workflows/ci.yml` verifies PRs (path-filtered builds plus `wrangler deploy --dry-run`); `deploy.yml` deploys.
-  Shared steps are in `.github/actions/` (`setup`, `checks`, `media-cache`).
+  Shared steps are in `.github/actions/` (`setup`, `checks`, `content`, `media-cache`).
+- Posts, post media and the writing editor (write.michal.ai) live in the private repo ItsMichal/space-content. The content
+  rules, `npm run content:pull` and the cutover order: `apps/michal-ai/docs/content-repo.md`. Editor threat model and owner
+  setup: the space-content `README.md`.
 - `packages/config` shared tsconfig/eslint/prettier bases; `packages/tokens` token generator; `packages/motion` spring and
   stroke maths; `packages/crosslinks` the switcher, marks and pair map (plain ESM, tested with `npm test -w @space/crosslinks`).
 - `.claude/launch.json` is gitignored and local. It has `halmic` (port 4310) and `halmic-worker` (`wrangler dev` on 8788) entries

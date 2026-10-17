@@ -14,6 +14,7 @@ import type { Root } from 'hast'
 import { LIVE_BLOCK_REACTIONS } from '@/lib/presence/flag'
 import { blockIds } from '@/lib/presence/blocks'
 import { rehypeDropDeadEmbeds } from '@/lib/embeds'
+import { rehypeContentSafety } from './safety'
 
 // Turn directive nodes into hast elements with custom tag names that we map to components.
 // Only leaf (`::name`) and container (`:::name`) directives are components; inline `:name` text
@@ -85,7 +86,9 @@ export async function markdownToHast(source: string): Promise<Root> {
     .use(remarkGfm)
     .use(remarkDirective)
     .use(remarkDirectiveToHast)
-    .use(remarkRehype)
+    // Raw HTML in markdown is dropped here (no allowDangerousHtml, no rehype-raw); rehypeContentSafety cleans what is left.
+    .use(remarkRehype, { allowDangerousHtml: false })
+    .use(rehypeContentSafety)
     .use(rehypeUnwrapImages)
     .use(rehypeDropDeadEmbeds)
     .use(rehypeSlug)

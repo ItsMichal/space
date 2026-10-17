@@ -5,13 +5,14 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import matter from 'gray-matter'
+import { SAFE_MATTER } from '../lib/content/rules.mjs'
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
 const dir = path.join(root, 'content', 'posts')
 const slugs = []
 const ids = []
 for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.md'))) {
-  const { data } = matter(fs.readFileSync(path.join(dir, f), 'utf8'))
+  const { data } = matter(fs.readFileSync(path.join(dir, f), 'utf8'), SAFE_MATTER)
   if (data.draft) continue
   const slug = String(data.slug ?? f.replace(/\.md$/, ''))
   slugs.push(slug)

@@ -8,5 +8,6 @@
     "types": ["vite/client"]
   },
   "include": ["**/*.ts", "**/*.tsx", "**/*.mts", ".react-router/types/**/*"],
-  "exclude": ["node_modules", "worker", "build", ".react-router", "scripts/parity"]
+  // write/worker and write/dist belong to the editor that ItsMichal/space-content lays over this app (it typechecks them itself).
+  "exclude": ["node_modules", "worker", "write/worker", "write/dist", "build", ".react-router", "scripts/parity"]
 }

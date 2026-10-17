@@ -1,6 +1,7 @@
 // Pure helpers for (de)serialising a post file. No fs access, so it is safe in any runtime.
 // The key order and flow-style tags match the hand-written files in content/posts.
 import matter from 'gray-matter'
+import { SAFE_MATTER } from './rules.mjs'
 import type { GalleryItem, PostFrontmatter, PostKind, PostLink } from './types'
 
 const KEY_ORDER: (keyof PostFrontmatter)[] = [
@@ -139,7 +140,7 @@ export function frontmatterFromData(data: Record<string, unknown>, fileSlug: str
 }
 
 export function parsePost(raw: string, fileSlug: string): { frontmatter: PostFrontmatter; body: string } {
-  const { data, content } = matter(raw)
+  const { data, content } = matter(raw, SAFE_MATTER)
   return { frontmatter: frontmatterFromData(data, fileSlug), body: content.trim() }
 }
 
