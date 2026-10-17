@@ -1,7 +1,9 @@
 // Prints /resume to PDF with headless Google Chrome: public/resume.pdf (US Letter) and public/resume-a4.pdf (A4).
 // The page's own print stylesheet (components/about/resume.css) hides the site chrome and sets the type for paper.
 // Needs a running site (default http://localhost:3100: `npm run dev:michal`, or `npm run build:michal` then `npm run start -w @space/michal-ai`).
-// Usage: node scripts/build-resume-pdf.mjs [baseUrl] [outDir]
+// Usage: node scripts/build-resume-pdf.mjs [baseUrl] [outDir] [--preview]
+//   --preview names the files resume-letter.pdf and resume-a4.pdf (for a review folder such as docs/resume-preview/) so a
+//   preview never overwrites the published public/resume.pdf. Each run prints the page count of every file it writes.
 // The old public/BodzianowskiResume.pdf is left untouched until the owner approves the new one.
 import { createRequire } from 'node:module'
 import { spawn } from 'node:child_process'
@@ -11,8 +13,10 @@ import path from 'node:path'
 const require = createRequire(import.meta.url)
 const WS = require('ws')
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
-const base = process.argv[2] ?? process.env.BASE ?? 'http://localhost:3100'
-const outDir = path.resolve(process.argv[3] ?? path.join(root, 'public'))
+const args = process.argv.slice(2).filter((a) => !a.startsWith('--'))
+const preview = process.argv.includes('--preview')
+const base = args[0] ?? process.env.BASE ?? 'http://localhost:3100'
+const outDir = path.resolve(args[1] ?? path.join(root, 'public'))
 fs.mkdirSync(outDir, { recursive: true })
 const chromeBin = process.env.CHROME ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const port = 9300 + Math.floor(Math.random() * 300)
@@ -48,7 +52,7 @@ try {
   await send('Emulation.setEmulatedMedia', { media: 'print' })
   await send('Runtime.evaluate', { expression: 'document.fonts.ready.then(() => true)', awaitPromise: true })
   const sizes = [
-    ['resume.pdf', 8.5, 11],
+    [preview ? 'resume-letter.pdf' : 'resume.pdf', 8.5, 11],
     ['resume-a4.pdf', 8.27, 11.69],
   ]
   for (const [name, w, h] of sizes) {
@@ -63,8 +67,10 @@ try {
       preferCSSPageSize: false,
       displayHeaderFooter: false,
     })
-    fs.writeFileSync(path.join(outDir, name), Buffer.from(data, 'base64'))
-    console.log('wrote', path.join(outDir, name))
+    const pdf = Buffer.from(data, 'base64')
+    fs.writeFileSync(path.join(outDir, name), pdf)
+    const pages = (pdf.toString('latin1').match(/\/Type\s*\/Page(?![s\w])/g) ?? []).length
+    console.log('wrote', path.join(outDir, name), `(${pages} page${pages === 1 ? '' : 's'})`)
   }
   ws.close()
 } finally {
