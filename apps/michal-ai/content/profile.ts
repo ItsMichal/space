@@ -87,10 +87,13 @@ export const profile = {
     "Hi, I'm Michał Bodzianowski, an award-winning creative developer with a passion for developing innovative and engaging user experiences. I specialize in full-stack web dev with React/TypeScript, as well as UI/UX design and AI/ML integrations.",
     "I'm a software engineer at SpaceX, growing the Starlink.com platform for millions and then billions worldwide. Before that I spent three and a half years at the Institute of Cognitive Science at the University of Colorado Boulder, working with the SHINE Laboratory and the AI Institute (iSAT).",
   ],
-  worksFor: [
-    { name: 'SpaceX', url: 'https://www.spacex.com' },
+  /** Current employer for JSON-LD `worksFor`. Empty: no current employer is stated (SpaceX ended in 2026); lib/seo omits the property then. */
+  worksFor: [] as readonly { name: string; url: string }[],
+  /** Past schools and employers for JSON-LD `alumniOf`. */
+  alumniOf: [
+    { type: 'CollegeOrUniversity', name: 'University of Colorado Boulder', url: 'https://www.colorado.edu' },
+    { type: 'Organization', name: 'SpaceX', url: 'https://www.spacex.com' },
   ],
-  alumniOf: ['University of Colorado Boulder'],
   /**
    * The owner's own photograph (public/media/about/portrait.webp, 900x1200, metadata stripped by scripts/make-about-portrait.mjs).
    * Used plainly: real background, no filter. `focus` is the object-position that frames the face when the card crops it.
@@ -116,7 +119,7 @@ export const profile = {
   ],
   /** Compact home page Experience list, newest first. */
   experience: [
-    { company: 'SpaceX', role: 'Software Engineer', since: '2024', years: '2024 to now' },
+    { company: 'SpaceX', role: 'Software Engineer', since: '2024', years: '2024 to 2026' },
     { company: 'Institute of Cognitive Science, CU Boulder (SHINE Lab, iSAT)', role: 'Software Engineer', short: 'CU Boulder', since: '2020', years: '2020 to 2024' },
     { company: 'AmedicaRx', role: 'Full stack developer (contract)', since: '2022', years: '2022 to 2023' },
     { company: 'Windward Studios', role: 'Software development intern', since: '2019', years: '2019 to 2020' },
@@ -136,7 +139,7 @@ export const profile = {
   },
   /**
    * Full career, newest first. Source: the owner's own LinkedIn text (docs/content-review/linkedin-source.md), with the resume
-   * for stack lines. Dates follow LinkedIn. Locations are left out on purpose.
+   * for stack lines. Dates follow LinkedIn (the SpaceX end is year only, from the owner). Locations are left out on purpose.
    */
   career: [
     {
@@ -145,8 +148,9 @@ export const profile = {
       org: 'SpaceX',
       role: 'Software Engineer',
       orgUrl: 'https://www.spacex.com',
-      dates: 'Apr 2024 to now',
+      dates: 'Apr 2024 to 2026',
       start: '2024-04',
+      end: '2026',
       summary: 'Growing the Starlink.com platform for millions and then billions worldwide, through technical excellence and collaboration with business stakeholders.',
       bullets: [
         'Responsible for unlocking the Starlink Mini retail launch',
