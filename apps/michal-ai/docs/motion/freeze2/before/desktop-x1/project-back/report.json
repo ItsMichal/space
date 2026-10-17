@@ -1,0 +1,115 @@
+{
+  "name": "project-back",
+  "profile": "desktop",
+  "throttle": 1,
+  "notes": [],
+  "inputType": "popstate",
+  "screencast": {
+    "frames": 70,
+    "durationMs": 1638.6,
+    "gapsMs": {
+      "p50": 16.7,
+      "p95": 22.4,
+      "max": 23,
+      "over25": 0,
+      "over40": 0
+    },
+    "motionFrames": 33
+  },
+  "responseMs": 338.6,
+  "motionMs": 516,
+  "timingFrom": "clean pass",
+  "raf": {
+    "frames": 41,
+    "p50": 16.7,
+    "p95": 16.8,
+    "max": 299.9,
+    "dropped": 17,
+    "over33": 1,
+    "over50": 1
+  },
+  "tracked": {
+    ".hero__img": {
+      "presentFrames": 1,
+      "of": 40
+    },
+    ".tile__img": {
+      "presentFrames": 39,
+      "of": 40,
+      "axis": "w",
+      "range": 31.7,
+      "moving": true,
+      "frames": 20,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 3.3,
+      "maxJerkPx": 0.2,
+      "jerkRatio": 0.006
+    },
+    ".reading__surface": {
+      "presentFrames": 1,
+      "of": 40
+    },
+    "pixelCentroid.cx": {
+      "range": 276,
+      "moving": true,
+      "frames": 3,
+      "reversals": 0,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 275.63,
+      "maxJerkPx": 138.27,
+      "jerkRatio": 0.501
+    },
+    "pixelCentroid.cy": {
+      "range": 380.5,
+      "moving": true,
+      "frames": 3,
+      "reversals": 1,
+      "stalls": 0,
+      "jumps": 0,
+      "maxStepPx": 379.67,
+      "maxJerkPx": 91.52,
+      "jerkRatio": 0.241
+    }
+  },
+  "domResponseMs": null,
+  "flash": {
+    "screencastFrames": 0,
+    "details": [],
+    "blankDomFrames": 0
+  },
+  "cls": {
+    "value": 0,
+    "entries": []
+  },
+  "longTasks": {
+    "count": 1,
+    "maxMs": 289,
+    "totalMs": 289
+  },
+  "loaf": {
+    "count": 1,
+    "maxMs": 297.8,
+    "worst": [
+      {
+        "d": 297.8,
+        "scripts": [
+          {
+            "src": "entry.client-Drh284G9.js",
+            "fn": "bt",
+            "d": 289.40000009536743,
+            "kind": "event-listener"
+          }
+        ]
+      }
+    ]
+  },
+  "trace": null,
+  "verdict": [
+    "SLOW-RESPONSE 338.6ms",
+    "DROPPED 17",
+    "LONGTASK 1x max 289ms"
+  ]
+}

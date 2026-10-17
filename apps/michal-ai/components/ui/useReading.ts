@@ -95,6 +95,7 @@ export function useReading(routeKey = '', restMs = 2200): Reading | null {
       )
     }
     const schedule = () => {
+      if (!ready) return
       if (!raf) raf = requestAnimationFrame(compute)
     }
     const onScroll = () => {
@@ -107,16 +108,35 @@ export function useReading(routeKey = '', restMs = 2200): Reading | null {
       schedule()
     }
     const onResize = () => {
+      if (!ready) return
       measure()
       schedule()
     }
-    measure()
-    compute()
+    // Measuring walks every block of the article (a layout read per element); on a client navigation that landed in the commit that
+    // opens the page (111 ms at 4x CPU) and again from the ResizeObserver's first callback. Now once, when the browser is idle.
+    let ready = false
+    let first = true
+    const init = () => {
+      measure()
+      compute()
+      ready = true
+    }
+    const hasIdle = typeof requestIdleCallback === 'function'
+    const idle = hasIdle ? requestIdleCallback(init, { timeout: 700 }) : setTimeout(init, 120)
+    const onSize = () => {
+      if (first) {
+        first = false
+        return
+      }
+      if (ready) onResize()
+    }
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onResize, { passive: true })
-    const ro = new ResizeObserver(onResize)
+    const ro = new ResizeObserver(onSize)
     ro.observe(body)
     return () => {
+      if (hasIdle) cancelIdleCallback(idle as number)
+      else clearTimeout(idle as ReturnType<typeof setTimeout>)
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onResize)
       ro.disconnect()
