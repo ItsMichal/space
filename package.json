@@ -11,6 +11,7 @@
     "dev:halmic": "npm run dev -w @space/halmic",
     "build:michal": "npm run build -w @space/michal-ai",
     "build:halmic": "npm run build -w @space/halmic",
+    "build:write": "npm run write:build -w @space/michal-ai",
     "build": "npm run build:michal",
     "deploy:michal": "npm run deploy -w @space/michal-ai",
     "deploy:halmic": "npm run deploy -w @space/halmic",

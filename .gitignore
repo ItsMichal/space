@@ -65,6 +65,9 @@ apps/michal-ai/.cache/
 # parity harness output (golden and candidate snapshots, screenshots)
 apps/michal-ai/.parity/
 
+# hosted editor build (npm run build:write)
+apps/michal-ai/write/dist/
+
 # react router
 apps/michal-ai/build/
 apps/michal-ai/.react-router/

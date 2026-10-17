@@ -10,8 +10,8 @@ import path from 'node:path'
 
 const root = path.resolve(import.meta.dirname, '..')
 const app = path.join(root, 'apps', 'michal-ai')
-const SCAN = ['app', 'components', 'lib', 'content', 'worker', 'public', 'site.config.ts']
-const SKIP_DIRS = new Set(['node_modules', '.next', 'build', '.react-router', '.parity', '.open-next', '.wrangler', '_v', 'medium-src', 'botanical', 'globe', 'textures', 'icons'])
+const SCAN = ['app', 'components', 'lib', 'content', 'worker', 'write', 'public', 'site.config.ts']
+const SKIP_DIRS = new Set(['node_modules', '.next', 'build', '.react-router', '.parity', '.open-next', '.wrangler', 'dist', '_v', 'medium-src', 'botanical', 'globe', 'textures', 'icons'])
 const TEXT = /\.(html?|css|js|mjs|cjs|jsx|ts|tsx|json|md|mdx|txt|xml|svg|webmanifest|csv)$/i
 const SKIP_FILES = new Set(['lib/media/manifest.json'])
 const DASH = /[–—]|&mdash;|&ndash;|&#8212;|&#8211;|\\u201[34]|\\u\{201[34]\}/i

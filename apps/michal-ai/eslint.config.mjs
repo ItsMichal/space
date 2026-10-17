@@ -1,3 +1,3 @@
 import { reactConfig } from '@space/config/eslint'
 
-export default reactConfig()
+export default [{ ignores: ['write/dist/**'] }, ...reactConfig()]
