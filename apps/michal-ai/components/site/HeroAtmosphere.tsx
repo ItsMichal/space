@@ -16,6 +16,11 @@ import './hero.css'
  * hero fills the top of the screen, <html data-hero-edge> sets that colour to the active tint (hero.css), so the strip
  * matches the hero instead of the paper; once the hero scrolls away it goes back to the paper. The flag flips on one passive
  * scroll listener (only when crossing the line, no per-frame work), and leaving the page removes it.
+ *
+ * The top status bar is not tinted, on purpose. iOS 26.3 Safari colours it from a fixed element at the top edge (here the
+ * nav's header, so the paper) and reads it once, at first paint: later changes, a replaced element, scrolling and client
+ * navigation all keep the first colour (checked in the simulator). A band in the tint there would tint the bar on the
+ * home page, but it would then stay tinted over the paper below the hero and on every page reached from home.
  */
 export function HeroAtmosphere({ tints }: { tints: string[] }) {
   const index = useSyncExternalStore(onHeroIndex, getHeroIndex, () => 0)
