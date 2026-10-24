@@ -44,6 +44,17 @@ build time `lib/ink/inline.server.ts` reads and checks the file again and puts i
 `components/ink/InkPlayer.tsx` draws it as inline SVG made only from numbers. Attributes are clamped
 (`HANDWRITING` in `rules.mjs`); `alt` is required. Tests: `lib/content/__tests__/handwriting.test.ts`.
 
+**Card order and presentation.** `content/layout.json` (space-content: `site/layout.json`) pins the order of Selected
+work on the home page and /projects (`work`), the writing list (`writing`) and the hero's rotating line (`hooks`), and
+sets per project card a `size` (`feature` or `regular`), a `variant` (`newsroom`, `fill`, `cap`), an image `focus`
+(`"x% y%"`) and `home: false` to keep it to /projects. Pins come first in pin order; everything else follows in the
+default order (minor last, then priority, then newest), so the file only lists what was moved. `parseLayout` in
+`rules.mjs` takes printable ASCII only, at most 32 KB, exactly those keys and enums, no slug twice in a list (limits in
+`LAYOUT`); `layoutRefProblems` reports slugs that do not exist or are the wrong kind for their list. The validator
+checks it with the posts (`--layout`), `lib/content/layout.ts` parses it again for the site, and the editor's Arrange
+screen (`/arrange` at write.michal.ai) writes it on the branch `write/_layout` and ships it as a pull request. Tests:
+`lib/content/__tests__/layout.test.tsx`.
+
 ## How the editor shares site code: the overlay build
 
 space-content does not copy or vendor site code. Its CI checks out this repo's `main` into `.site`, runs `npm ci` there,
@@ -69,8 +80,9 @@ npm run content:pull -w @space/michal-ai                       # clones or updat
 CONTENT_DIR=../space-content npm run content:pull -w @space/michal-ai   # or use a checkout you already have
 ```
 
-It validates the checkout first, then makes `content/posts/*.md` exactly the content repo's `posts/`, and replaces every
-post folder in `public/media/` with the content repo's copy. It never touches `about/`, `_v/`, `_og/` or `CREDITS.md`, and
+It validates the checkout first, then makes `content/posts/*.md` exactly the content repo's `posts/`, replaces every
+post folder in `public/media/` with the content repo's copy, and copies `site/layout.json` to `content/layout.json` (or
+writes `{ "version": 1 }`, the default order, when the content repo has none). It never touches `about/`, `_v/`, `_og/` or `CREDITS.md`, and
 it refuses symlinks. `.content/` is gitignored.
 
 In CI and deploy, `.github/actions/content` checks space-content out with the read-only deploy key in secret

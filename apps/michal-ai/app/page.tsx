@@ -6,6 +6,7 @@ import { HeroHook } from '@/components/site/HeroHook'
 import { HeroAtmosphere } from '@/components/site/HeroAtmosphere'
 import { postPath } from '@/lib/seo'
 import { tintFor } from '@/lib/tints'
+import { heroHooks, homeWriting } from '@/lib/content/layout'
 import { NameHeader } from '@/components/site/NameHeader'
 import { ProjectList } from '@/components/site/ProjectList'
 import { Showcase } from '@/components/work/Showcase'
@@ -38,8 +39,9 @@ const h2 = 'reveal mb-space-6 font-display text-title'
 export default function Home() {
   const projects = getMainProjects()
   const articles = getBlogPosts()
-  // Rotating hero line: every post that sets `hook`, in the site's own order (priority, then newest).
-  const hookPosts = getAllPosts().filter((p) => p.hook)
+  const latest = homeWriting(articles)
+  // Rotating hero line: every post that sets `hook`, the layout file's `hooks` first, then the site's own order (priority, then newest).
+  const hookPosts = heroHooks(getAllPosts().filter((p) => p.hook))
   const hooks = hookPosts.map((p) => ({ text: p.hook!, href: postPath(p) }))
   const tints = hookPosts.map((p) => tintFor(p.slug).hex)
 
@@ -71,7 +73,7 @@ export default function Home() {
           <h2 id="writing-h" className={h2}>
             Writing
           </h2>
-          <ProjectList posts={articles.slice(0, 3)} base="/writing" />
+          <ProjectList posts={latest.slice(0, 3)} base="/writing" />
           {articles.length > 3 ? (
             <Link href="/writing" className="link mt-space-2 flex min-h-[44px] items-center">
               All {articles.length} posts <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />

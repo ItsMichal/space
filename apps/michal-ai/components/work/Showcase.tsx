@@ -5,6 +5,7 @@ import type { Post } from '@/lib/content/types'
 import { tintFor } from '@/lib/tints'
 import { getPublication } from '@/lib/publications'
 import { Picture } from '@/components/media/Picture'
+import { cardOf, isFeature, siteLayout, type SiteLayout } from '@/lib/content/layout'
 import { matchesFilter, PROJECT_FILTERS } from '@/components/ui/segments'
 import './cards.css'
 
@@ -45,6 +46,7 @@ export function ProjectCard({
   variant = 'newsroom',
   glass = false,
   article = false,
+  focus,
 }: {
   post: Post
   href: string
@@ -56,6 +58,8 @@ export function ProjectCard({
   glass?: boolean
   /** A writing post: the date is the tertiary line instead of year and role. */
   article?: boolean
+  /** Focal point of the card image ("50% 30%"), from the layout file. Defaults to the cover's `coverFocus`. */
+  focus?: string
 }) {
   const src = post.cardImage === 'none' ? undefined : (post.cardImage ?? post.cover)
   const alt = post.cardImage ? (post.cardImageAlt ?? '') : (post.coverAlt ?? '')
@@ -74,7 +78,7 @@ export function ProjectCard({
             sizes={feature ? '(min-width: 1160px) 1120px, (min-width: 640px) 94vw, 78vw' : '(min-width: 1100px) 380px, (min-width: 640px) 45vw, 78vw'}
             priority={priority}
             className="tile__img"
-            focus={post.cardImage ? undefined : post.coverFocus}
+            focus={focus ?? (post.cardImage ? undefined : post.coverFocus)}
           />
         </div>
       ) : (
@@ -106,8 +110,9 @@ export function ProjectCard({
 }
 
 /**
- * Selected work as tiles, in the order given (the site's priority order). The first tile is the feature (full width,
- * image beside the text from 840px up); the rest are equal tiles. `variant="row"` (home): on phones the tiles are one
+ * Selected work as tiles, in the order given (the site's priority order, led by the layout file's pins). The first tile is
+ * the feature (full width, image beside the text from 840px up) and the rest are equal tiles, unless the layout file sets a
+ * card's size; it can also set a card's variant and image focus. `variant="row"` (home): on phones the tiles are one
  * native, swipeable snap row; `variant="grid"` (/projects): one column on phones. Two columns from 640px, three from 1100px.
  */
 export function Showcase({
@@ -117,6 +122,7 @@ export function Showcase({
   priority = false,
   variant = 'grid',
   glass = false,
+  layout = siteLayout,
 }: {
   posts: Post[]
   base: string
@@ -124,16 +130,22 @@ export function Showcase({
   priority?: boolean
   variant?: 'row' | 'grid'
   glass?: boolean
+  /** Card presentation (the site's layout file; the editor's Arrange preview passes its draft). */
+  layout?: SiteLayout
 }) {
   const shown = limit ? posts.slice(0, limit) : posts
   return (
     <div className="work">
       <ul className={`tiles tiles--${variant}`}>
-        {shown.map((p, i) => (
-          <li key={p.slug} className={`reveal${i === 0 ? ' tiles__feature' : ''}`} data-buckets={buckets(p)}>
-            <ProjectCard post={p} href={`${base}/${p.slug}`} feature={i === 0} priority={priority && i === 0} glass={glass} />
-          </li>
-        ))}
+        {shown.map((p, i) => {
+          const feature = isFeature(p, i, layout)
+          const card = cardOf(p.slug, layout)
+          return (
+            <li key={p.slug} className={`reveal${feature ? ' tiles__feature' : ''}`} data-buckets={buckets(p)}>
+              <ProjectCard post={p} href={`${base}/${p.slug}`} feature={feature} priority={priority && i === 0} glass={glass} variant={feature ? undefined : card.variant} focus={card.focus} />
+            </li>
+          )
+        })}
       </ul>
       {limit && posts.length > shown.length ? (
         <Link href={base} className="work-more link">

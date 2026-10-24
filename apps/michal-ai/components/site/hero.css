@@ -1,6 +1,7 @@
 /* Hero atmosphere: stacked flat tints behind the first screen, cross-faded by opacity only. It is an ordinary layer in the
    page flow (no fixed positioning, no scroll handler), sized in svh so the iOS URL bar never changes it, and its bottom
-   edge dissolves into the paper through a static mask. */
+   edge dissolves into the paper through each layer's own gradient. No CSS mask here or on the slot: WebKit's PDF snapshot
+   (Safari's full-page screenshot, print to PDF) paints a masked layer as a black block, which blacked out the whole hero. */
 .hero-atm {
   position: absolute;
   inset: 0 0 auto 0;
@@ -11,12 +12,13 @@
   overflow: hidden;
   pointer-events: none;
   contain: strict;
-  -webkit-mask-image: linear-gradient(180deg, #000 0, #000 52%, transparent 100%);
-  mask-image: linear-gradient(180deg, #000 0, #000 52%, transparent 100%);
 }
 .hero-atm__layer {
   position: absolute;
   inset: 0;
+  /* fades to the tint at alpha 0, not to `transparent` (black at alpha 0): a renderer that does not premultiply (the PDF snapshot)
+     would otherwise draw a grey band */
+  background: linear-gradient(180deg, var(--tint) 0, var(--tint) 52%, color-mix(in srgb, var(--tint) 0%, transparent) 100%);
   opacity: 0;
   transition: opacity 2600ms var(--ease-in-out-soft);
 }
@@ -36,7 +38,8 @@
 }
 
 /* Slot for a decorative hero element (for example the globe). Same box as the tint layer, painted above it and below the
-   text, never interactive. Empty by default. */
+   text, never interactive. Empty by default. It clips, and does not mask (see above): the globe's satellite shell already fades out
+   before its own canvas edge (presence/globe/renderer.ts). */
 .hero-slot {
   position: absolute;
   inset: 0 0 auto 0;
@@ -44,6 +47,20 @@
   height: min(100svh + 560px, 1340px);
   overflow: hidden;
   pointer-events: none;
-  -webkit-mask-image: linear-gradient(180deg, #000 0, #000 52%, transparent 100%);
-  mask-image: linear-gradient(180deg, #000 0, #000 52%, transparent 100%);
+}
+
+/* Safari's bars and side strip take the page colour (HeroAtmosphere.tsx): while the hero fills the top of the screen the page
+   colour is the active tint, and it eases back to the paper as the hero scrolls away. Under the solid top half of the
+   atmosphere the change is invisible; below it, the fade runs into the tint rather than the paper while the hero is up
+   (the bottom of a tall phone screen reads a touch more tinted). The first colour is set without a transition. */
+html[data-hero-edge] {
+  background-color: var(--edge-tint, var(--paper));
+}
+html[data-hero-edge-ready] {
+  transition: background-color 900ms var(--ease-in-out-soft);
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-hero-edge-ready] {
+    transition: none;
+  }
 }

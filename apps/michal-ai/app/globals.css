@@ -1117,8 +1117,9 @@ html[data-backdrop-gl] .backdrop-css {
 
 /* ---------- Hero hook: "I've built <phrase>" ----------
    A stem plus a slowly rolling phrase. All phrases sit in one grid cell, so the cell is as tall as the tallest one
-   (no layout shift, two lines reserved on phones automatically). The roll moves 0.6em and fades; the mask feathers the
-   top and bottom so there is no hard clip line. Positions are driven by data-slot, so every change is a CSS transition
+   (no layout shift, two lines reserved on phones automatically). The roll moves 8px and fades (craft.css), inside the
+   padding, so the clip line is never reached. No CSS mask: WebKit's PDF snapshot (Safari's full-page screenshot) paints
+   masked boxes black. Positions are driven by data-slot, so every change is a CSS transition
    that retargets from wherever it is (fully interruptible). */
 .hook {
   display: flex;
@@ -1138,8 +1139,6 @@ html[data-backdrop-gl] .backdrop-css {
   padding-block: var(--pad);
   margin-block: calc(var(--pad) * -1);
   touch-action: pan-y;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 calc(var(--pad) * 0.95), #000 calc(100% - var(--pad) * 0.95), transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 0, #000 calc(var(--pad) * 0.95), #000 calc(100% - var(--pad) * 0.95), transparent 100%);
 }
 .hook__list {
   display: grid;

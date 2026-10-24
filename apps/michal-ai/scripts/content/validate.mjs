@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Content validator: every post and media file against lib/content/rules.mjs. Exits 1 on any problem.
+// Content validator: every post and media file, and the layout file, against lib/content/rules.mjs. Exits 1 on any problem.
 // Runs in three places with the same code:
 //   - here, from prebuild: node scripts/content/validate.mjs (content/posts and the post folders of public/media)
 //   - here, by hand: npm run content:check, or with --posts <dir> --media <dir> against any checkout
@@ -8,7 +8,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import matter from 'gray-matter'
-import { SAFE_MATTER, bodyProblems, dashLines, frontmatterProblem, handwritingSources, mediaProblem, rawPostProblem, slugProblem } from '../../lib/content/rules.mjs'
+import { SAFE_MATTER, bodyProblems, dashLines, frontmatterProblem, handwritingSources, layoutRefProblems, mediaProblem, parseLayout, rawPostProblem, slugProblem } from '../../lib/content/rules.mjs'
 
 // Media folders that belong to the site, not to posts (they stay in the space repo).
 const SITE_MEDIA = new Set(['about', '_v', '_og'])
@@ -21,6 +21,10 @@ const arg = (name, fallback) => {
 const inApp = fs.existsSync(path.join(process.cwd(), 'content', 'posts')) && fs.existsSync(path.join(process.cwd(), 'public', 'media'))
 const postsDir = path.resolve(arg('--posts', inApp ? 'content/posts' : 'posts'))
 const mediaDir = path.resolve(arg('--media', inApp ? 'public/media' : 'media'))
+// The layout file is optional (no file: the site's default order). It sits next to the posts folder: site/layout.json in a
+// space-content checkout, layout.json in the app's content folder. Found from the posts folder so --posts on its own stays self-contained.
+const besidePosts = [path.join(path.dirname(postsDir), 'site', 'layout.json'), path.join(path.dirname(postsDir), 'layout.json')]
+const layoutFile = path.resolve(arg('--layout', besidePosts.find((f) => fs.existsSync(f)) ?? besidePosts[0]))
 
 /** Frontmatter as the site sees it: the same normalisation as lib/content/serialize.ts frontmatterFromData, for the checked fields. */
 function normalise(data, id) {
@@ -45,6 +49,7 @@ function normalise(data, id) {
 const problems = []
 const report = (file, msg) => problems.push(`${file}: ${msg}`)
 const ids = new Map()
+const refs = []
 
 if (!fs.existsSync(postsDir)) {
   console.error(`content: no posts folder at ${postsDir}. Run npm run content:pull (see docs/content-repo.md).`)
@@ -77,6 +82,7 @@ for (const e of fs.readdirSync(postsDir, { withFileTypes: true })) {
   const fm = normalise(parsed.data, id)
   const fp = frontmatterProblem(id, fm)
   if (fp) report(rel, fp)
+  refs.push({ slug: id, kind: fm.kind, parent: fm.parent ? String(fm.parent) : undefined, hook: fm.hook ? String(fm.hook) : undefined })
   const postId = String(parsed.data.id ?? id)
   if (ids.has(postId)) report(rel, `id "${postId}" is also used by ${ids.get(postId)}`)
   ids.set(postId, rel)
@@ -107,8 +113,21 @@ if (fs.existsSync(mediaDir)) {
   }
 }
 
+let layoutNote = ''
+if (fs.existsSync(layoutFile)) {
+  const rel = path.relative(process.cwd(), layoutFile)
+  const st = fs.lstatSync(layoutFile)
+  if (!st.isFile()) report(rel, 'must be a plain file')
+  else {
+    const r = parseLayout(new Uint8Array(fs.readFileSync(layoutFile)))
+    if (r.problem) report(rel, r.problem)
+    else for (const p of layoutRefProblems(r.layout, refs)) report(rel, p)
+    layoutNote = ', with the layout file,'
+  }
+}
+
 if (problems.length) {
   console.error(`content: ${problems.length} problem${problems.length > 1 ? 's' : ''}\n${problems.map((p) => `  ${p}`).join('\n')}`)
   process.exit(1)
 }
-console.log(`content: ${ids.size} posts and their media pass the content rules`)
+console.log(`content: ${ids.size} posts and their media${layoutNote} pass the content rules`)

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// npm run content:pull: bring posts and post media in from ItsMichal/space-content (private) and lay them out where the build reads
-// them, content/posts/*.md and public/media/<slug>/*. The site keeps reading those two folders; this script is the only way
+// npm run content:pull: bring posts, post media and the layout file in from ItsMichal/space-content (private) and lay them out where
+// the build reads them, content/posts/*.md, public/media/<slug>/* and content/layout.json. The site keeps reading those places; this script is the only way
 // content gets there once the content repo is the source of truth (docs/content-repo.md).
 //
 // Source, in order:
@@ -39,12 +39,13 @@ if (src) {
 
 const posts = path.join(src, 'posts')
 const media = path.join(src, 'media')
+const layout = path.join(src, 'site', 'layout.json')
 if (!fs.existsSync(posts)) {
   console.error(`content: ${src} has no posts/ folder. Is it a checkout of ItsMichal/space-content?`)
   process.exit(1)
 }
 
-run(process.execPath, [path.join(app, 'scripts', 'content', 'validate.mjs'), '--posts', posts, '--media', media], { cwd: app })
+run(process.execPath, [path.join(app, 'scripts', 'content', 'validate.mjs'), '--posts', posts, '--media', media, '--layout', layout], { cwd: app })
 
 // Posts: the folder becomes exactly the content repo's posts.
 const outPosts = path.join(app, 'content', 'posts')
@@ -78,6 +79,16 @@ if (fs.existsSync(media)) {
     }
   }
 }
+// Layout: the content repo's site/layout.json, or the default order when it has none.
+const outLayout = path.join(app, 'content', 'layout.json')
+if (fs.existsSync(layout)) {
+  if (!fs.lstatSync(layout).isFile()) {
+    console.error('content: site/layout.json is not a regular file')
+    process.exit(1)
+  }
+  fs.copyFileSync(layout, outLayout)
+} else fs.writeFileSync(outLayout, '{ "version": 1 }\n')
+
 const sha = (() => {
   try {
     return execFileSync('git', ['-C', src, 'rev-parse', '--short', 'HEAD'], { encoding: 'utf8' }).trim()
@@ -85,4 +96,4 @@ const sha = (() => {
     return 'unknown'
   }
 })()
-console.log(`content: ${n} posts and ${m} media files from space-content ${sha}`)
+console.log(`content: ${n} posts, ${m} media files and ${fs.existsSync(layout) ? 'the layout file' : 'the default layout'} from space-content ${sha}`)
