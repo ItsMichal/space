@@ -1,6 +1,6 @@
 'use client'
 
-import { useSyncExternalStore } from 'react'
+import { useSyncExternalStore, type CSSProperties } from 'react'
 import { getHeroIndex, onHeroIndex } from '@/lib/hero/store'
 import './hero.css'
 
@@ -16,7 +16,7 @@ export function HeroAtmosphere({ tints }: { tints: string[] }) {
   return (
     <div className="hero-atm" aria-hidden>
       {tints.map((hex, i) => (
-        <div key={i} className="hero-atm__layer" data-active={i === index ? '' : undefined} style={{ backgroundColor: hex }} />
+        <div key={i} className="hero-atm__layer" data-active={i === index ? '' : undefined} style={{ '--tint': hex } as CSSProperties} />
       ))}
     </div>
   )
