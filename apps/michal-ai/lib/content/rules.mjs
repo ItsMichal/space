@@ -106,7 +106,38 @@ export const CALLOUT_TYPES = ['note', 'tip', 'warning']
 export const RATIO_RE = /^\d{1,3}(?:\.\d{1,3})?\s*\/\s*\d{1,3}(?:\.\d{1,3})?$/
 
 /** The only directives a post may use, with the attributes each one keeps. */
-export const DIRECTIVES = { youtube: ['id', 'title'], embed: ['url', 'title', 'ratio'], callout: ['type'] }
+export const DIRECTIVES = {
+  youtube: ['id', 'title'],
+  embed: ['url', 'title', 'ratio'],
+  callout: ['type'],
+  handwriting: ['src', 'alt', 'duration', 'blur', 'chroma', 'stagger', 'focus', 'ease', 'color'],
+}
+
+/**
+ * ::handwriting{src alt ...}: the owner's pen strokes (a .ink.json media file, see parseInk) drawn on with a blur-to-sharp
+ * chromatic focus. Numbers are clamped into these ranges; anything that is not a plain decimal is dropped (the player's default).
+ * duration: seconds the pen takes to write everything (default: the recorded pace, clamped); blur and chroma: starting blur and
+ * RGB split in px; stagger: multiplier on the recorded pauses between strokes; focus: seconds a stroke takes to sharpen.
+ */
+export const HANDWRITING = {
+  duration: [0.3, 30],
+  blur: [0, 24],
+  chroma: [0, 16],
+  stagger: [0, 2],
+  focus: [0.1, 6],
+  ease: ['out', 'in-out', 'linear', 'expo'],
+  color: ['ink', 'accent'],
+}
+export const HANDWRITING_SRC_RE = /^\/media\/[a-z0-9]+(?:-[a-z0-9]+)*\/[A-Za-z0-9_][A-Za-z0-9_-]{0,100}\.ink\.json$/
+const DECIMAL_RE = /^\s*-?\d{1,6}(?:\.\d{1,6})?\s*$/
+
+/** A clamped handwriting number as a canonical string, or null when the value is not a plain decimal. */
+export function handwritingNumber(key, value) {
+  const range = HANDWRITING[key]
+  if (!range || typeof value !== 'string' || !DECIMAL_RE.test(value)) return null
+  const v = Math.min(range[1], Math.max(range[0], Number(value)))
+  return String(Math.round(v * 100) / 100)
+}
 
 /** The attributes of one directive after the allowlist, or null when the directive must be dropped. */
 export function directiveAttrs(name, attrs) {
@@ -120,7 +151,92 @@ export function directiveAttrs(name, attrs) {
     if (out.ratio && !RATIO_RE.test(out.ratio)) delete out.ratio
   }
   if (name === 'callout' && out.type && !CALLOUT_TYPES.includes(out.type)) out.type = 'note'
+  if (name === 'handwriting') {
+    if (!HANDWRITING_SRC_RE.test(out.src ?? '') || !mediaPathOk(out.src)) return null
+    out.alt = (out.alt ?? '').trim()
+    if (!out.alt) return null
+    for (const k of ['duration', 'blur', 'chroma', 'stagger', 'focus']) {
+      if (out[k] === undefined) continue
+      const n = handwritingNumber(k, out[k])
+      if (n === null) delete out[k]
+      else out[k] = n
+    }
+    if (out.ease !== undefined && !HANDWRITING.ease.includes(out.ease)) delete out.ease
+    if (out.color !== undefined && !HANDWRITING.color.includes(out.color)) delete out.color
+  }
   return out
+}
+
+/* -------------------------------------------------------------- ink files */
+
+/**
+ * A handwriting file, media/<slug>/<name>.ink.json. Plain numbers under fixed keys, nothing else:
+ *   { "version": 1, "width": 640, "height": 240, "size": 3.5, "pressure": false, "strokes": [[x, y, t, ...], ...] }
+ * width and height are the viewBox; size is the pen width in viewBox units; each stroke is a flat list of points, x y t
+ * (t in whole ms since the first point, never going back) or x y t p when pressure is true (p from 0 to 1).
+ */
+export const INK = {
+  bytes: 256 * 1024,
+  side: [16, 4096],
+  size: [0.25, 64],
+  strokes: 400,
+  points: 4000,
+  totalPoints: 20000,
+  time: 600000,
+}
+export const INK_NAME_RE = /^[A-Za-z0-9_][A-Za-z0-9_-]{0,100}\.ink\.json$/
+const INK_KEYS = new Set(['version', 'width', 'height', 'size', 'pressure', 'strokes'])
+const isPlainObject = (v) => typeof v === 'object' && v !== null && !Array.isArray(v) && Object.getPrototypeOf(v) === Object.prototype
+const inRange = (v, lo, hi) => typeof v === 'number' && Number.isFinite(v) && v >= lo && v <= hi
+
+/** Parse and check an ink file. Returns { ink } (a fresh copy holding only the checked fields) or { problem }. */
+export function parseInk(input) {
+  let text = input
+  if (input instanceof Uint8Array) {
+    if (input.length > INK.bytes) return { problem: `larger than ${INK.bytes / 1024} KB` }
+    // Printable ASCII and JSON whitespace only: numbers, the fixed keys and punctuation need nothing else.
+    for (const b of input) if (!(b === 0x09 || b === 0x0a || b === 0x0d || (b >= 0x20 && b <= 0x7e))) return { problem: 'not plain ASCII JSON' }
+    text = new TextDecoder().decode(input)
+  }
+  if (typeof text !== 'string') return { problem: 'not text' }
+  if (text.length > INK.bytes) return { problem: `larger than ${INK.bytes / 1024} KB` }
+  let raw
+  try {
+    raw = JSON.parse(text)
+  } catch {
+    return { problem: 'not valid JSON' }
+  }
+  if (!isPlainObject(raw)) return { problem: 'must be a JSON object' }
+  for (const k of Object.keys(raw)) if (!INK_KEYS.has(k)) return { problem: `unknown key "${k.slice(0, 20)}"` }
+  if (raw.version !== 1) return { problem: 'version must be 1' }
+  for (const k of ['width', 'height']) if (!Number.isInteger(raw[k]) || !inRange(raw[k], INK.side[0], INK.side[1])) return { problem: `${k} must be a whole number from ${INK.side[0]} to ${INK.side[1]}` }
+  if (!inRange(raw.size, INK.size[0], INK.size[1])) return { problem: `size must be a number from ${INK.size[0]} to ${INK.size[1]}` }
+  if (raw.pressure !== undefined && typeof raw.pressure !== 'boolean') return { problem: 'pressure must be true or false' }
+  const pressure = raw.pressure === true
+  const stride = pressure ? 4 : 3
+  if (!Array.isArray(raw.strokes) || raw.strokes.length < 1 || raw.strokes.length > INK.strokes) return { problem: `strokes must be a list of 1 to ${INK.strokes} strokes` }
+  const strokes = []
+  let total = 0
+  let last = 0
+  for (const [si, s] of raw.strokes.entries()) {
+    if (!Array.isArray(s) || s.length < stride || s.length % stride !== 0 || s.length / stride > INK.points) return { problem: `stroke ${si + 1} must be a flat list of 1 to ${INK.points} points of ${stride} numbers` }
+    total += s.length / stride
+    if (total > INK.totalPoints) return { problem: `more than ${INK.totalPoints} points` }
+    for (let i = 0; i < s.length; i += stride) {
+      if (!inRange(s[i], 0, raw.width) || !inRange(s[i + 1], 0, raw.height)) return { problem: `stroke ${si + 1} has a point outside the ${raw.width} x ${raw.height} box` }
+      const t = s[i + 2]
+      if (!Number.isInteger(t) || !inRange(t, last, INK.time)) return { problem: `stroke ${si + 1}: times must be whole ms from 0 to ${INK.time} that never go back` }
+      last = t
+      if (pressure && !inRange(s[i + 3], 0, 1)) return { problem: `stroke ${si + 1}: pressure must be from 0 to 1` }
+    }
+    strokes.push(s.slice())
+  }
+  return { ink: { version: 1, width: raw.width, height: raw.height, size: raw.size, pressure, strokes } }
+}
+
+/** Problem with an ink file's bytes or text, or null. */
+export function inkProblem(input) {
+  return parseInk(input).problem ?? null
 }
 
 /* ------------------------------------------------------------ front matter */
@@ -166,11 +282,8 @@ export function frontmatterProblem(id, fm) {
 
 /* -------------------------------------------------------------------- body */
 
-/**
- * Problems in a markdown body that the renderer would silently drop: unknown or broken directives and unsafe link or image targets.
- * Line based and conservative (fenced code is skipped); the renderer is the backstop.
- */
-export function bodyProblems(body) {
+/** Each line of a markdown body outside fenced code, with its 1-based number. */
+function proseLines(body) {
   const out = []
   let fence = null
   body.split('\n').forEach((line, i) => {
@@ -180,20 +293,51 @@ export function bodyProblems(body) {
       else if (f[1][0] === fence) fence = null
       return
     }
-    if (fence) return
-    const at = `line ${i + 1}`
-    const d = /^\s*:{2,}([A-Za-z][\w-]*)(?:\[[^\]]*\])?(?:\{([^}]*)\})?/.exec(line)
+    if (!fence) out.push({ line, n: i + 1 })
+  })
+  return out
+}
+
+/** A leaf or container directive at the start of a line: its name and attributes (quoted or bare values). */
+function directiveOf(line) {
+  const d = /^\s*:{2,}([A-Za-z][\w-]*)(?:\[[^\]]*\])?(?:\{([^}]*)\})?/.exec(line)
+  if (!d) return null
+  const attrs = Object.fromEntries([...(d[2] ?? '').matchAll(/([\w-]+)=(?:"([^"]*)"|'([^']*)'|([^\s"'}]+))/g)].map((m) => [m[1], m[2] ?? m[3] ?? m[4]]))
+  return { name: d[1], attrs }
+}
+
+const MISSING = { embed: 'url (https on an allowed host)', handwriting: 'src (/media/<slug>/<name>.ink.json) or alt text', youtube: 'id' }
+
+/**
+ * Problems in a markdown body that the renderer would silently drop: unknown or broken directives and unsafe link or image targets.
+ * Line based and conservative (fenced code is skipped); the renderer is the backstop.
+ */
+export function bodyProblems(body) {
+  const out = []
+  for (const { line, n } of proseLines(body)) {
+    const at = `line ${n}`
+    const d = directiveOf(line)
     if (d) {
-      const attrs = Object.fromEntries([...(d[2] ?? '').matchAll(/([\w-]+)="([^"]*)"/g)].map((m) => [m[1], m[2]]))
-      if (!DIRECTIVES[d[1]]) out.push(`${at}: unknown directive ::${d[1]} (allowed: ${Object.keys(DIRECTIVES).join(', ')})`)
-      else if (!directiveAttrs(d[1], attrs)) out.push(`${at}: ::${d[1]} has a missing or disallowed ${d[1] === 'embed' ? 'url (https on an allowed host)' : 'id'}`)
+      if (!DIRECTIVES[d.name]) out.push(`${at}: unknown directive ::${d.name} (allowed: ${Object.keys(DIRECTIVES).join(', ')})`)
+      else if (!directiveAttrs(d.name, d.attrs)) out.push(`${at}: ::${d.name} has a missing or disallowed ${MISSING[d.name] ?? 'attribute'}`)
     }
     for (const m of line.matchAll(/(!?)\[[^\]]*\]\(\s*<?([^)\s>]+)/g)) {
       const ok = m[1] ? safeImageSrc(m[2]) : safeHref(m[2])
       if (!ok) out.push(`${at}: unsafe ${m[1] ? 'image source' : 'link'} "${m[2].slice(0, 60)}"`)
     }
     for (const m of line.matchAll(/^\s*\[[^\]]+\]:\s*<?(\S+?)>?(?:\s|$)/g)) if (!safeHref(m[1])) out.push(`${at}: unsafe link definition "${m[1].slice(0, 60)}"`)
-  })
+  }
+  return out
+}
+
+/** The ink files a body's ::handwriting directives point at (valid ones only), with their line numbers. */
+export function handwritingSources(body) {
+  const out = []
+  for (const { line, n } of proseLines(body)) {
+    const d = directiveOf(line)
+    const attrs = d?.name === 'handwriting' ? directiveAttrs('handwriting', d.attrs) : null
+    if (attrs) out.push({ line: n, src: attrs.src })
+  }
   return out
 }
 
@@ -230,6 +374,11 @@ export const MEDIA_NAME_RE = /^[A-Za-z0-9_][A-Za-z0-9._-]{0,120}$/
 export function mediaProblem(dir, name, bytes) {
   if (!/^[a-z0-9-]+$/.test(dir)) return `media folder "${dir}" is not a slug`
   if (!MEDIA_NAME_RE.test(name) || name.includes('..')) return `media file name "${name}" has characters outside A-Z, a-z, 0-9, dot, dash and underscore`
+  if (/\.ink\.json$/i.test(name)) {
+    if (!INK_NAME_RE.test(name)) return `handwriting file "${name}" must be named <name>.ink.json`
+    const p = inkProblem(bytes)
+    return p ? `handwriting file "${name}": ${p}` : null
+  }
   const ext = name.split('.').pop().toLowerCase()
   if (!MEDIA_TYPES[ext]) return `media file "${name}": .${ext} is not an accepted type (${Object.keys(MEDIA_TYPES).join(', ')})`
   if (bytes.length > LIMITS.mediaBytes) return `media file "${name}" is larger than ${LIMITS.mediaBytes / 1024 / 1024} MB`
