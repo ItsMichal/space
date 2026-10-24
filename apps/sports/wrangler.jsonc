@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "halmic-sports",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-10-01",
+  // Private playtest host. The game files are not in this repo: they live in the R2 bucket below, uploaded from the owner's
+  // Mac (see README.md). Secret, set once with `wrangler secret put SPORTS_PASSKEY`; without it the Worker refuses everything.
+  // Requires the halmic.com zone in the Cloudflare account. workers.dev and preview URLs are off: sports.halmic.com is the only address.
+  "routes": [{ "pattern": "sports.halmic.com", "custom_domain": true }],
+  "workers_dev": false,
+  "preview_urls": false,
+  "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "halmic-sports" }],
+  "observability": { "enabled": true }
+}

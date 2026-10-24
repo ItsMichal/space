@@ -12,9 +12,9 @@ on:
   workflow_dispatch:
     inputs:
       app:
-        description: App to deploy (ignores change detection; halmic ignores the DEPLOY_HALMIC gate)
+        description: App to deploy (ignores change detection; halmic ignores the DEPLOY_HALMIC gate, sports the DEPLOY_SPORTS gate; both = michal + halmic)
         type: choice
-        options: [michal, halmic, both]
+        options: [michal, halmic, sports, both]
         default: michal
 
 permissions:
@@ -44,6 +44,7 @@ jobs:
     outputs:
       michal: ${{ steps.final.outputs.michal }}
       halmic: ${{ steps.final.outputs.halmic }}
+      sports: ${{ steps.final.outputs.sports }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -67,21 +68,30 @@ jobs:
               - 'scripts/**'
               - '.github/workflows/deploy.yml'
               - '.github/actions/**'
+            sports:
+              - 'apps/sports/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - '.github/workflows/deploy.yml'
+              - '.github/actions/**'
       - id: final
         env:
           EVENT: ${{ github.event_name }}
           APP: ${{ inputs.app }}
           F_MICHAL: ${{ steps.f.outputs.michal }}
           F_HALMIC: ${{ steps.f.outputs.halmic }}
+          F_SPORTS: ${{ steps.f.outputs.sports }}
         run: |
           if [ "$EVENT" = "workflow_dispatch" ]; then
             [ "$APP" = "michal" ] || [ "$APP" = "both" ] && m=true || m=false
             [ "$APP" = "halmic" ] || [ "$APP" = "both" ] && h=true || h=false
+            [ "$APP" = "sports" ] && sp=true || sp=false
           else
-            m="$F_MICHAL"; h="$F_HALMIC"
+            m="$F_MICHAL"; h="$F_HALMIC"; sp="$F_SPORTS"
           fi
           echo "michal=$m" >> "$GITHUB_OUTPUT"
           echo "halmic=$h" >> "$GITHUB_OUTPUT"
+          echo "sports=$sp" >> "$GITHUB_OUTPUT"
 
   deploy-michal:
     needs: [preflight, changes]
@@ -153,3 +163,44 @@ jobs:
       - name: Smoke test
         if: env.HALMIC_URL != ''
         run: scripts/smoke.sh "$HALMIC_URL" / /sitemap.xml /robots.txt /api/live /api/clips /games/taco-neko/
+
+  deploy-sports:
+    # Private playtest host (sports.halmic.com). Dormant until the R2 bucket exists and the passkey secret is set:
+    # set repository variable DEPLOY_SPORTS=true (or run manually and choose sports). Own job, own concurrency group.
+    needs: [preflight, changes]
+    if: >-
+      needs.preflight.outputs.has_token == 'true' && needs.changes.outputs.sports == 'true' &&
+      (github.event_name == 'workflow_dispatch' || vars.DEPLOY_SPORTS == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: ${{ vars.SPORTS_URL || 'https://sports.halmic.com' }}
+    concurrency:
+      group: deploy-sports
+      cancel-in-progress: false
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      SPORTS_URL: ${{ vars.SPORTS_URL || 'https://sports.halmic.com' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - uses: ./.github/actions/checks
+      - name: Deploy (wrangler deploy; the passkey secret and the R2 files are set outside CI)
+        run: npm run deploy:sports 2>&1 | tee deploy.log
+      - name: Deployed version
+        run: |
+          v=$(grep -oE 'Current Version ID: [0-9a-f-]+' deploy.log | tail -n1 | awk '{print $4}' || true)
+          echo "Deployed Worker version: ${v:-unknown}"
+          echo "sports deployed, Worker version \`${v:-unknown}\` from ${GITHUB_SHA::7}" >> "$GITHUB_STEP_SUMMARY"
+      - name: Smoke test (the gate answers, and nothing else is open without the cookie)
+        run: |
+          scripts/smoke.sh "$SPORTS_URL" /gate /robots.txt
+          for path in / /index.html /preload.json /memesports.wasm /chunks/0/0; do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 -H 'Accept: */*' "${SPORTS_URL%/}$path" || echo 000)
+            case "$code" in
+              401) echo "ok   $path is closed (HTTP 401)" ;;
+              *) echo "::error::$path answered HTTP $code without the cookie (want 401; 503 means SPORTS_PASSKEY is not set)"; exit 1 ;;
+            esac
+          done

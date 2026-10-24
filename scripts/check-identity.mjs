@@ -69,7 +69,10 @@ const isReadme = (p) => /^README(\..*)?$/i.test(path.basename(p))
 // The halmic sync script keeps its own copy of the denylist (it must contain the patterns it blocks); it is never served.
 const EXEMPT = new Set(['apps/halmic/content/identity-denylist.txt'])
 const posts = readMichalPosts(root)
-const hard = scan(walk(halmicDir, { skipFile: (p) => isReadme(p) || EXEMPT.has(rel(p)) }), deny, (r) => halmicAllowances(r, posts))
+// apps/sports is the private playtest host on a halmic.com subdomain: same rule.
+const sportsDir = path.join(root, 'apps', 'sports')
+const skipFile = (p) => isReadme(p) || EXEMPT.has(rel(p))
+const hard = scan([...walk(halmicDir, { skipFile }), ...walk(sportsDir, { skipFile })], deny, (r) => halmicAllowances(r, posts))
 if (hard.length) {
   failed = true
   console.error(`FAIL: ${hard.length} real-name/portfolio reference(s) in apps/halmic:`)
