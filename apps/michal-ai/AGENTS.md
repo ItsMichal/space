@@ -30,6 +30,9 @@ here, so keep diffs narrow and fetch before branching.
 - The writing editor (write.michal.ai) is not in this repo. It lives in the private ItsMichal/space-content repo, with the
   posts and media, and is built by laying its `editor/` folder over this app. Content split, `npm run content:pull`, the
   content rules (`lib/content/rules.mjs`) and the cutover order: `docs/content-repo.md`.
+- Card order and presentation (Selected work, /projects, the writing list, the hero's rotating line; per card size,
+  look, image focus, home) come from `content/layout.json`, checked by `parseLayout` in `rules.mjs` and read through
+  `lib/content/layout.ts`. Change the order there, not in components. Details: `docs/content-repo.md`.
 - No em dash or en dash anywhere in shipped copy or source (`npm run check:dashes`).
 
 ## Build pipeline
@@ -51,7 +54,8 @@ Details: `docs/presence.md`, `docs/live-reactions-views.md`.
 
 The look is "Paper": see `docs/design-system/README.md` (tokens in `docs/design-system/tokens.json`;
 `npm run tokens -w @space/michal-ai` regenerates `app/styles/tokens.css`). Backdrop, glass, motion and shader notes are in
-`docs/backdrop.md` and the other files under `docs/`. Screenshot folders under `docs/` (`*-shots`) are reference material
+`docs/backdrop.md` and the other files under `docs/`. No CSS `mask-image` on large surfaces (the hero, cards, their rims): Safari's full-page
+screenshot (a WebKit PDF snapshot) paints masked boxes solid black. Use gradients or opacity instead. Screenshot folders under `docs/` (`*-shots`) are reference material
 from past passes.
 
 ## Social previews
