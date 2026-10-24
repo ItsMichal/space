@@ -53,7 +53,7 @@ export function Handwriting({ src = '', alt = '', ink: inlined, duration, blur, 
         </div>
       ) : (
         <div role="img" aria-label={alt} className="flex aspect-[3/1] w-full items-center justify-center rounded-md text-ink-faint">
-          {failed ? <span className="text-sm">Handwriting unavailable</span> : null}
+          {failed ? <span className="font-serif text-small italic">Handwriting unavailable</span> : null}
         </div>
       )}
     </figure>

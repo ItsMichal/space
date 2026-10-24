@@ -32,7 +32,7 @@ function signature(n = 12, per = 80, pressure = false) {
     strokes.push(pts)
     t += 180
   }
-  return { version: 1, width: 680, height: 240, size: 3.5, pressure, strokes }
+  return { version: 1, width: Math.max(680, 100 + n * 50), height: 240, size: 3.5, pressure, strokes }
 }
 
 describe('ink file schema', () => {
@@ -44,7 +44,7 @@ describe('ink file schema', () => {
       expect(r.ink!.strokes).toHaveLength(30)
       expect(r.ink!.pressure).toBe(p)
     }
-    expect(inkProblem(enc({ ...signature(1, 1), pressure: undefined }))).toBeNull()
+    expect(inkProblem(enc({ ...signature(1, 2), pressure: undefined }))).toBeNull()
   })
 
   it.each<[string, unknown]>([
