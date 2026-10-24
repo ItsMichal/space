@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest'
 import { markdownToHast, renderMarkdown } from '../render'
 import { hastToReact } from '../to-react'
 import { HANDWRITING, INK, bodyProblems, directiveAttrs, handwritingSources, inkProblem, mediaProblem, parseInk } from '../rules.mjs'
-import { buildInk } from '@/lib/ink/geometry'
+import { buildInk, buildStroke, MAX_INK_SAMPLES } from '@/lib/ink/geometry'
 import { inlineHandwriting } from '@/lib/ink/inline.server'
 import { frameAt, inkAttrs, inkSettings, schedule, INK_DEFAULTS, INK_PRESETS } from '@/lib/ink/timeline'
 
@@ -223,6 +223,136 @@ describe('rendering', () => {
 
   it('drops a handwriting directive without alt text', async () => {
     expect(renderToStaticMarkup(await renderMarkdown('::handwriting{src="/media/a-post/sig.ink.json"}'))).toBe('')
+  })
+})
+
+describe('ink geometry', () => {
+  /** Seeded noise like a finger on a phone: white jitter plus a slow wobble, 120 Hz samples. */
+  function noisy(seed: number) {
+    let s = seed
+    const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647)
+    return () => (rnd() + rnd() + rnd() - 1.5) * 1.2
+  }
+  const ink = (strokes: number[][], size = 3.6, pressure = false) => parseInk(JSON.stringify({ version: 1, width: 600, height: 400, size, pressure, strokes })).ink!
+  const nums = (d: string) => (d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number)
+  const ringPoints = (d: string) => {
+    const v = nums(d)
+    const out: [number, number][] = []
+    for (let i = 0; i + 1 < v.length; i += 2) out.push([v[i], v[i + 1]])
+    return out
+  }
+  const centerPoints = (d: string) => ringPoints(d.replace(/h0\.1$/, ''))
+  /** A jittery straight stroke from (100, 100) to (500, 300), with a touch-down hook bent off to one side. */
+  function line(seed: number, hook = 0) {
+    const n = noisy(seed)
+    const pts: number[] = []
+    for (let i = 0; i <= 160; i++) {
+      const u = i / 160
+      const off = hook * Math.max(0, 1 - i / 4) ** 2
+      pts.push(Math.round((100 + 400 * u + n() - off * 0.45) * 10) / 10, Math.round((100 + 200 * u + n() + off * 0.9) * 10) / 10, i * 8)
+    }
+    return pts
+  }
+  const distToLine = ([x, y]: [number, number]) => Math.abs((x - 100) * 200 - (y - 100) * 400) / Math.hypot(400, 200)
+
+  it('smooths jitter out of the centerline', () => {
+    const raw = line(5)
+    const rawDev = Math.max(...ringPoints(raw.filter((_, i) => i % 3 !== 2).join(' ')).map(distToLine))
+    const built = buildInk(ink([raw])).strokes[0]
+    const dev = Math.max(...centerPoints(built.center).slice(2, -2).map(distToLine))
+    expect(rawDev).toBeGreaterThan(1)
+    expect(dev).toBeLessThan(rawDev / 2)
+    // A straight line needs few vertices once smoothed.
+    expect(centerPoints(built.center).length).toBeLessThan(40)
+  })
+
+  it('trims a touch-down hook', () => {
+    const plain = buildInk(ink([line(9)])).strokes[0]
+    const hooked = buildInk(ink([line(9, 9)])).strokes[0]
+    const start = centerPoints(hooked.center)[0]
+    expect(distToLine(start)).toBeLessThan(1.5)
+    expect(Math.hypot(start[0] - 100, start[1] - 100)).toBeLessThan(25)
+    expect(hooked.length).toBeGreaterThan(plain.length - 25)
+  })
+
+  it('keeps a real corner that is not at an end, and loops keep their size', () => {
+    const vee: number[] = []
+    for (let i = 0; i <= 100; i++) vee.push(100 + i * 2, 100 + (i <= 50 ? i : 100 - i) * 4, i * 8)
+    const c = centerPoints(buildInk(ink([vee])).strokes[0].center)
+    expect(Math.max(...c.map((p) => p[1]))).toBeGreaterThan(290)
+    const loop: number[] = []
+    for (let i = 0; i <= 200; i++) loop.push(300 + Math.cos((i / 200) * Math.PI * 2) * 30, 200 + Math.sin((i / 200) * Math.PI * 2) * 30, i * 6)
+    const o = buildInk(ink([loop])).strokes[0]
+    expect(o.box[2] - o.box[0]).toBeGreaterThan(58)
+  })
+
+  it('tapers both ends to a fine point, but not the live end of a stroke being drawn', () => {
+    const raw = line(3)
+    const tip = (st: { outline: string; center: string }, end: boolean) => {
+      const c = centerPoints(st.center)
+      const at = end ? c[c.length - 1] : c[0]
+      return Math.min(...ringPoints(st.outline).map(([x, y]) => Math.hypot(x - at[0], y - at[1])))
+    }
+    const done = buildStroke(ink([raw]), raw)
+    const live = buildStroke(ink([raw]), raw, { live: true })
+    expect(tip(done, false)).toBeLessThan(done.maxWidth * 0.4)
+    expect(tip(done, true)).toBeLessThan(done.maxWidth * 0.3)
+    expect(tip(live, true)).toBeGreaterThan(tip(done, true) * 1.5)
+  })
+
+  it('varies the width with speed, and with pressure when the file has it', () => {
+    const at = (fast: boolean, p?: number) => {
+      const pts: number[] = []
+      for (let i = 0; i <= 80; i++) pts.push(100 + i * 4, 200, i * (fast ? 2 : 20), ...(p === undefined ? [] : [p]))
+      return buildInk(ink([pts], 3.6, p !== undefined)).strokes[0].maxWidth
+    }
+    expect(at(false)).toBeGreaterThan(at(true) * 1.2)
+    expect(at(false, 0.9)).toBeGreaterThan(at(false, 0.2) * 1.5)
+  })
+
+  it('is deterministic, and the centerline the mask follows is the one the outline is built on', () => {
+    const doc = parseInk(enc(signature(6, 90))).ink!
+    expect(buildInk(doc)).toEqual(buildInk(doc))
+    const near = (ring: [number, number][], [x, y]: [number, number]) => {
+      let best = Infinity
+      for (let i = 0; i < ring.length; i++) {
+        const [ax, ay] = ring[i]
+        const [bx, by] = ring[(i + 1) % ring.length]
+        const len2 = (bx - ax) ** 2 + (by - ay) ** 2
+        const u = len2 ? Math.max(0, Math.min(1, ((x - ax) * (bx - ax) + (y - ay) * (by - ay)) / len2)) : 0
+        best = Math.min(best, Math.hypot(x - ax - u * (bx - ax), y - ay - u * (by - ay)))
+      }
+      return best
+    }
+    // Every centerline vertex is within half a pen width of the outline's edge: the mask follows the ink, not a different line.
+    for (const st of buildInk(doc).strokes) for (const p of centerPoints(st.center)) expect(near(ringPoints(st.outline), p)).toBeLessThanOrEqual(st.maxWidth / 2 + 0.6)
+  })
+
+  it('builds a full-size signature fast, with bounded path data', () => {
+    // 32 strokes of 400 points: about as much as fits in the file size limit.
+    const doc = parseInk(enc(signature(32, 400))).ink!
+    buildInk(doc)
+    const t = performance.now()
+    const built = buildInk(doc)
+    const ms = performance.now() - t
+    const bytes = built.strokes.reduce((n, s) => n + s.outline.length + s.center.length, 0)
+    expect(ms).toBeLessThan(250)
+    expect(bytes).toBeLessThan(400_000)
+  })
+
+  it('bounds the work for a hostile file (points jumping across the whole box)', () => {
+    let seed = 1
+    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
+    const strokes = Array.from({ length: 3 }, (_, s) => Array.from({ length: INK.points }, (_, i) => [Math.round(rnd() * 4096), Math.round(rnd() * 4096), s * INK.points + i]).flat())
+    const doc = parseInk(JSON.stringify({ version: 1, width: 4096, height: 4096, size: 64, strokes })).ink!
+    const t = performance.now()
+    const built = buildInk(doc)
+    expect(performance.now() - t).toBeLessThan(1500)
+    for (const st of built.strokes) {
+      expect(st.outline).toMatch(/^[MQZ0-9 .-]+$/)
+      expect(Number.isFinite(st.length)).toBe(true)
+    }
+    expect(MAX_INK_SAMPLES).toBeLessThanOrEqual(60000)
   })
 })
 
