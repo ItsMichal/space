@@ -1,6 +1,7 @@
 // The handwriting player: an inline SVG built only from checked numbers (lib/ink/geometry.ts). Until it plays, and for good
 // under prefers-reduced-motion or without JavaScript, it is the finished ink. When it plays, every stroke is revealed along its
-// centerline by a mask in recorded order and pace, and comes into focus through its own small filter: a Gaussian blur and an
+// centerline by a mask in recorded order and pace (the outline is built around that same smoothed line and the mask is just
+// wider than the outline, so no ink shows ahead of the pen), and comes into focus through its own small filter: a Gaussian blur and an
 // RGB split (three channel copies offset sideways, multiplied for dark ink on paper, screened for light ink in dark mode) that
 // both converge to zero. One animation frame loop sets attributes on the strokes that are moving; settled strokes drop their
 // filter, so a long signature costs a couple of filters at a time. Filter regions are clipped to each stroke's box.
@@ -207,7 +208,7 @@ export const InkPlayer = forwardRef<InkPlayerHandle, Props>(function InkPlayer({
                       d={s.center}
                       fill="none"
                       stroke="#fff"
-                      strokeWidth={s.maxWidth * 1.5 + 2}
+                      strokeWidth={s.maxWidth + 2}
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeDasharray={`${(s.length + 1).toFixed(2)} ${(s.length + 2).toFixed(2)}`}
