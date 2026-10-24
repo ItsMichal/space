@@ -20,6 +20,7 @@ jobs:
     outputs:
       michal: ${{ steps.f.outputs.michal }}
       halmic: ${{ steps.f.outputs.halmic }}
+      sports: ${{ steps.f.outputs.sports }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -40,6 +41,12 @@ jobs:
               - 'package.json'
               - 'package-lock.json'
               - 'scripts/**'
+              - '.github/workflows/ci.yml'
+              - '.github/actions/**'
+            sports:
+              - 'apps/sports/**'
+              - 'package.json'
+              - 'package-lock.json'
               - '.github/workflows/ci.yml'
               - '.github/actions/**'
 
@@ -89,4 +96,15 @@ jobs:
       - name: Worker config sanity (no upload)
         if: steps.present.outputs.present == 'true'
         working-directory: apps/halmic
+        run: npx wrangler deploy --dry-run
+
+  build-sports:
+    needs: changes
+    if: needs.changes.outputs.sports == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Worker config sanity (no upload)
+        working-directory: apps/sports
         run: npx wrangler deploy --dry-run

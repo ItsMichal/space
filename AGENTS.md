@@ -12,6 +12,7 @@ Two independent sites in one npm-workspaces monorepo (Node 22, one lockfile at t
 | --- | --- | --- | --- |
 | `apps/michal-ai` | The owner's real-name portfolio. React Router 7 + Vite, prerendered to static HTML, served by a plain Cloudflare Worker. | michal.ai | `space` |
 | `apps/halmic` | A persona site. Zero-dependency static build plus one small Worker. | halmic.com | `halmic` |
+| `apps/sports` | Private playtest host for the browser game: one Worker plus an R2 bucket, behind a shared passkey. Files are uploaded from the owner's Mac, not built here. | sports.halmic.com | `halmic-sports` |
 | `packages/*` | Shared code: `motion`, `tokens`, `config`, `crosslinks`. | n/a | n/a |
 
 - The apps never import from each other. Shared code goes through `packages/*` only, and only code that carries no copy,
@@ -39,7 +40,7 @@ npm test -w @space/halmic   # worker unit tests, link/markup check, social-card 
   runs typecheck, lint, test and `check:identity`.
 - A missing `@space/crosslinks` link (`ERR_MODULE_NOT_FOUND` from `npm run build:halmic`) means you need `npm install` at
   the root: a new workspace package is not linked until you do.
-- Deploy scripts (`deploy:michal`, `deploy:halmic`) exist but agents do not run them. See "Shipping".
+- Deploy scripts (`deploy:michal`, `deploy:halmic`, `deploy:sports`) exist but agents do not run them. See "Shipping".
 
 ## Shipping
 
@@ -47,7 +48,9 @@ npm test -w @space/halmic   # worker unit tests, link/markup check, social-card 
 - The GitHub Actions `Deploy` workflow deploys whichever app changed. It uses the repository secret
   `CLOUDFLARE_API_TOKEN` and the variables `CLOUDFLARE_ACCOUNT_ID`, `DEPLOY_HALMIC=true`, `HALMIC_URL`. Do not ask the owner to
   run `wrangler deploy` locally.
-- Redeploy without a code change: `gh workflow run Deploy -f app=halmic` (or `michal`, `both`).
+- Redeploy without a code change: `gh workflow run Deploy -f app=halmic` (or `michal`, `both`, `sports`). The sports job also
+  needs the variable `DEPLOY_SPORTS=true` on merges (the R2 bucket and passkey are the owner's one-time setup, see
+  `apps/sports/README.md`). Agents never handle the passkey.
 - Auto-merge is disabled on the repo. Merge with `gh pr merge <n> --merge`.
 - After a merge, watch the Deploy run (`gh run list --workflow Deploy`, `gh run watch <id>`) and check the live site.
   Both deploy jobs run a smoke test; a green run still deserves a look at the page you changed.
