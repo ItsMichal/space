@@ -1,5 +1,5 @@
 import type { Metadata } from '@/lib/meta-types'
-import { getTopLevel } from '@/lib/content'
+import { getProjectIndex } from '@/lib/content'
 import { Showcase } from '@/components/work/Showcase'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { listJsonLd, listMetadata } from '@/lib/seo'
@@ -13,7 +13,7 @@ const DESCRIPTION =
 export const metadata: Metadata = listMetadata('project', TITLE, DESCRIPTION)
 
 export default function Page() {
-  const posts = getTopLevel('project')
+  const posts = getProjectIndex()
   return (
     <div className="mx-auto max-w-content px-space-4 pb-space-16 pt-[120px] md:px-space-8 md:pt-[160px]">
       <JsonLd data={listJsonLd('project', TITLE, posts)} />

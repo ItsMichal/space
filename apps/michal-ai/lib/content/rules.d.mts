@@ -60,3 +60,12 @@ export declare const INK: {
 export declare const INK_NAME_RE: RegExp
 export declare function parseInk(input: Uint8Array | string): { ink: Ink; problem?: undefined } | { ink?: undefined; problem: string }
 export declare function inkProblem(input: Uint8Array | string): string | null
+export type CardSize = 'feature' | 'regular'
+export type CardVariant = 'newsroom' | 'fill' | 'cap'
+export type CardLayout = { size?: CardSize; variant?: CardVariant; focus?: string; home?: boolean }
+export type SiteLayout = { version: 1; work?: string[]; writing?: string[]; hooks?: string[]; cards?: Record<string, CardLayout> }
+export declare const LAYOUT: { bytes: number; list: number; cards: number; size: CardSize[]; variant: CardVariant[] }
+export declare const FOCUS_RE: RegExp
+export declare function parseLayout(input: Uint8Array | string): { layout: SiteLayout; problem?: undefined } | { layout?: undefined; problem: string }
+export declare function layoutProblem(input: Uint8Array | string): string | null
+export declare function layoutRefProblems(layout: SiteLayout, posts: { slug: string; kind: string; parent?: string; hook?: string }[]): string[]

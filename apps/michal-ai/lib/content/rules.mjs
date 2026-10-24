@@ -404,3 +404,125 @@ export function rawPostProblem(raw) {
   if (raw.includes('\u0000')) return 'post contains a NUL byte'
   return null
 }
+
+/* ------------------------------------------------------------- site layout */
+
+/**
+ * The site layout file (`site/layout.json` in space-content, `content/layout.json` here): card order and presentation on the
+ * home page and /projects, set from the editor's Arrange screen. Untrusted like a post. Exactly these keys, nothing else:
+ *   version  1
+ *   work     project slugs, in order: they lead Selected work (home) and /projects; other projects follow in the usual order
+ *   writing  article slugs, in order: they lead the home Writing list
+ *   hooks    slugs of posts with a `hook`, in order: they lead the hero's rotating "I've built ..." line
+ *   cards    { <project slug>: { size, variant, focus, home } }, every field optional:
+ *              size     "feature" (full width, image beside the text) or "regular"; unset: the first card is the feature
+ *              variant  regular cards: "newsroom" (image on top), "fill" (text above, image fills) or "cap" (image with a
+ *                       caption over it); the feature card has its own look
+ *              focus    the card image's focal point, "<x>% <y>%" with whole numbers from 0 to 100
+ *              home     false keeps the project off the home page (it stays on /projects)
+ */
+export const LAYOUT = {
+  bytes: 32 * 1024,
+  list: 200,
+  cards: 300,
+  size: ['feature', 'regular'],
+  variant: ['newsroom', 'fill', 'cap'],
+}
+const LAYOUT_KEYS = new Set(['version', 'work', 'writing', 'hooks', 'cards'])
+const CARD_KEYS = new Set(['size', 'variant', 'focus', 'home'])
+export const FOCUS_RE = /^(?:100|[1-9]?[0-9])% (?:100|[1-9]?[0-9])%$/
+const layoutSlug = (v) => typeof v === 'string' && v.length <= 80 && STRICT_SLUG_RE.test(v)
+const quoted = (v) => JSON.stringify(String(v).slice(0, 40))
+
+/** Parse and check a layout file. Returns { layout } (a fresh copy holding only the checked fields) or { problem }. */
+export function parseLayout(input) {
+  let text = input
+  if (input instanceof Uint8Array) {
+    if (input.length > LAYOUT.bytes) return { problem: `larger than ${LAYOUT.bytes / 1024} KB` }
+    text = new TextDecoder().decode(input)
+  }
+  if (typeof text !== 'string') return { problem: 'not text' }
+  if (text.length > LAYOUT.bytes) return { problem: `larger than ${LAYOUT.bytes / 1024} KB` }
+  // Slugs, enums, numbers and punctuation need nothing beyond printable ASCII.
+  if (/[^\t\n\r\x20-\x7e]/.test(text)) return { problem: 'not plain ASCII JSON' }
+  let raw
+  try {
+    raw = JSON.parse(text)
+  } catch {
+    return { problem: 'not valid JSON' }
+  }
+  if (!isPlainObject(raw)) return { problem: 'must be a JSON object' }
+  for (const k of Object.keys(raw)) if (!LAYOUT_KEYS.has(k)) return { problem: `unknown key ${quoted(k)}` }
+  if (raw.version !== 1) return { problem: 'version must be 1' }
+  const layout = { version: 1 }
+  for (const k of ['work', 'writing', 'hooks']) {
+    if (raw[k] === undefined) continue
+    const list = raw[k]
+    if (!Array.isArray(list) || list.length > LAYOUT.list) return { problem: `${k} must be a list of at most ${LAYOUT.list} slugs` }
+    const seen = new Set()
+    for (const s of list) {
+      if (!layoutSlug(s)) return { problem: `${k}: ${quoted(s)} is not a slug` }
+      if (seen.has(s)) return { problem: `${k}: "${s}" is listed twice` }
+      seen.add(s)
+    }
+    layout[k] = list.slice()
+  }
+  if (raw.cards !== undefined) {
+    if (!isPlainObject(raw.cards)) return { problem: 'cards must be an object keyed by project slug' }
+    const keys = Object.keys(raw.cards)
+    if (keys.length > LAYOUT.cards) return { problem: `at most ${LAYOUT.cards} cards` }
+    const cards = {}
+    for (const slug of keys) {
+      if (!layoutSlug(slug)) return { problem: `cards: ${quoted(slug)} is not a slug` }
+      const c = raw.cards[slug]
+      if (!isPlainObject(c)) return { problem: `cards.${slug} must be an object` }
+      for (const k of Object.keys(c)) if (!CARD_KEYS.has(k)) return { problem: `cards.${slug}: unknown key ${quoted(k)}` }
+      const card = {}
+      if (c.size !== undefined) {
+        if (!LAYOUT.size.includes(c.size)) return { problem: `cards.${slug}.size must be one of ${LAYOUT.size.join(', ')}` }
+        card.size = c.size
+      }
+      if (c.variant !== undefined) {
+        if (!LAYOUT.variant.includes(c.variant)) return { problem: `cards.${slug}.variant must be one of ${LAYOUT.variant.join(', ')}` }
+        card.variant = c.variant
+      }
+      if (c.focus !== undefined) {
+        if (typeof c.focus !== 'string' || !FOCUS_RE.test(c.focus)) return { problem: `cards.${slug}.focus must look like "50% 30%" (whole numbers 0 to 100)` }
+        card.focus = c.focus
+      }
+      if (c.home !== undefined) {
+        if (typeof c.home !== 'boolean') return { problem: `cards.${slug}.home must be true or false` }
+        card.home = c.home
+      }
+      cards[slug] = card
+    }
+    layout.cards = cards
+  }
+  return { layout }
+}
+
+/** Problem with a layout file's bytes or text, or null. */
+export function layoutProblem(input) {
+  return parseLayout(input).problem ?? null
+}
+
+/**
+ * Problems with what a parsed layout points at, given every post as { slug, kind, parent, hook }: `work` and `cards` name
+ * top-level projects, `writing` top-level articles, `hooks` posts that set a hook. A stale slug (a post renamed or removed)
+ * is a problem, so the layout is fixed in the same pull request.
+ */
+export function layoutRefProblems(layout, posts) {
+  const by = new Map(posts.map((p) => [p.slug, p]))
+  const problems = []
+  const want = (key, slug, ok, what) => {
+    const p = by.get(slug)
+    if (!p) problems.push(`${key}: no post "${slug}"`)
+    else if (!ok(p)) problems.push(`${key}: "${slug}" is not ${what}`)
+  }
+  const topProject = (p) => p.kind === 'project' && !p.parent
+  for (const s of layout.work ?? []) want('work', s, topProject, 'a top-level project')
+  for (const s of layout.writing ?? []) want('writing', s, (p) => p.kind === 'article' && !p.parent, 'a top-level article')
+  for (const s of layout.hooks ?? []) want('hooks', s, (p) => Boolean(p.hook), 'a post with a hook')
+  for (const s of Object.keys(layout.cards ?? {})) want('cards', s, topProject, 'a top-level project')
+  return problems
+}
