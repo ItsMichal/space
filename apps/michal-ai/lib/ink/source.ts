@@ -23,6 +23,12 @@ export function rememberInk(src: string, ink: Ink) {
 
 export const cachedInk = (src: string) => cache.get(src) ?? null
 
+/** An upload landed: the drawing kept under its placeholder is now also under its committed path. */
+export function carryInk(from: string, to: string) {
+  const hit = cache.get(from)
+  if (hit) cache.set(to, hit)
+}
+
 export async function loadInk(src: string): Promise<Ink> {
   const hit = cache.get(src)
   if (hit) return hit
