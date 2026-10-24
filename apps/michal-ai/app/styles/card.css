@@ -31,7 +31,7 @@
     --card-gap: var(--space-4);
   }
 }
-@media (min-width: 900px) {
+@media (min-width: 840px) {
   :root {
     --card-r: var(--radius-lg);
   }

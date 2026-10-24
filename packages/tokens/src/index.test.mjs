@@ -34,3 +34,11 @@ test('emits a phone step-down block only for styles that have one', () => {
   assert.match(css, /@media \(max-width: 767px\) \{\n {2}:root \{\n {4}--type-title-size: 34px;\n {4}--type-title-line: 1.2;/)
   assert.doesNotMatch(css.split('max-width: 767px')[1], /--type-body/)
 })
+
+test('phoneMax moves the step-down breakpoint', () => {
+  const t = structuredClone(sample)
+  t.type.groups[0].styles.push({ name: 'title', fontSize: '44px', fontSizeMobile: '34px', lineHeight: 1.1, fontWeight: 400 })
+  const css = tokensToCss(t, { phoneMax: '599px' })
+  assert.match(css, /@media \(max-width: 599px\) \{\n {2}:root \{\n {4}--type-title-size: 34px;/)
+  assert.doesNotMatch(css, /max-width: 767px/)
+})
