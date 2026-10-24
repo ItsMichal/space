@@ -7,6 +7,7 @@ import type { Root } from 'hast'
 import { YouTube } from '@/components/mdx/YouTube'
 import { Embed } from '@/components/mdx/Embed'
 import { Callout } from '@/components/mdx/Callout'
+import { Handwriting, type HandwritingProps } from '@/components/mdx/Handwriting'
 import { Picture } from '@/components/media/Picture'
 import { Zoomable } from '@/components/media/Zoomable'
 import { PostPreviewLink } from '@/components/ui/PostPreviewLink'
@@ -18,6 +19,7 @@ const components = {
   'mdx-youtube': (p: Props) => <YouTube id={String(p.id)} title={p.title as string | undefined} />,
   'mdx-embed': (p: Props) => <Embed url={String(p.url)} title={p.title as string | undefined} ratio={p.ratio as string | undefined} />,
   'mdx-callout': (p: Props & { children?: ReactNode }) => <Callout type={(p.type as string) ?? 'note'}>{p.children}</Callout>,
+  'mdx-handwriting': (p: Props) => <Handwriting {...(p as HandwritingProps)} />,
   // A wide table scrolls sideways inside its own wrapper (a focusable region), and the <table> keeps its semantics.
   table: (p: Props & { children?: ReactNode }) => (
     <div className="table-scroll" role="region" aria-label="Table" tabIndex={0}>

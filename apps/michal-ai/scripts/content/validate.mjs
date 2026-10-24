@@ -8,7 +8,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import matter from 'gray-matter'
-import { SAFE_MATTER, bodyProblems, dashLines, frontmatterProblem, mediaProblem, rawPostProblem, slugProblem } from '../../lib/content/rules.mjs'
+import { SAFE_MATTER, bodyProblems, dashLines, frontmatterProblem, handwritingSources, mediaProblem, rawPostProblem, slugProblem } from '../../lib/content/rules.mjs'
 
 // Media folders that belong to the site, not to posts (they stay in the space repo).
 const SITE_MEDIA = new Set(['about', '_v', '_og'])
@@ -81,6 +81,8 @@ for (const e of fs.readdirSync(postsDir, { withFileTypes: true })) {
   if (ids.has(postId)) report(rel, `id "${postId}" is also used by ${ids.get(postId)}`)
   ids.set(postId, rel)
   for (const b of bodyProblems(parsed.content)) report(rel, b)
+  // A ::handwriting is drawn from its ink file at build time, so the file has to be there (its contents are checked with the media below).
+  for (const h of handwritingSources(parsed.content)) if (!fs.existsSync(path.join(mediaDir, h.src.slice('/media/'.length)))) report(rel, `::handwriting src ${h.src} is not in the media folder`)
   for (const d of dashLines(raw)) report(`${rel}:${d.line}`, `em or en dash: ${d.text}`)
 }
 

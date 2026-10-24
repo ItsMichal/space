@@ -36,6 +36,14 @@ The renderer is the backstop: `lib/content/render.tsx` never passes raw HTML (`a
 handler and style attributes, unsafe `href` and `src`). JSON-LD text is escaped (`jsonLdText` in
 `components/seo/JsonLd.tsx`). Hostile fixtures: `lib/content/__tests__/hostile.test.ts`.
 
+**Handwriting.** `::handwriting{src alt duration blur chroma stagger focus ease color}` plays a drawing from the editor's
+pen pad. Its file is `media/<slug>/<name>.ink.json`, the only JSON media type: `parseInk` in `rules.mjs` takes printable
+ASCII only, at most 256 KB, exactly the keys `version width height size pressure strokes`, and flat number arrays inside
+the box with time never going back (limits in `INK`). The validator reports a `::handwriting` whose file is missing. At
+build time `lib/ink/inline.server.ts` reads and checks the file again and puts it into the page, where
+`components/ink/InkPlayer.tsx` draws it as inline SVG made only from numbers. Attributes are clamped
+(`HANDWRITING` in `rules.mjs`); `alt` is required. Tests: `lib/content/__tests__/handwriting.test.ts`.
+
 ## How the editor shares site code: the overlay build
 
 space-content does not copy or vendor site code. Its CI checks out this repo's `main` into `.site`, runs `npm ci` there,
