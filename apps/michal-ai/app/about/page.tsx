@@ -53,7 +53,7 @@ export default function AboutPage() {
           <Picture
             src={profile.portrait.src}
             alt={portraitAlt}
-            sizes="(min-width: 1100px) 360px, (min-width: 900px) 45vw, 94vw"
+            sizes="(min-width: 1100px) 360px, (min-width: 840px) 45vw, 94vw"
             priority
             className="ab-photo__img"
             focus={profile.portrait.focus}

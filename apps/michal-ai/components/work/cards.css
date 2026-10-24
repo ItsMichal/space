@@ -221,8 +221,8 @@
   }
 }
 
-/* feature: image beside the text from 900px up */
-@media (min-width: 900px) {
+/* feature: image beside the text from 840px up */
+@media (min-width: 840px) {
   .surface.tile--feature {
     flex-direction: row;
   }

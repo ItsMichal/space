@@ -107,7 +107,7 @@ export function ProjectCard({
 
 /**
  * Selected work as tiles, in the order given (the site's priority order). The first tile is the feature (full width,
- * image beside the text from 900px up); the rest are equal tiles. `variant="row"` (home): on phones the tiles are one
+ * image beside the text from 840px up); the rest are equal tiles. `variant="row"` (home): on phones the tiles are one
  * native, swipeable snap row; `variant="grid"` (/projects): one column on phones. Two columns from 640px, three from 1100px.
  */
 export function Showcase({

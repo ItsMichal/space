@@ -7,7 +7,9 @@ for code); this document is about sizes only.
 ## The tokens
 
 Defined once in `docs/design-system/tokens.json`, generated into `app/styles/tokens.css` (`npm run tokens`). Phones step the
-same tokens down below 768px (`fontSizeMobile`), so there are no per-component clamps.
+same tokens down below 600px (`fontSizeMobile`), so there are no per-component clamps. The step is at 600px, not at the 768px layout
+breakpoint: an unfolded phone or a small tablet (600 to 767px) keeps the phone layout but reads at the desktop sizes, so the 33rem
+text column is about 70 characters at 18px, a book page, instead of about 75 at 17px.
 
 | Token | Desktop | Phone | Line height | Face, weight | Used for |
 | --- | --- | --- | --- | --- | --- |

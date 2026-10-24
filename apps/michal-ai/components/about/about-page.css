@@ -1,5 +1,5 @@
 /* /about: a bento of the shared cards (app/styles/card.css) on the same container edges as the rest of the site. One type scale
-   (type.css roles: title 24, text 17, meta 15, ui 16), one gap, one padding. Three columns from 1100px, two from 900px, one below.
+   (type.css roles: title 24, text 17, meta 15, ui 16), one gap, one padding. Three columns from 1100px, two from 840px (an unfolded phone in landscape is 890px), one below.
    Precedents (docs/design-references.md, "About page"): leerob.com and brittanychiang.com for the dated role rows, linear.app and
    apple.com newsroom for the card language, read.cv profile lists for the quiet contact rows. */
 .ab {
@@ -89,7 +89,7 @@
 .ab-dates {
   font-variant-numeric: tabular-nums lining-nums;
 }
-@media (min-width: 900px) {
+@media (min-width: 840px) {
   .ab-role {
     grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
   }
@@ -152,7 +152,7 @@
 .ab-bp__list a:not(:hover):not(:focus-visible) {
   text-decoration-color: transparent;
 }
-@media (min-width: 900px) {
+@media (min-width: 840px) {
   .ab-bp__list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: var(--space-8);
@@ -188,7 +188,7 @@
 .ab-pr > p:nth-child(2) {
   grid-column: 1 / -1;
 }
-@media (min-width: 900px) {
+@media (min-width: 840px) {
   .ab-pr {
     grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
     align-items: baseline;
@@ -214,7 +214,7 @@
 .ab-quote p {
   margin: 0;
 }
-@media (min-width: 900px) {
+@media (min-width: 840px) {
   .ab-quotes {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -240,7 +240,7 @@
   quotes: '\201C' '\201D';
 }
 
-/* the photograph: a plain card, the picture fills it. Phones: a modest 4:3 window with the face centred. From 900px it takes the
+/* the photograph: a plain card, the picture fills it. Phones: a modest 4:3 window with the face centred. From 840px it takes the
    height of the intro beside it (the picture is absolutely filled so it never sets the row height). */
 .ab-photo {
   margin: 0;
@@ -256,7 +256,7 @@
 .ab-photo__img {
   object-fit: cover;
 }
-@media (min-width: 900px) {
+@media (min-width: 840px) {
   .ab-photo {
     aspect-ratio: auto;
     max-height: none;
@@ -276,7 +276,7 @@
   margin-bottom: var(--space-4);
 }
 
-@media (min-width: 900px) {
+@media (min-width: 840px) {
   .ab {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-areas:

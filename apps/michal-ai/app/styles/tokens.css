@@ -77,7 +77,7 @@
 }
 
 /* Phones: the same tokens, stepped down. */
-@media (max-width: 767px) {
+@media (max-width: 599px) {
   :root {
     --type-display-name-size: clamp(44px, calc((100vw - 32px) / 6.4), 64px);
     --type-title-size: 34px;

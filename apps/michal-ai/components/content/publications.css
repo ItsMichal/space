@@ -1,4 +1,4 @@
-/* Publication block on a project page: a card; citation beside the author's own sentence from 900px up. */
+/* Publication block on a project page: a card; citation beside the author's own sentence from 840px up. */
 .pubs {
   margin-top: var(--space-12);
   margin-bottom: 0;
@@ -12,7 +12,7 @@
   padding-top: var(--space-6);
   border-top: 1px solid var(--hairline);
 }
-@media (min-width: 900px) {
+@media (min-width: 840px) {
   .pubs__item:has(.pubs__role) {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
