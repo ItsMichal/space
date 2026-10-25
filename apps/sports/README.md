@@ -16,6 +16,12 @@ files. The game files are not in this repo.
 - Without the `SPORTS_PASSKEY` secret every request answers 503.
 - Dev-only endpoints of the local server (`/__stats`, the debug log POST) answer 404. `/lobby` and `/netplay` (online play)
   answer 501: not built here yet.
+- `/stats` (behind the gate): the online count and the all-time leaderboards, in one Durable Object (`Stats`, SQLite
+  storage, `worker/stats.js`). The page sends `POST /stats/hello {id}` every 20 s (a random per-tab id; online = seen in the
+  last 45 s) and `POST /stats/score {player, name, sport, level}` after a game (a random per-profile id, the character's
+  name, the game's own Skill Level; the best per profile and sport is kept). `GET /stats` answers
+  `{online, boards: {sport: [{name, level}]}}`, the top 10 per sport. The deploy creates the object (the `v1` migration in
+  `wrangler.jsonc`); no account resource to make by hand.
 
 ## One-time setup (owner)
 

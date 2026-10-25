@@ -7,10 +7,12 @@
 //     uploaded: the page only ever reads them through these chunks (web/preload.js).
 // Dev-only endpoints of serve-web are not exposed: /__stats and the debug log POST answer 404. The online lobby and
 // netplay mailbox (/lobby, /netplay) are not built here yet and answer 501.
+// /stats (the online count and the all-time leaderboards, worker/stats.js) goes to the Durable Object STATS.
 //
 // Every path except /gate needs the cookie from a correct passkey. Without the SPORTS_PASSKEY secret everything answers 503.
 import { isAuthed, makeCookieValue, passkeyMatches, passkeyOf, setCookieHeader } from './auth.js';
 import { gatePage } from './gate-page.js';
+import { Board, sqlStore, statsRequest } from './stats.js';
 
 const TYPES = {
   '.html': 'text/html',
@@ -130,6 +132,10 @@ export async function handle(req, env, opts = {}) {
     return text(401, 'passkey required');
   }
 
+  if (path === '/stats' || path.startsWith('/stats/')) {
+    if (!env.STATS) return text(501, 'no stats here');
+    return env.STATS.get(env.STATS.idFromName('global')).fetch(req);
+  }
   if (req.method !== 'GET' && req.method !== 'HEAD') return text(405, 'method not allowed', { Allow: 'GET, HEAD' });
   if (path === '/robots.txt') return text(200, req.method === 'HEAD' ? null : ROBOTS, { 'Cache-Control': 'public, max-age=3600' });
   if (path === '/__stats' || path === '/log') return text(404, 'not found');
@@ -139,6 +145,12 @@ export async function handle(req, env, opts = {}) {
   const cm = /^\/chunks\/([0-9a-f]{1,64})\/(\d{1,6})$/.exec(path);
   if (cm) return serveChunk(req, env, cm[1], Number(cm[2]));
   return serveStatic(req, env, path);
+}
+
+/** The online count and the leaderboards: one instance ("global"), SQLite storage (wrangler.jsonc migrations). */
+export class Stats {
+  constructor(ctx) { this.board = new Board(sqlStore(ctx.storage.sql)); }
+  fetch(req) { return statsRequest(req, this.board, Date.now()); }
 }
 
 export default { fetch: (req, env) => handle(req, env) };
