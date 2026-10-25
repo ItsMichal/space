@@ -22,6 +22,7 @@ const TYPES = {
   '.data': 'application/octet-stream',
   '.json': 'application/json',
   '.webmanifest': 'application/manifest+json',
+  '.woff': 'font/woff',
 };
 const ROBOTS = 'User-agent: *\nDisallow: /\n';
 const FAIL_DELAY_MS = 500;
