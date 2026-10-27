@@ -1,42 +1,79 @@
-/* /about: a bento of the shared cards (app/styles/card.css) on the same container edges as the rest of the site. One type scale
-   (type.css roles: title 24, text 17, meta 15, ui 16), one gap, one padding. Three columns from 1100px, two from 840px (an unfolded phone in landscape is 890px), one below.
-   Precedents (docs/design-references.md, "About page"): leerob.com and brittanychiang.com for the dated role rows, linear.app and
-   apple.com newsroom for the card language, read.cv profile lists for the quiet contact rows. */
+/* /about: one column of text sections, set like the indexes (app/styles/type.css, `.ix-sec`): each section's heading sits in a
+   narrow left column from 840px, its content beside it at a book measure. No cards, surfaces or row rules; whitespace
+   separates sections and entries. One small portrait beside the bio is the only picture above the project list.
+   Precedents (docs/design-references.md, "About page"): leerob.com and brittanychiang.com for the dated role rows, read.cv
+   profile lists for the quiet contact rows. */
 .ab {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--card-gap);
+  gap: var(--space-16);
 }
 .ab-card {
   scroll-margin-top: 96px;
 }
-.ab-card > p,
-.ab-card > ul {
+:where(.ab-card) p,
+:where(.ab-card) ul,
+:where(.ab-card) ol {
   margin: 0;
 }
-.ab-card > p + p,
-.ab-card > p + ul,
-.ab-card > ul + p {
-  margin-top: var(--space-2);
+.ab-list {
+  display: grid;
+  gap: var(--space-6);
+  padding: 0;
+  list-style: none;
 }
-.ab-intro > .t-text {
-  margin: 0;
+.ix-sec__body > * + * {
+  margin-top: var(--space-3);
+}
+
+/* intro: the portrait floats small beside the bio on phones; from 840px it takes the left column */
+.ab-photo {
+  float: left;
+  width: 104px;
+  margin: 0.3em var(--space-4) var(--space-2) 0;
+  overflow: hidden;
+  border-radius: var(--radius-xs);
+}
+.ab-photo picture,
+.ab-photo__img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.ab-intro::after {
+  content: '';
+  display: block;
+  clear: both;
+}
+.ab-intro__text > .t-text {
   color: var(--ink);
 }
-.ab-intro > .t-text + .t-text {
+.ab-intro__text > .t-text + .t-text {
   margin-top: var(--space-4);
   color: var(--ink-muted);
 }
-/* the status: his own words, one quiet inset inside the intro card */
+.ab-intro__text {
+  max-width: var(--ix-measure);
+}
+/* the status: his own words, set apart by space and weight only */
 .ab-status {
   margin-top: var(--space-6);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-xs);
-  background: color-mix(in srgb, var(--accent) 7%, var(--paper-raised));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
 }
-.ab-status p {
-  margin: 0;
+@media (min-width: 840px) {
+  .ab-intro {
+    display: grid;
+    grid-template-columns: var(--ix-col) minmax(0, var(--ix-measure));
+    column-gap: var(--ix-gap);
+    align-items: start;
+  }
+  .ab-intro::after {
+    content: none;
+  }
+  .ab-photo {
+    float: none;
+    width: 100%;
+    max-width: 8.5rem;
+    margin: 0.3em 0 0;
+  }
 }
 .ab-arrow {
   display: inline-block;
@@ -44,31 +81,40 @@
   vertical-align: -2px;
   opacity: 0.7;
 }
+
+/* contact: name, then the handle in quiet text */
+.ab-contact .ab-list {
+  gap: 0;
+}
 .ab-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-4);
+  column-gap: var(--space-3);
   min-height: 44px;
-  padding: var(--space-3) var(--card-pad);
+  padding: var(--space-2) 0;
+  color: var(--ink);
+  text-decoration: none;
+  transition: color var(--motion-fast) var(--ease-out-soft);
+}
+.ab-row:hover,
+.ab-row:focus-visible {
+  color: var(--accent);
 }
 .ab-row .t-meta {
-  text-align: right;
   overflow-wrap: anywhere;
 }
 
 /* experience */
+.ab-roles {
+  gap: var(--space-12);
+}
 .ab-role {
   display: grid;
-  gap: var(--space-2) var(--space-8);
-  padding: var(--space-4) var(--card-pad);
+  gap: var(--space-3);
 }
-.ab-role__meta h3,
-.ab-role__meta p {
-  margin: 0;
-}
-.ab-role__body > * {
-  margin: 0;
+.ab-role__meta > * + * {
+  margin-top: 2px;
 }
 .ab-role__body > * + * {
   margin-top: var(--space-2);
@@ -76,6 +122,9 @@
 .ab-bullets {
   padding-left: 1.1em;
   list-style: disc;
+}
+.ab-card .ab-bullets {
+  padding-left: 1.1em;
 }
 .ab-bullets li {
   padding-left: 2px;
@@ -89,17 +138,14 @@
 .ab-dates {
   font-variant-numeric: tabular-nums lining-nums;
 }
-@media (min-width: 840px) {
-  .ab-role {
-    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
-  }
-}
 
-/* education, awards, skills: short lists inside a padded card */
+/* education, blueprint, awards, skills: short lists */
 .ab-plain {
-  margin: var(--space-3) 0 0;
   padding: 0;
   list-style: none;
+}
+.ab-card .ab-plain {
+  margin-top: var(--space-3);
 }
 .ab-plain li + li {
   margin-top: var(--space-2);
@@ -114,121 +160,69 @@
 }
 .ab-awards .ab-plain li + li,
 .ab-skilllist > div + div {
-  margin-top: var(--space-3);
+  margin-top: var(--space-4);
 }
 .ab-sub {
-  margin: var(--space-6) 0 0;
+  margin-top: var(--space-8);
 }
-.ab-skilllist {
-  margin: 0;
-}
+.ab-skilllist,
 .ab-skilllist dt,
 .ab-skilllist dd {
   margin: 0;
 }
-.ab-edu > .t-meta {
-  margin-top: var(--space-2);
-}
-.ab-edu .t-ui {
-  margin: 0;
-}
-.ab-bp > .t-meta {
-  margin-top: var(--space-3);
+.ab-edu .t-meta {
+  margin-top: var(--space-1);
 }
 .ab-bp__list {
-  margin: var(--space-3) 0 0;
+  display: grid;
+  gap: var(--space-4);
   padding: 0;
   list-style: none;
-  display: grid;
-  gap: var(--space-3);
+}
+.ab-card .ab-bp__list {
+  margin-top: var(--space-3);
 }
 .ab-bp__list li {
   display: grid;
   gap: 2px;
 }
-.ab-bp__list p {
-  margin: 0;
-}
 .ab-bp__list a:not(:hover):not(:focus-visible) {
   text-decoration-color: transparent;
 }
-@media (min-width: 840px) {
+@media (min-width: 640px) {
   .ab-bp__list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: var(--space-8);
   }
 }
+/* awards and skills were a side column of the bento; now two more sections in the one column */
 .ab-side {
-  display: grid;
-  gap: var(--card-gap);
-  align-content: start;
+  display: contents;
 }
 
-/* hackathons and press: rows with a title, a trailing date, and one meta line */
+/* publications, hackathons, press: title, then one or two quiet lines (date first where there is one) */
+.pub,
 .ab-hack,
 .ab-pr {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-1) var(--space-4);
-  padding: var(--space-3) var(--card-pad);
+  gap: 2px;
 }
-.ab-hack p,
-.ab-pr p {
-  margin: 0;
-}
+.pub__year,
 .ab-hack__d {
-  grid-column: 2;
-  grid-row: 1;
+  order: 2;
   font-variant-numeric: tabular-nums lining-nums;
-  white-space: nowrap;
 }
+.pub__ref,
 .ab-hack__e {
-  grid-column: 1 / -1;
+  order: 1;
 }
-.ab-pr > p:nth-child(2) {
-  grid-column: 1 / -1;
-}
-@media (min-width: 840px) {
-  .ab-pr {
-    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-    align-items: baseline;
-  }
-  .ab-pr > p:nth-child(2) {
-    grid-column: auto;
-    text-align: right;
-  }
-}
-
-/* X quotes: plain quote cards, no embed */
-.ab-quotes {
-  display: grid;
-  gap: var(--card-gap);
-  margin: 0 0 var(--space-4);
-  padding: 0;
-  list-style: none;
-}
-.ab-quote blockquote {
-  margin: 0 0 var(--space-2);
-  color: var(--ink);
-}
-.ab-quote p {
-  margin: 0;
-}
-@media (min-width: 840px) {
-  .ab-quotes {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-/* Publications: the "Acknowledged in" sub-section and its quotations (type roles only, no new sizes) */
-.ab-subhead {
-  margin: 0;
-  padding: var(--space-4) var(--card-pad) var(--space-1);
-  border-top: 1px solid var(--hairline);
+.pub__title,
+.ab-hack__t {
+  order: 0;
 }
 .pub__quote {
-  grid-column: 1 / -1;
-  margin: var(--space-1) 0 0;
+  order: 3;
+  margin: var(--space-2) 0 0;
   padding-left: var(--space-3);
   border-left: 2px solid var(--hairline);
 }
@@ -239,78 +233,24 @@
 .pub__quote q {
   quotes: '\201C' '\201D';
 }
-
-/* the photograph: a plain card, the picture fills it. Phones: a modest 4:3 window with the face centred. From 840px it takes the
-   height of the intro beside it (the picture is absolutely filled so it never sets the row height). */
-.ab-photo {
-  margin: 0;
-  aspect-ratio: 4 / 3;
-  max-height: 300px;
-}
-.ab-photo picture,
-.ab-photo__img {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-.ab-photo__img {
-  object-fit: cover;
-}
-@media (min-width: 840px) {
-  .ab-photo {
-    aspect-ratio: auto;
-    max-height: none;
-    min-height: 360px;
-  }
-  .ab-photo picture {
-    position: absolute;
-    inset: 0;
-  }
-}
-
-/* projects grid: the home tiles, compact */
-.ab-projects {
+.ab-subhead {
   margin-top: var(--space-12);
 }
-.ab-projects__h {
-  margin-bottom: var(--space-4);
+
+/* X quotes: plain quotations, no embed */
+.ab-quotes {
+  display: grid;
+  gap: var(--space-8);
+  padding: 0;
+  list-style: none;
+}
+.ab-card .ab-quotes {
+}
+.ab-quote blockquote {
+  margin: 0 0 var(--space-2);
+  color: var(--ink);
 }
 
-@media (min-width: 840px) {
-  .ab {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-areas:
-      'photo intro'
-      'contact contact'
-      'xp xp'
-      'edu pubs'
-      'bp bp'
-      'hacks side'
-      'press press'
-      'x x';
-  }
-  .ab-photo { grid-area: photo; }
-  .ab-intro { grid-area: intro; }
-  .ab-contact { grid-area: contact; }
-  .ab-xp { grid-area: xp; }
-  .ab-edu { grid-area: edu; }
-  .ab-bp { grid-area: bp; }
-  .ab-pubs { grid-area: pubs; }
-  .ab-hacks { grid-area: hacks; }
-  .ab-side { grid-area: side; }
-  .ab-press { grid-area: press; }
-  .ab-x { grid-area: x; }
-}
-@media (min-width: 1100px) {
-  .ab {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-areas:
-      'photo intro contact'
-      'xp xp xp'
-      'edu pubs pubs'
-      'bp bp bp'
-      'hacks hacks side'
-      'press press press'
-      'x x x';
-  }
+.ab-projects {
+  margin-top: var(--space-16);
 }

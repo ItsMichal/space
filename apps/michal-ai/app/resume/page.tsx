@@ -93,7 +93,7 @@ export default function ResumePage() {
         </Link>
       </div>
 
-      <article className="rs surface" aria-label={`Resume of ${profile.name}`}>
+      <article className="rs" aria-label={`Resume of ${profile.name}`}>
         <header className="rs-head">
           <h1 className="rs-name">{profile.name}</h1>
           <p className="rs-contact">

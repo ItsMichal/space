@@ -12,9 +12,9 @@ export default function NotFound() {
   return (
     <div className="mx-auto max-w-content px-space-4 pb-space-16 pt-[120px] md:px-space-8 md:pt-[160px]">
       <h1 className="font-display text-title">Page not found</h1>
-      <Link href="/" className="surface surface--link card mt-space-8 flex items-center justify-between gap-space-4 t-heading">
+      <Link href="/" className="link mt-space-8 inline-flex min-h-[44px] items-center gap-space-2 t-ui">
         Back to the home page
-        <ArrowRight size={20} strokeWidth={1.5} aria-hidden />
+        <ArrowRight size={16} strokeWidth={1.5} aria-hidden />
       </Link>
     </div>
   )
