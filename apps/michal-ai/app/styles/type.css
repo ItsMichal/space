@@ -144,7 +144,8 @@ a.ix:focus-visible {
   gap: var(--space-4);
   scroll-margin-top: 96px;
 }
-.ix-sec > h2 {
+.ix-sec > h2,
+.ix-sec > h3 {
   margin: 0;
 }
 .ix-sec__body {
@@ -175,7 +176,8 @@ a.ix:focus-visible {
     grid-template-columns: var(--ix-col) minmax(0, var(--ix-measure));
     column-gap: var(--ix-gap);
   }
-  .ix-sec > h2 {
+  .ix-sec > h2,
+  .ix-sec > h3 {
     padding-top: 0.1em;
   }
   /* entries inside a section already have the left column for the heading: they stack */

@@ -102,7 +102,7 @@ export function FilteredWork({ options, children }: { options: readonly Filter[]
       {options.map((o) => (
         <span key={o} id={`f-${o}`} className="fw-mark" aria-hidden />
       ))}
-      <div className="fw-bar surface">
+      <div className="fw-bar">
         <SegmentedControl
           label="Filter projects"
           value={value}
