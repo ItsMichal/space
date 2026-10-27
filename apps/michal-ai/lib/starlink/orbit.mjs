@@ -20,6 +20,10 @@ export const VERSION = 1
 export const HEADER_BYTES = 20
 export const FLOATS_PER_SAT = 5
 export const MAX_AGE_DAYS = 30
+/** Header flag (the u16 at byte 6): an identity trailer follows the floats, ID_BYTES per satellite. */
+export const FLAG_IDS = 1
+export const ID_BYTES = 12
+const DTC = 0x80000000
 export const MIN_REV_PER_DAY = 14.5
 export const MAX_REV_PER_DAY = 16.5
 
@@ -101,15 +105,20 @@ export function packOmm(list, refEpoch) {
     if (Number.isFinite(e) && e > newest) newest = e
   }
   const ref = refEpoch ?? Math.floor(newest)
+  const ids = []
   for (const o of list) {
     const el = elementsAt(o, ref)
-    if (el) ok.push(el)
+    if (el) {
+      ok.push(el)
+      ids.push(identityOf(o))
+    }
   }
-  const bytes = new Uint8Array(HEADER_BYTES + ok.length * FLOATS_PER_SAT * 4)
+  const floatEnd = HEADER_BYTES + ok.length * FLOATS_PER_SAT * 4
+  const bytes = new Uint8Array(floatEnd + ok.length * ID_BYTES)
   const dv = new DataView(bytes.buffer)
   dv.setUint32(0, MAGIC, true)
   dv.setUint16(4, VERSION, true)
-  dv.setUint16(6, 0, true)
+  dv.setUint16(6, FLAG_IDS, true)
   dv.setUint32(8, ok.length, true)
   dv.setFloat64(12, ref, true)
   ok.forEach((e, i) => {
@@ -120,7 +129,37 @@ export function packOmm(list, refEpoch) {
     dv.setFloat32(o + 12, e.udot, true)
     dv.setFloat32(o + 16, e.udd, true)
   })
+  ids.forEach((d, i) => {
+    const o = floatEnd + i * ID_BYTES
+    dv.setUint32(o, d.norad, true)
+    dv.setUint32(o + 4, d.name, true)
+    dv.setUint32(o + 8, d.launch, true)
+  })
   return { bytes, count: ok.length, refEpoch: ref }
+}
+
+/**
+ * What the OMM says about who a satellite is, as three integers: the NORAD catalogue number, the number in its name
+ * ("STARLINK-1234" -> 1234, with the top bit set for a "[DTC]" direct-to-cell satellite) and its launch as year * 1000 + launch
+ * of the year (OBJECT_ID "2019-074A" -> 2019074). 0 where the field is missing or not in that form.
+ */
+export function identityOf(omm) {
+  const norad = Number(omm.NORAD_CAT_ID)
+  const nm = /^STARLINK-(\d{1,9})(\s*\[DTC\])?$/.exec(String(omm.OBJECT_NAME ?? '').trim())
+  const num = nm ? Number(nm[1]) : 0
+  const id = /^(\d{4})-(\d{3})/.exec(String(omm.OBJECT_ID ?? ''))
+  return {
+    norad: Number.isInteger(norad) && norad > 0 && norad < DTC ? norad : 0,
+    name: num > 0 && num < DTC ? (num | (nm && nm[2] ? DTC : 0)) >>> 0 : 0,
+    launch: id ? Number(id[1]) * 1000 + Number(id[2]) : 0,
+  }
+}
+
+/** Decode the name field of the identity trailer: "STARLINK-1234", "STARLINK-1234 [DTC]", or null. */
+export function nameOf(n) {
+  if (!n) return null
+  const num = n & 0x7fffffff
+  return `STARLINK-${num}${n & DTC ? ' [DTC]' : ''}`
 }
 
 /** Read a packed buffer. Returns null for anything that is not a version-1 constellation file. */
@@ -130,12 +169,22 @@ export function unpack(buf) {
   const dv = new DataView(ab)
   if (dv.getUint32(0, true) !== MAGIC || dv.getUint16(4, true) !== VERSION) return null
   const count = dv.getUint32(8, true)
-  if (ab.byteLength !== HEADER_BYTES + count * FLOATS_PER_SAT * 4) return null
+  const floatEnd = HEADER_BYTES + count * FLOATS_PER_SAT * 4
+  const withIds = (dv.getUint16(6, true) & FLAG_IDS) !== 0
+  if (ab.byteLength !== floatEnd + (withIds ? count * ID_BYTES : 0)) return null
   const refEpoch = dv.getFloat64(12, true)
   // Little-endian on every platform that runs a browser; DataView copy keeps this correct elsewhere too.
   const data = new Float32Array(count * FLOATS_PER_SAT)
   for (let i = 0; i < data.length; i++) data[i] = dv.getFloat32(HEADER_BYTES + i * 4, true)
-  return { count, refEpoch, data }
+  if (!withIds) return { count, refEpoch, data, ids: null }
+  const ids = { norad: new Uint32Array(count), name: new Uint32Array(count), launch: new Uint32Array(count) }
+  for (let i = 0; i < count; i++) {
+    const o = floatEnd + i * ID_BYTES
+    ids.norad[i] = dv.getUint32(o, true)
+    ids.name[i] = dv.getUint32(o + 4, true)
+    ids.launch[i] = dv.getUint32(o + 8, true)
+  }
+  return { count, refEpoch, data, ids }
 }
 
 /** True when the elements are too old to draw (reference epoch more than 30 days before `nowMs`, or in the future by > 1 day). */

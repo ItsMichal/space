@@ -8,6 +8,8 @@ export const VERSION: number
 export const HEADER_BYTES: number
 export const FLOATS_PER_SAT: number
 export const MAX_AGE_DAYS: number
+export const FLAG_IDS: number
+export const ID_BYTES: number
 
 export interface Omm {
   OBJECT_NAME?: string
@@ -32,7 +34,17 @@ export interface Packed {
   refEpoch: number
   /** inc, raan, u, udot, udd per satellite */
   data: Float32Array
+  /** Identity trailer (NORAD number, name number, launch), or null for a file packed without one. */
+  ids: Identities | null
 }
+export interface Identities {
+  norad: Uint32Array
+  name: Uint32Array
+  /** year * 1000 + launch of the year */
+  launch: Uint32Array
+}
+export function identityOf(omm: Omm): { norad: number; name: number; launch: number }
+export function nameOf(n: number): string | null
 
 export function epochSeconds(s: string): number
 export function gmst(unixSec: number): number
