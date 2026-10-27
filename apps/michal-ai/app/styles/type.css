@@ -172,6 +172,10 @@ a.ix:focus-visible {
   .ix--ui > .ix__meta {
     padding-top: 0.12em;
   }
+  /* in the narrow column a long role wraps inside itself rather than running into the title */
+  .ix > .ix__meta .t-meta__part {
+    white-space: normal;
+  }
   .ix-sec {
     grid-template-columns: var(--ix-col) minmax(0, var(--ix-measure));
     column-gap: var(--ix-gap);

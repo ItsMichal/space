@@ -146,13 +146,15 @@ describe('the site follows the layout file', () => {
   })
   it('renders size, variant and focus from a layout, and nothing else', () => {
     const posts = getMainProjects().slice(0, 3)
-    const layout: SiteLayout = { version: 1, cards: { [posts[0].slug]: { size: 'regular' }, [posts[1].slug]: { size: 'feature' }, [posts[2].slug]: { variant: 'fill', focus: '10% 90%' } } }
+    const layout: SiteLayout = { version: 1, cards: { [posts[0].slug]: { size: 'regular' }, [posts[1].slug]: { size: 'feature', focus: '10% 90%' }, [posts[2].slug]: { variant: 'fill' } } }
     const html = renderToStaticMarkup(<Showcase posts={posts} base="/projects" layout={layout} />)
     const lis = html.split('<li').slice(1)
     expect(lis[0]).not.toContain('tiles__feature')
     expect(lis[1]).toContain('tiles__feature')
     expect(lis[2]).toContain('tile--fill')
-    if (posts[2].cover || posts[2].cardImage) expect(lis[2]).toContain('10% 90%')
+    // only a feature entry carries a picture, so focus frames that one
+    if (posts[1].cover || posts[1].cardImage) expect(lis[1]).toContain('10% 90%')
+    expect(lis[2]).not.toContain('<img')
   })
 })
 
