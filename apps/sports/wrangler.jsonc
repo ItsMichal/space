@@ -11,7 +11,8 @@
   "preview_urls": false,
   "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "halmic-sports" }],
   // The online count and the leaderboards (worker/stats.js): one Durable Object with SQLite storage, created by the deploy.
-  "durable_objects": { "bindings": [{ "name": "STATS", "class_name": "Stats" }] },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Stats"] }],
+  // The online lobbies and netplay rooms (worker/online.js): one Durable Object, in memory only.
+  "durable_objects": { "bindings": [{ "name": "STATS", "class_name": "Stats" }, { "name": "ONLINE", "class_name": "Online" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Stats"] }, { "tag": "v2", "new_sqlite_classes": ["Online"] }],
   "observability": { "enabled": true }
 }
