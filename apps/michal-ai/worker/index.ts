@@ -2,7 +2,7 @@
 // prerendered site from the static assets binding. Durable Objects and the cron handler are unchanged from before the migration.
 import { canonicalRedirect, isPreviewHost } from './host'
 import { handleLive, isLivePath, type LiveEnv } from './live'
-import { handleStarlinkRead, refreshStarlink, STARLINK_LIVE_PATH } from './starlink'
+import { handleStarlinkRead, refreshStarlink, STARLINK_LIVE_IDS_PATH, STARLINK_LIVE_PATH } from './starlink'
 import { contentTypeFor, isDataRequest, isHtmlFilePath, parseRange, redirectFor, shareCardAsset } from './static'
 
 export interface Env extends LiveEnv {
@@ -60,7 +60,7 @@ export default {
     const to = canonicalRedirect(request.url)
     if (to) return Response.redirect(to, 308)
     // Hero globe constellation (not part of the live features, so LIVE_KILL does not apply).
-    if (url.pathname === STARLINK_LIVE_PATH) return handleStarlinkRead(request, env)
+    if (url.pathname === STARLINK_LIVE_PATH || url.pathname === STARLINK_LIVE_IDS_PATH) return handleStarlinkRead(request, env)
     // Live features (presence socket, reactions). The site itself never depends on them.
     if (isLivePath(url.pathname)) {
       try {

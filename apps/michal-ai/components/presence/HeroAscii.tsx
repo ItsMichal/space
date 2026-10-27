@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { positionEcef } from '@/lib/starlink/orbit.mjs'
 import { loadLand, type Ring } from './globe/data'
-import { loadStarlink, type Packed } from './globe/starlink'
+import { loadStarlinkWithIds, type Identities, type Packed } from './globe/starlink'
 import { calloutLines, GLYPHS, landGlyph, OCEAN, SAT, SAT_LINKED, SAT_MARKED, satFacts, strokeGlyph, TERMINAL } from './ascii/field'
 import './presence.css'
 import './ascii/ascii.css'
@@ -107,6 +107,7 @@ export function HeroAscii({ className = '' }: { className?: string }) {
     // ---- data ----
     let mask: Uint8Array | null = null
     let sat: Packed | null = null
+    let ids: Identities | null = null
     let ecef = new Float32Array(0)
     let posCursor = 0
     let stride = 8
@@ -578,7 +579,7 @@ export function HeroAscii({ className = '' }: { className?: string }) {
         const j = pool[pi]
         pool[pi] = pool[k]
         pool[k] = j
-        const lines = calloutLines(satFacts(sat.data, sat.ids, j * stride), compact())
+        const lines = calloutLines(satFacts(sat.data, ids, j * stride), compact())
         const { lh, tw } = labelSize(lines)
         const b = bestPlace(sx[j], sy[j], tw, lh * lines.length, lh)
         if (b.score < 0.04) {
@@ -594,7 +595,7 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       callout.sat = i
       callout.t0 = now
       callout.pinned = pinned
-      callout.lines = calloutLines(satFacts(sat.data, sat.ids, i), compact())
+      callout.lines = calloutLines(satFacts(sat.data, ids, i), compact())
       callout.next = now + 6000 + Math.random() * 4000
       const j = i / stride
       const { lh, tw } = labelSize(callout.lines)
@@ -904,9 +905,11 @@ export function HeroAscii({ className = '' }: { className?: string }) {
         lastLonCol = NaN
         redrawOnce()
       }).catch(() => {})
-      void loadStarlink().then((p) => {
-        if (!p) return
+      void loadStarlinkWithIds().then((r) => {
+        if (!r) return
+        const p = r.sat
         sat = p
+        ids = r.ids
         ecef = new Float32Array(p.count * 3)
         refreshPositions(true)
         callout.next = performance.now() + 1800

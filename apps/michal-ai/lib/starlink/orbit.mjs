@@ -20,8 +20,14 @@ export const VERSION = 1
 export const HEADER_BYTES = 20
 export const FLOATS_PER_SAT = 5
 export const MAX_AGE_DAYS = 30
-/** Header flag (the u16 at byte 6): an identity trailer follows the floats, ID_BYTES per satellite. */
-export const FLAG_IDS = 1
+/**
+ * Identities live in a separate sidecar file so the constellation file keeps its exact v1 layout (clients already in the
+ * wild read it with a strict length check). Sidecar: magic "SLID", u16 version, u16 reserved, u32 count, f64 reference epoch
+ * (both equal to the constellation file it belongs to), then ID_BYTES per satellite in the same order: u32 NORAD number,
+ * u32 name number (top bit = "[DTC]"), u32 launch (year * 1000 + launch of the year).
+ */
+export const IDS_MAGIC = 0x44494c53 // "SLID"
+export const IDS_VERSION = 1
 export const ID_BYTES = 12
 const DTC = 0x80000000
 export const MIN_REV_PER_DAY = 14.5
@@ -96,7 +102,10 @@ export function elementsAt(omm, refSec) {
   }
 }
 
-/** Pack OMM records. Returns { bytes, count, refEpoch }. `refEpoch` defaults to the newest element epoch. */
+/**
+ * Pack OMM records. Returns { bytes, ids, count, refEpoch }: `bytes` is the constellation file, `ids` its identity sidecar.
+ * `refEpoch` defaults to the newest element epoch.
+ */
 export function packOmm(list, refEpoch) {
   const ok = []
   let newest = 0
@@ -113,12 +122,11 @@ export function packOmm(list, refEpoch) {
       ids.push(identityOf(o))
     }
   }
-  const floatEnd = HEADER_BYTES + ok.length * FLOATS_PER_SAT * 4
-  const bytes = new Uint8Array(floatEnd + ok.length * ID_BYTES)
+  const bytes = new Uint8Array(HEADER_BYTES + ok.length * FLOATS_PER_SAT * 4)
   const dv = new DataView(bytes.buffer)
   dv.setUint32(0, MAGIC, true)
   dv.setUint16(4, VERSION, true)
-  dv.setUint16(6, FLAG_IDS, true)
+  dv.setUint16(6, 0, true)
   dv.setUint32(8, ok.length, true)
   dv.setFloat64(12, ref, true)
   ok.forEach((e, i) => {
@@ -129,13 +137,47 @@ export function packOmm(list, refEpoch) {
     dv.setFloat32(o + 12, e.udot, true)
     dv.setFloat32(o + 16, e.udd, true)
   })
-  ids.forEach((d, i) => {
-    const o = floatEnd + i * ID_BYTES
+  return { bytes, ids: packIds(ids, ref), count: ok.length, refEpoch: ref }
+}
+
+/** The identity sidecar for `list` (from identityOf, in constellation order) at reference epoch `ref`. */
+export function packIds(list, ref) {
+  const bytes = new Uint8Array(HEADER_BYTES + list.length * ID_BYTES)
+  const dv = new DataView(bytes.buffer)
+  dv.setUint32(0, IDS_MAGIC, true)
+  dv.setUint16(4, IDS_VERSION, true)
+  dv.setUint16(6, 0, true)
+  dv.setUint32(8, list.length, true)
+  dv.setFloat64(12, ref, true)
+  list.forEach((d, i) => {
+    const o = HEADER_BYTES + i * ID_BYTES
     dv.setUint32(o, d.norad, true)
     dv.setUint32(o + 4, d.name, true)
     dv.setUint32(o + 8, d.launch, true)
   })
-  return { bytes, count: ok.length, refEpoch: ref }
+  return bytes
+}
+
+/**
+ * Read an identity sidecar. Returns null unless it is a v1 sidecar for exactly `packed` (same count and reference epoch), so a
+ * sidecar from another refresh is never paired with the wrong satellites.
+ */
+export function unpackIds(buf, packed) {
+  const ab = buf instanceof ArrayBuffer ? buf : buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
+  if (!packed || ab.byteLength < HEADER_BYTES) return null
+  const dv = new DataView(ab)
+  if (dv.getUint32(0, true) !== IDS_MAGIC || dv.getUint16(4, true) !== IDS_VERSION) return null
+  const count = dv.getUint32(8, true)
+  if (count !== packed.count || dv.getFloat64(12, true) !== packed.refEpoch) return null
+  if (ab.byteLength !== HEADER_BYTES + count * ID_BYTES) return null
+  const ids = { norad: new Uint32Array(count), name: new Uint32Array(count), launch: new Uint32Array(count) }
+  for (let i = 0; i < count; i++) {
+    const o = HEADER_BYTES + i * ID_BYTES
+    ids.norad[i] = dv.getUint32(o, true)
+    ids.name[i] = dv.getUint32(o + 4, true)
+    ids.launch[i] = dv.getUint32(o + 8, true)
+  }
+  return ids
 }
 
 /**
@@ -169,22 +211,12 @@ export function unpack(buf) {
   const dv = new DataView(ab)
   if (dv.getUint32(0, true) !== MAGIC || dv.getUint16(4, true) !== VERSION) return null
   const count = dv.getUint32(8, true)
-  const floatEnd = HEADER_BYTES + count * FLOATS_PER_SAT * 4
-  const withIds = (dv.getUint16(6, true) & FLAG_IDS) !== 0
-  if (ab.byteLength !== floatEnd + (withIds ? count * ID_BYTES : 0)) return null
+  if (ab.byteLength !== HEADER_BYTES + count * FLOATS_PER_SAT * 4) return null
   const refEpoch = dv.getFloat64(12, true)
   // Little-endian on every platform that runs a browser; DataView copy keeps this correct elsewhere too.
   const data = new Float32Array(count * FLOATS_PER_SAT)
   for (let i = 0; i < data.length; i++) data[i] = dv.getFloat32(HEADER_BYTES + i * 4, true)
-  if (!withIds) return { count, refEpoch, data, ids: null }
-  const ids = { norad: new Uint32Array(count), name: new Uint32Array(count), launch: new Uint32Array(count) }
-  for (let i = 0; i < count; i++) {
-    const o = floatEnd + i * ID_BYTES
-    ids.norad[i] = dv.getUint32(o, true)
-    ids.name[i] = dv.getUint32(o + 4, true)
-    ids.launch[i] = dv.getUint32(o + 8, true)
-  }
-  return { count, refEpoch, data, ids }
+  return { count, refEpoch, data }
 }
 
 /** True when the elements are too old to draw (reference epoch more than 30 days before `nowMs`, or in the future by > 1 day). */

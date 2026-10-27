@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import * as sat from 'satellite.js'
 import fixture from './fixture-omm.json'
-import { epochSeconds, identityOf, isStale, nameOf, packOmm, positionEcef, subPoint, unpack, type Omm } from '../orbit.mjs'
+import { epochSeconds, identityOf, isStale, nameOf, packOmm, positionEcef, subPoint, unpack, unpackIds, type Omm } from '../orbit.mjs'
 
 const omms = fixture as unknown as Omm[]
 const D2R = Math.PI / 180
@@ -46,7 +46,9 @@ describe('orbit model vs SGP4', () => {
 describe('packer', () => {
   it('round-trips header and elements', () => {
     const { bytes, count, refEpoch } = packOmm(omms)
-    expect(bytes.byteLength).toBe(20 + count * 20 + count * 12)
+    expect(bytes.byteLength).toBe(20 + count * 20)
+    // the constellation file keeps the v1 layout: reserved header field 0, no trailer
+    expect(new DataView(bytes.buffer).getUint16(6, true)).toBe(0)
     const p = unpack(bytes)!
     expect(p.count).toBe(count)
     expect(p.refEpoch).toBe(refEpoch)
@@ -56,23 +58,27 @@ describe('packer', () => {
       expect(p.data[i * 5 + 3]).toBeCloseTo((omms[i].MEAN_MOTION * 2 * Math.PI) / 86400, 4)
     }
   })
-  it('carries each satellite identity in the trailer', () => {
-    const p = unpack(packOmm(omms).bytes)!
-    expect(p.ids).not.toBeNull()
+  it('carries each satellite identity in the sidecar', () => {
+    const { bytes, ids, count } = packOmm(omms)
+    expect(ids.byteLength).toBe(20 + count * 12)
+    const p = unpack(bytes)!
+    const got = unpackIds(ids, p)!
+    expect(got).not.toBeNull()
     for (let i = 0; i < p.count; i++) {
       const want = identityOf(omms[i])
-      expect(p.ids!.norad[i]).toBe(want.norad)
-      expect(p.ids!.name[i]).toBe(want.name)
-      expect(p.ids!.launch[i]).toBe(want.launch)
+      expect(got.norad[i]).toBe(want.norad)
+      expect(got.name[i]).toBe(want.name)
+      expect(got.launch[i]).toBe(want.launch)
     }
   })
-  it('still reads a file packed without identities', () => {
-    const { bytes, count } = packOmm(omms)
-    const v1 = bytes.slice(0, 20 + count * 20)
-    new DataView(v1.buffer).setUint16(6, 0, true)
-    const p = unpack(v1)!
-    expect(p.count).toBe(count)
-    expect(p.ids).toBeNull()
+  it('never pairs a sidecar with another file', () => {
+    const { ids } = packOmm(omms)
+    const p = unpack(packOmm(omms).bytes)!
+    expect(unpackIds(ids, { ...p, refEpoch: p.refEpoch + 1 })).toBeNull()
+    expect(unpackIds(ids, { ...p, count: p.count - 1 })).toBeNull()
+    expect(unpackIds(ids, null)).toBeNull()
+    expect(unpack(ids)).toBeNull()
+    expect(unpackIds(packOmm(omms).bytes, p)).toBeNull()
   })
   it('parses names, catalogue numbers and launches', () => {
     const a = identityOf({ ...omms[0], OBJECT_NAME: 'STARLINK-1234', NORAD_CAT_ID: 44713, OBJECT_ID: '2019-074A' })
