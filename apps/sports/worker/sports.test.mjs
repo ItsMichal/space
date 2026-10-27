@@ -224,15 +224,22 @@ test('chunks: unknown chunk 404, no accepted encoding 406, malformed paths 404, 
   assert.equal(again.headers.get('content-encoding'), 'br');
 });
 
-test('dev endpoints are off and online play says so', async () => {
+test('dev endpoints are off; lobby and netplay calls (any method) go to the ONLINE object', async () => {
   const env = ENV();
   const cookie = await login(env);
   assert.equal((await handle(req('/__stats', { headers: { cookie } }), env, O)).status, 404);
   assert.equal((await handle(req('/log', { method: 'POST', headers: { cookie }, body: '[]' }), env, O)).status, 405);
   assert.equal((await handle(req('/log', { headers: { cookie } }), env, O)).status, 404);
-  const l = await handle(req('/lobby/ABCDE', { headers: { cookie } }), env, O);
-  assert.equal(l.status, 501);
-  assert.match((await l.json()).err, /online play/);
+  assert.equal((await handle(req('/lobby/ABCDE', { headers: { cookie } }), env, O)).status, 501);
+  const seen = [];
+  const ONLINE = { idFromName: (n) => 'id:' + n, get: (id) => ({ fetch: async (r) => { seen.push([id, new URL(r.url).pathname, r.method]); return new Response('{}'); } }) };
+  for (const [p, method] of [['/lobby/new', 'POST'], ['/lobby/ABCDE/join', 'POST'], ['/lobby/ABCDE', 'GET'], ['/netplay/ABCDE/h', 'POST'], ['/lobby/new', 'OPTIONS']]) {
+    assert.equal((await handle(req(p, { method, headers: { cookie } }), { ...env, ONLINE }, O)).status, 200, p);
+  }
+  assert.deepEqual(seen.map((x) => x[0]), Array(5).fill('id:global'));
+  assert.deepEqual(seen.map((x) => x[2]), ['POST', 'POST', 'GET', 'POST', 'OPTIONS']);
+  assert.equal((await handle(req('/lobby/new', { method: 'POST' }), { ...env, ONLINE }, O)).status, 401);
+  assert.equal(seen.length, 5);
 });
 
 test('the default export is the fetch handler', async () => {

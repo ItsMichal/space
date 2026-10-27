@@ -5,12 +5,15 @@
 //   - /chunks/<hash>/<i>: chunk i of a preload.json file, from the precompressed object z/<hash>.<i>.br or .gz with
 //     Content-Encoding (the Worker never recompresses: encodeBody "manual"). The raw wasm, data and disc files are not
 //     uploaded: the page only ever reads them through these chunks (web/preload.js).
-// Dev-only endpoints of serve-web are not exposed: /__stats and the debug log POST answer 404. The online lobby and
-// netplay mailbox (/lobby, /netplay) are not built here yet and answer 501.
+// Dev-only endpoints of serve-web are not exposed: /__stats and the debug log POST answer 404.
+// The online lobby and netplay mailbox (/lobby, /netplay; worker/online.js) go to the Durable Object ONLINE.
+// /stats (the online count and the all-time leaderboards, worker/stats.js) goes to the Durable Object STATS.
 //
 // Every path except /gate needs the cookie from a correct passkey. Without the SPORTS_PASSKEY secret everything answers 503.
 import { isAuthed, makeCookieValue, passkeyMatches, passkeyOf, setCookieHeader } from './auth.js';
 import { gatePage } from './gate-page.js';
+import { createOnline } from './online.js';
+import { Board, sqlStore, statsRequest } from './stats.js';
 
 const TYPES = {
   '.html': 'text/html',
@@ -20,6 +23,7 @@ const TYPES = {
   '.data': 'application/octet-stream',
   '.json': 'application/json',
   '.webmanifest': 'application/manifest+json',
+  '.woff': 'font/woff',
 };
 const ROBOTS = 'User-agent: *\nDisallow: /\n';
 const FAIL_DELAY_MS = 500;
@@ -130,15 +134,32 @@ export async function handle(req, env, opts = {}) {
     return text(401, 'passkey required');
   }
 
+  if (path === '/stats' || path.startsWith('/stats/')) {
+    if (!env.STATS) return text(501, 'no stats here');
+    return env.STATS.get(env.STATS.idFromName('global')).fetch(req);
+  }
+  if (path.startsWith('/lobby/') || path.startsWith('/netplay/')) {
+    if (!env.ONLINE) return text(501, 'no online play here');
+    return env.ONLINE.get(env.ONLINE.idFromName('global')).fetch(req);
+  }
   if (req.method !== 'GET' && req.method !== 'HEAD') return text(405, 'method not allowed', { Allow: 'GET, HEAD' });
   if (path === '/robots.txt') return text(200, req.method === 'HEAD' ? null : ROBOTS, { 'Cache-Control': 'public, max-age=3600' });
   if (path === '/__stats' || path === '/log') return text(404, 'not found');
-  if (path.startsWith('/lobby') || path.startsWith('/netplay')) {
-    return new Response(JSON.stringify({ err: 'online play is not available on this host yet' }), { status: 501, headers: { ...base(), 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
-  }
   const cm = /^\/chunks\/([0-9a-f]{1,64})\/(\d{1,6})$/.exec(path);
   if (cm) return serveChunk(req, env, cm[1], Number(cm[2]));
   return serveStatic(req, env, path);
+}
+
+/** The online count and the leaderboards: one instance ("global"), SQLite storage (wrangler.jsonc migrations). */
+export class Stats {
+  constructor(ctx) { this.board = new Board(sqlStore(ctx.storage.sql)); }
+  fetch(req) { return statsRequest(req, this.board, Date.now()); }
+}
+
+/** The online lobbies and netplay rooms: one instance ("global"), in memory only (worker/online.js). */
+export class Online {
+  constructor() { this.handle = createOnline(); }
+  fetch(req) { return this.handle(req); }
 }
 
 export default { fetch: (req, env) => handle(req, env) };
