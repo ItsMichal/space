@@ -60,7 +60,7 @@ export function calloutLines(f: SatFacts, compact = false): string[] {
   // SupGP gives satellites not yet in the public catalogue a provisional number above 99999; that is not a NORAD id
   const norad = f.norad > 0 && f.norad <= 99999 ? f.norad : 0
   const id = compact
-    ? [norad ? `#${norad}` : '', f.launch ?? ''].filter(Boolean).join(' · ')
+    ? [norad ? `#${norad}` : '', f.launch ? (norad ? f.launch : `launch ${f.launch}`) : ''].filter(Boolean).join(' · ')
     : [norad ? `NORAD ${norad}` : '', f.launch ? `launch ${f.launch}` : ''].filter(Boolean).join(' · ')
   out.push(f.name ?? (norad ? `NORAD ${norad}` : 'Starlink'))
   if (id && f.name) out.push(id)

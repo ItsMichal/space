@@ -541,7 +541,8 @@ export function HeroAscii({ className = '' }: { className?: string }) {
         }
       }
       // a label over its own satellite is no use
-      const hidesSat = over && y > top - 8 && y < bottom + 8 ? 1 : 0
+      // ... and one hugging it leaves no room for a leader
+      const hidesSat = over ? (y > top - 8 && y < bottom + 8 ? 1 : y > top - 18 && y < bottom + 18 ? 0.05 : 0) : 0
       return { side, ex: ex2, ey: ey3, hx: hx2, lx, ly, score: (samples ? cover / samples : 1) + hidesSat }
     }
     const bestPlace = (x: number, y: number, tw: number, th: number, lh: number) => {
@@ -984,7 +985,7 @@ export function HeroAscii({ className = '' }: { className?: string }) {
     Object.defineProperty(window, '__asciiHero', {
       configurable: true,
       enumerable: false,
-      value: () => ({ ...stats, avgMs: stats.frames ? +(stats.totalMs / stats.frames).toFixed(3) : 0, box, W, dpr, cols, rows, satellites: sat?.count ?? 0, refEpoch: sat?.refEpoch ?? 0, callout: callout.lines }),
+      value: () => ({ ...stats, avgMs: stats.frames ? +(stats.totalMs / stats.frames).toFixed(3) : 0, box, W, dpr, cols, rows, satellites: sat?.count ?? 0, refEpoch: sat?.refEpoch ?? 0, callout: callout.sat >= 0 ? callout.lines : [], pinned: callout.sat >= 0 && callout.pinned }),
     })
 
     return () => {
