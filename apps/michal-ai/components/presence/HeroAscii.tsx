@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { gmst, positionEcef } from '@/lib/starlink/orbit.mjs'
+import { positionEcef } from '@/lib/starlink/orbit.mjs'
 import { loadLand, type Ring } from './globe/data'
 import { loadStarlink, type Packed } from './globe/starlink'
 import { calloutLines, GLYPHS, landGlyph, OCEAN, SAT, SAT_LINKED, SAT_MARKED, satFacts, strokeGlyph, TERMINAL } from './ascii/field'
@@ -45,8 +45,10 @@ const STRAND_POINTS = 14
 const STRAND_ITER = 3
 const FRAME_MS = 1000 / 32
 const CALLOUT_MS = 5200
+/** CSS px at the top of the viewport kept clear for the fixed nav bar. */
+const NAV_CLEAR = 72
 const POS_SLICE = 1600 // satellites re-propagated per frame
-const REST = { u: -0.38, v: 0.22 }
+const REST = { u: 0.12, v: -0.34 }
 
 interface Strand {
   sat: number
@@ -96,6 +98,7 @@ export function HeroAscii({ className = '' }: { className?: string }) {
     let ink = '#18211b'
     let accent = '#3d6a35'
     let halo = '#f4f1e8'
+    let haloAlpha = 0.85
     const atlas = { ink: null as HTMLCanvasElement | null, accent: null as HTMLCanvasElement | null }
     const slotOf = new Map<string, number>(GLYPHS.map((g, i) => [g, i]))
     const earth = document.createElement('canvas')
@@ -106,7 +109,6 @@ export function HeroAscii({ className = '' }: { className?: string }) {
     let sat: Packed | null = null
     let ecef = new Float32Array(0)
     let posCursor = 0
-    let posStamp = 0
     let stride = 8
     let overhead = 0
 
@@ -122,18 +124,29 @@ export function HeroAscii({ className = '' }: { className?: string }) {
     const strands: Strand[] = []
     let candidates: number[] = []
     let candStamp = 0
-    const callout = { sat: -1, t0: 0, pinned: false, next: 0, lines: [] as string[] }
+    const callout = { sat: -1, t0: 0, pinned: false, next: 0, lines: [] as string[], dir: 1, up: true }
+    let pinFirst = false
     // per-frame projection of the drawn satellites (screen x, y, visible flag), reused by hit tests and the callout picker
     let sx = new Float32Array(0)
     let sy = new Float32Array(0)
     let sv = new Uint8Array(0)
     const stats = { frames: 0, totalMs: 0, maxMs: 0, earthDraws: 0, sats: 0, cells: 0, strands: 0 }
 
+    // The halo behind callout text: the hero tint on light paper, plain paper when the ink is light (dark theme), where the
+    // tint would glow around the letters.
+    const pickHalo = (cs: CSSStyleDeclaration) => {
+      const paper = cs.getPropertyValue('--paper').trim()
+      const rgb = (ink.match(/\d+(\.\d+)?/g) ?? []).slice(0, 3).map(Number)
+      const lightInk = rgb.length === 3 && rgb[0] * 0.299 + rgb[1] * 0.587 + rgb[2] * 0.114 > 128
+      haloAlpha = lightInk ? 0.45 : 0.85
+      if (lightInk) return paper || halo
+      return getComputedStyle(document.documentElement).getPropertyValue('--edge-tint').trim() || paper || halo
+    }
     const readColours = () => {
       const cs = getComputedStyle(el)
       ink = cs.color || ink
       accent = cs.getPropertyValue('--accent').trim() || accent
-      halo = getComputedStyle(document.documentElement).getPropertyValue('--edge-tint').trim() || cs.getPropertyValue('--paper').trim() || halo
+      halo = pickHalo(cs)
       const a = parseFloat(cs.getPropertyValue('--hero-globe-opacity'))
       if (Number.isFinite(a)) A = a
       const mono = getComputedStyle(document.documentElement).getPropertyValue('--font-mono').trim() || 'ui-monospace, monospace'
@@ -202,7 +215,7 @@ export function HeroAscii({ className = '' }: { className?: string }) {
           shade.push(d)
           lat.push(Math.min(MASK_H - 1, Math.max(0, Math.floor((90 - (Math.asin(Y) * 180) / Math.PI) * (MASK_H / 180)))))
           lon.push((Math.atan2(u, Z) * 180) / Math.PI)
-          limb.push(q > 0.9 ? 1 : 0)
+          limb.push(q > 0.955 ? 1 : 0)
         }
       }
       eIdx = Int32Array.from(idx)
@@ -266,6 +279,12 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       const r = Math.floor(y / ch)
       return c < 0 || r < 0 || c >= cols || r >= rows ? 1 : dimC[r * cols + c]
     }
+    // the settled map, for placing callouts where the text will be rather than where it is fading from
+    const dimTargetAt = (x: number, y: number) => {
+      const c = Math.floor(x / cw)
+      const r = Math.floor(y / ch)
+      return c < 0 || r < 0 || c >= cols || r >= rows ? 1 : dimT[r * cols + c]
+    }
 
     // ---- Earth layer ----
     const drawEarth = () => {
@@ -288,11 +307,11 @@ export function HeroAscii({ className = '' }: { className?: string }) {
         let alpha: number
         if (land) {
           g = landGlyph(0.08 + 0.92 * d)
-          alpha = A * (0.5 + 0.5 * d) * 1.5
+          alpha = A * (0.55 + 0.6 * d)
         } else {
-          if (!eLimb[i] && (c + r) % 2) continue
+          if ((c + r) % 2) continue
           g = OCEAN
-          alpha = A * (eLimb[i] ? 0.55 : 0.3 + 0.35 * d)
+          alpha = A * (eLimb[i] ? 0.6 : 0.32 + 0.45 * d)
         }
         alpha *= dim
         if (alpha < 0.015) continue
@@ -345,7 +364,6 @@ export function HeroAscii({ className = '' }: { className?: string }) {
         ecef[i * 3 + 2] = p[2]
         posCursor = (posCursor + 1) % n
       }
-      posStamp = tSec
     }
 
     const countOverhead = (g: number[]) => {
@@ -469,39 +487,119 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       const k = W / (cr.width || 1)
       const sr = slot?.getBoundingClientRect()
       const L = Math.max(cr.left, sr?.left ?? 0, 0)
-      const T = Math.max(cr.top, sr?.top ?? -1e9, 0)
+      // keep clear of the fixed nav bar at the top of the viewport
+      const T = Math.max(cr.top, sr?.top ?? -1e9, NAV_CLEAR)
       const Rr = Math.min(cr.right, sr?.right ?? 1e9, window.innerWidth)
-      const B = Math.min(cr.bottom, sr?.bottom ?? 1e9, window.innerHeight)
+      const work = document.getElementById('work-h')?.getBoundingClientRect()
+      const B = Math.min(cr.bottom, sr?.bottom ?? 1e9, window.innerHeight, work ? work.bottom + 8 : 1e9)
       return { l: (L - cr.left) * k, t: (T - cr.top) * k, r: (Rr - cr.left) * k, b: (B - cr.top) * k }
     }
 
+    // Label geometry for a satellite at (x, y): which way the leader goes, where the text sits, and how much of it would cover
+    // the hero text or leave the visible part of the hero (lower is better).
+    const labelSize = (lines: string[]) => {
+      const fs = Math.max(11, Math.min(12.5, ch))
+      ctx.font = `${fs * dpr}px ${font}`
+      let tw = 0
+      for (const l of lines) tw = Math.max(tw, ctx.measureText(l).width / dpr)
+      return { fs, lh: fs * 1.35, tw }
+    }
+    const place = (x: number, y: number, dir: number, up: boolean, tw: number, th: number, lh: number, vr: ReturnType<typeof visibleRect>) => {
+      const ey = y + (up ? -26 : 26)
+      const hx = x + dir * 44
+      let lx = dir > 0 ? hx + 6 : hx - 6 - tw
+      lx = Math.max(vr.l + 10, Math.min(vr.r - 10 - tw, lx))
+      let ly = up ? ey - th + lh * 0.5 : ey - lh * 0.5
+      ly = Math.max(vr.t + lh, Math.min(vr.b - th, ly))
+      // the leader ends level with the nearest line of the label, at its edge
+      const ey2 = up ? ly + th - lh : ly
+      // after clamping the label may sit on the other side of the satellite: the leader goes to whichever edge faces it
+      let side = lx + tw / 2 < x ? -1 : 1
+      let hx2 = side > 0 ? lx - 6 : lx + tw + 6
+      let ex2 = x + side * Math.min(Math.abs(ey2 - y), 40)
+      let ey3 = ey2
+      if ((side > 0 && ex2 > hx2) || (side < 0 && ex2 < hx2)) ex2 = hx2
+      const top = ly - lh / 2
+      const bottom = ly + th - lh / 2
+      const over = x > lx - 10 && x < lx + tw + 10
+      if (over) {
+        // straight above or below the label: a short vertical hairline to its nearest edge
+        side = 0
+        ey3 = y < top ? top - 3 : bottom + 3
+        ex2 = x
+        hx2 = x
+      }
+      let cover = 0
+      let samples = 0
+      // keep off the ground terminal and its counter too
+      const tx = W / 2 + term.u * R
+      const ty = W / 2 - term.v * R
+      for (let yy = ly - lh / 2; yy <= ly + th; yy += ch) {
+        for (let xx = lx; xx <= lx + tw; xx += cw) {
+          cover += Math.abs(xx - tx) < 120 && yy > ty - 2 * ch && yy < ty + 3 * ch ? 1 : 1 - dimTargetAt(xx, yy)
+          samples++
+        }
+      }
+      // a label over its own satellite is no use
+      const hidesSat = over && y > top - 8 && y < bottom + 8 ? 1 : 0
+      return { side, ex: ex2, ey: ey3, hx: hx2, lx, ly, score: (samples ? cover / samples : 1) + hidesSat }
+    }
+    const bestPlace = (x: number, y: number, tw: number, th: number, lh: number) => {
+      const vr = visibleRect()
+      let best: { dir: number; up: boolean; score: number } = { dir: 1, up: true, score: 9 }
+      for (const dir of [1, -1]) {
+        for (const up of [true, false]) {
+          const p = place(x, y, dir, up, tw, th, lh, vr)
+          if (p.score < best.score - 1e-3) best = { dir, up, score: p.score }
+        }
+      }
+      return best
+    }
+
+    const compact = () => window.innerWidth < 480
     const pickCallout = (now: number) => {
       if (!sat) return
+      measureText() // late web fonts or a new phrase may have moved the text
       const vr = visibleRect()
-      const m = 48
+      const m = compact() ? 28 : 48
       const pool: number[] = []
       for (let j = 0; j < sv.length; j++) {
         if (sv[j] !== 2) continue
         const x = sx[j]
         const y = sy[j]
         if (x < vr.l + m || x > vr.r - m || y < vr.t + m || y > vr.b - m) continue
-        if (dimAt(x, y) < 0.95) continue
+        if (dimTargetAt(x, y) < 0.95) continue
         pool.push(j)
       }
-      if (!pool.length) {
-        callout.next = now + 1500
-        return
+      // a satellite whose label fits in open space, tried in random order (in pool order under reduced motion)
+      for (let k = 0; k < Math.min(32, pool.length); k++) {
+        const pi = reduced ? k : k + ((Math.random() * (pool.length - k)) | 0)
+        const j = pool[pi]
+        pool[pi] = pool[k]
+        pool[k] = j
+        const lines = calloutLines(satFacts(sat.data, sat.ids, j * stride), compact())
+        const { lh, tw } = labelSize(lines)
+        const b = bestPlace(sx[j], sy[j], tw, lh * lines.length, lh)
+        if (b.score < 0.04) {
+          setCallout(j * stride, now, pinFirst)
+          pinFirst = false
+          return
+        }
       }
-      const j = reduced ? pool[0] : pool[(Math.random() * pool.length) | 0]
-      setCallout(j * stride, now, false)
+      callout.next = now + 1500
     }
     const setCallout = (i: number, now: number, pinned: boolean) => {
       if (!sat) return
       callout.sat = i
       callout.t0 = now
       callout.pinned = pinned
-      callout.lines = calloutLines(satFacts(sat.data, sat.ids, i))
+      callout.lines = calloutLines(satFacts(sat.data, sat.ids, i), compact())
       callout.next = now + 6000 + Math.random() * 4000
+      const j = i / stride
+      const { lh, tw } = labelSize(callout.lines)
+      const b = bestPlace(sx[j], sy[j], tw, lh * callout.lines.length, lh)
+      callout.dir = b.dir
+      callout.up = b.up
     }
 
     const drawCallout = (now: number) => {
@@ -523,21 +621,10 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       const x = sx[j]
       const y = sy[j]
       const vr = visibleRect()
-      const fs = Math.max(11, Math.min(12.5, ch))
-      const lh = fs * 1.35
-      ctx.font = `${fs * dpr}px ${font}`
-      let tw = 0
-      for (const l of callout.lines) tw = Math.max(tw, ctx.measureText(l).width / dpr)
+      const { fs, lh, tw } = labelSize(callout.lines)
       const th = lh * callout.lines.length
-      const cxv = (vr.l + vr.r) / 2
-      const dir = x > cxv ? -1 : 1
-      const up = y - th - 40 > vr.t + 8
-      const ex = x + dir * 26
-      const ey = y + (up ? -26 : 26)
-      const hx = ex + dir * 18
-      let lx = dir > 0 ? hx + 6 : hx - 6 - tw
-      lx = Math.max(vr.l + 10, Math.min(vr.r - 10 - tw, lx))
-      const ly = up ? ey - th + lh * 0.5 : ey - lh * 0.5
+      const { dir, up } = callout
+      const { side, ex, ey, hx, lx, ly } = place(x, y, dir, up, tw, th, lh, vr)
       // highlighted satellite
       ctx.globalAlpha = a
       glyph(ctx, atlas.ink!, SAT_MARKED, x, y)
@@ -547,7 +634,7 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       ctx.lineWidth = 1
       ctx.globalAlpha = a * 0.7
       ctx.beginPath()
-      ctx.moveTo(x + dir * 5, y + (up ? -5 : 5))
+      ctx.moveTo(x + side * 5, y + (ey < y ? -6 : 6))
       ctx.lineTo(ex, ey)
       ctx.lineTo(hx, ey)
       ctx.stroke()
@@ -556,7 +643,7 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       ctx.lineJoin = 'round'
       callout.lines.forEach((l, i) => {
         const yy = ly + i * lh
-        ctx.globalAlpha = a * 0.85
+        ctx.globalAlpha = a * haloAlpha
         ctx.strokeStyle = halo
         ctx.lineWidth = 3.5
         ctx.strokeText(l, lx, yy)
@@ -687,7 +774,11 @@ export function HeroAscii({ className = '' }: { className?: string }) {
         ctx.textBaseline = 'middle'
         ctx.fillStyle = accent
         ctx.globalAlpha = Math.min(1, A * 2.2 * td)
-        ctx.fillText(`${overhead} overhead`, tx + cw, ty + ch * 1.1)
+        const label = `${overhead} overhead`
+        const lw = ctx.measureText(label).width
+        // flip to the left of the terminal when the label would run off the visible edge
+        const lx = tx + cw + lw > visibleRect().r - 6 ? tx - cw - lw : tx + cw
+        ctx.fillText(label, lx, ty + ch * 1.1)
         ctx.setTransform(1, 0, 0, 1, 0, 0)
 
         // callouts
@@ -820,7 +911,11 @@ export function HeroAscii({ className = '' }: { className?: string }) {
         callout.next = performance.now() + 1800
         if (process.env.NODE_ENV !== 'production') {
           const q = new URLSearchParams(window.location.search).get('callout')
-          if (q !== null) callout.next = 0
+          if (q !== null) {
+            // Dev only: ?callout=1 pins the first callout, for screenshots.
+            callout.next = 0
+            pinFirst = true
+          }
         }
         redrawOnce()
       })
@@ -875,7 +970,7 @@ export function HeroAscii({ className = '' }: { className?: string }) {
     mo?.observe(list!, { attributes: true, attributeFilter: ['data-current'], subtree: true })
     // the halo behind callout text follows the hero tint
     const tintMo = new MutationObserver(() => {
-      halo = getComputedStyle(document.documentElement).getPropertyValue('--edge-tint').trim() || halo
+      halo = pickHalo(getComputedStyle(el))
     })
     tintMo.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] })
 
@@ -906,7 +1001,6 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       window.removeEventListener('pointercancel', onCancel)
       document.documentElement.removeEventListener('pointerleave', onLeave)
       window.removeEventListener('blur', onLeave)
-      void posStamp
     }
   }, [])
 

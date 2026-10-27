@@ -2,7 +2,7 @@
 import { MU, RE, nameOf, type Identities } from '@/lib/starlink/orbit.mjs'
 
 /** Land shading, darkest to brightest. Index 0 is the night side, which still shows the coast faintly. */
-export const LAND_RAMP = '.:-=+*#%@'
+export const LAND_RAMP = '.:-=+*#%'
 export const OCEAN = '·'
 export const SAT = '·'
 export const SAT_LINKED = '+'
@@ -53,12 +53,18 @@ export function satFacts(data: Float32Array, ids: Identities | null, i: number):
   }
 }
 
-/** Two to three short lines for the callout label. Nothing is shown for a field the data does not have. */
-export function calloutLines(f: SatFacts): string[] {
+/** Two to three short lines for the callout label. Nothing is shown for a field the data does not have. `compact` drops the
+ * words and the inclination so the label fits beside a phone-width hero. */
+export function calloutLines(f: SatFacts, compact = false): string[] {
   const out: string[] = []
-  const id = [f.norad ? `NORAD ${f.norad}` : '', f.launch ? `launch ${f.launch}` : ''].filter(Boolean).join(' · ')
-  out.push(f.name ?? (f.norad ? `NORAD ${f.norad}` : 'Starlink'))
+  // SupGP gives satellites not yet in the public catalogue a provisional number above 99999; that is not a NORAD id
+  const norad = f.norad > 0 && f.norad <= 99999 ? f.norad : 0
+  const id = compact
+    ? [norad ? `#${norad}` : '', f.launch ?? ''].filter(Boolean).join(' · ')
+    : [norad ? `NORAD ${norad}` : '', f.launch ? `launch ${f.launch}` : ''].filter(Boolean).join(' · ')
+  out.push(f.name ?? (norad ? `NORAD ${norad}` : 'Starlink'))
   if (id && f.name) out.push(id)
-  out.push(`${Math.round(f.altKm)} km · ${f.speedKms.toFixed(2)} km/s · ${f.incDeg.toFixed(1)}°`)
+  const motion = `${Math.round(f.altKm)} km · ${f.speedKms.toFixed(2)} km/s`
+  out.push(compact ? motion : `${motion} · ${f.incDeg.toFixed(1)}°`)
   return out
 }
