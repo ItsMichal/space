@@ -120,20 +120,6 @@
   height: auto;
   border-radius: var(--radius-md);
 }
-/* .ix--bg: an entry whose cover shows in the home page's halftone field (components/work/CoverField.tsx), a fixed canvas
-   behind the page. The entry itself has no surface. */
-.ix--bg {
-  position: relative;
-}
-.cover-field {
-  position: fixed;
-  inset: 0;
-  /* above the hero's tint and globe layers (z -1); the home sections sit above it (home.css) */
-  z-index: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
 a.ix:hover .ix__title,
 a.ix:focus-visible .ix__title {
   color: var(--accent);

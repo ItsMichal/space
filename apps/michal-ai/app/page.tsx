@@ -10,7 +10,6 @@ import { heroHooks, homeWriting } from '@/lib/content/layout'
 import { NameHeader } from '@/components/site/NameHeader'
 import { WritingRows } from '@/components/writing/WritingIndex'
 import { Showcase } from '@/components/work/Showcase'
-import { CoverField } from '@/components/work/CoverField'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { profile } from '@/content/profile'
 import { doiUrl, venueLine } from '@/lib/publications'
@@ -62,12 +61,11 @@ export default function Home() {
         intro={hooks.length ? <HeroHook stem={profile.hookStem} items={hooks} /> : undefined}
       />
 
-      <CoverField />
       <section id="work" aria-labelledby="work-h" className="home-sec mt-space-8 md:mt-space-12">
         <h2 id="work-h" className={h2}>
           Selected work
         </h2>
-        <Showcase posts={projects} base="/projects" limit={3} priority backdrop />
+        <Showcase posts={projects} base="/projects" limit={3} priority textOnly />
       </section>
 
       {articles.length > 0 ? (
@@ -75,7 +73,7 @@ export default function Home() {
           <h2 id="writing-h" className={h2}>
             Writing
           </h2>
-          <WritingRows posts={latest.slice(0, 3)} backdrop />
+          <WritingRows posts={latest.slice(0, 3)} />
           {articles.length > 3 ? (
             <Link href="/writing" className="ix-more link">
               View all {articles.length} posts <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />

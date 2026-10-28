@@ -46,8 +46,3 @@
   border-top: 1px solid var(--hairline);
 }
 
-/* Home sections sit above the covers' halftone field (.cover-field, z 0). */
-.home-sec {
-  position: relative;
-  z-index: 1;
-}

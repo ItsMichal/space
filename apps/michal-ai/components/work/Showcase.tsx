@@ -4,7 +4,6 @@ import type { ReactNode } from 'react'
 import type { Post } from '@/lib/content/types'
 import { getPublication } from '@/lib/publications'
 import { Picture } from '@/components/media/Picture'
-import { getImageInfo } from '@/lib/media'
 import { cardOf, isFeature, siteLayout, type SiteLayout } from '@/lib/content/layout'
 import { matchesFilter, PROJECT_FILTERS } from '@/components/ui/segments'
 import './cards.css'
@@ -30,16 +29,6 @@ function MetaParts({ parts }: { parts: ReactNode[] }) {
 
 const monthYear = (iso: string) => new Date(iso + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
 
-/** A small variant of an entry's cover for the home page's halftone field (CoverField.tsx), or undefined. */
-export function coverSrc(post: Post): string | undefined {
-  const src = post.cardImage === 'none' ? undefined : (post.cardImage ?? post.cover)
-  if (!src) return undefined
-  const info = getImageInfo(src)
-  if (!info) return src
-  const v = info.variants.webp.find((x) => x.w >= 400) ?? info.variants.webp[info.variants.webp.length - 1]
-  return v?.src ?? src
-}
-
 export type CardVariant = 'newsroom' | 'fill' | 'cap'
 
 /**
@@ -58,7 +47,7 @@ export function ProjectCard({
   variant = 'newsroom',
   article = false,
   focus,
-  backdrop = false,
+  textOnly = false,
 }: {
   post: Post
   href: string
@@ -72,8 +61,8 @@ export function ProjectCard({
   article?: boolean
   /** Focal point of the feature image ("50% 30%"), from the layout file. Defaults to the cover's `coverFocus`. */
   focus?: string
-  /** The cover shows in the home page's halftone field (CoverField) instead of as a picture under the entry. */
-  backdrop?: boolean
+  /** No picture, even on the feature entry (the home page). */
+  textOnly?: boolean
 }) {
   const src = post.cardImage === 'none' ? undefined : (post.cardImage ?? post.cover)
   const alt = post.cardImage ? (post.cardImageAlt ?? '') : (post.coverAlt ?? '')
@@ -85,10 +74,9 @@ export function ProjectCard({
   return (
     <Link
       href={href}
-      className={`tile ix${backdrop ? ' ix--bg' : ''}${feature ? ' tile--feature' : ''}${variant !== 'newsroom' ? ` tile--${variant}` : ''}`}
+      className={`tile ix${feature ? ' tile--feature' : ''}${variant !== 'newsroom' ? ` tile--${variant}` : ''}`}
       aria-labelledby={`${id}-t`}
       aria-describedby={`${id}-d`}
-      data-cover={backdrop ? coverSrc(post) : undefined}
     >
       <h3 id={`${id}-t`} className="ix__title tile__title" data-card-title>
         {post.title}
@@ -99,7 +87,7 @@ export function ProjectCard({
       <p className="ix__meta t-meta">
         <MetaParts parts={metaParts} />
       </p>
-      {feature && src && !backdrop ? (
+      {feature && src && !textOnly ? (
         <div className="ix__media tile__media">
           <Picture
             src={src}
@@ -126,7 +114,7 @@ export function Showcase({
   base,
   limit,
   priority = false,
-  backdrop = false,
+  textOnly = false,
   layout = siteLayout,
 }: {
   posts: Post[]
@@ -135,8 +123,8 @@ export function Showcase({
   priority?: boolean
   variant?: 'row' | 'grid'
   glass?: boolean
-  /** Covers behind the entries' text (see ProjectCard). */
-  backdrop?: boolean
+  /** No pictures, even on the feature entry (see ProjectCard). */
+  textOnly?: boolean
   /** Card presentation (the site's layout file; the editor's Arrange preview passes its draft). */
   layout?: SiteLayout
 }) {
@@ -149,7 +137,7 @@ export function Showcase({
           const card = cardOf(p.slug, layout)
           return (
             <li key={p.slug} className={feature ? 'tiles__feature' : undefined} data-buckets={buckets(p)}>
-              <ProjectCard post={p} href={`${base}/${p.slug}`} feature={feature} priority={priority && feature} variant={card.variant} focus={card.focus} backdrop={backdrop} />
+              <ProjectCard post={p} href={`${base}/${p.slug}`} feature={feature} priority={priority && feature} variant={card.variant} focus={card.focus} textOnly={textOnly} />
             </li>
           )
         })}
