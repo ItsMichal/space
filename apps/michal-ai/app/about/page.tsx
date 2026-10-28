@@ -12,7 +12,6 @@ import { xHighlights } from '@/content/x-highlights'
 import { postById, portraitAlt, mentionAuthors } from '@/lib/about'
 import { paperMentions } from '@/content/mentions'
 import { Picture } from '@/components/media/Picture'
-import '@/components/site/about.css'
 import '@/components/about/about-page.css'
 
 export const metadata = aboutMetadata()
@@ -28,12 +27,13 @@ function Ext({ href, children, me = false }: { href: string; children: ReactNode
   )
 }
 
-const Card = ({ id, title, className = '', children, list = false }: { id: string; title: string; className?: string; children: ReactNode; list?: boolean }) => (
-  <section id={id} aria-labelledby={`${id}-h`} className={`ab-card card surface${list ? ' card--list' : ''} ${className}`}>
-    <h2 id={`${id}-h`} className="card__h t-heading">
+/** One section of the page: its heading in the left column from 840px (the shared `.ix-sec`), the content beside it. */
+const Card = ({ id, title, className = '', children }: { id: string; title: string; className?: string; children: ReactNode }) => (
+  <section id={id} aria-labelledby={`${id}-h`} className={`ab-card ix-sec ${className}`}>
+    <h2 id={`${id}-h`} className="t-heading">
       {title}
     </h2>
-    {children}
+    <div className="ix-sec__body">{children}</div>
   </section>
 )
 
@@ -48,61 +48,63 @@ export default function AboutPage() {
       <h1 className="mb-space-8 font-display text-title md:mb-space-12">About</h1>
 
       <div className="ab">
-        {/* The owner's photograph, used plainly: real background, no filter, face framed with object-position */}
-        <figure className="ab-photo surface">
-          <Picture
-            src={profile.portrait.src}
-            alt={portraitAlt}
-            sizes="(min-width: 1100px) 360px, (min-width: 840px) 45vw, 94vw"
-            priority
-            className="ab-photo__img"
-            focus={profile.portrait.focus}
-          />
-        </figure>
-        {/* Intro: bio, then the status in his words */}
-        <section id="intro" aria-labelledby="intro-h" className="ab-card ab-intro card surface">
+        {/* Intro: a small portrait (used plainly: real background, no filter) beside the bio, then the status in his words */}
+        <section id="intro" aria-labelledby="intro-h" className="ab-card ab-intro">
           <h2 id="intro-h" className="sr-only">
             Introduction
           </h2>
-          {profile.about.map((p, i) => (
-            <p key={i} className="t-text">
-              {p}
-            </p>
-          ))}
-          <div className="ab-status" role="note" aria-label="Current status">
-            <p className="t-ui">
-              {profile.status.sentences.map((s) => (
-                <span key={s}>{s} </span>
-              ))}
-            </p>
+          <figure className="ab-photo">
+            <Picture
+              src={profile.portrait.src}
+              alt={portraitAlt}
+              sizes="(min-width: 840px) 168px, 104px"
+              priority
+              aspect="4 / 5"
+              className="ab-photo__img"
+              focus={profile.portrait.focus}
+            />
+          </figure>
+          <div className="ab-intro__text">
+            {profile.about.map((p, i) => (
+              <p key={i} className="t-text">
+                {p}
+              </p>
+            ))}
+            <div className="ab-status" role="note" aria-label="Current status">
+              <p className="t-ui">
+                {profile.status.sentences.map((s) => (
+                  <span key={s}>{s} </span>
+                ))}
+              </p>
+            </div>
           </div>
         </section>
 
-        <Card id="contact" title="Contact" list className="ab-contact">
-          <ul className="card__rows">
+        <Card id="contact" title="Contact" className="ab-contact">
+          <ul className="ab-list">
             <li>
-              <a className="ab-row card__row t-ui" href={siteConfig.linkedin} target="_blank" rel="me noopener noreferrer">
+              <a className="ab-row t-ui" href={siteConfig.linkedin} target="_blank" rel="me noopener noreferrer">
                 <span>LinkedIn</span>
                 <span className="t-meta">in/mbodzianowski</span>
                 <span className="sr-only">(opens in a new tab)</span>
               </a>
             </li>
             <li>
-              <a className="ab-row card__row t-ui" href={profile.contact.x} target="_blank" rel="me noopener noreferrer">
+              <a className="ab-row t-ui" href={profile.contact.x} target="_blank" rel="me noopener noreferrer">
                 <span>X</span>
                 <span className="t-meta">@ItsMichal</span>
                 <span className="sr-only">(opens in a new tab)</span>
               </a>
             </li>
             <li>
-              <a className="ab-row card__row t-ui" href={siteConfig.github} target="_blank" rel="me noopener noreferrer">
+              <a className="ab-row t-ui" href={siteConfig.github} target="_blank" rel="me noopener noreferrer">
                 <span>GitHub</span>
                 <span className="t-meta">ItsMichal</span>
                 <span className="sr-only">(opens in a new tab)</span>
               </a>
             </li>
             <li>
-              <Link className="ab-row card__row t-ui" href="/resume">
+              <Link className="ab-row t-ui" href="/resume">
                 <span>Resume</span>
                 <span className="t-meta">Web and PDF</span>
               </Link>
@@ -111,8 +113,8 @@ export default function AboutPage() {
         </Card>
 
         {/* Experience: one row per role, meta on the left, detail on the right */}
-        <Card id="experience" title="Experience" list className="ab-xp">
-          <ol className="card__rows ab-roles">
+        <Card id="experience" title="Experience" className="ab-xp">
+          <ol className="ab-list ab-roles">
             {profile.career.map((r) => {
               const links = (r.postIds ?? []).map((id) => postById(id))
               return (
@@ -211,8 +213,8 @@ export default function AboutPage() {
           </ul>
         </Card>
 
-        <Card id="publications" title="Publications" list className="ab-pubs">
-          <ul className="card__rows">
+        <Card id="publications" title="Publications" className="ab-pubs">
+          <ul className="ab-list">
             {profile.publications.map((p) => (
               <li key={p.id} className="pub">
                 <p className="pub__title t-ui">
@@ -233,7 +235,7 @@ export default function AboutPage() {
               <h3 id="acknowledged-h" className="ab-subhead t-ui">
                 Acknowledged in
               </h3>
-              <ul className="card__rows" aria-labelledby="acknowledged-h">
+              <ul className="ab-list" aria-labelledby="acknowledged-h">
                 {paperMentions.map((m) => (
                   <li key={m.id} className="pub">
                     <p className="pub__title t-ui">{m.doi ? <Ext href={`https://doi.org/${m.doi}`}>{m.title}</Ext> : <Ext href={m.url}>{m.title}</Ext>}</p>
@@ -291,8 +293,8 @@ export default function AboutPage() {
         </Card>
         </div>
 
-        <Card id="hackathons" title="Hackathons" list className="ab-hacks">
-          <ul className="card__rows">
+        <Card id="hackathons" title="Hackathons" className="ab-hacks">
+          <ul className="ab-list">
             {hacks.map((h) => {
               const post = hackathonPostHref(h)
               return (
@@ -322,8 +324,8 @@ export default function AboutPage() {
           </ul>
         </Card>
 
-        <Card id="press" title="Press and mentions" list className="ab-press">
-          <ul className="card__rows">
+        <Card id="press" title="Press and mentions" className="ab-press">
+          <ul className="ab-list">
             <li className="ab-pr">
               <p className="t-ui"><Ext href={press.atlas.url}>{press.atlas.title}</Ext></p>
               <p className="t-meta">{press.atlas.outlet}, <time dateTime={press.atlas.date ?? undefined}>{fullDate(press.atlas.date!)}</time></p>
@@ -374,20 +376,22 @@ export default function AboutPage() {
         ) : null}
       </div>
 
-      <section id="projects" aria-labelledby="projects-h" className="ab-projects work">
-        <h2 id="projects-h" className="card__h t-heading ab-projects__h">
+      <section id="projects" aria-labelledby="projects-h" className="ab-card ab-projects ix-sec">
+        <h2 id="projects-h" className="t-heading">
           Selected projects
         </h2>
-        <ul className="tiles tiles--grid ab-tiles">
-          {projects.map((p) => (
-            <li key={p.slug}>
-              <ProjectCard post={p} href={postPath(p)} />
-            </li>
-          ))}
-        </ul>
-        <Link href="/projects" className="link mt-space-4 flex min-h-[44px] items-center">
-          All projects <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
-        </Link>
+        <div className="ix-sec__body">
+          <ul className="ix-list">
+            {projects.map((p) => (
+              <li key={p.slug}>
+                <ProjectCard post={p} href={postPath(p)} />
+              </li>
+            ))}
+          </ul>
+          <Link href="/projects" className="ix-more link">
+            All projects <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
+          </Link>
+        </div>
       </section>
     </div>
   )

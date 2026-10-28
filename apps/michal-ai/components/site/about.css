@@ -1,57 +1,23 @@
-/* Home About: a bento of cards on the same edges as the work grid above it. Three columns from 1100px (the work grid's three):
-   intro and publications span two, experience takes the third and runs the full height. Two columns 840 to 1099 (an unfolded phone in landscape is 890px), one below. */
-.about {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--card-gap);
-  grid-template-areas: 'intro' 'xp' 'pubs' 'more';
-}
-.about__more {
-  grid-area: more;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  min-height: 44px;
-}
-.about__more .card__h {
-  margin-bottom: var(--space-1);
-}
-.about__more-go {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  white-space: nowrap;
-}
-.about__intro {
-  grid-area: intro;
-}
-.about__xp {
-  grid-area: xp;
-  display: flex;
-  flex-direction: column;
-}
-.about__pubs {
-  grid-area: pubs;
-  scroll-margin-top: 96px;
+/* Home: sections below the hero are separated by whitespace only. About is text on the same two columns as the index above
+   it (app/styles/type.css, `.ix`): from 840px the portrait sits in the left column beside the two paragraphs, and
+   Experience and Publications put their heading in that column. Phones stack everything; the portrait floats small
+   beside the first paragraph. */
+.home-sec + .home-sec {
+  margin-top: var(--space-16);
 }
 @media (min-width: 840px) {
-  .about {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-areas: 'intro xp' 'pubs pubs' 'more more';
+  .home-sec + .home-sec {
+    margin-top: var(--space-24);
   }
 }
-@media (min-width: 1100px) {
-  .about {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-areas: 'intro intro xp' 'pubs pubs xp' 'more more more';
-  }
+.about {
+  display: grid;
+  gap: var(--space-12);
 }
-/* a small portrait beside the first paragraph: 4:5, the card's inner radius, no filter */
 .about__photo {
   float: left;
   width: 88px;
-  margin: 0 var(--space-4) var(--space-2) 0;
+  margin: 0.3em var(--space-4) var(--space-2) 0;
   overflow: hidden;
   border-radius: var(--radius-xs);
 }
@@ -60,10 +26,8 @@
   width: 100%;
   height: auto;
 }
-@media (min-width: 640px) {
-  .about__photo {
-    width: 104px;
-  }
+.about__text {
+  max-width: var(--ix-measure);
 }
 .about__intro p {
   margin: 0;
@@ -73,22 +37,42 @@
   margin-top: var(--space-4);
   color: var(--ink-muted);
 }
-.pub {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-1) var(--space-4);
-  padding: var(--space-4) var(--card-pad);
+.about__intro::after {
+  content: '';
+  display: block;
+  clear: both;
 }
-.pub__title {
-  margin: 0;
+@media (min-width: 840px) {
+  .about__intro {
+    display: grid;
+    grid-template-columns: var(--ix-col) minmax(0, var(--ix-measure));
+    column-gap: var(--ix-gap);
+    align-items: start;
+  }
+  .about__intro::after {
+    content: none;
+  }
+  .about__photo {
+    float: none;
+    width: 100%;
+    max-width: 8.5rem;
+    margin: 0.3em 0 0;
+  }
 }
-.pub__ref {
-  grid-column: 1;
-  margin: 0;
-  text-wrap: pretty;
+#publications {
+  scroll-margin-top: 96px;
 }
-.pub__year {
-  grid-column: 2;
-  grid-row: 1;
-  font-variant-numeric: tabular-nums lining-nums;
+.about__more-go {
+  display: inline-block;
+  margin-left: var(--space-2);
+  vertical-align: -0.1em;
+  color: var(--ink-muted);
+  transition:
+    transform var(--motion-fast) var(--ease-out-soft),
+    color var(--motion-fast) var(--ease-out-soft);
+}
+a.about__more:hover .about__more-go,
+a.about__more:focus-visible .about__more-go {
+  color: currentColor;
+  transform: translateX(3px);
 }

@@ -1,4 +1,5 @@
-// Refreshes public/globe/starlink.bin (the committed Starlink snapshot for the hero globe) from CelesTrak's SupGP file.
+// Refreshes public/globe/starlink.bin (the committed Starlink snapshot for the hero globe) and its identity sidecar
+// public/globe/starlink-ids.bin (names, NORAD numbers, launches; lib/starlink/orbit.mjs) from CelesTrak's SupGP file.
 // Never fails the build: offline, rate-limited or any error keeps the committed snapshot. Rules:
 //   - CI (process.env.CI) never fetches; it uses the committed snapshot.
 //   - Only refreshes when the committed snapshot's reference epoch is older than 12 h.
@@ -7,10 +8,11 @@
 //     subject to the 2 h rule).
 import fs from 'node:fs'
 import path from 'node:path'
-import { packOmm, unpack } from '../lib/starlink/orbit.mjs'
+import { packOmm, unpack, unpackIds } from '../lib/starlink/orbit.mjs'
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
 const out = path.join(root, 'public', 'globe', 'starlink.bin')
+const outIds = path.join(root, 'public', 'globe', 'starlink-ids.bin')
 const cache = path.join(root, '.cache', 'celestrak-starlink.json')
 const URL_SUPGP = 'https://celestrak.org/NORAD/elements/supplemental/sup-gp.php?FILE=starlink&FORMAT=json'
 const FRESH_S = 12 * 3600
@@ -19,7 +21,9 @@ const MIN_FETCH_GAP_MS = 2 * 3600 * 1000
 function snapshotAge() {
   try {
     const p = unpack(fs.readFileSync(out))
-    return p ? Date.now() / 1000 - p.refEpoch : Infinity
+    // a snapshot without its matching sidecar counts as old, so the next allowed refresh writes both
+    if (!p || !unpackIds(fs.readFileSync(outIds), p)) return Infinity
+    return Date.now() / 1000 - p.refEpoch
   } catch {
     return Infinity
   }
@@ -47,9 +51,10 @@ async function main() {
   }
   const list = JSON.parse(text)
   if (!Array.isArray(list) || list.length < 1000) return console.warn('starlink: unexpected payload, keeping the committed snapshot')
-  const { bytes, count, refEpoch } = packOmm(list)
+  const { bytes, ids, count, refEpoch } = packOmm(list)
   fs.mkdirSync(path.dirname(out), { recursive: true })
   fs.writeFileSync(out, bytes)
+  fs.writeFileSync(outIds, ids)
   console.log(`starlink: wrote ${count} satellites, ${bytes.length} bytes, epoch ${new Date(refEpoch * 1000).toISOString()}`)
 }
 

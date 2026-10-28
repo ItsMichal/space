@@ -24,14 +24,25 @@ export function pinned<T extends { slug: string }>(items: T[], pins: readonly st
 
 export const cardOf = (slug: string, layout: SiteLayout = siteLayout): CardLayout => layout.cards?.[slug] ?? {}
 
-/** Projects for Selected work on the home page: the work pins first, without the ones set to stay off the home page. */
-export const homeWork = <T extends { slug: string }>(projects: T[], layout: SiteLayout = siteLayout): T[] =>
-  pinned(projects, layout.work).filter((p) => cardOf(p.slug, layout).home !== false)
+type Ranked = { slug: string; featured?: boolean; date?: string }
+
+/** Featured entries first, keeping the incoming order within each group (stable sort). */
+const featuredFirst = <T extends Ranked>(items: T[]): T[] => [...items].sort((a, b) => Number(!!b.featured) - Number(!!a.featured))
+
+/** Projects for Selected work on the home page: the work pins first, then featured projects, then the site's order, without
+ * the ones set to stay off the home page. */
+export const homeWork = <T extends Ranked>(projects: T[], layout: SiteLayout = siteLayout): T[] =>
+  pinned(featuredFirst(projects), layout.work).filter((p) => cardOf(p.slug, layout).home !== false)
 
 /** Projects for /projects: the work pins first (every project stays listed). */
 export const indexWork = <T extends { slug: string }>(projects: T[], layout: SiteLayout = siteLayout): T[] => pinned(projects, layout.work)
 
-export const homeWriting = <T extends { slug: string }>(articles: T[], layout: SiteLayout = siteLayout): T[] => pinned(articles, layout.writing)
+/** Writing on the home page: the writing pins first, then featured posts, then the newest. */
+export const homeWriting = <T extends Ranked>(articles: T[], layout: SiteLayout = siteLayout): T[] =>
+  pinned(
+    featuredFirst([...articles].sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))),
+    layout.writing,
+  )
 
 export const heroHooks = <T extends { slug: string }>(posts: T[], layout: SiteLayout = siteLayout): T[] => pinned(posts, layout.hooks)
 

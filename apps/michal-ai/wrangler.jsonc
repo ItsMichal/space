@@ -31,5 +31,17 @@
     { "tag": "v2", "new_sqlite_classes": ["ReactionsRoom"] }
   ],
   "triggers": { "crons": ["17 */6 * * *"] },
+  // Pull request Previews (.github/workflows/preview.yml, `wrangler preview --name pr-<n>`). Previews inherit nothing from the
+  // settings above except assets, compatibility and the Durable Object classes; each Preview gets its own, empty Durable Object
+  // namespace, so it never reads or writes production reactions, views or the Starlink blob. Crons never run on a Preview.
+  "previews": {
+    "vars": { "LIVE_KILL": "0", "VIEWS_PUBLIC": "1" },
+    "durable_objects": {
+      "bindings": [
+        { "name": "PRESENCE", "class_name": "PresenceRoom" },
+        { "name": "REACTIONS", "class_name": "ReactionsRoom" }
+      ]
+    }
+  },
   "observability": { "enabled": true }
 }

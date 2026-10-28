@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import * as sat from 'satellite.js'
 import fixture from './fixture-omm.json'
-import { epochSeconds, isStale, packOmm, positionEcef, subPoint, unpack, type Omm } from '../orbit.mjs'
+import { epochSeconds, identityOf, isStale, nameOf, packOmm, positionEcef, subPoint, unpack, unpackIds, type Omm } from '../orbit.mjs'
 
 const omms = fixture as unknown as Omm[]
 const D2R = Math.PI / 180
@@ -47,6 +47,8 @@ describe('packer', () => {
   it('round-trips header and elements', () => {
     const { bytes, count, refEpoch } = packOmm(omms)
     expect(bytes.byteLength).toBe(20 + count * 20)
+    // the constellation file keeps the v1 layout: reserved header field 0, no trailer
+    expect(new DataView(bytes.buffer).getUint16(6, true)).toBe(0)
     const p = unpack(bytes)!
     expect(p.count).toBe(count)
     expect(p.refEpoch).toBe(refEpoch)
@@ -55,6 +57,38 @@ describe('packer', () => {
       expect(p.data[i * 5]).toBeCloseTo(omms[i].INCLINATION * D2R, 5)
       expect(p.data[i * 5 + 3]).toBeCloseTo((omms[i].MEAN_MOTION * 2 * Math.PI) / 86400, 4)
     }
+  })
+  it('carries each satellite identity in the sidecar', () => {
+    const { bytes, ids, count } = packOmm(omms)
+    expect(ids.byteLength).toBe(20 + count * 12)
+    const p = unpack(bytes)!
+    const got = unpackIds(ids, p)!
+    expect(got).not.toBeNull()
+    for (let i = 0; i < p.count; i++) {
+      const want = identityOf(omms[i])
+      expect(got.norad[i]).toBe(want.norad)
+      expect(got.name[i]).toBe(want.name)
+      expect(got.launch[i]).toBe(want.launch)
+    }
+  })
+  it('never pairs a sidecar with another file', () => {
+    const { ids } = packOmm(omms)
+    const p = unpack(packOmm(omms).bytes)!
+    expect(unpackIds(ids, { ...p, refEpoch: p.refEpoch + 1 })).toBeNull()
+    expect(unpackIds(ids, { ...p, count: p.count - 1 })).toBeNull()
+    expect(unpackIds(ids, null)).toBeNull()
+    expect(unpack(ids)).toBeNull()
+    expect(unpackIds(packOmm(omms).bytes, p)).toBeNull()
+  })
+  it('parses names, catalogue numbers and launches', () => {
+    const a = identityOf({ ...omms[0], OBJECT_NAME: 'STARLINK-1234', NORAD_CAT_ID: 44713, OBJECT_ID: '2019-074A' })
+    expect(a).toEqual({ norad: 44713, name: 1234, launch: 2019074 })
+    expect(nameOf(a.name)).toBe('STARLINK-1234')
+    const b = identityOf({ ...omms[0], OBJECT_NAME: 'STARLINK-11072 [DTC]', NORAD_CAT_ID: 'x', OBJECT_ID: undefined })
+    expect(b.norad).toBe(0)
+    expect(b.launch).toBe(0)
+    expect(nameOf(b.name)).toBe('STARLINK-11072 [DTC]')
+    expect(nameOf(identityOf({ ...omms[0], OBJECT_NAME: 'OTHER' }).name)).toBeNull()
   })
   it('rejects junk and drops off-station objects', () => {
     expect(unpack(new Uint8Array(30))).toBeNull()

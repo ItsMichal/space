@@ -20,6 +20,16 @@ export const VERSION = 1
 export const HEADER_BYTES = 20
 export const FLOATS_PER_SAT = 5
 export const MAX_AGE_DAYS = 30
+/**
+ * Identities live in a separate sidecar file so the constellation file keeps its exact v1 layout (clients already in the
+ * wild read it with a strict length check). Sidecar: magic "SLID", u16 version, u16 reserved, u32 count, f64 reference epoch
+ * (both equal to the constellation file it belongs to), then ID_BYTES per satellite in the same order: u32 NORAD number,
+ * u32 name number (top bit = "[DTC]"), u32 launch (year * 1000 + launch of the year).
+ */
+export const IDS_MAGIC = 0x44494c53 // "SLID"
+export const IDS_VERSION = 1
+export const ID_BYTES = 12
+const DTC = 0x80000000
 export const MIN_REV_PER_DAY = 14.5
 export const MAX_REV_PER_DAY = 16.5
 
@@ -92,7 +102,10 @@ export function elementsAt(omm, refSec) {
   }
 }
 
-/** Pack OMM records. Returns { bytes, count, refEpoch }. `refEpoch` defaults to the newest element epoch. */
+/**
+ * Pack OMM records. Returns { bytes, ids, count, refEpoch }: `bytes` is the constellation file, `ids` its identity sidecar.
+ * `refEpoch` defaults to the newest element epoch.
+ */
 export function packOmm(list, refEpoch) {
   const ok = []
   let newest = 0
@@ -101,9 +114,13 @@ export function packOmm(list, refEpoch) {
     if (Number.isFinite(e) && e > newest) newest = e
   }
   const ref = refEpoch ?? Math.floor(newest)
+  const ids = []
   for (const o of list) {
     const el = elementsAt(o, ref)
-    if (el) ok.push(el)
+    if (el) {
+      ok.push(el)
+      ids.push(identityOf(o))
+    }
   }
   const bytes = new Uint8Array(HEADER_BYTES + ok.length * FLOATS_PER_SAT * 4)
   const dv = new DataView(bytes.buffer)
@@ -120,7 +137,71 @@ export function packOmm(list, refEpoch) {
     dv.setFloat32(o + 12, e.udot, true)
     dv.setFloat32(o + 16, e.udd, true)
   })
-  return { bytes, count: ok.length, refEpoch: ref }
+  return { bytes, ids: packIds(ids, ref), count: ok.length, refEpoch: ref }
+}
+
+/** The identity sidecar for `list` (from identityOf, in constellation order) at reference epoch `ref`. */
+export function packIds(list, ref) {
+  const bytes = new Uint8Array(HEADER_BYTES + list.length * ID_BYTES)
+  const dv = new DataView(bytes.buffer)
+  dv.setUint32(0, IDS_MAGIC, true)
+  dv.setUint16(4, IDS_VERSION, true)
+  dv.setUint16(6, 0, true)
+  dv.setUint32(8, list.length, true)
+  dv.setFloat64(12, ref, true)
+  list.forEach((d, i) => {
+    const o = HEADER_BYTES + i * ID_BYTES
+    dv.setUint32(o, d.norad, true)
+    dv.setUint32(o + 4, d.name, true)
+    dv.setUint32(o + 8, d.launch, true)
+  })
+  return bytes
+}
+
+/**
+ * Read an identity sidecar. Returns null unless it is a v1 sidecar for exactly `packed` (same count and reference epoch), so a
+ * sidecar from another refresh is never paired with the wrong satellites.
+ */
+export function unpackIds(buf, packed) {
+  const ab = buf instanceof ArrayBuffer ? buf : buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
+  if (!packed || ab.byteLength < HEADER_BYTES) return null
+  const dv = new DataView(ab)
+  if (dv.getUint32(0, true) !== IDS_MAGIC || dv.getUint16(4, true) !== IDS_VERSION) return null
+  const count = dv.getUint32(8, true)
+  if (count !== packed.count || dv.getFloat64(12, true) !== packed.refEpoch) return null
+  if (ab.byteLength !== HEADER_BYTES + count * ID_BYTES) return null
+  const ids = { norad: new Uint32Array(count), name: new Uint32Array(count), launch: new Uint32Array(count) }
+  for (let i = 0; i < count; i++) {
+    const o = HEADER_BYTES + i * ID_BYTES
+    ids.norad[i] = dv.getUint32(o, true)
+    ids.name[i] = dv.getUint32(o + 4, true)
+    ids.launch[i] = dv.getUint32(o + 8, true)
+  }
+  return ids
+}
+
+/**
+ * What the OMM says about who a satellite is, as three integers: the NORAD catalogue number, the number in its name
+ * ("STARLINK-1234" -> 1234, with the top bit set for a "[DTC]" direct-to-cell satellite) and its launch as year * 1000 + launch
+ * of the year (OBJECT_ID "2019-074A" -> 2019074). 0 where the field is missing or not in that form.
+ */
+export function identityOf(omm) {
+  const norad = Number(omm.NORAD_CAT_ID)
+  const nm = /^STARLINK-(\d{1,9})(\s*\[DTC\])?$/.exec(String(omm.OBJECT_NAME ?? '').trim())
+  const num = nm ? Number(nm[1]) : 0
+  const id = /^(\d{4})-(\d{3})/.exec(String(omm.OBJECT_ID ?? ''))
+  return {
+    norad: Number.isInteger(norad) && norad > 0 && norad < DTC ? norad : 0,
+    name: num > 0 && num < DTC ? (num | (nm && nm[2] ? DTC : 0)) >>> 0 : 0,
+    launch: id ? Number(id[1]) * 1000 + Number(id[2]) : 0,
+  }
+}
+
+/** Decode the name field of the identity trailer: "STARLINK-1234", "STARLINK-1234 [DTC]", or null. */
+export function nameOf(n) {
+  if (!n) return null
+  const num = n & 0x7fffffff
+  return `STARLINK-${num}${n & DTC ? ' [DTC]' : ''}`
 }
 
 /** Read a packed buffer. Returns null for anything that is not a version-1 constellation file. */

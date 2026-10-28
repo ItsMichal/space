@@ -9,24 +9,23 @@ import './writing.css'
 const month = (iso: string) =>
   new Date(iso + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
 
-/** One compact row inside a list card: title, one-line description, date. The date is already the tertiary line, so it stays on the right. */
+/** One post as an index entry: title, one-line description, date. */
 function Row({ post }: { post: Post }) {
   return (
-    <Link href={postPath(post)} className="wrt card__row">
-      <span className="wrt__text">
-        <span className="wrt__title">{post.title}</span>
-        <span className="wrt__desc">{post.description}</span>
-      </span>
-      <time className="wrt__date" dateTime={post.date}>
+    <Link href={postPath(post)} className="wrt ix ix--ui">
+      <span className="ix__title wrt__title">{post.title}</span>
+      <span className="ix__desc wrt__desc">{post.description}</span>
+      <time className="ix__meta" dateTime={post.date}>
         {month(post.date)}
       </time>
     </Link>
   )
 }
 
-function Rows({ posts }: { posts: Post[] }) {
+/** Posts as index entries (the home page's Writing section uses the same rows). */
+export function WritingRows({ posts, className = '' }: { posts: Post[]; className?: string }) {
   return (
-    <ul className="wlist card__rows">
+    <ul className={`ix-list wlist ${className}`}>
       {posts.map((p) => (
         <li key={p.slug}>
           <Row post={p} />
@@ -42,7 +41,7 @@ function SeriesBlock({ group }: { group: SeriesGroup }) {
   const span = first.date.slice(0, 4) === last.date.slice(0, 4) ? first.date.slice(0, 4) : `${first.date.slice(0, 4)} to ${last.date.slice(0, 4)}`
   const title = group.parent ? group.parent.title : group.name
   return (
-    <div id={group.id} className="wseries card surface card--list">
+    <div id={group.id} className="wseries">
       <Disclosure
         summary={
           <span className="wseries__sum">
@@ -61,22 +60,26 @@ function SeriesBlock({ group }: { group: SeriesGroup }) {
             </Link>
           </p>
         ) : null}
-        <Rows posts={group.posts} />
+        <WritingRows posts={group.posts} className="ix-list--tight" />
       </Disclosure>
     </div>
   )
 }
 
 /**
- * The /writing list: featured pieces first (with a thumbnail), then series as collapsed groups with a count,
- * then everything else by year. Sections with nothing in them are not rendered.
+ * The /writing index, set like a book's contents: featured pieces first, then series as collapsed groups with a count, then
+ * everything else by year. Each section's name sits in the left column from 840px. Sections with nothing in them are not
+ * rendered.
  */
 export function WritingIndex({ featured, series, years }: { featured: Post[]; series: SeriesGroup[]; years: { year: string; posts: Post[] }[] }) {
   return (
     <div className="writing">
       {featured.length ? (
-        <section aria-label="Featured" className="work">
-          <ul className="tiles tiles--grid">
+        <section aria-labelledby="w-featured" className="ix-sec">
+          <h2 id="w-featured" className="t-heading">
+            Featured
+          </h2>
+          <ul className="ix-list ix-sec__body">
             {featured.map((p) => (
               <li key={p.slug}>
                 <ProjectCard post={p} href={postPath(p)} article />
@@ -86,11 +89,11 @@ export function WritingIndex({ featured, series, years }: { featured: Post[]; se
         </section>
       ) : null}
       {series.length ? (
-        <section aria-labelledby="w-series">
-          <h2 id="w-series" className="writing__h">
+        <section aria-labelledby="w-series" className="ix-sec">
+          <h2 id="w-series" className="t-heading">
             Series
           </h2>
-          <div className="writing__stack">
+          <div className="writing__stack ix-sec__body">
             {series.map((g) => (
               <SeriesBlock key={g.id} group={g} />
             ))}
@@ -98,13 +101,11 @@ export function WritingIndex({ featured, series, years }: { featured: Post[]; se
         </section>
       ) : null}
       {years.map(({ year, posts }) => (
-        <section key={year} aria-labelledby={`w-${year}`}>
-          <h2 id={`w-${year}`} className="writing__h">
+        <section key={year} aria-labelledby={`w-${year}`} className="ix-sec">
+          <h2 id={`w-${year}`} className="t-heading">
             {year}
           </h2>
-          <div className="card surface card--list">
-            <Rows posts={posts} />
-          </div>
+          <WritingRows posts={posts} className="ix-sec__body" />
         </section>
       ))}
     </div>

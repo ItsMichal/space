@@ -1,31 +1,17 @@
-/* End-of-page links: two columns on phones, three from tablet up. Hairline rows, display serif, a quiet arrow. */
-.nx {
-  padding-top: var(--space-2);
-  padding-bottom: 0;
-}
+/* End-of-page links: a plain wrapped line of names in the text face, a quiet arrow after each. No surface, no row rules. */
 .nx__list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: var(--space-6);
-  margin: 0 0 -1px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-8);
+  margin: 0;
   padding: 0;
   list-style: none;
 }
-@media (min-width: 768px) {
-  .nx__list {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    column-gap: var(--space-8);
-  }
-}
-.nx__list > li {
-  border-bottom: 1px solid var(--hairline);
-}
 .nx__a {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  min-height: 56px;
+  gap: var(--space-1);
+  min-height: 44px;
   font: 500 var(--type-body-strong-size) / var(--type-body-strong-line) var(--font-serif);
   color: var(--ink);
   text-decoration: none;
@@ -50,13 +36,13 @@
 }
 .nx__a:focus-visible {
   outline: 2px solid var(--focus);
-  outline-offset: -2px;
+  outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
 
-/* Home Writing section: two rows on phones, three from tablet up (the rest is one tap away). */
-@media (max-width: 639px) {
-  .home-writing .plist > li:nth-child(n + 3) {
-    display: none;
-  }
+/* Footer: the page's one fine rule, then the mark, the links and the credits. */
+.ft {
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--hairline);
 }
+
