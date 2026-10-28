@@ -2,7 +2,7 @@
 // `?hero=globe` on the home URL overrides it for one visit, to compare the two.
 export type HeroKind = 'globe' | 'ascii'
 
-export const HERO_DEFAULT: HeroKind = 'globe'
+export const HERO_DEFAULT: HeroKind = 'ascii'
 
 export function heroFromSearch(search: string, fallback: HeroKind = HERO_DEFAULT): HeroKind {
   const v = new URLSearchParams(search).get('hero')
