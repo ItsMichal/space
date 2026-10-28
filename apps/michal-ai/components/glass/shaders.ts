@@ -47,6 +47,7 @@ uniform vec3 uShadowCol;
 uniform vec4 uGlow;        // touch illumination colour
 uniform float uThemeDark;  // 1 when the page theme is dark
 uniform int uReadback;     // 1: pixels leave via readPixels (bottom-up rows), flip pass 0
+uniform float uSheen;      // scale on the gloss and the frost bevel lift
 uniform int uFrost;        // 1: no backdrop lens available (Safari / Firefox): fake thickness with a rim bevel
 
 out vec4 outColor;
@@ -221,16 +222,16 @@ void main() {
   vec3 rimC = RIM.rgb * (RIM.a * rimI);
   body.rgb += rimC;
   // soft water-drop gloss: a faint sheen hugging the upper inner edge
-  float gloss = exp(-depth / max(uBezel * 1.3, 6.0)) * max(-n.y, 0.0) * 0.16 * uLightK * (1.0 - 0.85 * a.dark) * (1.0 - 0.5 * a.clear);
+  float gloss = exp(-depth / max(uBezel * 1.3, 6.0)) * max(-n.y, 0.0) * 0.16 * uSheen * uLightK * (1.0 - 0.85 * a.dark) * (1.0 - 0.5 * a.clear);
   body.rgb += vec3(0.92, 0.97, 1.0) * gloss;
   body.a = clamp(body.a + gloss * 0.6, 0.0, 1.0);
   if (uFrost == 1) {
     // no lens without a real backdrop: suggest glass thickness with a bevel (light side lifts, far side sinks)
     float bevel = exp(-depth / max(uBezel * 0.8, 5.0)) * dot(n, uLight);
-    vec3 lift = vec3(1.0) * max(bevel, 0.0) * 0.16 * (1.0 - 0.5 * a.clear) * (1.0 - 0.8 * a.dark);
+    vec3 lift = vec3(1.0) * max(bevel, 0.0) * 0.16 * uSheen * (1.0 - 0.5 * a.clear) * (1.0 - 0.8 * a.dark);
     vec4 sink = vec4(EDGE.rgb * max(-bevel, 0.0) * 0.5 * EDGE.a, max(-bevel, 0.0) * 0.5 * EDGE.a * 0.6);
     body.rgb += lift;
-    body.a = clamp(body.a + max(bevel, 0.0) * 0.1 * (1.0 - 0.8 * a.dark), 0.0, 1.0);
+    body.a = clamp(body.a + max(bevel, 0.0) * 0.1 * uSheen * (1.0 - 0.8 * a.dark), 0.0, 1.0);
     body = sink + body * (1.0 - sink.a);
   }
   body.a = clamp(max(body.a, rimI * RIM.a), 0.0, 1.0);
