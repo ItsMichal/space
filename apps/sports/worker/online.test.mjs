@@ -34,7 +34,7 @@ test('a full lobby: create, join, pick a sport, ready, start, leave', async () =
 
   assert.equal((await call(`/lobby/${code}/start`, { token: host })).status, 409);
   assert.equal((await call(`/lobby/${code}/set`, { token: guest, sport: 'baseball' })).status, 403);
-  assert.equal((await call(`/lobby/${code}/set`, { token: host, sport: 'golf' })).status, 400);
+  assert.equal((await call(`/lobby/${code}/set`, { token: host, sport: 'curling' })).status, 400);
   assert.equal((await call(`/lobby/${code}/set`, { token: host, sport: 'baseball' })).body.sport, 'baseball');
   assert.equal((await call(`/lobby/${code}/set`, { token: guest, ready: true })).body.players[1].ready, true);
   assert.equal((await call(`/lobby/${code}/start`, { token: guest })).status, 403);
