@@ -15,7 +15,7 @@
 //   GET  /netplay/<room>/<h|j>     long-poll (<= 20 s): the box's messages as a JSON array, emptied
 export const CODE_ALPHA = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // no I L O 0 1: read aloud or typed on a phone
 const CODE_LEN = 5;
-const PLAYABLE_ONLINE = new Set(['baseball', 'bowling']);
+const PLAYABLE_ONLINE = new Set(['baseball', 'bowling', 'tennis', 'golf', 'boxing']);
 const MAX_PLAYERS = 2, LOBBY_IDLE_MS = 2 * 60 * 60 * 1000, GONE_MS = 30000, MAX_LOBBIES = 200, MAX_LOBBY_BODY = 4096;
 const ROOM_IDLE_MS = 15 * 60 * 1000, MAX_ROOMS = 200, MAX_SIGNAL_BODY = 64 * 1024, BOX_MAX = 64;
 export const POLL_MS = 20000;
