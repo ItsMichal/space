@@ -120,62 +120,19 @@
   height: auto;
   border-radius: var(--radius-md);
 }
-/* .ix--bg: the entry's cover lies faintly behind its text (home page). The layer is greyscale and fades to white inside
-   itself, then multiplies onto the page: white times any colour is that colour, so the fade lands on whatever is beneath
-   (the hero tint or the paper) with no visible edge. Gradients and blending only, no CSS masks (they capture black in
-   full-page screenshots). It bleeds a gutter past the text column so the text keeps its alignment with the page. */
+/* .ix--bg: an entry whose cover shows in the home page's halftone field (components/work/CoverField.tsx), a fixed canvas
+   behind the page. The entry itself has no surface. */
 .ix--bg {
   position: relative;
-  padding: var(--space-6) var(--space-4);
-  margin-inline: calc(-1 * var(--space-4));
 }
-.ix--bg > :not(.ix__bg) {
-  position: relative;
-  z-index: 1;
-}
-.ix > .ix__bg {
-  position: absolute;
+.cover-field {
+  position: fixed;
   inset: 0;
+  /* above the hero's tint and globe layers (z -1); the home sections sit above it (home.css) */
   z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-  isolation: isolate;
-  mix-blend-mode: multiply;
-  /* on the layer, not the img: the picture's own load-in filter (data-lqip) owns the img's filter */
-  filter: grayscale(1) contrast(0.95);
-  opacity: 0.2;
-  transition: opacity var(--motion-fast) var(--ease-out-soft);
-}
-.ix__bg picture,
-.ix__bg img {
-  display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-}
-.ix__bg::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(180deg, #fff 0%, transparent 24%, transparent 76%, #fff 100%),
-    linear-gradient(90deg, #fff 0%, rgb(255 255 255 / 0.6) 45%, transparent 100%);
-}
-/* wide screens: the entry ends inside the page, so its right edge fades too */
-@media (min-width: 840px) {
-  .ix__bg::after {
-    background:
-      linear-gradient(180deg, #fff 0%, transparent 24%, transparent 76%, #fff 100%),
-      linear-gradient(90deg, #fff 0%, rgb(255 255 255 / 0.6) 40%, transparent 68%, transparent 80%, #fff 100%);
-  }
-}
-@media (hover: hover) {
-  a.ix--bg:hover .ix__bg {
-    opacity: 0.3;
-  }
-}
-.ix-list:has(> li > .ix--bg) {
-  gap: var(--space-2);
+  pointer-events: none;
 }
 a.ix:hover .ix__title,
 a.ix:focus-visible .ix__title {

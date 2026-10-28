@@ -10,6 +10,7 @@ import { heroHooks, homeWriting } from '@/lib/content/layout'
 import { NameHeader } from '@/components/site/NameHeader'
 import { WritingRows } from '@/components/writing/WritingIndex'
 import { Showcase } from '@/components/work/Showcase'
+import { CoverField } from '@/components/work/CoverField'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { profile } from '@/content/profile'
 import { doiUrl, venueLine } from '@/lib/publications'
@@ -61,6 +62,7 @@ export default function Home() {
         intro={hooks.length ? <HeroHook stem={profile.hookStem} items={hooks} /> : undefined}
       />
 
+      <CoverField />
       <section id="work" aria-labelledby="work-h" className="home-sec mt-space-8 md:mt-space-12">
         <h2 id="work-h" className={h2}>
           Selected work
