@@ -120,6 +120,50 @@
   height: auto;
   border-radius: var(--radius-md);
 }
+/* .ix--bg: the entry's cover lies faintly behind its text (home page). Greyscale at low opacity, faded into the page colour
+   from the text side and at the top and bottom edges with gradients (no CSS masks: they capture black in full-page
+   screenshots). It bleeds a gutter past the text column so the text keeps its alignment with the rest of the page. */
+.ix--bg {
+  position: relative;
+  isolation: isolate;
+  padding: var(--space-6) var(--space-4);
+  margin-inline: calc(-1 * var(--space-4));
+}
+.ix > .ix__bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.ix__bg picture,
+.ix__bg img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ix__bg img {
+  filter: grayscale(1) contrast(0.92);
+  opacity: 0.16;
+  transition: opacity var(--motion-fast) var(--ease-out-soft);
+}
+.ix__bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, var(--paper) 0%, transparent 22%, transparent 78%, var(--paper) 100%),
+    linear-gradient(90deg, var(--paper) 0%, color-mix(in srgb, var(--paper) 55%, transparent) 50%, transparent 100%);
+}
+@media (hover: hover) {
+  a.ix--bg:hover .ix__bg img {
+    opacity: 0.26;
+  }
+}
+.ix-list:has(> li > .ix--bg) {
+  gap: var(--space-2);
+}
 a.ix:hover .ix__title,
 a.ix:focus-visible .ix__title {
   color: var(--accent);

@@ -65,7 +65,7 @@ export default function Home() {
         <h2 id="work-h" className={h2}>
           Selected work
         </h2>
-        <Showcase posts={projects} base="/projects" priority />
+        <Showcase posts={projects} base="/projects" limit={3} priority backdrop />
       </section>
 
       {articles.length > 0 ? (
@@ -73,10 +73,10 @@ export default function Home() {
           <h2 id="writing-h" className={h2}>
             Writing
           </h2>
-          <WritingRows posts={latest.slice(0, 3)} />
+          <WritingRows posts={latest.slice(0, 3)} backdrop />
           {articles.length > 3 ? (
             <Link href="/writing" className="ix-more link">
-              All {articles.length} posts <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
+              View all {articles.length} posts <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
             </Link>
           ) : null}
         </section>

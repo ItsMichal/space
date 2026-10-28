@@ -1,7 +1,7 @@
 import Link from '@/lib/nav'
 import type { Post } from '@/lib/content/types'
 import type { SeriesGroup } from '@/lib/content'
-import { ProjectCard } from '@/components/work/Showcase'
+import { Backdrop, ProjectCard } from '@/components/work/Showcase'
 import { Disclosure } from '@/components/ui/Disclosure'
 import { postPath } from '@/lib/seo'
 import './writing.css'
@@ -10,9 +10,10 @@ const month = (iso: string) =>
   new Date(iso + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
 
 /** One post as an index entry: title, one-line description, date. */
-function Row({ post }: { post: Post }) {
+function Row({ post, backdrop = false }: { post: Post; backdrop?: boolean }) {
   return (
-    <Link href={postPath(post)} className="wrt ix ix--ui">
+    <Link href={postPath(post)} className={`wrt ix ix--ui${backdrop ? ' ix--bg' : ''}`}>
+      {backdrop ? <Backdrop post={post} /> : null}
       <span className="ix__title wrt__title">{post.title}</span>
       <span className="ix__desc wrt__desc">{post.description}</span>
       <time className="ix__meta" dateTime={post.date}>
@@ -22,13 +23,13 @@ function Row({ post }: { post: Post }) {
   )
 }
 
-/** Posts as index entries (the home page's Writing section uses the same rows). */
-export function WritingRows({ posts, className = '' }: { posts: Post[]; className?: string }) {
+/** Posts as index entries (the home page's Writing section uses the same rows, with `backdrop`). */
+export function WritingRows({ posts, className = '', backdrop = false }: { posts: Post[]; className?: string; backdrop?: boolean }) {
   return (
     <ul className={`ix-list wlist ${className}`}>
       {posts.map((p) => (
         <li key={p.slug}>
-          <Row post={p} />
+          <Row post={p} backdrop={backdrop} />
         </li>
       ))}
     </ul>

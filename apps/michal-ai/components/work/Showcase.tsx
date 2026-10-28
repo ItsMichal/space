@@ -29,6 +29,17 @@ function MetaParts({ parts }: { parts: ReactNode[] }) {
 
 const monthYear = (iso: string) => new Date(iso + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
 
+/** An entry's cover as a faint, desaturated layer behind its text (decorative: empty alt, aria-hidden). */
+export function Backdrop({ post, priority = false }: { post: Post; priority?: boolean }) {
+  const src = post.cardImage === 'none' ? undefined : (post.cardImage ?? post.cover)
+  if (!src) return null
+  return (
+    <span className="ix__bg" aria-hidden>
+      <Picture src={src} alt="" sizes="(min-width: 840px) 720px, 100vw" priority={priority} focus={post.cardImage ? undefined : post.coverFocus} />
+    </span>
+  )
+}
+
 export type CardVariant = 'newsroom' | 'fill' | 'cap'
 
 /**
@@ -47,6 +58,7 @@ export function ProjectCard({
   variant = 'newsroom',
   article = false,
   focus,
+  backdrop = false,
 }: {
   post: Post
   href: string
@@ -60,6 +72,8 @@ export function ProjectCard({
   article?: boolean
   /** Focal point of the feature image ("50% 30%"), from the layout file. Defaults to the cover's `coverFocus`. */
   focus?: string
+  /** The cover sits faintly behind the text instead of as a picture under it (the home page). */
+  backdrop?: boolean
 }) {
   const src = post.cardImage === 'none' ? undefined : (post.cardImage ?? post.cover)
   const alt = post.cardImage ? (post.cardImageAlt ?? '') : (post.coverAlt ?? '')
@@ -71,10 +85,11 @@ export function ProjectCard({
   return (
     <Link
       href={href}
-      className={`tile ix${feature ? ' tile--feature' : ''}${variant !== 'newsroom' ? ` tile--${variant}` : ''}`}
+      className={`tile ix${backdrop ? ' ix--bg' : ''}${feature ? ' tile--feature' : ''}${variant !== 'newsroom' ? ` tile--${variant}` : ''}`}
       aria-labelledby={`${id}-t`}
       aria-describedby={`${id}-d`}
     >
+      {backdrop ? <Backdrop post={post} priority={priority} /> : null}
       <h3 id={`${id}-t`} className="ix__title tile__title" data-card-title>
         {post.title}
       </h3>
@@ -84,7 +99,7 @@ export function ProjectCard({
       <p className="ix__meta t-meta">
         <MetaParts parts={metaParts} />
       </p>
-      {feature && src ? (
+      {feature && src && !backdrop ? (
         <div className="ix__media tile__media">
           <Picture
             src={src}
@@ -111,6 +126,7 @@ export function Showcase({
   base,
   limit,
   priority = false,
+  backdrop = false,
   layout = siteLayout,
 }: {
   posts: Post[]
@@ -119,6 +135,8 @@ export function Showcase({
   priority?: boolean
   variant?: 'row' | 'grid'
   glass?: boolean
+  /** Covers behind the entries' text (see ProjectCard). */
+  backdrop?: boolean
   /** Card presentation (the site's layout file; the editor's Arrange preview passes its draft). */
   layout?: SiteLayout
 }) {
@@ -131,14 +149,14 @@ export function Showcase({
           const card = cardOf(p.slug, layout)
           return (
             <li key={p.slug} className={feature ? 'tiles__feature' : undefined} data-buckets={buckets(p)}>
-              <ProjectCard post={p} href={`${base}/${p.slug}`} feature={feature} priority={priority && feature} variant={card.variant} focus={card.focus} />
+              <ProjectCard post={p} href={`${base}/${p.slug}`} feature={feature} priority={priority && feature} variant={card.variant} focus={card.focus} backdrop={backdrop} />
             </li>
           )
         })}
       </ul>
       {limit && posts.length > shown.length ? (
         <Link href={base} className="ix-more link">
-          All {posts.length} projects <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
+          View all {posts.length} projects <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
         </Link>
       ) : null}
     </div>
