@@ -1,0 +1,15 @@
+/* Character-cell hero (HeroAscii.tsx). It takes the globe's box (.hero-globe--slot in presence.css) and draws its own alpha from
+   --hero-globe-opacity, so the box itself stays opaque. The canvas is SCALE (1.3) times the box, centred on it, so the satellite
+   shell and callouts have room; the hero slot clips it. No mask (see hero.css). */
+.hero-globe.hero-ascii {
+  opacity: 1;
+}
+.hero-ascii__canvas {
+  position: absolute;
+  left: -15%;
+  top: -15%;
+  width: 130%;
+  height: 130%;
+  display: block;
+  pointer-events: none;
+}
