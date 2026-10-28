@@ -6,7 +6,8 @@ import { useEffect, useRef } from 'react'
  * The home page's covers as one halftone field behind the index (components/work/Showcase.tsx, `.ix--bg` entries with a
  * `data-cover` image). The entry nearest the middle of the screen (or, with a mouse, the one under the pointer) shows its
  * cover as ink dots beside its text: dot size follows the picture's darkness, and the field dissolves into the page through
- * a noisy round falloff, so there is no box. When the active entry changes, the old cover's dots give way cell by cell to
+ * a soft round falloff, so there is no box. Like a printed halftone: the screen is turned 45 degrees, each cover is
+ * auto-levelled so light and dark covers both use the full tonal range, and highlights keep a small dot so the shape reads, each dot averages its cell and takes the cover's colour. When the active entry changes, the old cover's dots give way cell by cell to
  * the new one's. One fixed WebGL canvas, drawn only while something moves; no WebGL means plain text. Decorative.
  */
 
@@ -23,6 +24,8 @@ uniform sampler2D uTexA;
 uniform sampler2D uTexB;
 uniform vec4 uRectA;      // field centre xy, half size zw (canvas px, y down)
 uniform vec4 uRectB;
+uniform vec2 uLvA;        // darkness levels (low, high) of each cover, from its histogram
+uniform vec2 uLvB;
 uniform float uOnA;
 uniform float uOnB;
 uniform float uSeed;
@@ -31,37 +34,60 @@ float hash(vec2 v){return fract(sin(dot(v,vec2(127.1,311.7)))*43758.5453);}
 float noise(vec2 v){vec2 i=floor(v),f=fract(v);f=f*f*(3.-2.*f);
   return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
 
-// darkness of one layer at a cell centre, times its soft round envelope
-float layer(sampler2D t, vec4 r, vec2 c, float on){
-  if(on<=0.) return 0.;
+// one layer at a cell centre: the cover's colour averaged over the cell (rgb) and its darkness times the soft round envelope (a)
+vec4 layer(sampler2D t, vec4 r, vec2 lv, vec2 c, float on){
+  if(on<=0.) return vec4(0.);
   vec2 q=(c-r.xy)/r.zw;                     // -1..1 across the field
-  float n=noise(c/(uCell*5.)+uSeed)-.5;
-  float e=1.-smoothstep(.35,1.,length(q)+n*.45);
-  if(e<=0.) return 0.;
+  float n=noise(c/(uCell*7.)+uSeed)-.5;
+  float e=1.-smoothstep(.62,1.,length(q)+n*.15);
+  if(e<=0.) return vec4(0.);
   vec2 uv=q*.5+.5;
-  vec3 s=texture2D(t,uv).rgb;
+  vec2 st=uCell/(r.zw*2.)/3.;               // a 3x3 average over the cell, so thin lines and type turn to tone, not noise
+  vec3 s=vec3(0.);
+  for(int i=-1;i<=1;i++)for(int j=-1;j<=1;j++)s+=texture2D(t,uv+vec2(float(i),float(j))*st).rgb;
+  s/=9.;
   float d=1.-dot(s,vec3(.299,.587,.114));
-  d=smoothstep(.12,.88,d);
-  return d*e*on;
+  d=clamp((d-lv.x)/max(.05,lv.y-lv.x),0.,1.);
+  return vec4(s,mix(.06,1.,d)*e*on);        // highlights keep a small dot
 }
 
 void main(){
   vec2 px=vec2(gl_FragCoord.x,uRes.y-gl_FragCoord.y);
-  vec2 cell=floor(px/uCell);
-  vec2 c=(cell+.5)*uCell;
+  const float K=.70710678;                  // 45 degree screen
+  mat2 rot=mat2(K,-K,K,K);
+  vec2 rp=rot*px;
+  vec2 cell=floor(rp/uCell);
+  vec2 c=(cell+.5)*uCell*rot;               // cell centre back in screen space
   float h=hash(cell+uSeed);
-  float a=layer(uTexA,uRectA,c,uOnA);
-  float b=layer(uTexB,uRectB,c,uOnB);
-  float d=h<uMix?b:a;
+  vec4 l=h<uMix?layer(uTexB,uRectB,uLvB,c,uOnB):layer(uTexA,uRectA,uLvA,c,uOnA);
+  float d=l.a;
   if(uNarrow>0.) d*=mix(.35,1.,smoothstep(.15,.85,c.x/uRes.x));
   if(d<=.02) discard;
   float rad=uCell*.5*sqrt(d);
   float dist=length(px-c);
   float al=smoothstep(rad+.8,rad-.8,dist)*uStrength;
-  gl_FragColor=vec4(uInk*al,al);
+  vec3 ink=mix(uInk,l.rgb*.62,.75);           // the cover's own colour, pulled toward the page ink
+  gl_FragColor=vec4(ink*al,al);
 }`
 
-type Layer = { el: HTMLElement; tex: WebGLTexture; aspect: number }
+type Layer = { el: HTMLElement; tex: WebGLTexture; aspect: number; lv: [number, number] }
+
+// The 3rd and 97th percentile of a cover's darkness, from a 48 px copy: the range the halftone stretches to full.
+const levels = (img: HTMLImageElement): [number, number] => {
+  try {
+    const c = document.createElement('canvas')
+    c.width = c.height = 48
+    const g = c.getContext('2d', { willReadFrequently: true })!
+    g.drawImage(img, 0, 0, 48, 48)
+    const px = g.getImageData(0, 0, 48, 48).data
+    const d: number[] = []
+    for (let i = 0; i < px.length; i += 4) d.push(1 - (px[i] * 0.299 + px[i + 1] * 0.587 + px[i + 2] * 0.114) / 255)
+    d.sort((x, y) => x - y)
+    return [d[Math.floor(d.length * 0.03)], d[Math.floor(d.length * 0.97)]]
+  } catch {
+    return [0.12, 0.88]
+  }
+}
 
 const parseHex = (hex: string): [number, number, number] => {
   const m = hex.trim().match(/^#?([0-9a-f]{6})$/i)
@@ -107,6 +133,7 @@ export function CoverField() {
     const u = {
       res: U('uRes'), cell: U('uCell'), ink: U('uInk'), strength: U('uStrength'), mix: U('uMix'), narrow: U('uNarrow'),
       texA: U('uTexA'), texB: U('uTexB'), rectA: U('uRectA'), rectB: U('uRectB'), onA: U('uOnA'), onB: U('uOnB'), seed: U('uSeed'),
+      lvA: U('uLvA'), lvB: U('uLvB'),
     }
     gl.uniform1i(u.texA, 0)
     gl.uniform1i(u.texB, 1)
@@ -131,7 +158,7 @@ export function CoverField() {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img)
-            resolve({ el, tex, aspect: img.naturalHeight / Math.max(1, img.naturalWidth) })
+            resolve({ el, tex, aspect: img.naturalHeight / Math.max(1, img.naturalWidth), lv: levels(img) })
           }
           img.onerror = () => resolve(null)
           img.src = el.dataset.cover!
@@ -150,18 +177,22 @@ export function CoverField() {
       canvas.height = Math.round(h * dpr)
       gl.viewport(0, 0, canvas.width, canvas.height)
       gl.uniform2f(u.res, canvas.width, canvas.height)
-      gl.uniform1f(u.cell, Math.round((w < 840 ? 6 : 7) * dpr))
+      gl.uniform1f(u.cell, Math.round(6 * dpr))
       gl.uniform1f(u.narrow, w < 840 ? 1 : 0)
       wake()
     }
 
-    // The field sits beside the entry's text: right of centre on wide screens, under the right half on phones.
+    // The field sits beside the entry's text: in the open column to its right on wide screens, under the right half on phones.
+    const range = document.createRange()
     const rectFor = (l: Layer): [number, number, number, number] => {
       const r = l.el.getBoundingClientRect()
       const narrow = w < 840
-      const half = narrow ? w * 0.5 : Math.min(320, w * 0.24)
-      const aspect = Math.min(1.1, Math.max(0.5, l.aspect))
-      const cx = narrow ? w * 0.7 : Math.min(r.right + half * 0.35, w - half * 0.8)
+      // The row can span the whole content width, so measure where its text actually ends.
+      range.selectNodeContents(l.el)
+      const right = Math.min(r.right, range.getBoundingClientRect().right)
+      const half = narrow ? w * 0.5 : Math.max(120, Math.min(340, (w - right - 40) / 2))
+      const aspect = Math.min(1.1, Math.max(0.56, l.aspect))
+      const cx = narrow ? w * 0.7 : right + 16 + half
       const cy = r.top + r.height / 2
       return [cx * dpr, cy * dpr, half * dpr, half * aspect * dpr * (narrow ? 0.9 : 1)]
     }
@@ -228,11 +259,13 @@ export function CoverField() {
       gl.clearColor(0, 0, 0, 0)
       gl.clear(gl.COLOR_BUFFER_BIT)
       if (b && onB > 0.002) {
-        gl.uniform1f(u.strength, w < 840 ? 0.2 : 0.3)
+        gl.uniform1f(u.strength, w < 840 ? 0.2 : 0.5)
         gl.uniform1f(u.mix, a ? mix : 1)
         gl.activeTexture(gl.TEXTURE0)
         gl.bindTexture(gl.TEXTURE_2D, a ? a.tex : blank)
         gl.uniform4fv(u.rectA, a ? rectFor(a) : [0, 0, 1, 1])
+        gl.uniform2fv(u.lvA, a ? a.lv : [0, 1])
+        gl.uniform2fv(u.lvB, b.lv)
         gl.uniform1f(u.onA, a ? 1 : 0)
         gl.activeTexture(gl.TEXTURE1)
         gl.bindTexture(gl.TEXTURE_2D, b.tex)
