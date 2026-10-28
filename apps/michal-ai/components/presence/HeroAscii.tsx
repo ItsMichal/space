@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 import { positionEcef } from '@/lib/starlink/orbit.mjs'
 import { loadLand, type Ring } from './globe/data'
 import { loadStarlinkWithIds, type Identities, type Packed } from './globe/starlink'
-import { calloutLines, GLYPHS, landGlyph, OCEAN, SAT, SAT_LINKED, SAT_MARKED, satFacts, strokeGlyph, TERMINAL } from './ascii/field'
+import { BRAILLE_BIT, calloutLines, dither, GLYPHS, landDot, SAT, SAT_FRONT, SAT_LINKED, SAT_MARKED, satFacts, seaDot, strokeGlyph, TERMINAL } from './ascii/field'
 import './presence.css'
 import './ascii/ascii.css'
 
@@ -61,6 +61,20 @@ interface Strand {
   dying: boolean
 }
 
+/** `a` moved a fraction `t` towards `b`, as an rgb() string; any CSS colour the canvas understands. */
+function mix(a: string, b: string, t: number): string {
+  const rgb = (c: string) => {
+    const g = document.createElement('canvas').getContext('2d')!
+    g.fillStyle = c
+    const v = String(g.fillStyle)
+    if (v.startsWith('#')) return [1, 3, 5].map((i) => parseInt(v.slice(i, i + 2), 16))
+    return (v.match(/\d+(\.\d+)?/g) ?? ['0', '0', '0']).slice(0, 3).map(Number)
+  }
+  const x = rgb(a)
+  const y = rgb(b)
+  return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(',')})`
+}
+
 export function HeroAscii({ className = '' }: { className?: string }) {
   const wrap = useRef<HTMLDivElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
@@ -84,12 +98,14 @@ export function HeroAscii({ className = '' }: { className?: string }) {
     let R = 0
     let A = 0.34
     let font = ''
-    // Earth cells (indices into the canvas grid) and what is fixed about each: lambert term, latitude row, base longitude.
+    // Earth cells (indices into the canvas grid) and what is fixed about each of their eight braille sub-dots: lambert term,
+    // latitude row (-1 off the disc) and base longitude. Cell shade is the mean of its sub-dots on the disc.
     let eIdx = new Int32Array(0)
     let eShade = new Float32Array(0)
-    let eLat = new Int32Array(0)
-    let eLon = new Float32Array(0)
     let eLimb = new Uint8Array(0)
+    let sShade = new Float32Array(0)
+    let sLat = new Int32Array(0)
+    let sLon = new Float32Array(0)
     let dimT = new Float32Array(0)
     let dimC = new Float32Array(0)
     let dimSettled = true
@@ -99,7 +115,7 @@ export function HeroAscii({ className = '' }: { className?: string }) {
     let accent = '#3d6a35'
     let halo = '#f4f1e8'
     let haloAlpha = 0.85
-    const atlas = { ink: null as HTMLCanvasElement | null, accent: null as HTMLCanvasElement | null }
+    const atlas = { ink: null as HTMLCanvasElement | null, accent: null as HTMLCanvasElement | null, land: null as HTMLCanvasElement | null, sea: null as HTMLCanvasElement | null }
     const slotOf = new Map<string, number>(GLYPHS.map((g, i) => [g, i]))
     const earth = document.createElement('canvas')
     const ectx = earth.getContext('2d')!
@@ -168,9 +184,40 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       GLYPHS.forEach((ch_, i) => g.fillText(ch_, i * gw + gw / 2, gh / 2 + dpr * 0.5))
       return c
     }
+    // all 256 braille patterns, drawn as dots on the cell's 2 x 4 sub-grid (not from a font, so they line up on every platform)
+    const buildBraille = (colour: string) => {
+      const c = document.createElement('canvas')
+      const gw = Math.ceil(cw * dpr)
+      const gh = Math.ceil(ch * dpr)
+      c.width = gw * 256
+      c.height = gh
+      const g = c.getContext('2d')!
+      g.fillStyle = colour
+      const rad = Math.min(cw / 2, ch / 4) * 0.4 * dpr
+      for (let bits = 1; bits < 256; bits++) {
+        g.beginPath()
+        for (let k = 0; k < 8; k++) {
+          if (!(bits & BRAILLE_BIT[k])) continue
+          const x = bits * gw + (((k & 1) + 0.5) * cw * dpr) / 2
+          const y = (((k >> 1) + 0.5) * ch * dpr) / 4
+          g.moveTo(x + rad, y)
+          g.arc(x, y, rad, 0, Math.PI * 2)
+        }
+        g.fill()
+      }
+      return c
+    }
     const buildAtlases = () => {
       atlas.ink = buildAtlas(ink)
       atlas.accent = buildAtlas(accent)
+      // a slight colouring: land in the accent green, the sea in ink leaning a little blue
+      atlas.land = buildBraille(accent)
+      atlas.sea = buildBraille(mix(ink, '#2f6aa0', 0.35))
+    }
+    const braille = (c: CanvasRenderingContext2D, a: HTMLCanvasElement, bits: number, x: number, y: number) => {
+      const gw = Math.ceil(cw * dpr)
+      const gh = Math.ceil(ch * dpr)
+      c.drawImage(a, bits * gw, 0, gw, gh, Math.round((x - cw / 2) * dpr), Math.round((y - ch / 2) * dpr), gw, gh)
     }
     const glyph = (c: CanvasRenderingContext2D, a: HTMLCanvasElement, g: string, x: number, y: number) => {
       const i = slotOf.get(g) ?? 0
@@ -194,36 +241,58 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       stride = box < 520 ? 12 : 7
       readColours()
       buildAtlases()
-      // earth cells
+      // earth cells, sampled at their eight sub-dots
       const idx: number[] = []
       const shade: number[] = []
-      const lat: number[] = []
-      const lon: number[] = []
       const limb: number[] = []
+      const subShade: number[] = []
+      const subLat: number[] = []
+      const subLon: number[] = []
       const ct = Math.cos(TILT)
       const st = Math.sin(TILT)
       for (let r = 0; r < rows; r++) {
-        const v = -(((r + 0.5) * ch - W / 2) / R)
         for (let c = 0; c < cols; c++) {
-          const u = ((c + 0.5) * cw - W / 2) / R
-          const q = u * u + v * v
-          if (q >= 1) continue
-          const z = Math.sqrt(1 - q)
-          const d = Math.max(0, u * LIGHT[0] + v * LIGHT[1] + z * LIGHT[2])
-          const Y = v * ct + z * st
-          const Z = -v * st + z * ct
+          const cu = ((c + 0.5) * cw - W / 2) / R
+          const cv_ = -(((r + 0.5) * ch - W / 2) / R)
+          if (cu * cu + cv_ * cv_ >= 1.06) continue
+          let on = 0
+          let sum = 0
+          const base = subLat.length
+          for (let k = 0; k < 8; k++) {
+            const u = ((c + ((k & 1) + 0.5) / 2) * cw - W / 2) / R
+            const v = -(((r + ((k >> 1) + 0.5) / 4) * ch - W / 2) / R)
+            const q = u * u + v * v
+            if (q >= 1) {
+              subShade.push(0)
+              subLat.push(-1)
+              subLon.push(0)
+              continue
+            }
+            const z = Math.sqrt(1 - q)
+            const d = Math.max(0, u * LIGHT[0] + v * LIGHT[1] + z * LIGHT[2])
+            const Y = v * ct + z * st
+            const Z = -v * st + z * ct
+            subShade.push(d)
+            subLat.push(Math.min(MASK_H - 1, Math.max(0, Math.floor((90 - (Math.asin(Y) * 180) / Math.PI) * (MASK_H / 180)))))
+            subLon.push((Math.atan2(u, Z) * 180) / Math.PI)
+            on++
+            sum += d
+          }
+          if (!on) {
+            subShade.length = subLat.length = subLon.length = base
+            continue
+          }
           idx.push(r * cols + c)
-          shade.push(d)
-          lat.push(Math.min(MASK_H - 1, Math.max(0, Math.floor((90 - (Math.asin(Y) * 180) / Math.PI) * (MASK_H / 180)))))
-          lon.push((Math.atan2(u, Z) * 180) / Math.PI)
-          limb.push(q > 0.955 ? 1 : 0)
+          shade.push(sum / on)
+          limb.push(cu * cu + cv_ * cv_ > 0.93 ? 1 : 0)
         }
       }
       eIdx = Int32Array.from(idx)
       eShade = Float32Array.from(shade)
-      eLat = Int32Array.from(lat)
-      eLon = Float32Array.from(lon)
       eLimb = Uint8Array.from(limb)
+      sShade = Float32Array.from(subShade)
+      sLat = Int32Array.from(subLat)
+      sLon = Float32Array.from(subLon)
       dimT = new Float32Array(cols * rows).fill(1)
       dimC = new Float32Array(cols * rows).fill(1)
       stats.cells = eIdx.length
@@ -275,6 +344,9 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       if (instant) dimC.set(dimT)
       dimSettled = false
     }
+    // satellites sit on the character grid, like the Earth's cells
+    const snapX = (x: number) => (Math.floor(x / cw) + 0.5) * cw
+    const snapY = (y: number) => (Math.floor(y / ch) + 0.5) * ch
     const dimAt = (x: number, y: number) => {
       const c = Math.floor(x / cw)
       const r = Math.floor(y / ch)
@@ -292,32 +364,41 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       stats.earthDraws++
       ectx.setTransform(1, 0, 0, 1, 0, 0)
       ectx.clearRect(0, 0, earth.width, earth.height)
-      const a = atlas.ink
-      if (!a) return
+      const la = atlas.land
+      const sa = atlas.sea
+      if (!la || !sa) return
       const n = eIdx.length
       for (let i = 0; i < n; i++) {
         const gi = eIdx[i]
         const c = gi % cols
         const r = (gi / cols) | 0
         const dim = dimC[gi]
-        let lon = eLon[i] + lonC + 180
-        lon = ((lon % 360) + 360) % 360
-        const land = mask ? mask[eLat[i] * MASK_W + ((lon * 2) | 0)] : 0
-        const d = eShade[i]
-        let g: string
-        let alpha: number
-        if (land) {
-          g = landGlyph(0.08 + 0.92 * d)
-          alpha = A * (0.55 + 0.6 * d)
-        } else {
-          if ((c + r) % 2) continue
-          g = OCEAN
-          alpha = A * (eLimb[i] ? 0.6 : 0.32 + 0.45 * d)
+        if (dim < 0.05) continue
+        let land = 0
+        let sea = 0
+        for (let k = 0; k < 8; k++) {
+          const j = i * 8 + k
+          const lat = sLat[j]
+          if (lat < 0) continue
+          let lon = sLon[j] + lonC + 180
+          lon = ((lon % 360) + 360) % 360
+          const d = sShade[j]
+          const t = dither(c * 2 + (k & 1), r * 4 + (k >> 1))
+          if (mask && mask[lat * MASK_W + ((lon * 2) | 0)]) {
+            if (landDot(d, t)) land |= BRAILLE_BIT[k]
+          } else if (seaDot(d, t, !!eLimb[i])) sea |= BRAILLE_BIT[k]
         }
-        alpha *= dim
-        if (alpha < 0.015) continue
-        ectx.globalAlpha = Math.min(1, alpha)
-        glyph(ectx, a, g, (c + 0.5) * cw, (r + 0.5) * ch)
+        const x = (c + 0.5) * cw
+        const y = (r + 0.5) * ch
+        const d = eShade[i]
+        if (land) {
+          ectx.globalAlpha = Math.min(1, A * (0.75 + 0.6 * d) * dim)
+          braille(ectx, la, land, x, y)
+        }
+        if (sea) {
+          ectx.globalAlpha = Math.min(1, A * (eLimb[i] ? 0.8 : 0.5 + 0.4 * d) * dim)
+          braille(ectx, sa, sea, x, y)
+        }
       }
       ectx.globalAlpha = 1
     }
@@ -629,7 +710,7 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       const { side, ex, ey, hx, lx, ly } = place(x, y, dir, up, tw, th, lh, vr)
       // highlighted satellite
       ctx.globalAlpha = a
-      glyph(ctx, atlas.ink!, SAT_MARKED, x, y)
+      glyph(ctx, atlas.ink!, SAT_MARKED, snapX(x), snapY(y))
       // leader: a hairline out to the label
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       ctx.strokeStyle = ink
@@ -731,7 +812,8 @@ export function HeroAscii({ className = '' }: { className?: string }) {
           const al = A * (behind ? 0.9 : 1.9) * dimAt(px, py)
           if (al < 0.02) continue
           ctx.globalAlpha = Math.min(1, al)
-          glyph(ctx, linked.has(i) ? atlas.accent! : a, linked.has(i) ? SAT_LINKED : SAT, px, py)
+          const g = linked.has(i) ? SAT_LINKED : behind ? SAT : SAT_FRONT
+          glyph(ctx, linked.has(i) ? atlas.accent! : a, g, snapX(px), snapY(py))
           drawn++
         }
         stats.sats = drawn

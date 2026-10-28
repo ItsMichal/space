@@ -1,21 +1,26 @@
 // Pure pieces of the character-cell hero (HeroAscii.tsx): the glyph choices and the satellite callout text.
 import { MU, RE, nameOf, type Identities } from '@/lib/starlink/orbit.mjs'
 
-/** Land shading, darkest to brightest. Index 0 is the night side, which still shows the coast faintly. */
-export const LAND_RAMP = '.:-=+*#%'
-export const OCEAN = '·'
-export const SAT = '·'
+// The Earth is drawn in braille "mixels": each character cell is a 2 x 4 grid of dots, so the globe has eight samples per cell.
+// Sub-dot k = row * 2 + col; BRAILLE_BIT[k] is its bit in the Unicode braille pattern (U+2800 + bits).
+export const BRAILLE_BIT = [0x01, 0x08, 0x02, 0x10, 0x04, 0x20, 0x40, 0x80]
+// 4 x 4 ordered dither thresholds in (0, 1), indexed [y % 4][x % 4] over the sub-dot grid
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
+export function dither(x: number, y: number): number {
+  return (BAYER[(y & 3) * 4 + (x & 3)] + 0.5) / 16
+}
+/** Whether a land sub-dot with lambert term d is set: full on the day side, a quarter on the night side so the coast still shows. */
+export const landDot = (d: number, t: number) => 0.25 + 0.75 * d > t
+/** Ocean sub-dots are a sparse halftone, a little denser at the limb. */
+export const seaDot = (d: number, t: number, limb: boolean) => (limb ? 0.34 : 0.08 + 0.14 * d) > t
+
+export const SAT = '.'
+export const SAT_FRONT = '*'
 export const SAT_LINKED = '+'
-export const SAT_MARKED = '×'
+export const SAT_MARKED = '@'
 export const TERMINAL = 'o'
 export const STROKES = '-\\|/'
-export const GLYPHS = Array.from(new Set([...LAND_RAMP, OCEAN, SAT, SAT_LINKED, SAT_MARKED, TERMINAL, ...STROKES]))
-
-/** The ramp glyph for a lambert term in [0, 1]. */
-export function landGlyph(d: number): string {
-  const k = Math.max(0, Math.min(LAND_RAMP.length - 1, Math.floor(d * LAND_RAMP.length)))
-  return LAND_RAMP[k]
-}
+export const GLYPHS = Array.from(new Set([SAT, SAT_FRONT, SAT_LINKED, SAT_MARKED, TERMINAL, ...STROKES]))
 
 /** A line-art glyph for a stroke going (dx, dy) on screen (y down): - \ | / */
 export function strokeGlyph(dx: number, dy: number): string {

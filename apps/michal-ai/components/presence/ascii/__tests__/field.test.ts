@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calloutLines, landGlyph, LAND_RAMP, strokeGlyph, type SatFacts } from '../field'
+import { BRAILLE_BIT, calloutLines, dither, strokeGlyph, type SatFacts } from '../field'
 
 const facts: SatFacts = { name: 'STARLINK-2343', norad: 47884, launch: '2021-021', altKm: 449.4, speedKms: 7.6412, incDeg: 53.21 }
 
@@ -17,9 +17,16 @@ describe('calloutLines', () => {
 })
 
 describe('glyphs', () => {
-  it('maps the lambert term onto the ramp', () => {
-    expect(landGlyph(0)).toBe(LAND_RAMP[0])
-    expect(landGlyph(1)).toBe(LAND_RAMP[LAND_RAMP.length - 1])
+  it('covers every braille dot once', () => {
+    expect(BRAILLE_BIT.reduce((a, b) => a | b, 0)).toBe(0xff)
+    expect(new Set(BRAILLE_BIT).size).toBe(8)
+  })
+  it('dithers with 16 distinct thresholds in (0, 1)', () => {
+    const t = new Set<number>()
+    for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) t.add(dither(x, y))
+    expect(t.size).toBe(16)
+    expect(Math.min(...t)).toBeGreaterThan(0)
+    expect(Math.max(...t)).toBeLessThan(1)
   })
   it('draws strokes by direction', () => {
     expect(strokeGlyph(1, 0)).toBe('-')
