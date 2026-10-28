@@ -1,7 +1,7 @@
 import Link from '@/lib/nav'
 import type { Post } from '@/lib/content/types'
 import type { SeriesGroup } from '@/lib/content'
-import { Backdrop, ProjectCard } from '@/components/work/Showcase'
+import { coverSrc, ProjectCard } from '@/components/work/Showcase'
 import { Disclosure } from '@/components/ui/Disclosure'
 import { postPath } from '@/lib/seo'
 import './writing.css'
@@ -12,8 +12,7 @@ const month = (iso: string) =>
 /** One post as an index entry: title, one-line description, date. */
 function Row({ post, backdrop = false }: { post: Post; backdrop?: boolean }) {
   return (
-    <Link href={postPath(post)} className={`wrt ix ix--ui${backdrop ? ' ix--bg' : ''}`}>
-      {backdrop ? <Backdrop post={post} /> : null}
+    <Link href={postPath(post)} className={`wrt ix ix--ui${backdrop ? ' ix--bg' : ''}`} data-cover={backdrop ? coverSrc(post) : undefined}>
       <span className="ix__title wrt__title">{post.title}</span>
       <span className="ix__desc wrt__desc">{post.description}</span>
       <time className="ix__meta" dateTime={post.date}>

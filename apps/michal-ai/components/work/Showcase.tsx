@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import type { Post } from '@/lib/content/types'
 import { getPublication } from '@/lib/publications'
 import { Picture } from '@/components/media/Picture'
+import { getImageInfo } from '@/lib/media'
 import { cardOf, isFeature, siteLayout, type SiteLayout } from '@/lib/content/layout'
 import { matchesFilter, PROJECT_FILTERS } from '@/components/ui/segments'
 import './cards.css'
@@ -29,15 +30,14 @@ function MetaParts({ parts }: { parts: ReactNode[] }) {
 
 const monthYear = (iso: string) => new Date(iso + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
 
-/** An entry's cover as a faint, desaturated layer behind its text (decorative: empty alt, aria-hidden). */
-export function Backdrop({ post, priority = false }: { post: Post; priority?: boolean }) {
+/** A small variant of an entry's cover for the home page's halftone field (CoverField.tsx), or undefined. */
+export function coverSrc(post: Post): string | undefined {
   const src = post.cardImage === 'none' ? undefined : (post.cardImage ?? post.cover)
-  if (!src) return null
-  return (
-    <span className="ix__bg" aria-hidden>
-      <Picture src={src} alt="" sizes="(min-width: 840px) 720px, 100vw" priority={priority} focus={post.cardImage ? undefined : post.coverFocus} />
-    </span>
-  )
+  if (!src) return undefined
+  const info = getImageInfo(src)
+  if (!info) return src
+  const v = info.variants.webp.find((x) => x.w >= 400) ?? info.variants.webp[info.variants.webp.length - 1]
+  return v?.src ?? src
 }
 
 export type CardVariant = 'newsroom' | 'fill' | 'cap'
@@ -72,7 +72,7 @@ export function ProjectCard({
   article?: boolean
   /** Focal point of the feature image ("50% 30%"), from the layout file. Defaults to the cover's `coverFocus`. */
   focus?: string
-  /** The cover sits faintly behind the text instead of as a picture under it (the home page). */
+  /** The cover shows in the home page's halftone field (CoverField) instead of as a picture under the entry. */
   backdrop?: boolean
 }) {
   const src = post.cardImage === 'none' ? undefined : (post.cardImage ?? post.cover)
@@ -88,8 +88,8 @@ export function ProjectCard({
       className={`tile ix${backdrop ? ' ix--bg' : ''}${feature ? ' tile--feature' : ''}${variant !== 'newsroom' ? ` tile--${variant}` : ''}`}
       aria-labelledby={`${id}-t`}
       aria-describedby={`${id}-d`}
+      data-cover={backdrop ? coverSrc(post) : undefined}
     >
-      {backdrop ? <Backdrop post={post} priority={priority} /> : null}
       <h3 id={`${id}-t`} className="ix__title tile__title" data-card-title>
         {post.title}
       </h3>
