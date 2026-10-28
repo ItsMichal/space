@@ -1,0 +1,113 @@
+name: Preview
+
+# A phone-openable preview of michal.ai for each pull request that changes the portfolio: the same build as Deploy (content
+# from ItsMichal/space-content included), uploaded as a Cloudflare Worker Preview named pr-<number> of the "space" Worker
+# (`wrangler preview`), with its URL commented on the pull request. A Preview never changes the production deployment: it
+# gets its own URL, its own Durable Object namespace and the `previews` settings in apps/michal-ai/wrangler.jsonc. Closing
+# the pull request deletes the Preview.
+# Same-repo pull requests by the owner only: fork pull requests and other actors never reach a step that sees a secret.
+# Version URLs (`wrangler versions upload --preview-alias`) are not an option here: Cloudflare does not generate them for
+# Workers that implement Durable Objects.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    paths:
+      - 'apps/michal-ai/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'scripts/**'
+      - '.github/workflows/preview.yml'
+      - '.github/actions/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: preview-michal-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  preview-michal:
+    if: >-
+      github.event.action != 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor == 'ItsMichal'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+    steps:
+      - name: Token present?
+        id: t
+        run: |
+          if [ -n "$CLOUDFLARE_API_TOKEN" ]; then echo "ok=true" >> "$GITHUB_OUTPUT"; else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Preview skipped::Repository secret CLOUDFLARE_API_TOKEN is not set."
+          fi
+      - uses: actions/checkout@v4
+        if: steps.t.outputs.ok == 'true'
+      - uses: ./.github/actions/setup
+        if: steps.t.outputs.ok == 'true'
+      - uses: ./.github/actions/content
+        if: steps.t.outputs.ok == 'true'
+        with:
+          deploy-key: ${{ secrets.CONTENT_DEPLOY_KEY }}
+          token: ${{ secrets.CONTENT_TOKEN }}
+      - uses: ./.github/actions/media-cache
+        if: steps.t.outputs.ok == 'true'
+      - name: Build (react-router build and share cards, same as Deploy)
+        if: steps.t.outputs.ok == 'true'
+        run: npm run build:michal
+      - name: Upload the Preview (never the production deployment)
+        id: preview
+        if: steps.t.outputs.ok == 'true'
+        working-directory: apps/michal-ai
+        run: |
+          set -o pipefail
+          npx wrangler preview --name "pr-$PR_NUMBER" --message "PR #$PR_NUMBER ${GITHUB_SHA::7}" --json | tee preview.json
+          url=$(jq -r '(.preview.urls // [])[0] // empty' preview.json 2>/dev/null || true)
+          [ -n "$url" ] || url=$(grep -oE 'https://pr-[0-9]+-[a-z0-9.-]+\.workers\.dev' preview.json | head -n1 || true)
+          if [ -z "$url" ]; then echo "::error::No Preview URL in the wrangler output"; exit 1; fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "michal.ai preview for #$PR_NUMBER: $url" >> "$GITHUB_STEP_SUMMARY"
+      - name: Smoke test the Preview
+        if: steps.t.outputs.ok == 'true'
+        env:
+          URL: ${{ steps.preview.outputs.url }}
+        run: |
+          for path in / /projects /writing /about /resume; do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 "${URL%/}$path" || echo 000)
+            echo "$code $path"
+            [ "$code" = "200" ] || { echo "::warning::$path answered HTTP $code on the Preview"; }
+          done
+      - name: Comment the URL on the pull request
+        if: steps.t.outputs.ok == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          URL: ${{ steps.preview.outputs.url }}
+        run: |
+          body="michal.ai preview: $URL
+
+          Built from ${GITHUB_SHA::7}. Updates on every push; deleted when this pull request closes."
+          gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body "$body" --edit-last --create-if-none
+
+  cleanup-michal:
+    if: >-
+      github.event.action == 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor == 'ItsMichal'
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Delete the Preview
+        working-directory: apps/michal-ai
+        run: npx wrangler preview delete --name "pr-$PR_NUMBER" --skip-confirmation || echo "No Preview pr-$PR_NUMBER to delete"

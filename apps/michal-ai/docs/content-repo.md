@@ -46,7 +46,9 @@ build time `lib/ink/inline.server.ts` reads and checks the file again and puts i
 
 **Card order and presentation.** `content/layout.json` (space-content: `site/layout.json`) pins the order of Selected
 work on the home page and /projects (`work`), the writing list (`writing`) and the hero's rotating line (`hooks`), and
-sets per project card a `size` (`feature` or `regular`), a `variant` (`newsroom`, `fill`, `cap`), an image `focus`
+sets per project card a `size` (`feature`: the entry carries its one picture, or `regular`: text only; without any `feature`,
+the first entry is the feature), a `variant` (`newsroom`, `fill`, `cap`: kept for compatibility, no visual effect since the
+text index), an image `focus` for the feature picture
 (`"x% y%"`) and `home: false` to keep it to /projects. Pins come first in pin order; everything else follows in the
 default order (minor last, then priority, then newest), so the file only lists what was moved. `parseLayout` in
 `rules.mjs` takes printable ASCII only, at most 32 KB, exactly those keys and enums, no slug twice in a list (limits in
@@ -94,7 +96,9 @@ uses the content in this repo, which is the state until the cutover. Pull reques
 - A push to space-content `main` that touches `posts/**` or `media/**` dispatches this repo's `Deploy` workflow with
   `app=michal` (space-content workflow `trigger-site-deploy.yml`, token `SPACE_DISPATCH_TOKEN`: a fine-grained PAT with
   Actions read and write on ItsMichal/space only). The deploy job's concurrency group queues it behind a running deploy.
-- Pull requests in either repo never deploy.
+- Pull requests in either repo never deploy to production. Same-repo pull requests by ItsMichal in this repo get a
+  Workers Preview of `space` (`.github/workflows/preview.yml`, `wrangler preview --name pr-<n>`, URL commented on the PR,
+  deleted on close); forks never run it.
 - The editor Worker `write` is deployed by space-content (`deploy-editor.yml`), never from here.
 
 ## Cutover order

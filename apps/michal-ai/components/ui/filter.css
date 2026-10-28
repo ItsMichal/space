@@ -1,7 +1,6 @@
 /* Project filter: JS sets data-filter; without JS the anchors target the markers and :has() does the same. */
 .fw-bar {
-  margin: 0 0 var(--card-gap);
-  padding: var(--space-2);
+  margin: 0 0 var(--space-12);
 }
 .fw-mark {
   display: block;

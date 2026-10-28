@@ -8,19 +8,19 @@ export type NextLink = { label: string; href: string; external?: boolean }
 export function NextLinks({ links, label }: { links: NextLink[]; label: string }) {
   return (
     <nav aria-label={label}>
-      <div className="nx surface card">
+      <div className="nx">
       <ul className="nx__list">
         {links.map((l) => (
           <li key={l.href}>
             {l.external ? (
               <a href={l.href} className="nx__a" target="_blank" rel="noreferrer">
                 <span>{l.label}</span>
-                <ArrowUpRight size={20} strokeWidth={1.4} aria-hidden />
+                <ArrowUpRight size={16} strokeWidth={1.5} aria-hidden />
               </a>
             ) : (
               <Link href={l.href} className="nx__a">
                 <span>{l.label}</span>
-                <ArrowUpRight size={20} strokeWidth={1.4} aria-hidden />
+                <ArrowUpRight size={16} strokeWidth={1.5} aria-hidden />
               </Link>
             )}
           </li>

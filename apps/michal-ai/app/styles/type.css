@@ -6,15 +6,15 @@
 
      role      token    face       desktop / phone    weight  colour
      title     title    display    44 / 34            400     ink            section and page headings, article title
-     heading   heading  display    24 / 21            400     ink            card headings, tile and row titles, article h2
+     heading   heading  display    24 / 21            400     ink            sub-section heads, project titles, article h2
      text      body     Newsreader 18 / 17            400     ink-muted      paragraphs, descriptions, list rows
-     ui        body     Newsreader 18 / 17            500     ink            item titles inside a card, nav, buttons
+     ui        body     Newsreader 18 / 17            500     ink            item titles in a list, nav, buttons
      meta      small    Newsreader 15                 400     ink-muted      dates, years, roles, venue lines, captions
 
-   Item titles: a card's heading is `heading`; the title of one item inside a card or list (employer, publication, post row,
-   hackathon, press, prev/next step) is `ui` (body at 500). A tile that is itself the card titles itself with `heading`.
+   Item titles: a project in the work index titles itself with `heading`; the title of one item in any other list (employer,
+   publication, post, hackathon, press, prev/next step) is `ui` (body at 500).
 
-   Project rows (home, /projects lists) and writing rows are the same style: they share the rules below. */
+   The index language (home, /projects, /writing, /about) is below: `.ix`. */
 .t-title {
   font-family: var(--font-display);
   font-size: var(--type-title-size);
@@ -23,6 +23,7 @@
   letter-spacing: var(--type-title-tracking);
 }
 .t-heading,
+.ix__title,
 .wseries__name {
   font-family: var(--font-display);
   font-size: var(--type-heading-size);
@@ -31,8 +32,7 @@
   letter-spacing: var(--type-heading-tracking);
 }
 .t-text,
-.prow__desc,
-.wrt__desc {
+.ix__desc {
   font-family: var(--font-serif);
   font-size: var(--type-body-size);
   line-height: var(--type-body-line);
@@ -40,16 +40,15 @@
   color: var(--ink-muted);
 }
 .t-ui,
-.prow__title,
-.wrt__title {
+.ix--ui .ix__title {
   font-family: var(--font-serif);
   font-size: var(--type-body-strong-size);
   line-height: var(--type-body-strong-line);
   font-weight: var(--type-body-strong-weight);
+  letter-spacing: normal;
 }
 .t-meta,
-.prow__meta,
-.wrt__date,
+.ix__meta,
 .wseries__meta {
   font-family: var(--font-serif);
   font-size: var(--type-small-size);
@@ -58,59 +57,205 @@
   color: var(--ink-muted);
 }
 
-/* ---------- Rows: one component's worth of style for projects and writing ---------- */
-.prow,
-.wrt {
+/* ---------- The index: a page set like a book's contents ----------
+   One entry = title, one line of description, then the year, role or date in quiet secondary text. No surfaces, borders or
+   shadows: whitespace separates entries. Phones stack the three lines; from 840px the secondary line moves into a narrow
+   column on the left, so a list reads as a column of dates beside a column of titles (and the text keeps a book measure).
+
+     .ix-list       a list of entries (ul / ol), generous gap between them
+     .ix            one entry (a link or a plain block): __title, __desc, __meta, optional __media (one picture) or __body
+     .ix--ui        an entry whose title is an item title (body 500), not a heading (writing, roles, publications)
+     .ix-sec        a section whose heading sits in that same left column from 840px (/about, /writing)
+     .ix-h          a sub-section head above a list (heading size)  */
+:root {
+  --ix-col: 10.5rem;
+  --ix-gap: var(--space-8);
+  --ix-measure: 40rem;
+}
+.ix-list {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-1) var(--space-6);
-  align-items: baseline;
-  padding: var(--space-4) var(--card-pad);
-  color: inherit;
-  text-decoration: none;
-}
-.prow > div,
-.wrt__text {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-.prow__desc,
-.wrt__desc {
-  max-width: 60ch;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.prow__meta,
-.wrt__date {
-  text-align: right;
-  white-space: nowrap;
-}
-.prow__title,
-.wrt__title {
-  transition: color 150ms var(--ease-out-soft);
-}
-.prow:hover .prow__title,
-.prow:focus-visible .prow__title,
-.wrt:hover .wrt__title,
-.wrt:focus-visible .wrt__title {
-  color: var(--accent);
-}
-.plist,
-.wlist {
+  gap: var(--space-6);
   margin: 0;
+  padding: 0;
   list-style: none;
 }
-@media (max-width: 767px) {
-  .prow,
-  .wrt {
-    grid-template-columns: minmax(0, 1fr);
+.ix-list--tight {
+  gap: var(--space-4);
+}
+.ix-list > li {
+  min-width: 0;
+}
+.ix {
+  display: grid;
+  grid-template-columns: minmax(0, var(--ix-measure));
+  align-content: start;
+  row-gap: 2px;
+  color: inherit;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.ix > * {
+  margin: 0;
+  min-width: 0;
+}
+.ix__title {
+  color: var(--ink);
+  text-wrap: balance;
+  transition: color var(--motion-fast) var(--ease-out-soft);
+}
+.ix__desc {
+  text-wrap: pretty;
+}
+.ix__meta {
+  margin-top: var(--space-1);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.ix__media {
+  margin-top: var(--space-4);
+}
+.ix__media img,
+.ix__media picture {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+}
+/* .ix--bg: the entry's cover lies faintly behind its text (home page). The layer is greyscale and fades to white inside
+   itself, then multiplies onto the page: white times any colour is that colour, so the fade lands on whatever is beneath
+   (the hero tint or the paper) with no visible edge. Gradients and blending only, no CSS masks (they capture black in
+   full-page screenshots). It bleeds a gutter past the text column so the text keeps its alignment with the page. */
+.ix--bg {
+  position: relative;
+  padding: var(--space-6) var(--space-4);
+  margin-inline: calc(-1 * var(--space-4));
+}
+.ix--bg > :not(.ix__bg) {
+  position: relative;
+  z-index: 1;
+}
+.ix > .ix__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+  mix-blend-mode: multiply;
+  /* on the layer, not the img: the picture's own load-in filter (data-lqip) owns the img's filter */
+  filter: grayscale(1) contrast(0.95);
+  opacity: 0.2;
+  transition: opacity var(--motion-fast) var(--ease-out-soft);
+}
+.ix__bg picture,
+.ix__bg img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ix__bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, #fff 0%, transparent 24%, transparent 76%, #fff 100%),
+    linear-gradient(90deg, #fff 0%, rgb(255 255 255 / 0.6) 45%, transparent 100%);
+}
+/* wide screens: the entry ends inside the page, so its right edge fades too */
+@media (min-width: 840px) {
+  .ix__bg::after {
+    background:
+      linear-gradient(180deg, #fff 0%, transparent 24%, transparent 76%, #fff 100%),
+      linear-gradient(90deg, #fff 0%, rgb(255 255 255 / 0.6) 40%, transparent 68%, transparent 80%, #fff 100%);
   }
-  .prow__meta,
-  .wrt__date {
-    text-align: left;
+}
+@media (hover: hover) {
+  a.ix--bg:hover .ix__bg {
+    opacity: 0.3;
+  }
+}
+.ix-list:has(> li > .ix--bg) {
+  gap: var(--space-2);
+}
+a.ix:hover .ix__title,
+a.ix:focus-visible .ix__title {
+  color: var(--accent);
+}
+a.ix:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 6px;
+  border-radius: var(--radius-xs);
+}
+.ix-h {
+  margin: var(--space-12) 0 var(--space-4);
+}
+.ix-more {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: var(--space-4);
+}
+.ix-sec {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  scroll-margin-top: 96px;
+}
+.ix-sec > h2,
+.ix-sec > h3 {
+  margin: 0;
+}
+.ix-sec__body {
+  min-width: 0;
+  max-width: var(--ix-measure);
+}
+@media (min-width: 840px) {
+  .ix {
+    grid-template-columns: var(--ix-col) minmax(0, var(--ix-measure));
+    /* a tall secondary line (it wraps in the narrow column) grows the last, flexible row, never the gap under the title */
+    grid-template-rows: auto auto auto 1fr;
+    column-gap: var(--ix-gap);
+  }
+  .ix > * {
+    grid-column: 2;
+  }
+  /* the secondary line sits beside the title; the small top inset puts its first baseline near the title's */
+  .ix > .ix__meta {
+    grid-column: 1;
+    grid-row: 1 / span 4;
+    margin-top: 0;
+    padding-top: 0.32em;
+  }
+  .ix--ui > .ix__meta {
+    padding-top: 0.12em;
+  }
+  /* in the narrow column a long role wraps inside itself rather than running into the title */
+  .ix > .ix__meta .t-meta__part {
     white-space: normal;
   }
+  .ix-sec {
+    grid-template-columns: var(--ix-col) minmax(0, var(--ix-measure));
+    column-gap: var(--ix-gap);
+  }
+  .ix-sec > h2,
+  .ix-sec > h3 {
+    padding-top: 0.1em;
+  }
+  /* entries inside a section already have the left column for the heading: they stack */
+  .ix-sec .ix {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ix-sec .ix > * {
+    grid-column: 1;
+  }
+  .ix-sec .ix > .ix__meta {
+    grid-row: auto;
+    margin-top: var(--space-1);
+    padding-top: 0;
+  }
+}
+
+/* tertiary line (meta) parts: each part stays on one line, so a narrow column wraps at the separator */
+.t-meta__part {
+  white-space: nowrap;
 }

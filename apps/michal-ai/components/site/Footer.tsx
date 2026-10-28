@@ -2,13 +2,14 @@ import Link from '@/lib/nav'
 import { siteConfig } from '@/site.config'
 import { profile } from '@/content/profile'
 import { SiteMark } from './SiteMark'
+import './home.css'
 
 const linkCls = 'text-ink-muted transition-colors duration-150 hover:text-accent'
 
 export function Footer() {
   return (
     <footer className="relative mx-auto mt-space-12 w-full max-w-content px-space-4 pb-space-12 md:px-space-8">
-      <div className="card surface flex flex-col gap-space-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="ft flex flex-col gap-space-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-space-3 text-ink">
           <Link href="/" aria-label="Home" className="rounded-sm">
             <SiteMark height={24} />
@@ -29,8 +30,8 @@ export function Footer() {
           </Link>
         </nav>
       </div>
-      <p className="t-meta mt-space-4 px-space-2">Starlink image: Starlink / SpaceX.</p>
-      <p className="t-meta mt-space-2 px-space-2">Globe satellite positions: orbit data from CelesTrak supplemental GP, derived from SpaceX public ephemerides.</p>
+      <p className="t-meta mt-space-6">Starlink image: Starlink / SpaceX.</p>
+      <p className="t-meta mt-space-2">Globe satellite positions: orbit data from CelesTrak supplemental GP, derived from SpaceX public ephemerides.</p>
     </footer>
   )
 }

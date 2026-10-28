@@ -8,7 +8,7 @@ import { postPath } from '@/lib/seo'
 import { tintFor } from '@/lib/tints'
 import { heroHooks, homeWriting } from '@/lib/content/layout'
 import { NameHeader } from '@/components/site/NameHeader'
-import { ProjectList } from '@/components/site/ProjectList'
+import { WritingRows } from '@/components/writing/WritingIndex'
 import { Showcase } from '@/components/work/Showcase'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { profile } from '@/content/profile'
@@ -61,82 +61,85 @@ export default function Home() {
         intro={hooks.length ? <HeroHook stem={profile.hookStem} items={hooks} /> : undefined}
       />
 
-      <section id="work" aria-labelledby="work-h" className="mt-space-8 md:mt-space-12">
+      <section id="work" aria-labelledby="work-h" className="home-sec mt-space-8 md:mt-space-12">
         <h2 id="work-h" className={h2}>
           Selected work
         </h2>
-        <Showcase posts={projects} base="/projects" variant="row" priority glass />
+        <Showcase posts={projects} base="/projects" limit={3} priority backdrop />
       </section>
 
       {articles.length > 0 ? (
-        <section id="writing" aria-labelledby="writing-h" className="home-writing mt-space-12">
+        <section id="writing" aria-labelledby="writing-h" className="home-sec">
           <h2 id="writing-h" className={h2}>
             Writing
           </h2>
-          <ProjectList posts={latest.slice(0, 3)} base="/writing" />
+          <WritingRows posts={latest.slice(0, 3)} backdrop />
           {articles.length > 3 ? (
-            <Link href="/writing" className="link mt-space-2 flex min-h-[44px] items-center">
-              All {articles.length} posts <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
+            <Link href="/writing" className="ix-more link">
+              View all {articles.length} posts <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
             </Link>
           ) : null}
         </section>
       ) : null}
 
-      <section id="about" aria-labelledby="about-h" className="mt-space-12">
+      <section id="about" aria-labelledby="about-h" className="home-sec">
         <h2 id="about-h" className={h2}>
           About
         </h2>
         <div className="about">
-          <div className="about__intro card surface">
+          <div className="about__intro">
             <div className="about__photo">
-              <Picture src={profile.portrait.src} alt={portraitAlt} sizes="96px" aspect="4 / 5" focus={profile.portrait.focus} />
+              <Picture src={profile.portrait.src} alt={portraitAlt} sizes="(min-width: 840px) 168px, 88px" aspect="4 / 5" focus={profile.portrait.focus} />
             </div>
-            <p className="t-text">{profile.about[0]}</p>
-            <p className="t-text">{profile.about[1]}</p>
+            <div className="about__text">
+              <p className="t-text">{profile.about[0]}</p>
+              <p className="t-text">{profile.about[1]}</p>
+            </div>
           </div>
-          <div className="about__xp card surface card--list">
-            <h3 className="card__h t-heading">Experience</h3>
-            <ExperienceList items={experience} label="Experience" />
-          </div>
+          <section aria-labelledby="xp-h" className="ix-sec">
+            <h3 id="xp-h" className="t-heading">
+              Experience
+            </h3>
+            <div className="ix-sec__body">
+              <ExperienceList items={experience} label="Experience" />
+            </div>
+          </section>
           {profile.publications.length ? (
-            <div id="publications" className="about__pubs card surface card--list">
-              <h3 className="card__h t-heading">Publications</h3>
-              <ul className="card__rows">
+            <section id="publications" aria-labelledby="pubs-h" className="ix-sec">
+              <h3 id="pubs-h" className="t-heading">
+                Publications
+              </h3>
+              <ul className="ix-list ix-list--tight ix-sec__body">
                 {profile.publications.map((p) => (
-                  <li key={p.id} className="pub">
-                    <p className="pub__title t-ui">
-                      <a href={doiUrl(p)} className="link" target="_blank" rel="noopener noreferrer">
-                        {p.title}
-                      </a>
-                    </p>
-                    <p className="pub__year t-meta">
-                      <time dateTime={p.published}>{p.year}</time>
-                    </p>
-                    <p className="pub__ref t-meta">
-                      {p.shortAuthors ? `${p.shortAuthors} ` : ''}
-                      {venueLine(p)}
-                      {p.shortAuthors ? '.' : ''}
-                      {p.authorCount ? ` ${p.authorCount.toLocaleString('en-US')} authors.` : ''}
-                    </p>
+                  <li key={p.id}>
+                    <a href={doiUrl(p)} className="ix ix--ui" target="_blank" rel="noopener noreferrer">
+                      <span className="ix__title">{p.title}</span>
+                      <span className="ix__desc">
+                        {p.shortAuthors ? `${p.shortAuthors} ` : ''}
+                        {venueLine(p)}
+                        {p.shortAuthors ? '.' : ''}
+                        {p.authorCount ? ` ${p.authorCount.toLocaleString('en-US')} authors.` : ''}
+                      </span>
+                      <time className="ix__meta" dateTime={p.published}>
+                        {p.year}
+                      </time>
+                    </a>
                   </li>
                 ))}
               </ul>
-            </div>
+            </section>
           ) : null}
-          <Link href="/about" className="about__more card surface surface--link" aria-labelledby="about-more-h">
-            <span>
-              <span id="about-more-h" className="card__h t-heading block">
-                More about me
-              </span>
-              <span className="t-text block">Full experience, education, hackathons and press, and how to get in touch.</span>
+          <Link href="/about" className="about__more ix" aria-labelledby="about-more-h" aria-describedby="about-more-d">
+            <span id="about-more-h" className="ix__title">
+              More about me
+              <ArrowRight size={18} strokeWidth={1.5} aria-hidden className="about__more-go" />
             </span>
-            <span className="about__more-go t-ui">
-              About <ArrowRight size={16} strokeWidth={1.5} aria-hidden />
+            <span id="about-more-d" className="ix__desc">
+              Full experience, education, hackathons and press, and how to get in touch.
             </span>
           </Link>
         </div>
       </section>
-
     </div>
   )
 }

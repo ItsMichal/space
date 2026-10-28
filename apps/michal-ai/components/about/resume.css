@@ -1,4 +1,4 @@
-/* /resume: a document card on screen, a clean one or two page sheet in print (US Letter or A4). Same data as /about.
+/* /resume: plain text on the page on screen (no card), a clean one or two page sheet in print (US Letter or A4). Same data as /about.
    Hierarchy: name (title), section labels (small caps over a hairline), entry heads (body strong) with dates flush right,
    everything else at the small step. Screen sizes come from the four-step scale; print uses its own pt sizes. */
 .rs-actions {
@@ -7,7 +7,7 @@
   justify-content: space-between;
   gap: var(--space-4);
   max-width: 52rem;
-  margin: 0 auto var(--space-4);
+  margin: 0 auto var(--space-12);
 }
 .rs-btn {
   display: inline-flex;
@@ -31,15 +31,9 @@
 .rs {
   max-width: 52rem;
   margin: 0 auto;
-  padding: var(--space-6) var(--card-pad) var(--space-8);
-  background: var(--paper-raised);
+  padding: 0;
   color: var(--ink);
   font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
-}
-@media (min-width: 640px) {
-  .rs {
-    padding: var(--space-8) var(--space-12) var(--space-12);
-  }
 }
 
 /* ---- header ---- */
