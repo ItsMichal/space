@@ -10,9 +10,9 @@ export function dither(x: number, y: number): number {
   return (BAYER[(y & 3) * 4 + (x & 3)] + 0.5) / 16
 }
 /** Whether a land sub-dot with lambert term d is set: full on the day side, a quarter on the night side so the coast still shows. */
-export const landDot = (d: number, t: number) => 0.25 + 0.75 * d > t
+export const landDot = (d: number, t: number) => 0.35 + 0.65 * d > t
 /** Ocean sub-dots are a sparse halftone, a little denser at the limb. */
-export const seaDot = (d: number, t: number, limb: boolean) => (limb ? 0.34 : 0.08 + 0.14 * d) > t
+export const seaDot = (d: number, t: number, limb: boolean) => (limb ? 0.28 : 0.04 + 0.1 * d) > t
 
 export const SAT = '.'
 export const SAT_FRONT = '*'

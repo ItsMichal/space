@@ -392,7 +392,7 @@ export function HeroAscii({ className = '' }: { className?: string }) {
         const y = (r + 0.5) * ch
         const d = eShade[i]
         if (land) {
-          ectx.globalAlpha = Math.min(1, A * (0.75 + 0.6 * d) * dim)
+          ectx.globalAlpha = Math.min(1, A * (1.2 + 0.8 * d) * dim)
           braille(ectx, la, land, x, y)
         }
         if (sea) {
