@@ -194,8 +194,13 @@ jobs:
           v=$(grep -oE 'Current Version ID: [0-9a-f-]+' deploy.log | tail -n1 | awk '{print $4}' || true)
           echo "Deployed Worker version: ${v:-unknown}"
           echo "sports deployed, Worker version \`${v:-unknown}\` from ${GITHUB_SHA::7}" >> "$GITHUB_STEP_SUMMARY"
-      - name: Smoke test (the gate answers, and nothing else is open without the cookie)
+      - name: Smoke test (gate on - the gate answers and nothing else is open without the cookie; gate off - the page answers)
         run: |
+          # SPORTS_GATE in apps/sports/wrangler.jsonc ("off" opens the site)
+          if grep -qE '"SPORTS_GATE"[[:space:]]*:[[:space:]]*"off"' apps/sports/wrangler.jsonc; then
+            scripts/smoke.sh "$SPORTS_URL" / /preload.json /robots.txt
+            exit 0
+          fi
           scripts/smoke.sh "$SPORTS_URL" /gate /robots.txt
           for path in / /index.html /preload.json /memesports.wasm /chunks/0/0; do
             code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 -H 'Accept: */*' "${SPORTS_URL%/}$path" || echo 000)
