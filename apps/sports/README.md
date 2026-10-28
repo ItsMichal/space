@@ -14,6 +14,9 @@ files. The game files are not in this repo.
   is an HMAC-signed `HttpOnly; Secure; SameSite=Lax` value that lasts 30 days. It is keyed with the passkey, so changing the
   passkey signs everyone out. All responses carry `X-Robots-Tag: noindex, nofollow`.
 - Without the `SPORTS_PASSKEY` secret every request answers 503.
+- The gate can be switched off: `"vars": { "SPORTS_GATE": "off" }` in `wrangler.jsonc` opens the site to anyone with the
+  address (no cookie, no secret needed; `/gate` redirects straight on). It is **off for now** (owner's call, 2026-10-27);
+  set it to `"on"` and merge to put the gate back (the `SPORTS_PASSKEY` secret is still set).
 - Dev-only endpoints of the local server (`/__stats`, the debug log POST) answer 404. `/lobby` and `/netplay` (online play)
   answer 501: not built here yet.
 - `/stats` (behind the gate): the online count and the all-time leaderboards, in one Durable Object (`Stats`, SQLite
