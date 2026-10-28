@@ -10,6 +10,7 @@
 // /stats (the online count and the all-time leaderboards, worker/stats.js) goes to the Durable Object STATS.
 //
 // Every path except /gate needs the cookie from a correct passkey. Without the SPORTS_PASSKEY secret everything answers 503.
+// SPORTS_GATE="off" (wrangler.jsonc vars) opens the site: no passkey, no secret needed, /gate goes straight on.
 import { isAuthed, makeCookieValue, passkeyMatches, passkeyOf, setCookieHeader } from './auth.js';
 import { gatePage } from './gate-page.js';
 import { createOnline } from './online.js';
@@ -116,14 +117,21 @@ async function serveStatic(req, env, pathname) {
   return new Response(req.method === 'HEAD' ? null : obj.body, { status: 200, headers });
 }
 
+/** The gate is on unless the Worker variable SPORTS_GATE is "off" (wrangler.jsonc). */
+export const gateOn = (env) => String(env?.SPORTS_GATE ?? 'on').trim().toLowerCase() !== 'off';
+
 export async function handle(req, env, opts = {}) {
-  const secret = passkeyOf(env);
-  if (!secret) return text(503, 'not configured');
   const url = new URL(req.url);
   const path = url.pathname;
-  const authed = await isAuthed(req, secret, opts.now);
+  const open = !gateOn(env);
+  const secret = open ? '' : passkeyOf(env);
+  if (!open && !secret) return text(503, 'not configured');
+  const authed = open || (await isAuthed(req, secret, opts.now));
 
-  if (path === '/gate') return gate(req, url, secret, opts, authed);
+  if (path === '/gate') {
+    if (open) return new Response(null, { status: 303, headers: { ...base(), Location: safeNext(url.searchParams.get('next')), 'Cache-Control': 'no-store' } });
+    return gate(req, url, secret, opts, authed);
+  }
 
   if (!authed) {
     if (path === '/robots.txt' && (req.method === 'GET' || req.method === 'HEAD')) {

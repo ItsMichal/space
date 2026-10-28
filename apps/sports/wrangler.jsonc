@@ -9,6 +9,8 @@
   "routes": [{ "pattern": "sports.halmic.com", "custom_domain": true }],
   "workers_dev": false,
   "preview_urls": false,
+  // The passkey gate: "off" opens the site to anyone with the address (no secret needed); "on" puts it back.
+  "vars": { "SPORTS_GATE": "off" },
   "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "halmic-sports" }],
   // The online count and the leaderboards (worker/stats.js): one Durable Object with SQLite storage, created by the deploy.
   // The online lobbies and netplay rooms (worker/online.js): one Durable Object, in memory only.

@@ -45,6 +45,19 @@ test('no secret set: everything is refused, even with a cookie and on the gate',
   }
 });
 
+test('SPORTS_GATE off: open without a cookie or a secret, /gate goes straight on; on (or unset) keeps the gate', async () => {
+  for (const env of [{ SPORTS_GATE: 'off', BUCKET: bucket() }, { SPORTS_GATE: ' OFF ', SPORTS_PASSKEY: SECRET, BUCKET: bucket() }]) {
+    for (const p of ['/', '/index.html', '/main.js', '/preload.json']) assert.equal((await handle(req(p), env, O)).status, 200, p);
+    assert.equal((await handle(req('/chunks/abc123/0', { headers: { 'accept-encoding': 'br' } }), env, O)).status, 200);
+    const g = await handle(req('/gate?next=%2Fplay'), env, O);
+    assert.equal(g.status, 303);
+    assert.equal(g.headers.get('location'), '/play');
+    assert.equal(g.headers.get('set-cookie'), null);
+  }
+  assert.equal((await handle(req('/main.js'), ENV({ SPORTS_GATE: 'on' }), O)).status, 401);
+  assert.equal((await handle(req('/main.js'), { SPORTS_GATE: 'on', BUCKET: bucket() }, O)).status, 503);
+});
+
 test('the gate rejects: no cookie means no files, no chunks, no bucket reads', async () => {
   const env = ENV();
   for (const p of ['/', '/index.html', '/main.js', '/preload.json', '/chunks/abc123/0', '/memesports.wasm', '/__stats', '/lobby/new', '/z/abc123.0.br']) {
