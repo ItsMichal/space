@@ -114,7 +114,7 @@ export function NavBar({ previews }: { previews?: { work: MenuPreview[]; writing
               <ul className="m-0 hidden list-none items-center gap-space-6 p-0 sm:flex">
                 {links.map((l) => (
                   <li key={l.href}>
-                    <Link href={l.href} aria-current={l.match && pathname.startsWith(l.match) ? 'page' : undefined} className={linkClass(!!l.match && pathname.startsWith(l.match))}>
+                    <Link href={l.href} aria-current={l.match && pathname.startsWith(l.match) ? 'page' : undefined} className={`${linkClass(!!l.match && pathname.startsWith(l.match))} -mx-space-3 !rounded-full px-space-3 focus-visible:outline-offset-[-6px]`}>
                       {l.label}
                     </Link>
                   </li>
