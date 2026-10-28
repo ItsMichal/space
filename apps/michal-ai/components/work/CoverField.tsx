@@ -3,25 +3,32 @@
 import { useEffect, useRef } from 'react'
 
 /**
- * The home page's covers as one halftone field behind the index (components/work/Showcase.tsx, `.ix--bg` entries with a
+ * The home page's covers as text-mode art behind the index (components/work/Showcase.tsx, `.ix--bg` entries with a
  * `data-cover` image). The entry nearest the middle of the screen (or, with a mouse, the one under the pointer) shows its
- * cover as ink dots beside its text: dot size follows the picture's darkness, and the field dissolves into the page through
- * a soft round falloff, so there is no box. Like a printed halftone: the screen is turned 45 degrees, each cover is
- * auto-levelled so light and dark covers both use the full tonal range, and highlights keep a small dot so the shape reads, each dot averages its cell and takes the cover's colour. When the active entry changes, the old cover's dots give way cell by cell to
- * the new one's. One fixed WebGL canvas, drawn only while something moves; no WebGL means plain text. Decorative.
+ * cover beside its text on the hero globe's character grid, the way terminal image viewers draw pictures: each cell is one
+ * of the sixteen Unicode quadrant block characters (QUADRANTS, a 2 x 2 grid of "mixels" per character, glyphs from the
+ * site's mono font), each mixel set by a 4 x 4 ordered dither of the picture's darkness under it, in one colour per cell
+ * (the cover's colour there, pulled toward the page ink). Each cover is auto-levelled so light and dark covers both use the
+ * full tonal range. The field dissolves into the page through a ragged round falloff in whole characters, so there is no
+ * box; when the active entry changes, the old cover gives way cell by cell to the new one. One fixed WebGL canvas, drawn
+ * only while something moves; no WebGL means plain text. Decorative.
  */
+
+// Indexed by mixel bits: top left 1, top right 2, bottom left 4, bottom right 8.
+const QUADRANTS = ' \u2598\u259D\u2580\u2596\u258C\u259E\u259B\u2597\u259A\u2590\u259C\u2584\u2599\u259F\u2588'
 
 const VERT = `attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}`
 
 const FRAG = `precision mediump float;
 uniform vec2 uRes;        // canvas px
-uniform float uCell;      // cell size, canvas px
+uniform vec2 uChar;       // character cell, canvas px
 uniform vec3 uInk;
 uniform float uStrength;
 uniform float uMix;       // 0: layer A only, 1: layer B only (per-cell dissolve)
 uniform float uNarrow;    // 1 on phones: soften toward the text on the left
 uniform sampler2D uTexA;
 uniform sampler2D uTexB;
+uniform sampler2D uGlyph; // the 16 quadrant glyphs in a row, one cell each
 uniform vec4 uRectA;      // field centre xy, half size zw (canvas px, y down)
 uniform vec4 uRectB;
 uniform vec2 uLvA;        // darkness levels (low, high) of each cover, from its histogram
@@ -33,40 +40,48 @@ uniform float uSeed;
 float hash(vec2 v){return fract(sin(dot(v,vec2(127.1,311.7)))*43758.5453);}
 float noise(vec2 v){vec2 i=floor(v),f=fract(v);f=f*f*(3.-2.*f);
   return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
+// 4 x 4 Bayer threshold in (0, 1) on the mixel grid (the same matrix as the hero's dither())
+float b2(vec2 v){return mod(2.*v.x+3.*v.y,4.);}
+float bayer(vec2 p){return (4.*b2(mod(p,2.))+b2(mod(floor(p*.5),2.))+.5)/16.;}
+// mean colour of a cover over a box (half size h, uv) from four taps
+vec3 box(sampler2D t, vec2 uv, vec2 h){
+  return (texture2D(t,uv+vec2(-h.x,-h.y)*.5).rgb+texture2D(t,uv+vec2(h.x,-h.y)*.5).rgb
+         +texture2D(t,uv+vec2(-h.x,h.y)*.5).rgb+texture2D(t,uv+vec2(h.x,h.y)*.5).rgb)*.25;
+}
+float level(vec3 s, vec2 lv){return clamp((1.-dot(s,vec3(.299,.587,.114))-lv.x)/max(.05,lv.y-lv.x),0.,1.);}
 
-// one layer at a cell centre: the cover's colour averaged over the cell (rgb) and its darkness times the soft round envelope (a)
-vec4 layer(sampler2D t, vec4 r, vec2 lv, vec2 c, float on){
-  if(on<=0.) return vec4(0.);
-  vec2 q=(c-r.xy)/r.zw;                     // -1..1 across the field
-  float n=noise(c/(uCell*7.)+uSeed)-.5;
-  float e=1.-smoothstep(.62,1.,length(q)+n*.15);
-  if(e<=0.) return vec4(0.);
+// one layer for a character cell: the cell's colour (rgb) and its glyph index (a, -1 when outside the field)
+vec4 layer(sampler2D t, vec4 r, vec2 lv, vec2 cell, float on){
+  if(on<=0.) return vec4(0.,0.,0.,-1.);
+  vec2 cc=(cell+.5)*uChar;
+  vec2 q=(cc-r.xy)/r.zw;                    // -1..1 across the field
+  float n=noise(cc/(uChar.y*4.)+uSeed)-.5;
+  float e=(1.-smoothstep(.62,1.,length(q)+n*.2))*on;
+  if(e<=0.) return vec4(0.,0.,0.,-1.);
   vec2 uv=q*.5+.5;
-  vec2 st=uCell/(r.zw*2.)/3.;               // a 3x3 average over the cell, so thin lines and type turn to tone, not noise
-  vec3 s=vec3(0.);
-  for(int i=-1;i<=1;i++)for(int j=-1;j<=1;j++)s+=texture2D(t,uv+vec2(float(i),float(j))*st).rgb;
-  s/=9.;
-  float d=1.-dot(s,vec3(.299,.587,.114));
-  d=clamp((d-lv.x)/max(.05,lv.y-lv.x),0.,1.);
-  return vec4(s,mix(.06,1.,d)*e*on);        // highlights keep a small dot
+  vec2 pc=uChar/(r.zw*2.);                  // one cell in uv
+  vec2 m=pc*.25;                            // a mixel centre's offset from the cell centre
+  vec2 g=cell*2.;
+  float bits=0.;
+  // each mixel averages its own quarter of the cell, so type turns to tone, not noise
+  if(level(box(t,uv+vec2(-m.x,-m.y),pc*.25),lv)*e>bayer(g)) bits+=1.;
+  if(level(box(t,uv+vec2( m.x,-m.y),pc*.25),lv)*e>bayer(g+vec2(1,0))) bits+=2.;
+  if(level(box(t,uv+vec2(-m.x, m.y),pc*.25),lv)*e>bayer(g+vec2(0,1))) bits+=4.;
+  if(level(box(t,uv+vec2( m.x, m.y),pc*.25),lv)*e>bayer(g+vec2(1,1))) bits+=8.;
+  return vec4(box(t,uv,pc*.5),bits);
 }
 
 void main(){
   vec2 px=vec2(gl_FragCoord.x,uRes.y-gl_FragCoord.y);
-  const float K=.70710678;                  // 45 degree screen
-  mat2 rot=mat2(K,-K,K,K);
-  vec2 rp=rot*px;
-  vec2 cell=floor(rp/uCell);
-  vec2 c=(cell+.5)*uCell*rot;               // cell centre back in screen space
+  vec2 cell=floor(px/uChar);
   float h=hash(cell+uSeed);
-  vec4 l=h<uMix?layer(uTexB,uRectB,uLvB,c,uOnB):layer(uTexA,uRectA,uLvA,c,uOnA);
-  float d=l.a;
-  if(uNarrow>0.) d*=mix(.35,1.,smoothstep(.15,.85,c.x/uRes.x));
-  if(d<=.02) discard;
-  float rad=uCell*.5*sqrt(d);
-  float dist=length(px-c);
-  float al=smoothstep(rad+.8,rad-.8,dist)*uStrength;
-  vec3 ink=mix(uInk,l.rgb*.62,.75);           // the cover's own colour, pulled toward the page ink
+  vec4 l=h<uMix?layer(uTexB,uRectB,uLvB,cell,uOnB):layer(uTexA,uRectA,uLvA,cell,uOnA);
+  if(l.a<=0.) discard;
+  if(uNarrow>0.&&hash(cell+uSeed+7.)>mix(.35,1.,smoothstep(.15,.85,(cell.x+.5)*uChar.x/uRes.x))) discard;
+  vec2 f=fract(px/uChar);
+  float al=texture2D(uGlyph,vec2((l.a+f.x)/16.,f.y)).a*uStrength;
+  if(al<=0.) discard;
+  vec3 ink=mix(uInk,l.rgb*.62,.75);         // the cover's own colour, pulled toward the page ink
   gl_FragColor=vec4(ink*al,al);
 }`
 
@@ -131,12 +146,13 @@ export function CoverField() {
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
     const U = (n: string) => gl.getUniformLocation(prog, n)
     const u = {
-      res: U('uRes'), cell: U('uCell'), ink: U('uInk'), strength: U('uStrength'), mix: U('uMix'), narrow: U('uNarrow'),
+      res: U('uRes'), char: U('uChar'), ink: U('uInk'), strength: U('uStrength'), mix: U('uMix'), narrow: U('uNarrow'),
       texA: U('uTexA'), texB: U('uTexB'), rectA: U('uRectA'), rectB: U('uRectB'), onA: U('uOnA'), onB: U('uOnB'), seed: U('uSeed'),
-      lvA: U('uLvA'), lvB: U('uLvB'),
+      lvA: U('uLvA'), lvB: U('uLvB'), glyph: U('uGlyph'),
     }
     gl.uniform1i(u.texA, 0)
     gl.uniform1i(u.texB, 1)
+    gl.uniform1i(u.glyph, 2)
     gl.uniform1f(u.seed, Math.random() * 50)
     gl.uniform3fv(u.ink, parseHex(getComputedStyle(document.documentElement).getPropertyValue('--ink')))
     const blank = gl.createTexture()!
@@ -168,6 +184,33 @@ export function CoverField() {
       return p
     }
 
+    // The quadrant glyphs from the mono font, one cell each, scaled so the full block fills the cell as in a terminal.
+    const mono = getComputedStyle(document.documentElement).getPropertyValue('--font-mono').trim() || 'ui-monospace, monospace'
+    const glyphs = gl.createTexture()!
+    const buildGlyphs = (cw: number, ch: number) => {
+      const c = document.createElement('canvas')
+      c.width = cw * 16
+      c.height = ch
+      const g = c.getContext('2d')!
+      g.font = `${ch}px ${mono}`
+      const m = g.measureText(QUADRANTS[15])
+      const gw = m.actualBoundingBoxLeft + m.actualBoundingBoxRight
+      const gh = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent
+      g.fillStyle = '#000'
+      for (let i = 1; i < 16; i++) {
+        g.setTransform(cw / Math.max(1, gw), 0, 0, ch / Math.max(1, gh), i * cw, 0)
+        g.fillText(QUADRANTS[i], m.actualBoundingBoxLeft, m.actualBoundingBoxAscent)
+      }
+      gl.activeTexture(gl.TEXTURE2)
+      gl.bindTexture(gl.TEXTURE_2D, glyphs)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c)
+      gl.activeTexture(gl.TEXTURE0)
+    }
+
     let w = 0, h = 0, dpr = 1
     const resize = () => {
       dpr = Math.min(window.devicePixelRatio || 1, 1.5)
@@ -177,7 +220,11 @@ export function CoverField() {
       canvas.height = Math.round(h * dpr)
       gl.viewport(0, 0, canvas.width, canvas.height)
       gl.uniform2f(u.res, canvas.width, canvas.height)
-      gl.uniform1f(u.cell, Math.round(6 * dpr))
+      const ch = w < 840 ? 9 : 10 // the hero globe's character size, css px
+      const cw = Math.round(ch * 0.62 * dpr)
+      const chp = Math.round(ch * dpr)
+      gl.uniform2f(u.char, cw, chp)
+      buildGlyphs(cw, chp)
       gl.uniform1f(u.narrow, w < 840 ? 1 : 0)
       wake()
     }
