@@ -73,12 +73,38 @@ export default function Home() {
           <h2 id="writing-h" className={h2}>
             Writing
           </h2>
-          <WritingRows posts={latest.slice(0, 3)} />
+          <WritingRows posts={latest.slice(0, 3)} thumbs />
           {articles.length > 3 ? (
             <Link href="/writing" className="ix-more link">
               View all {articles.length} posts <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
             </Link>
           ) : null}
+        </section>
+      ) : null}
+
+      {profile.publications.length ? (
+        <section id="publications" aria-labelledby="pubs-h" className="home-sec">
+          <h2 id="pubs-h" className={h2}>
+            Publications
+          </h2>
+          <ul className="ix-list">
+            {profile.publications.map((p) => (
+              <li key={p.id}>
+                <a href={doiUrl(p)} className="ix" target="_blank" rel="noopener noreferrer">
+                  <span className="ix__title">{p.title}</span>
+                  <span className="ix__desc t-text">
+                    {p.shortAuthors ? `${p.shortAuthors} ` : ''}
+                    {venueLine(p)}
+                    {p.shortAuthors ? '.' : ''}
+                    {p.authorCount ? ` ${p.authorCount.toLocaleString('en-US')} authors.` : ''}
+                  </span>
+                  <time className="ix__meta t-meta" dateTime={p.published}>
+                    {p.year}
+                  </time>
+                </a>
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
 
@@ -104,31 +130,6 @@ export default function Home() {
               <ExperienceList items={experience} label="Experience" />
             </div>
           </section>
-          {profile.publications.length ? (
-            <section id="publications" aria-labelledby="pubs-h" className="ix-sec">
-              <h3 id="pubs-h" className="t-heading">
-                Publications
-              </h3>
-              <ul className="ix-list ix-list--tight ix-sec__body">
-                {profile.publications.map((p) => (
-                  <li key={p.id}>
-                    <a href={doiUrl(p)} className="ix ix--ui" target="_blank" rel="noopener noreferrer">
-                      <span className="ix__title">{p.title}</span>
-                      <span className="ix__desc">
-                        {p.shortAuthors ? `${p.shortAuthors} ` : ''}
-                        {venueLine(p)}
-                        {p.shortAuthors ? '.' : ''}
-                        {p.authorCount ? ` ${p.authorCount.toLocaleString('en-US')} authors.` : ''}
-                      </span>
-                      <time className="ix__meta" dateTime={p.published}>
-                        {p.year}
-                      </time>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
           <Link href="/about" className="about__more ix" aria-labelledby="about-more-h" aria-describedby="about-more-d">
             <span id="about-more-h" className="ix__title">
               More about me

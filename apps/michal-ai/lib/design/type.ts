@@ -8,7 +8,7 @@
  *   roles         what a piece of text is; each role uses exactly one level, and `ui` is body at 500, not a new size.
  *
  * Hierarchy rule: an item's title sits one level below the heading of the section it is in. Under a `title` section
- * head (home: Projects, Writing) item titles are `heading`; under a `heading` sub-head (Experience, Publications,
+ * head (home: Projects, Writing, Publications) item titles are `heading`; under a `heading` sub-head (Experience,
  * /writing, /about) they are `ui`.
  */
 
