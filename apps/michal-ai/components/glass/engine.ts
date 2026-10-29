@@ -575,6 +575,8 @@ export class Field {
     sat: 1.6,
     backdrop: '',
     refraction: 36,
+    sheen: 1,
+    shadow: 0.075,
     pageLum: 0.9,
     themeDark: 0,
   }
@@ -930,6 +932,9 @@ export class Field {
     c.blur = this.opts.blur ?? (c.themeDark ? cssNumber(h, '--glass-blur-dark', blurLight) : blurLight)
     c.sat = this.opts.saturate ?? (c.themeDark ? cssNumber(h, '--glass-saturate-dark', satLight) : satLight)
     c.refraction = this.opts.refraction ?? cssNumber(h, '--glass-refraction', 36)
+    // gloss and bevel lift scale, and the light-theme drop shadow alpha: the nav turns both down to match iOS bars
+    c.sheen = cssNumber(h, '--glass-sheen', 1)
+    c.shadow = cssNumber(h, '--glass-shadow', 0.075)
     // optional extra backdrop-filter functions for the frost path, e.g. "brightness(1.1) contrast(.8)": a luminance clamp
     // that lets a low tint stay legible over very dark or very bright content. Empty (the default) adds nothing.
     c.backdrop = getComputedStyle(h).getPropertyValue('--glass-backdrop').trim()
@@ -1131,11 +1136,12 @@ export class Field {
       edge: c.edge,
       rimDark: c.rimDark,
       edgeDark: c.edgeDark,
-      shadow: [10, 40, dark ? 0.32 : 0.075],
+      shadow: [10, 40, dark ? 0.32 : c.shadow],
       shadowCol: dark ? [0, 0, 0] : [0.094, 0.129, 0.106],
       glow: dark ? [1, 1, 1, 0.3] : [1, 1, 1, 0.55],
       themeDark: dark,
       frost: this.mode === 'frost',
+      sheen: c.sheen,
     }
 
     // ---- surface pass

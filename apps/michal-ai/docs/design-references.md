@@ -98,6 +98,21 @@ the bar (the engine reads its variables from the container), so glass buttons an
 | Luminance clamp (backdrop-filter, new) | none | light: `contrast(0.5) brightness(1.25)`; dark: `contrast(0.55) brightness(0.5)` |
 | Top sheen (new) | none | 48px linear gradient, white 30% light / 10% dark, fading to clear |
 | Rim, edge, shadow | unchanged | unchanged (thin specular rim, soft shadow) |
+
+### Nav glass: 1:1 with the iOS 26 Safari bars (2026-10-28)
+
+Reference: the owner's iPhone screenshot of michal.ai in Safari (iOS 26), where Safari's own Liquid Glass address bar and round
+buttons sit on the same cream page (236,227,203) as our nav. Pixels sampled from that screenshot:
+
+| | iOS Safari bar / button | Our nav before | Our nav now |
+| --- | --- | --- | --- |
+| Body over the cream page | 172,165,144 (backdrop at about 73%, hue kept), +5 lighter toward the bottom | top half clipped to 255,255,255, lower half 247,241,225 | black tint 27% over the backdrop, saturate 1.15, no brightness clamp |
+| Rim | about 1px, +7 over the body | bright specular, plus a 48px white top sheen | rim white 30%, sheen removed, gloss and frost bevel lift off (`--glass-sheen: 0`) |
+| Outer shadow | none visible (page value right up to the edge) | darkens the page to 220 over a wide halo | `--glass-shadow: 0.02` |
+| Glyphs | flip with the glass | always page ink | adaptive: ink over light content, pale over dark (a picture reports its manifest colour through its inline background) |
+
+The light luminance clamp (`contrast(0.5) brightness(1.25)`) is gone: it is what blew the bar out to white. Legibility over a dark photo
+now comes from the glyph flip, as on iOS. Open, the sheet keeps its opaque paper tint and the page ink.
 | Without `backdrop-filter` | 62% flat tint | 92% tint (nothing blurs what is behind it) |
 | `prefers-reduced-transparency`, `prefers-contrast: more` | flat 90% tint | flat 92% tint, no clamp |
 

@@ -104,9 +104,10 @@ export function NavBar({ previews }: { previews?: { work: MenuPreview[]; writing
           id="pill"
           namespace={ns}
           open={open}
+          adaptiveText={!open}
           panelId="nav-sheet"
           className="pointer-events-auto min-w-0 flex-1 sm:flex-none"
-          headerClassName="relative flex min-h-[48px] items-center justify-between gap-space-3 pl-space-4 pr-[4px] sm:gap-space-6 sm:pr-space-4"
+          headerClassName="nav-head relative flex min-h-[48px] items-center justify-between gap-space-3 pl-space-4 pr-[4px] sm:gap-space-6 sm:pr-space-4"
           panelClassName="sheet-scroll flex flex-col px-space-4 pb-space-3 pt-space-1 sm:hidden"
           header={
             <>

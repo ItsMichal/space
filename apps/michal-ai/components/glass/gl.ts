@@ -36,13 +36,15 @@ export type DrawParams = {
   glow: RGBA
   themeDark: number
   frost: boolean
+  /** Scale on the water-drop gloss and the frost bevel lift (1 = default, 0 = none). */
+  sheen: number
   readback?: boolean
 }
 
 const UNIFORMS = [
   'uPass', 'uN', 'uRect', 'uPar', 'uTint', 'uMisc', 'uFold', 'uK', 'uUnionK', 'uWin', 'uWinPx', 'uPx', 'uBezel',
   'uPeak', 'uLight', 'uLightK', 'uTintLight', 'uTintDark', 'uRim', 'uEdge', 'uRimD', 'uEdgeD', 'uShadow', 'uShadowCol', 'uGlow',
-  'uThemeDark', 'uReadback', 'uFrost',
+  'uThemeDark', 'uReadback', 'uFrost', 'uSheen',
 ] as const
 
 type UName = (typeof UNIFORMS)[number]
@@ -219,6 +221,7 @@ export class GlassGL {
     gl.uniform1f(L.uThemeDark, p.themeDark)
     gl.uniform1i(L.uReadback, p.readback ? 1 : 0)
     gl.uniform1i(L.uFrost, p.frost ? 1 : 0)
+    gl.uniform1f(L.uSheen, p.sheen)
     gl.drawArrays(gl.TRIANGLES, 0, 3)
     return this.canvas.height - hpx
   }
