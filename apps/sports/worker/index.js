@@ -32,6 +32,8 @@ const TYPES = {
   '.json': 'application/json',
   '.webmanifest': 'application/manifest+json',
   '.woff': 'font/woff',
+  '.png': 'image/png',
+  '.ico': 'image/x-icon',
 };
 const ROBOTS = 'User-agent: *\nDisallow: /\n';
 const FAIL_DELAY_MS = 500;

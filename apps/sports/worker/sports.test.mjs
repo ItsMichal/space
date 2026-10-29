@@ -16,6 +16,8 @@ function bucket(files = {}) {
     'main.js': 'export {}',
     'preload.json': '{"c":8388608,"files":[]}',
     'memesports.webmanifest': '{}',
+    'og.png': 'PNG',
+    'favicon.ico': 'ICO',
     'z/abc123.0.br': 'BR-BYTES',
     'z/abc123.0.gz': 'GZ-BYTES',
     '.publish-state.json': '{}',
@@ -181,6 +183,8 @@ test('static files: MIME types, no-cache, index for directories, ETag revalidati
   assert.equal((await get('/main.js')).headers.get('content-type'), 'text/javascript');
   assert.equal((await get('/preload.json')).headers.get('content-type'), 'application/json');
   assert.equal((await get('/memesports.webmanifest')).headers.get('content-type'), 'application/manifest+json');
+  assert.equal((await get('/og.png')).headers.get('content-type'), 'image/png');
+  assert.equal((await get('/favicon.ico')).headers.get('content-type'), 'image/x-icon');
   const tag = (await get('/main.js')).headers.get('etag');
   assert.equal((await get('/main.js', { 'if-none-match': tag })).status, 304);
   const head = await handle(req('/main.js', { method: 'HEAD', headers: { cookie } }), env, O);
