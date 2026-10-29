@@ -19,9 +19,9 @@ export type PostFrontmatter = {
   cardImage?: string
   cardImageAlt?: string
   priority?: number
-  /* Projects: shown large at the top of Selected work. Articles: listed first on /writing. */
+  /* Projects: shown large at the top of Projects (home). Articles: listed first on /writing. */
   featured?: boolean
-  /* Projects: a smaller project. Listed on /projects after the main projects, and kept off the home page (Selected work,
+  /* Projects: a smaller project. Listed on /projects after the main projects, and kept off the home page (Projects,
      hero phrases) and the menu previews. Never set together with `featured` or `hook`. */
   minor?: boolean
   /* Slug of a parent project. The post then lives at /projects/<parent>/<slug>, is listed on the parent's page

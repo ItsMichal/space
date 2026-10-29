@@ -138,7 +138,7 @@ describe('the site follows the layout file', () => {
     const refs = getAllPosts({ includeDrafts: true }).map((p) => ({ slug: p.slug, kind: p.kind, parent: p.parent, hook: p.hook }))
     expect(layoutRefProblems(siteLayout, refs)).toEqual([])
   })
-  it('leads Selected work, /projects and the hero line with Starlink.com', () => {
+  it('leads Projects (home), /projects and the hero line with Starlink.com', () => {
     expect(getMainProjects()[0].slug).toBe('starlink')
     expect(getProjectIndex()[0].slug).toBe('starlink')
     expect(getProjectIndex()).toHaveLength(getTopLevel('project').length)

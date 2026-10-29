@@ -29,7 +29,7 @@ type Ranked = { slug: string; featured?: boolean; date?: string }
 /** Featured entries first, keeping the incoming order within each group (stable sort). */
 const featuredFirst = <T extends Ranked>(items: T[]): T[] => [...items].sort((a, b) => Number(!!b.featured) - Number(!!a.featured))
 
-/** Projects for Selected work on the home page: the work pins first, then featured projects, then the site's order, without
+/** Projects for Projects on the home page: the work pins first, then featured projects, then the site's order, without
  * the ones set to stay off the home page. */
 export const homeWork = <T extends Ranked>(projects: T[], layout: SiteLayout = siteLayout): T[] =>
   pinned(featuredFirst(projects), layout.work).filter((p) => cardOf(p.slug, layout).home !== false)

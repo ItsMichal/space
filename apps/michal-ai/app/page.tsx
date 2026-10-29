@@ -61,9 +61,9 @@ export default function Home() {
         intro={hooks.length ? <HeroHook stem={profile.hookStem} items={hooks} /> : undefined}
       />
 
-      <section id="work" aria-labelledby="work-h" className="home-sec mt-space-8 md:mt-space-12">
+      <section id="work" aria-labelledby="work-h" className="home-sec mt-space-16">
         <h2 id="work-h" className={h2}>
-          Selected work
+          Projects
         </h2>
         <Showcase posts={projects} base="/projects" limit={3} priority textOnly />
       </section>

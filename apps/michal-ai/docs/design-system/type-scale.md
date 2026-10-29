@@ -15,7 +15,7 @@ text column is about 70 characters at 18px, a book page, instead of about 75 at 
 
 | Token | Desktop | Phone | Line height | Face, weight | Used for |
 | --- | --- | --- | --- | --- | --- |
-| `title` | 44px | 34px | 1.1 | display, 400 | Section and page headings (Selected work, Writing, About), the article title |
+| `title` | 44px | 34px | 1.1 | display, 400 | Section and page headings (Projects, Writing, About), the article title |
 | `heading` | 24px | 21px | 1.2 | display, 400 | Card headings (Experience, Publications, More about me), titles on tiles, rows and page-end links, article h2, the lede |
 | `body` | 18px | 17px | 1.55 | text, 400 (500 for item titles) | Paragraphs, descriptions, list rows, nav links, buttons, article prose, article h3 |
 | `small` | 15px | 15px | 1.45 | text, 400 | Dates, years, roles, venue lines, captions, labels, footers, tertiary text; ink-muted |
@@ -36,7 +36,7 @@ the name fills the column). Nothing else uses it. Page titles and article titles
    no `text-sm`/`text-lg`, no `em` sizes, no `clamp()` outside the token definitions. `npm run check:type` enforces it.
 2. Hierarchy inside a size comes from weight (400 or 500), colour (`--ink` or `--ink-muted`) and space, not from a new size.
 3. Item titles sit one level below the head of their section (2026-10-28, the owner: "limit text sizes on the main page to just 3
-   levels (plus header and one tiny one)"). Under a `title` section head (home: Selected work, Writing) every item title is
+   levels (plus header and one tiny one)"). Under a `title` section head (home: Projects, Writing) every item title is
    `heading`, so projects and posts read as one list. Under a `heading` sub-head (`.ix-sec`: Experience, Publications, the `/writing`
    and `/about` sections) an item title is `body` at 500 (`ui`). A tile that is itself the card (the `/projects` and `/writing` tiles)
    titles itself with `heading`. In code: `itemTitleRole(sectionHead)` in `lib/design/type.ts`.

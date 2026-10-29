@@ -301,24 +301,49 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       return true
     }
 
-    // ---- text clearing: cells near the hero's text lines fade, so the text stays readable over the field ----
+    // ---- text clearing: cells near the hero's glyphs fade, so the text stays readable over the field ----
+    // Every glyph is drawn at its real position into a small offscreen canvas (S px per cell) with a blurred halo, and each
+    // cell fades by the coverage there, so the clearing follows the letter shapes. Line boxes would clear whole rectangles.
     const measureText = (instant = false) => {
       if (!cols) return
       const cr = cv.getBoundingClientRect()
-      const k = W / (cr.width || 1)
-      const rects: number[][] = []
+      const k = W / (cr.width || 1) // CSS px -> canvas units
+      const S = 3
+      const mc = document.createElement('canvas')
+      mc.width = cols * S
+      mc.height = rows * S
+      const g = mc.getContext('2d', { willReadFrequently: true })
+      if (!g) return
+      g.setTransform(S / cw, 0, 0, S / ch, 0, 0) // draw in canvas units
+      g.fillStyle = '#fff'
+      g.shadowColor = '#fff'
+      g.shadowBlur = ((14 * k) / cw) * S // halo of about 14 CSS px, in mask px (shadows ignore the transform)
+      g.textBaseline = 'alphabetic'
       const range = document.createRange()
-      // text nodes only: a range over an element also returns the boxes of block children (the name's lines are
-      // display:block), which are full width and blank the whole column on a phone
-      const add = (node: Element | null) => {
-        if (!node) return
-        const walk = document.createTreeWalker(node, NodeFilter.SHOW_TEXT)
+      const add = (root: Element | null) => {
+        if (!root) return
+        const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
         for (let t = walk.nextNode(); t; t = walk.nextNode()) {
-          if (!t.textContent?.trim()) continue
-          range.selectNodeContents(t)
-          for (const r of Array.from(range.getClientRects())) {
-            if (r.width < 2 || r.height < 2) continue
-            rects.push([(r.left - cr.left) * k, (r.top - cr.top) * k, (r.right - cr.left) * k, (r.bottom - cr.top) * k])
+          const text = t.textContent
+          const parent = t.parentElement
+          if (!text?.trim() || !parent) continue
+          const cs = getComputedStyle(parent)
+          const fs = parseFloat(cs.fontSize) * k
+          g.font = `${cs.fontStyle} ${cs.fontWeight} ${fs}px ${cs.fontFamily}`
+          const fm = g.measureText('M')
+          const asc = fm.fontBoundingBoxAscent ?? fs * 0.8
+          const desc = fm.fontBoundingBoxDescent ?? fs * 0.2
+          for (let i = 0; i < text.length; i++) {
+            if (!text[i].trim()) continue
+            range.setStart(t, i)
+            range.setEnd(t, i + 1)
+            const r = range.getBoundingClientRect()
+            if (r.width < 1 || r.height < 1) continue
+            // the glyph's baseline: the content box is centred in the line box
+            const top = (r.top - cr.top) * k + ((r.bottom - r.top) * k - asc - desc) / 2
+            const x = (r.left - cr.left) * k
+            g.fillText(text[i], x, top + asc)
+            g.fillText(text[i], x, top + asc) // twice: a denser, rounder halo
           }
         }
       }
@@ -330,21 +355,13 @@ export function HeroAscii({ className = '' }: { className?: string }) {
         } else add(t)
       })
       add(document.getElementById('work-h'))
-      const pad = 4
-      const soft = 18
+      const px = g.getImageData(0, 0, mc.width, mc.height).data
       for (let r = 0; r < rows; r++) {
-        const y = (r + 0.5) * ch
         for (let c = 0; c < cols; c++) {
-          const x = (c + 0.5) * cw
-          let best = 1
-          for (const b of rects) {
-            const dx = Math.max(b[0] - pad - x, 0, x - b[2] - pad)
-            const dy = Math.max(b[1] - pad - y, 0, y - b[3] - pad)
-            const d = Math.hypot(dx, dy)
-            const m = d >= soft ? 1 : 0.1 + 0.9 * (d / soft) * (d / soft)
-            if (m < best) best = m
-          }
-          dimT[r * cols + c] = best
+          let sum = 0
+          for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) sum += px[((r * S + y) * mc.width + c * S + x) * 4 + 3]
+          const cov = Math.min(1, (sum / (S * S * 255)) * 2)
+          dimT[r * cols + c] = 1 - 0.9 * cov * cov * (3 - 2 * cov)
         }
       }
       if (instant) dimC.set(dimT)

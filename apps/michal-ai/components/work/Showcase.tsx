@@ -105,7 +105,7 @@ export function ProjectCard({
 }
 
 /**
- * Selected work as a text index, in the order given (the site's priority order, led by the layout file's pins). The first
+ * Projects (home) as a text index, in the order given (the site's priority order, led by the layout file's pins). The first
  * entry is the feature (with its image) unless the layout file sets a card's size. `variant` and `glass` are accepted for
  * older callers and change nothing: the home page and /projects show the same list.
  */
