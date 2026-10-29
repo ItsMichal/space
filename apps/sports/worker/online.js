@@ -17,7 +17,8 @@ export const CODE_ALPHA = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // no I L O 0 1: re
 const CODE_LEN = 5;
 const PLAYABLE_ONLINE = new Set(['baseball', 'bowling', 'tennis', 'golf', 'boxing']);
 const MAX_PLAYERS = 2, LOBBY_IDLE_MS = 2 * 60 * 60 * 1000, GONE_MS = 30000, MAX_LOBBIES = 200, MAX_LOBBY_BODY = 4096;
-const ROOM_IDLE_MS = 15 * 60 * 1000, MAX_ROOMS = 200, MAX_SIGNAL_BODY = 64 * 1024, BOX_MAX = 64;
+const ROOM_IDLE_MS = 2 * 60 * 60 * 1000, MAX_ROOMS = 200, MAX_SIGNAL_BODY = 64 * 1024, BOX_MAX = 64;
+// a room lives as long as a lobby: a player who reloads mid-game rejoins through it (the game's web/netplay.js)
 export const POLL_MS = 20000;
 
 const json = (status, v) =>
