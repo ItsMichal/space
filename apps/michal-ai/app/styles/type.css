@@ -14,7 +14,7 @@
      ui        body     Newsreader 18 / 17            500     ink            item titles in a list, nav, buttons
      meta      small    Newsreader 15                 400     ink-muted      dates, years, roles, venue lines, captions
 
-   Item titles sit one level below their section's head. Under a `title` head (home: Selected work, Writing) an item title
+   Item titles sit one level below their section's head. Under a `title` head (home: Projects, Writing) an item title
    is `heading`; under a `heading` sub-head (.ix-sec: Experience, Publications, /writing, /about) it is `ui` (body at 500).
 
    The index language (home, /projects, /writing, /about) is below: `.ix`. */

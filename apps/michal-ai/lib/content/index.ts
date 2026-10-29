@@ -27,7 +27,7 @@ export function getTopLevel(kind: PostKind, opts: { includeDrafts?: boolean } = 
 
 /**
  * Top-level projects without the `minor` flag, in the layout file's order and without the ones it keeps off the home page:
- * what the home page ("Selected work") and the menu previews show. The sitemap, feeds and static params use
+ * what the home page ("Projects") and the menu previews show. The sitemap, feeds and static params use
  * getTopLevel('project'), which lists minor projects last; /projects uses getProjectIndex.
  */
 export const getMainProjects = (opts: { includeDrafts?: boolean } = {}) => homeWork(getTopLevel('project', opts).filter((p) => !p.minor))

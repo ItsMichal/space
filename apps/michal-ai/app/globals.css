@@ -99,17 +99,36 @@ html[data-fade] .page-enter {
   }
 }
 
-/* One scroll reveal, scrubbed rather than played: while an element's box enters the viewport it rises 12px, tied to the scroll
-   position by a CSS scroll-driven animation (compositor, no JS, native scrolling is never touched). It moves TRANSFORM ONLY:
-   there is no opacity at any point, so content can never be left invisible (crawlers with a tall viewport, full-page
-   screenshots, print, JavaScript off, browsers without view() timelines all simply show the content in place). The
-   animation exists only where view() timelines are supported and motion is allowed. */
+/* Scroll reveals, scrubbed rather than played, tied to the scroll position by CSS scroll-driven animations (compositor, no
+   JS, native scrolling is never touched), in the manner of Apple's product pages:
+     - section heads rise 12px as they enter;
+     - home list rows and the About blocks rise 28px from 97% scale and fade in from 35% opacity, never lower, so content
+       is never invisible (crawlers with a tall viewport, full-page screenshots, print, JavaScript off and browsers
+       without view() timelines all show it, at worst a little faded);
+     - the hero's name and role fade back as the page scrolls away from them. Opacity only: their glyphs must stay where
+       the globe's text clearing measured them.
+   All of it exists only where view() timelines are supported and motion is allowed. */
 @keyframes reveal-in {
   from {
     transform: translate3d(0, 12px, 0);
   }
   to {
     transform: none;
+  }
+}
+@keyframes rise-in {
+  from {
+    opacity: 0.35;
+    transform: translate3d(0, 28px, 0) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes hero-away {
+  to {
+    opacity: 0.25;
   }
 }
 @keyframes intro-away {
@@ -124,6 +143,19 @@ html[data-fade] .page-enter {
       animation-timeline: view();
       animation-range: entry 0% entry 40%;
     }
+    .home-sec .ix-list > li,
+    .home-sec .about__intro,
+    .home-sec .ix-sec {
+      transform-origin: 50% 100%;
+      animation: rise-in cubic-bezier(0.22, 1, 0.36, 1) both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 90%;
+    }
+    .name-hero {
+      animation: hero-away linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 55vh;
+    }
     .name-intro {
       animation: intro-away linear both;
       animation-timeline: scroll(root);
@@ -133,6 +165,10 @@ html[data-fade] .page-enter {
 }
 @media print {
   .reveal,
+  .home-sec .ix-list > li,
+  .home-sec .about__intro,
+  .home-sec .ix-sec,
+  .name-hero,
   .name-intro {
     animation: none !important;
   }

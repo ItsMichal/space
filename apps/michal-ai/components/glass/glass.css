@@ -243,7 +243,11 @@
   --glass-blur-dark: 24px;
   --glass-saturate-dark: 1.9;
   --glass-backdrop: brightness(1);
-  --glass-rim-light: rgba(255, 255, 255, 0.3);
+  --glass-rim-light: rgba(255, 255, 255, 0.45);
+  /* Safari's bars are flat: a thin bright rim all round and no dark inner edge, so nothing sinks along the bottom */
+  --glass-edge-light: rgba(0, 0, 0, 0);
+  /* and their glyphs are white on that darkened backdrop, not page ink */
+  --glass-fg-on-light: rgba(255, 255, 255, 0.96);
   --glass-sheen: 0;
   --glass-shadow: 0.02;
   --nav-flat-tint: var(--glass-tint-light);
@@ -256,6 +260,10 @@
 }
 /* the bar's glyphs flip with its tone, as iOS bars do: ink over light content, pale over a dark photo. The tone comes
    from the backdrop (an image reports its manifest colour). Open, the sheet is opaque paper and keeps the page ink. */
+/* before the engine has picked a tone (server frame, no WebGL2) the bar is the light tone */
+.nav-glass .glass[data-glass-adaptive-text]:not([data-glass-tone]) {
+  color: var(--glass-fg-on-light);
+}
 .nav-glass .glass[data-glass-adaptive-text] .nav-head :is(a, button) {
   color: inherit;
 }

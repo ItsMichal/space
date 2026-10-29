@@ -130,7 +130,7 @@ export function Backdrop({ paths = ['/'] }: Props) {
         small ? [vw * 0.98, 30, 0, vw * 1.05] : [vw * 0.8, vh * 0.34, 0, Math.min(vw * 0.56, 820)],
         // mid page: hydrangea haze at the far right, level with the about section
         small
-          ? [vw * 0.9, 500, 0, vw * 0.8] // phones: a soft bloom in the free space right of the "Selected work" heading, under the work line
+          ? [vw * 0.9, 500, 0, vw * 0.8] // phones: a soft bloom in the free space right of the "Projects" heading, under the work line
           : [vw * 0.9, vh * 0.52, Math.max(0, brkDoc - vh * 0.5), Math.min(vw * 0.5, 720)],
         // page end: a small, washed daylily as the only warm accent
         small ? [vw * 0.9, vh * 0.8, Math.max(0, docH - vh), vw * 0.9] : [vw * 0.86, vh * 0.78, Math.max(0, docH - vh), Math.min(vw * 0.34, 480)],

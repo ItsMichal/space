@@ -411,7 +411,7 @@ export function rawPostProblem(raw) {
  * The site layout file (`site/layout.json` in space-content, `content/layout.json` here): card order and presentation on the
  * home page and /projects, set from the editor's Arrange screen. Untrusted like a post. Exactly these keys, nothing else:
  *   version  1
- *   work     project slugs, in order: they lead Selected work (home) and /projects; other projects follow in the usual order
+ *   work     project slugs, in order: they lead Projects (home) and /projects; other projects follow in the usual order
  *   writing  article slugs, in order: they lead the home Writing list
  *   hooks    slugs of posts with a `hook`, in order: they lead the hero's rotating "I've built ..." line
  *   cards    { <project slug>: { size, variant, focus, home } }, every field optional:

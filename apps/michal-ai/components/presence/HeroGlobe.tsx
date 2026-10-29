@@ -119,7 +119,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
     return out
   }, [pins, presence])
 
-  // The hero text as a soft halo mask: every glyph of the name, tagline, "I've built" and the phrase on screen (and "Selected work") is
+  // The hero text as a soft halo mask: every glyph of the name, tagline, "I've built" and the phrase on screen (and "Projects") is
   // drawn at its real position into a small offscreen canvas (1/4 of the canvas size) with a blurred shadow, and the shader shrinks and
   // fades dots by it, so the clearing follows the letter shapes and has no straight edges. Rebuilt only when the phrase changes, on
   // resize and when fonts arrive, never per frame; the old and new masks cross-fade over the phrase's own transition.
