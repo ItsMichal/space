@@ -48,6 +48,7 @@ export function ProjectCard({
   article = false,
   focus,
   textOnly = false,
+  thumb = false,
 }: {
   post: Post
   href: string
@@ -61,8 +62,11 @@ export function ProjectCard({
   article?: boolean
   /** Focal point of the feature image ("50% 30%"), from the layout file. Defaults to the cover's `coverFocus`. */
   focus?: string
-  /** No picture, even on the feature entry (the home page). */
+  /** No picture, even on the feature entry. */
   textOnly?: boolean
+  /** Every entry shows its picture as part of the row (beside the text from 840px, above the title on phones), not as a
+   *  separate card block (the home page). */
+  thumb?: boolean
 }) {
   const src = post.cardImage === 'none' ? undefined : (post.cardImage ?? post.cover)
   const alt = post.cardImage ? (post.cardImageAlt ?? '') : (post.coverAlt ?? '')
@@ -74,7 +78,7 @@ export function ProjectCard({
   return (
     <Link
       href={href}
-      className={`tile ix${feature ? ' tile--feature' : ''}${variant !== 'newsroom' ? ` tile--${variant}` : ''}`}
+      className={`tile ix${thumb && src ? ' ix--thumb' : ''}${feature ? ' tile--feature' : ''}${variant !== 'newsroom' ? ` tile--${variant}` : ''}`}
       aria-labelledby={`${id}-t`}
       aria-describedby={`${id}-d`}
     >
@@ -87,7 +91,18 @@ export function ProjectCard({
       <p className="ix__meta t-meta">
         <MetaParts parts={metaParts} />
       </p>
-      {feature && src && !textOnly ? (
+      {thumb && src ? (
+        <div className="ix__media ix__thumb">
+          <Picture
+            src={src}
+            alt={alt}
+            sizes="(min-width: 840px) 240px, calc(100vw - 32px)"
+            priority={priority}
+            aspect="16 / 10"
+            focus={focus ?? (post.cardImage ? undefined : post.coverFocus)}
+          />
+        </div>
+      ) : feature && src && !textOnly ? (
         <div className="ix__media tile__media">
           <Picture
             src={src}
@@ -115,6 +130,7 @@ export function Showcase({
   limit,
   priority = false,
   textOnly = false,
+  thumbs = false,
   layout = siteLayout,
 }: {
   posts: Post[]
@@ -125,6 +141,8 @@ export function Showcase({
   glass?: boolean
   /** No pictures, even on the feature entry (see ProjectCard). */
   textOnly?: boolean
+  /** Every entry's picture inside its row (see ProjectCard `thumb`). */
+  thumbs?: boolean
   /** Card presentation (the site's layout file; the editor's Arrange preview passes its draft). */
   layout?: SiteLayout
 }) {
@@ -137,7 +155,7 @@ export function Showcase({
           const card = cardOf(p.slug, layout)
           return (
             <li key={p.slug} className={feature ? 'tiles__feature' : undefined} data-buckets={buckets(p)}>
-              <ProjectCard post={p} href={`${base}/${p.slug}`} feature={feature} priority={priority && feature} variant={card.variant} focus={card.focus} textOnly={textOnly} />
+              <ProjectCard post={p} href={`${base}/${p.slug}`} feature={feature} priority={priority && (feature || thumbs)} variant={card.variant} focus={card.focus} textOnly={textOnly} thumb={thumbs} />
             </li>
           )
         })}

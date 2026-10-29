@@ -1139,13 +1139,31 @@ function rasterize(rings: Ring[]): Uint8Array {
   g.fillStyle = '#fff'
   g.beginPath()
   for (const r of rings) {
+    // rings that cross the antimeridian jump by ~360 degrees; unwrap them and draw at three offsets so the jump is no
+    // edge. A ring that wraps the whole globe (Antarctica) is closed through its pole.
+    const pts: number[] = []
+    let shift = 0
     for (let k = 0; k < r.length; k += 2) {
-      const x = (r[k] + 180) * (MASK_W / 360)
-      const y = (90 - r[k + 1]) * (MASK_H / 180)
-      if (k === 0) g.moveTo(x, y)
-      else g.lineTo(x, y)
+      if (k) {
+        const d = r[k] - r[k - 2]
+        if (d > 180) shift -= 360
+        else if (d < -180) shift += 360
+      }
+      pts.push(r[k] + shift, r[k + 1])
     }
-    g.closePath()
+    if (shift) {
+      const pole = r[1] < 0 ? -90 : 90
+      pts.push(pts[pts.length - 2], pole, pts[0], pole)
+    }
+    for (const off of [-360, 0, 360]) {
+      for (let k = 0; k < pts.length; k += 2) {
+        const x = (pts[k] + off + 180) * (MASK_W / 360)
+        const y = (90 - pts[k + 1]) * (MASK_H / 180)
+        if (k === 0) g.moveTo(x, y)
+        else g.lineTo(x, y)
+      }
+      g.closePath()
+    }
   }
   g.fill('evenodd')
   const px = g.getImageData(0, 0, MASK_W, MASK_H).data
