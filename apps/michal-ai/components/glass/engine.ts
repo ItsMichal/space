@@ -590,7 +590,12 @@ export class Field {
   /** Frost engine with the snapshot lens (requested 'auto' on a non-Chromium engine); off means plain frost. */
   private lens = false
   private lensOff: (() => void) | null = null
-  private onScroll = () => this.invalidate()
+  // Scrolling changes what sits behind fixed glass: keep frames running past the last scroll event so the tone probe
+  // (every 240ms) sees where the page settled, and the lens (when on) redraws its rim.
+  private onScroll = () => {
+    this.pollUntil = performance.now() + 300
+    this.invalidate()
+  }
   private transitionEvt = () => {
     this.pollUntil = performance.now() + 700
     this.wake()
@@ -658,6 +663,7 @@ export class Field {
     host.addEventListener('pointermove', this.onPointerEnter, { passive: true })
     host.addEventListener('pointerleave', this.onPointerLeave, { passive: true })
     host.addEventListener('focusin', this.onFocusIn)
+    addEventListener('scroll', this.onScroll, { passive: true })
     host.addEventListener('focusout', this.onFocusOut)
     this.resolveMode()
   }
@@ -794,12 +800,9 @@ export class Field {
     this.lens = on
     if (on) {
       this.lensOff = onSnapshot(() => this.invalidate(true))
-      // the nav is fixed: what is under its rim changes with scroll, so scrolling draws (the surface pass only, sub-ms)
-      addEventListener('scroll', this.onScroll, { passive: true })
     } else {
       this.lensOff?.()
       this.lensOff = null
-      removeEventListener('scroll', this.onScroll)
     }
   }
 
@@ -816,6 +819,7 @@ export class Field {
     this.host.removeEventListener('pointermove', this.onPointerEnter)
     this.host.removeEventListener('pointerleave', this.onPointerLeave)
     this.host.removeEventListener('focusin', this.onFocusIn)
+    removeEventListener('scroll', this.onScroll)
     this.host.removeEventListener('focusout', this.onFocusOut)
     for (const t of ['transitionrun', 'transitionstart', 'transitionend', 'transitioncancel', 'animationstart', 'animationend', 'animationcancel'])
       this.host.removeEventListener(t, this.transitionEvt)
