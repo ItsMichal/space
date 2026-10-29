@@ -308,12 +308,18 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       const k = W / (cr.width || 1)
       const rects: number[][] = []
       const range = document.createRange()
+      // text nodes only: a range over an element also returns the boxes of block children (the name's lines are
+      // display:block), which are full width and blank the whole column on a phone
       const add = (node: Element | null) => {
         if (!node) return
-        range.selectNodeContents(node)
-        for (const r of Array.from(range.getClientRects())) {
-          if (r.width < 2 || r.height < 2) continue
-          rects.push([(r.left - cr.left) * k, (r.top - cr.top) * k, (r.right - cr.left) * k, (r.bottom - cr.top) * k])
+        const walk = document.createTreeWalker(node, NodeFilter.SHOW_TEXT)
+        for (let t = walk.nextNode(); t; t = walk.nextNode()) {
+          if (!t.textContent?.trim()) continue
+          range.selectNodeContents(t)
+          for (const r of Array.from(range.getClientRects())) {
+            if (r.width < 2 || r.height < 2) continue
+            rects.push([(r.left - cr.left) * k, (r.top - cr.top) * k, (r.right - cr.left) * k, (r.bottom - cr.top) * k])
+          }
         }
       }
       document.querySelectorAll<HTMLElement>('[data-hero-text]').forEach((t) => {
@@ -324,8 +330,8 @@ export function HeroAscii({ className = '' }: { className?: string }) {
         } else add(t)
       })
       add(document.getElementById('work-h'))
-      const pad = 6
-      const soft = 26
+      const pad = 4
+      const soft = 18
       for (let r = 0; r < rows; r++) {
         const y = (r + 0.5) * ch
         for (let c = 0; c < cols; c++) {
