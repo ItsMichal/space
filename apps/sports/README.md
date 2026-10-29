@@ -30,6 +30,9 @@ files. The game files are not in this repo.
   An account is a display name, a character and a passkey (WebAuthn: no password, no e-mail); making one needs the player
   to confirm they own the original game (kept with its time). The page signs in with a session token (only its hash is
   stored; 90 days). Endpoints and checks: the top of `worker/club.js`.
+  The same object keeps the club's social side (`worker/social.js`): friends by friend code, blocks and reports, and a
+  rating (stored); presence, the club chat room and direct messages, invites and the quick-match queues (in memory),
+  all over a long-poll of `/club/events`. Endpoints: the top of `worker/social.js`.
 
 ## One-time setup (owner)
 
