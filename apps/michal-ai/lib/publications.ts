@@ -43,9 +43,9 @@ export function publicationJsonLd(p: Publication) {
   }
 }
 
-/** "21 citations" for a DOI, from content/citations.json (Semantic Scholar, refreshed with `npm run citations`); '' when unknown or none. */
+/** "21 citations and counting" for a DOI, from content/citations.json (Semantic Scholar, refreshed with `npm run citations`); '' when unknown or none. */
 export function citationLabel(doi?: string): string {
   const n = doi ? (citations.counts as Record<string, number>)[doi] : undefined
-  return n ? `${n.toLocaleString('en-US')} ${n === 1 ? 'citation' : 'citations'}` : ''
+  return n ? `${n.toLocaleString('en-US')} ${n === 1 ? 'citation' : 'citations'} and counting` : ''
 }
 export const citationsSource = `${citations.source}, ${citations.asOf}`
