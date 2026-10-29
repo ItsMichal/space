@@ -1,8 +1,11 @@
 /* Type roles. One display face (Michelangelus) for titles and headings, ONE text face (Newsreader) for everything else:
    descriptions, meta lines, UI. Mono only for code. Two weights (400, 500), four sizes, no synthetic bold or italic.
    The same hierarchy discipline as apple.com: few sizes, one family doing most of the work. The sizes are tokens
-   (docs/design-system/tokens.json, generated into tokens.css; rules in docs/design-system/type-scale.md). Phones step the
-   same tokens down, so nothing here has a media query for type. scripts/check-type.mjs fails on any other font size.
+   (docs/design-system/tokens.json, generated into tokens.css; rules in docs/design-system/type-scale.md; typed in
+   lib/design/type.ts). Phones step the same tokens down, so nothing here has a media query for type. `npm run check:type`
+   (scripts/check-type.mjs at the repo root) fails on any other font size.
+
+   Levels: the name (home header only), then title > heading > body, plus small. Nothing else.
 
      role      token    face       desktop / phone    weight  colour
      title     title    display    44 / 34            400     ink            section and page headings, article title
@@ -11,8 +14,8 @@
      ui        body     Newsreader 18 / 17            500     ink            item titles in a list, nav, buttons
      meta      small    Newsreader 15                 400     ink-muted      dates, years, roles, venue lines, captions
 
-   Item titles: a project in the work index titles itself with `heading`; the title of one item in any other list (employer,
-   publication, post, hackathon, press, prev/next step) is `ui` (body at 500).
+   Item titles sit one level below their section's head. Under a `title` head (home: Selected work, Writing) an item title
+   is `heading`; under a `heading` sub-head (.ix-sec: Experience, Publications, /writing, /about) it is `ui` (body at 500).
 
    The index language (home, /projects, /writing, /about) is below: `.ix`. */
 .t-title {
@@ -40,7 +43,7 @@
   color: var(--ink-muted);
 }
 .t-ui,
-.ix--ui .ix__title {
+.ix-sec .ix--ui .ix__title {
   font-family: var(--font-serif);
   font-size: var(--type-body-strong-size);
   line-height: var(--type-body-strong-line);
@@ -64,7 +67,7 @@
 
      .ix-list       a list of entries (ul / ol), generous gap between them
      .ix            one entry (a link or a plain block): __title, __desc, __meta, optional __media (one picture) or __body
-     .ix--ui        an entry whose title is an item title (body 500), not a heading (writing, roles, publications)
+     .ix--ui        an entry whose title drops to `ui` (body 500) inside an .ix-sec; under a `title` head it stays `heading`
      .ix-sec        a section whose heading sits in that same left column from 840px (/about, /writing)
      .ix-h          a sub-section head above a list (heading size)  */
 :root {
@@ -169,7 +172,7 @@ a.ix:focus-visible {
     margin-top: 0;
     padding-top: 0.32em;
   }
-  .ix--ui > .ix__meta {
+  .ix-sec .ix--ui > .ix__meta {
     padding-top: 0.12em;
   }
   /* in the narrow column a long role wraps inside itself rather than running into the title */
