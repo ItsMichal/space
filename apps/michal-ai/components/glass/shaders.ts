@@ -49,6 +49,11 @@ uniform float uThemeDark;  // 1 when the page theme is dark
 uniform int uReadback;     // 1: pixels leave via readPixels (bottom-up rows), flip pass 0
 uniform float uSheen;      // scale on the gloss and the frost bevel lift
 uniform int uFrost;        // 1: no backdrop lens available (Safari / Firefox): fake thickness with a rim bevel
+uniform sampler2D uBack;   // page snapshot (frost engine lens), premultiplied, mipmapped
+uniform int uBackOn;
+uniform vec4 uBackXf;      // field css -> snapshot uv: (p + xy) * zw
+uniform float uBackLod;    // mip level standing in for the lens blur
+uniform float uRefr;       // rim shift scale in css px (the svg engine's feDisplacementMap scale / 2)
 
 out vec4 outColor;
 
@@ -181,6 +186,28 @@ void main() {
 
   vec4 body = vec4(0.0);
 
+  // snapshot lens (frost engine): the rim bends the page content like the svg engine does, R/G/B shifted a little apart.
+  // Only the bezel samples; the flat interior is the live frost box underneath (Snell: no shift there).
+  vec4 lens = vec4(0.0);
+  if (uBackOn == 1 && depth > 0.0 && depth < uBezel) {
+    float t = depth / uBezel;
+    vec2 g = gradient(p);
+    float mag = rimShift(t) / uPeak * a.mat;
+    vec2 sh = -g * mag * uRefr;
+    float w = smoothstep(0.02, 0.3, mag) * cov;
+    vec2 q = (p + uBackXf.xy) * uBackXf.zw;
+    vec2 d = sh * uBackXf.zw;
+    vec4 cg = textureLod(uBack, q + d, uBackLod);
+    float cr = textureLod(uBack, q + d * 1.06, uBackLod).r;
+    float cb = textureLod(uBack, q + d * 0.94, uBackLod).b;
+    vec4 c = vec4(cr, cg.g, cb, cg.a);
+    // the unbent content under the rim is in the frost box too: veil it with the glass body so it does not double up
+    vec4 veil = mix(uTintLight, uTintDark, a.dark);
+    float va = w * 0.35;
+    lens = vec4(veil.rgb * va, va);
+    lens = c * w + lens * (1.0 - c.a * w);
+  }
+
   // body tint: adaptive light/dark, clear variant is nearly transparent
   vec4 base = mix(uTintLight, uTintDark, a.dark);
   float baseA = base.a * mix(1.0, 0.16, a.clear);
@@ -240,6 +267,7 @@ void main() {
   body = ed + body * (1.0 - ed.a);
 
   body *= cov * a.mat;
+  body = body + lens * (1.0 - body.a);
   vec4 shd = vec4(uShadowCol * sh * a.mat, sh * a.mat);
   outColor = body + shd * (1.0 - body.a);
 }

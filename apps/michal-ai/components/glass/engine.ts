@@ -39,6 +39,9 @@ import { GlassGL, type DrawParams, type MapTicket } from './gl'
 import { MAX_SHAPES } from './shaders'
 import { lightFor } from './lighting'
 import { decideTone, type Tone } from './theme'
+import { getSnapshot, onSnapshot, refreshSnapshot } from './snapshot'
+
+export { refreshSnapshot as refreshGlassLens }
 
 export type GlassTransition = 'materialize' | 'matchedGeometry' | 'identity'
 export type GlassAppearance = 'auto' | 'light' | 'dark'
@@ -96,6 +99,8 @@ function initEnv() {
     env.dpr = window.devicePixelRatio || 1
     // Edge, Opera, Brave, Samsung Internet and Android Chrome all say "Chrome/"; iOS browsers (CriOS) do not.
     env.chromium = /Chrome\//.test(navigator.userAgent) && !/Edg\/.*Mobile.*iPhone/.test(navigator.userAgent)
+    // ?glass=lens: the Safari path (frost + snapshot lens) in any browser, for debugging
+    if (location.search.includes('glass=lens')) env.chromium = false
   }
   read()
   const onChange = () => {
@@ -373,6 +378,7 @@ class Member extends ShapeState {
   readonly el: HTMLElement
   field: Field
   concR = 0
+  cut = 0
   lastW = -1
   lastH = -1
   private cleanups: Array<() => void> = []
@@ -469,6 +475,7 @@ class Member extends ShapeState {
     this.el.removeAttribute('data-glass-live')
     this.el.removeAttribute('data-glass-tone')
     this.el.style.removeProperty('scale')
+    this.el.style.removeProperty('--glass-cut')
   }
 }
 
@@ -580,6 +587,15 @@ export class Field {
     pageLum: 0.9,
     themeDark: 0,
   }
+  /** Frost engine with the snapshot lens (requested 'auto' on a non-Chromium engine); off means plain frost. */
+  private lens = false
+  private lensOff: (() => void) | null = null
+  // Scrolling changes what sits behind fixed glass: keep frames running past the last scroll event so the tone probe
+  // (every 240ms) sees where the page settled, and the lens (when on) redraws its rim.
+  private onScroll = () => {
+    this.pollUntil = performance.now() + 300
+    this.invalidate()
+  }
   private transitionEvt = () => {
     this.pollUntil = performance.now() + 700
     this.wake()
@@ -647,6 +663,7 @@ export class Field {
     host.addEventListener('pointermove', this.onPointerEnter, { passive: true })
     host.addEventListener('pointerleave', this.onPointerLeave, { passive: true })
     host.addEventListener('focusin', this.onFocusIn)
+    addEventListener('scroll', this.onScroll, { passive: true })
     host.addEventListener('focusout', this.onFocusOut)
     this.resolveMode()
   }
@@ -658,6 +675,7 @@ export class Field {
     else if (want === 'svg' || (want === 'auto' && env.chromium)) mode = 'svg'
     else mode = 'frost'
     if (mode !== 'flat' && !getGL()) mode = 'flat'
+    this.setLens(mode === 'frost' && want === 'auto')
     this.setMode(mode)
   }
 
@@ -777,8 +795,20 @@ export class Field {
     this.svg = svg
   }
 
+  private setLens(on: boolean) {
+    if (on === this.lens) return
+    this.lens = on
+    if (on) {
+      this.lensOff = onSnapshot(() => this.invalidate(true))
+    } else {
+      this.lensOff?.()
+      this.lensOff = null
+    }
+  }
+
   dispose() {
     if (this.disposed) return
+    this.setLens(false)
     this.disposed = true
     fields.delete(this)
     active.delete(this)
@@ -789,6 +819,7 @@ export class Field {
     this.host.removeEventListener('pointermove', this.onPointerEnter)
     this.host.removeEventListener('pointerleave', this.onPointerLeave)
     this.host.removeEventListener('focusin', this.onFocusIn)
+    removeEventListener('scroll', this.onScroll)
     this.host.removeEventListener('focusout', this.onFocusOut)
     for (const t of ['transitionrun', 'transitionstart', 'transitionend', 'transitioncancel', 'animationstart', 'animationend', 'animationcancel'])
       this.host.removeEventListener(t, this.transitionEvt)
@@ -990,6 +1021,14 @@ export class Field {
       m.group = groupOf(m)
       if (probe) this.probeTone(m, hr)
       moving = m.step(dt, reduce) || moving
+      // while the surface springs taller than it is (a fold opening) the content is clipped to it, so rows never show
+      // past the glass edge: --glass-cut is how far the DOM box still reaches below the surface
+      const cut = reduce ? 0 : Math.max(0, Math.round(m.tcy + m.thy - (m.cy.x + m.hy.x)))
+      if (cut !== m.cut) {
+        m.cut = cut
+        if (cut) m.el.style.setProperty('--glass-cut', `${cut}px`)
+        else m.el.style.removeProperty('--glass-cut')
+      }
       // press scale is applied to the element itself so its content bounces with the glass
       if (m.cfg.effect.isInteractive && !reduce) {
         const s = m.scale.x
@@ -1061,6 +1100,7 @@ export class Field {
 
   private signature(shapes: ShapeState[], hr: DOMRect, light: { x: number; y: number; k: number }): string {
     let s = `${this.mode}|${envEpoch}|${(light.x * 60) | 0},${(light.y * 60) | 0}|`
+    if (this.lens) s += `${getSnapshot()?.epoch ?? 0},${Math.round(scrollX + hr.left)},${Math.round(scrollY + hr.top)}|`
     for (const m of shapes) {
       s +=
         `${Math.round(m.cx.x * 8)},${Math.round(m.cy.x * 8)},${Math.round(m.hx.x * 8)},${Math.round(m.hy.x * 8)},${Math.round(m.r.x * 4)},` +
@@ -1142,6 +1182,16 @@ export class Field {
       themeDark: dark,
       frost: this.mode === 'frost',
       sheen: c.sheen,
+      back: null,
+    }
+    const snap = this.lens ? getSnapshot() : null
+    if (snap && gl.setBackdrop(snap.canvas, snap.epoch)) {
+      base.back = {
+        xf: [hr.left + scrollX, hr.top + scrollY, 1 / snap.w, 1 / snap.h],
+        // the lens blur as a mip level of the snapshot (texels per css px = scale)
+        lod: Math.log2(Math.max(1, (c.blur / 3) * snap.scale)),
+        refr: 0.5 * c.refraction * Math.min(1, bezel / 24),
+      }
     }
 
     // ---- surface pass

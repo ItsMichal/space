@@ -2,7 +2,6 @@ import Link from '@/lib/nav'
 import { ArrowRight } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { Post } from '@/lib/content/types'
-import { getPublication } from '@/lib/publications'
 import { Picture } from '@/components/media/Picture'
 import { cardOf, isFeature, siteLayout, type SiteLayout } from '@/lib/content/layout'
 import { matchesFilter, PROJECT_FILTERS } from '@/components/ui/segments'
@@ -70,10 +69,8 @@ export function ProjectCard({
 }) {
   const src = post.cardImage === 'none' ? undefined : (post.cardImage ?? post.cover)
   const alt = post.cardImage ? (post.cardImageAlt ?? '') : (post.coverAlt ?? '')
-  const pub = article ? undefined : post.publications?.map(getPublication).find(Boolean)
-  const metaParts: ReactNode[] = article
-    ? [<time key="d" dateTime={post.date}>{monthYear(post.date)}</time>, ...(post.series ? [post.series] : [])]
-    : ([year(post), post.role, pub ? `Published at ${pub.venueShort}` : ''].filter(Boolean) as string[])
+  // dates only: no eyebrows (role, series, venue) over the title
+  const metaParts: ReactNode[] = article ? [<time key="d" dateTime={post.date}>{monthYear(post.date)}</time>] : [year(post)]
   const id = `pc-${post.slug}`
   return (
     <Link

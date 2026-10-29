@@ -5,7 +5,7 @@ import { JsonLd } from '@/components/seo/JsonLd'
 import { ProjectCard } from '@/components/work/Showcase'
 import { profile } from '@/content/profile'
 import { hackathonPostHref, featuredProjects, fullDate, hrefById, monthYear, pressItems, NEWSLETTER_LABEL, hackathonList } from '@/lib/about'
-import { authorLine, doiUrl, venueLine } from '@/lib/publications'
+import { authorLine, citationLabel, citationsSource, doiUrl, venueLine } from '@/lib/publications'
 import { aboutMetadata, profilePageJsonLd, postPath, breadcrumbJsonLd } from '@/lib/seo'
 import { siteConfig } from '@/site.config'
 import { xHighlights } from '@/content/x-highlights'
@@ -225,6 +225,7 @@ export default function AboutPage() {
                 </p>
                 <p className="pub__ref t-meta">
                   {authorLine(p).replace(/\.$/, "")}. {venueLine(p)}.{p.authorCount ? ` ${p.authorCount.toLocaleString('en-US')} authors.` : ''}
+                  {citationLabel(p.doi) ? <span title={citationsSource}>{` ${citationLabel(p.doi)}.`}</span> : null}
                 </p>
                 {'role' in p && p.role ? <p className="pub__ref t-meta">{p.role}</p> : null}
               </li>
@@ -244,6 +245,7 @@ export default function AboutPage() {
                     </p>
                     <p className="pub__ref t-meta">
                       {mentionAuthors(m).replace(/\.$/, '')}. {m.venueShort}.
+                      {citationLabel(m.doi) ? <span title={citationsSource}>{` ${citationLabel(m.doi)}.`}</span> : null}
                     </p>
                     <blockquote className="pub__quote t-meta">
                       <p>

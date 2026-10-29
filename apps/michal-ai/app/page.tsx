@@ -2,6 +2,7 @@ import Link from '@/lib/nav'
 import { ArrowRight } from 'lucide-react'
 import { getAllPosts, getBlogPosts, getMainProjects } from '@/lib/content'
 import { HeroBackdrop } from '@/components/presence/HeroBackdrop'
+import { ArtisanFx } from '@/components/fx/ArtisanFx'
 import { HeroHook } from '@/components/site/HeroHook'
 import { HeroAtmosphere } from '@/components/site/HeroAtmosphere'
 import { postPath } from '@/lib/seo'
@@ -12,7 +13,7 @@ import { WritingRows } from '@/components/writing/WritingIndex'
 import { Showcase } from '@/components/work/Showcase'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { profile } from '@/content/profile'
-import { doiUrl, venueLine } from '@/lib/publications'
+import { citationLabel, citationsSource, doiUrl, venueLine } from '@/lib/publications'
 import { ExperienceList, type ExperienceItem } from '@/components/ui/ExperienceList'
 import { Picture } from '@/components/media/Picture'
 import { portraitAlt } from '@/lib/about'
@@ -34,7 +35,7 @@ const experience: ExperienceItem[] = profile.experience.map((e) => ({
   href: ROLE_LINKS[e.company],
 }))
 
-const h2 = 'reveal mb-space-6 font-display text-title'
+const h2 = 'mb-space-6 font-display text-title'
 
 export default function Home() {
   const projects = getMainProjects()
@@ -47,6 +48,7 @@ export default function Home() {
 
   return (
     <div className="mx-auto max-w-content px-space-4 md:px-space-8">
+      <ArtisanFx />
       <JsonLd data={[personJsonLd, websiteJsonLd]} />
       {hooks.length ? <HeroAtmosphere tints={tints} /> : null}
       {/* Hero background slot: a positioned layer behind the text and above the tint cross-fade, empty by default. A decorative
@@ -62,7 +64,7 @@ export default function Home() {
       />
 
       <section id="work" aria-labelledby="work-h" className="home-sec mt-space-16">
-        <h2 id="work-h" className={h2}>
+        <h2 id="work-h" className={h2} data-scramble>
           Projects
         </h2>
         <Showcase posts={projects} base="/projects" limit={3} priority thumbs />
@@ -70,7 +72,7 @@ export default function Home() {
 
       {articles.length > 0 ? (
         <section id="writing" aria-labelledby="writing-h" className="home-sec">
-          <h2 id="writing-h" className={h2}>
+          <h2 id="writing-h" className={h2} data-scramble>
             Writing
           </h2>
           <WritingRows posts={latest.slice(0, 3)} thumbs />
@@ -84,7 +86,7 @@ export default function Home() {
 
       {profile.publications.length ? (
         <section id="publications" aria-labelledby="pubs-h" className="home-sec">
-          <h2 id="pubs-h" className={h2}>
+          <h2 id="pubs-h" className={h2} data-scramble>
             Publications
           </h2>
           <ul className="ix-list">
@@ -97,6 +99,7 @@ export default function Home() {
                     {venueLine(p)}
                     {p.shortAuthors ? '.' : ''}
                     {p.authorCount ? ` ${p.authorCount.toLocaleString('en-US')} authors.` : ''}
+                    {citationLabel(p.doi) ? <span title={citationsSource}>{`${p.shortAuthors || p.authorCount ? ' ' : '. '}${citationLabel(p.doi)}.`}</span> : null}
                   </span>
                   <time className="ix__meta t-meta" dateTime={p.published}>
                     {p.year}
@@ -109,7 +112,7 @@ export default function Home() {
       ) : null}
 
       <section id="about" aria-labelledby="about-h" className="home-sec">
-        <h2 id="about-h" className={h2}>
+        <h2 id="about-h" className={h2} data-scramble>
           About
         </h2>
         <div className="about">

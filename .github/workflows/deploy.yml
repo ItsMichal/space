@@ -1,6 +1,7 @@
 name: Deploy
 
 # Merges to main deploy the Workers whose files changed. Manual runs: Actions -> Deploy -> Run workflow.
+# Every Monday a scheduled run redeploys michal.ai alone, which refreshes its citation counts.
 # ItsMichal/space-content dispatches this workflow (app=michal) when posts or media change on its main branch.
 # Content comes from that repo through ./.github/actions/content when CONTENT_DEPLOY_KEY is set (apps/michal-ai/docs/content-repo.md).
 # The writing editor (write.michal.ai) is deployed from space-content, never from here.
@@ -9,6 +10,9 @@ name: Deploy
 on:
   push:
     branches: [main]
+  schedule:
+    # weekly redeploy of michal.ai so citation counts (apps/michal-ai/content/citations.json) stay current between merges
+    - cron: '17 15 * * 1'
   workflow_dispatch:
     inputs:
       app:
@@ -82,7 +86,9 @@ jobs:
           F_HALMIC: ${{ steps.f.outputs.halmic }}
           F_SPORTS: ${{ steps.f.outputs.sports }}
         run: |
-          if [ "$EVENT" = "workflow_dispatch" ]; then
+          if [ "$EVENT" = "schedule" ]; then
+            m=true; h=false; sp=false
+          elif [ "$EVENT" = "workflow_dispatch" ]; then
             [ "$APP" = "michal" ] || [ "$APP" = "both" ] && m=true || m=false
             [ "$APP" = "halmic" ] || [ "$APP" = "both" ] && h=true || h=false
             [ "$APP" = "sports" ] && sp=true || sp=false
@@ -116,6 +122,8 @@ jobs:
           deploy-key: ${{ secrets.CONTENT_DEPLOY_KEY }}
           token: ${{ secrets.CONTENT_TOKEN }}
       - uses: ./.github/actions/media-cache
+      - name: Refresh citation counts (Semantic Scholar; keeps the last known counts if it is unreachable)
+        run: npm --prefix apps/michal-ai run citations || echo "::warning title=Citations::refresh failed, deploying the committed counts"
       - name: Build and deploy (react-router build, then wrangler deploy)
         run: npm run deploy:michal 2>&1 | tee deploy.log
       - name: Deployed version

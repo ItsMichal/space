@@ -24,7 +24,8 @@
     "check:do": "node scripts/check-do-exports.mjs",
     "typecheck": "react-router typegen && tsc --noEmit && tsc --noEmit -p worker/tsconfig.json",
     "build:redirects": "node scripts/build-worker-redirects.mjs",
-    "motion:audit": "node scripts/motion/run.mjs"
+    "motion:audit": "node scripts/motion/run.mjs",
+    "citations": "node scripts/refresh-citations.mjs"
   },
   "dependencies": {
     "@react-router/node": "^7.18.4",
@@ -35,6 +36,7 @@
     "eslint": "^9.39.5",
     "gray-matter": "^4.0.3",
     "hast-util-to-jsx-runtime": "^2.3.6",
+    "html2canvas-pro": "2.5.1",
     "isbot": "^5.2.2",
     "lucide-react": "^1.54.0",
     "postcss": "^8.5.29",

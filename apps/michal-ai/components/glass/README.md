@@ -64,6 +64,12 @@ Field (one per container, or per lone glass element)
                             one CSS backdrop-blur box per member under the canvas, tint, adaptive tone, and the
                             surface shader adds a rim bevel (light side lifts, far side sinks), two-lobed specular,
                             water-drop gloss and soft shadow to suggest thickness
+      + snapshot lens       (engine 'auto' only) snapshot.ts renders the page once into a canvas on idle
+                            (html2canvas-pro, fixed layers and the glass left out), uploaded as a mipmapped texture;
+                            the shader samples it at the rim, bent by the same Snell profile with R/G/B dispersion,
+                            so text and photos really bend at the edge. Scrolling only moves the lookup; recapture on
+                            document resize or route change; late images are painted into the snapshot. A capture
+                            over 1.5s or a failure turns it off and the glass stays plain frost
     flat                    CSS fallback (.lg in globals.css): SSR, no WebGL2, reduced transparency, more contrast
 ```
 
@@ -93,7 +99,7 @@ UI growing with the device instead of relaunching); no timings from Apple are kn
 
 | | Chromium (desktop, Android) | Safari / iOS | Firefox |
 | --- | --- | --- | --- |
-| Engine | svg: true backdrop refraction of everything | frost: blur, tint, bevel, specular, gloss | frost |
+| Engine | svg: true backdrop refraction of everything | frost + snapshot lens at the rim (frost alone if the capture is slow or fails) | frost + snapshot lens |
 | WebGL2 | required for the engine | yes (15+) | yes |
 | Map worker (OffscreenCanvas GL) | yes, else main-thread PBO readback | not used | not used |
 | Device-motion light | automatic | after `enableGlassMotion()` in a tap | n/a |
@@ -115,5 +121,5 @@ sub-millisecond for the nav, a few hundred microseconds of JS submit. Idle: zero
 
 ## Known limits
 
-Up to 12 shapes per container. Safari and Firefox cannot refract the real backdrop (no `backdrop-filter: url()` support), so they get the frost finish without lensing. Lens in the svg engine
+Up to 12 shapes per container. Safari and Firefox cannot refract the real backdrop (no `backdrop-filter: url()` support): their lens bends a snapshot of the page, so content that changes without a resize (animations, video, the WebGL backdrop) is not in it and the interior stays live frost. Lens in the svg engine
 lags the shape by about one map update during very fast motion. Glass shouldn't nest in glass.

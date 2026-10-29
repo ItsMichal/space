@@ -70,13 +70,8 @@ export function ArticleLayout({
             <Link href={back.href} className="link inline-flex min-h-[44px] items-center">
               {back.label}
             </Link>
-            {back.series ? ` · ${back.series}` : ''} · {readingMinutes} min read
           </p>
-        ) : (
-          <p className="mb-space-4 font-serif text-small text-ink-muted">
-            {kind === 'project' ? 'Project' : 'Article'} · {readingMinutes} min read
-          </p>
-        )}
+        ) : null}
         <h1 className="font-display text-title">
           {title}
         </h1>
@@ -89,7 +84,6 @@ export function ArticleLayout({
               <time dateTime={updated}>{fmt(updated)}</time>
             </>
           ) : null}
-          {stack.length ? ` · ${stack.join(' · ')}` : null}
         </p>
         {/* The page's end of the card-to-page transition: the card surface opens into this box (CardTransitions). */}
         <span aria-hidden className="reading__surface" />

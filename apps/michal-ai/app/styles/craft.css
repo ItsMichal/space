@@ -122,10 +122,10 @@
 }
 
 /* ---------- Nav sheet (phones) ----------
-   Open, the sheet is nearly opaque paper over a soft scrim so the links are always perfectly legible; the rows are
-   separated by a 1px hairline. */
+   Open, the sheet is the nav's light Liquid Glass, denser than the pill so the rows stay legible over the soft scrim; the
+   rows are separated by a 1px hairline. */
 :root {
-  --nav-sheet-tint: rgba(246, 243, 235, 0.9);
+  --nav-sheet-tint: rgba(255, 255, 255, 0.66);
 }
 @media (prefers-color-scheme: dark) {
   :root[data-reading] {

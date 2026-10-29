@@ -3,7 +3,7 @@
 import Link from '@/lib/nav'
 import { usePathname } from '@/lib/nav'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { GlassEffectContainer, GlassFold, GlassFoldItem, glass, useGlassNamespace } from '@/components/glass'
+import { GlassEffectContainer, GlassFold, GlassFoldItem, glass, refreshGlassLens, useGlassNamespace } from '@/components/glass'
 import { StatusSlot } from '@/components/ui/StatusPill'
 import { OtherSiteRow, SiteSwitcher } from './SiteSwitcher'
 import type { MenuPreview } from '@/lib/menu'
@@ -29,9 +29,10 @@ function MenuIcon({ open }: { open: boolean }) {
  * indicator, can be added later and will merge with it). Below 640px the pill folds open into a menu
  * sheet that unfolds from, and folds back into, the pill (44px targets, safe-area aware).
  */
-// The nav is a clean frosted bar by default (blur and saturate, hairline edge, soft shadow). The SVG-displacement
-// Liquid Glass path stays in the code behind NEXT_PUBLIC_GLASS=refract until it has a measured precedent.
-const NAV_GLASS = process.env.NEXT_PUBLIC_GLASS === 'refract' ? 'auto' : 'frost'
+// Liquid Glass with a real lens: Chromium refracts the live backdrop (svg engine); Safari, iOS and Firefox bend a snapshot
+// of the page at the rim over a live frost box (frost engine + snapshot lens). If the snapshot fails or is slow, plain frost.
+// NEXT_PUBLIC_GLASS=frost keeps the plain frosted bar everywhere.
+const NAV_GLASS = process.env.NEXT_PUBLIC_GLASS === 'frost' ? 'frost' : 'auto'
 
 export function NavBar({ previews }: { previews?: { work: MenuPreview[]; writing: MenuPreview[] } }) {
   const pathname = usePathname()
@@ -41,7 +42,10 @@ export function NavBar({ previews }: { previews?: { work: MenuPreview[]; writing
   const buttonRef = useRef<HTMLButtonElement | null>(null)
   const wasOpen = useRef(false)
 
-  useEffect(() => setOpen(false), [pathname])
+  useEffect(() => {
+    setOpen(false)
+    refreshGlassLens() // new page content under the glass
+  }, [pathname])
 
   useEffect(() => {
     if (!open) return
