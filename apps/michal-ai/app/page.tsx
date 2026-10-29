@@ -65,7 +65,7 @@ export default function Home() {
         <h2 id="work-h" className={h2}>
           Projects
         </h2>
-        <Showcase posts={projects} base="/projects" limit={3} priority textOnly />
+        <Showcase posts={projects} base="/projects" limit={3} priority thumbs />
       </section>
 
       {articles.length > 0 ? (
