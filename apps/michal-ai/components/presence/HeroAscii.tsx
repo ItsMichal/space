@@ -883,9 +883,19 @@ export function HeroAscii({ className = '' }: { className?: string }) {
         ctx.globalAlpha = Math.min(1, A * 2.2 * td)
         const label = `${overhead} overhead`
         const lw = ctx.measureText(label).width
-        // flip to the left of the terminal when the label would run off the visible edge
-        const lx = tx + cw + lw > visibleRect().r - 6 ? tx - cw - lw : tx + cw
-        ctx.fillText(label, lx, ty + ch * 1.1)
+        // right of the terminal unless that runs off the visible edge or into the hero text, then left; over text either
+        // way, it fades with the text clearing
+        const ly = ty + ch * 1.1
+        const clear = (x0: number) => {
+          let m = 1
+          for (let x = x0; x <= x0 + lw; x += cw) m = Math.min(m, dimTargetAt(x, ly))
+          return m
+        }
+        const right = tx + cw + lw > visibleRect().r - 6 ? 0 : clear(tx + cw)
+        const left = clear(tx - cw - lw)
+        const lx = right >= left ? tx + cw : tx - cw - lw
+        ctx.globalAlpha *= Math.max(right, left)
+        ctx.fillText(label, lx, ly)
         ctx.setTransform(1, 0, 0, 1, 0, 0)
 
         // callouts
