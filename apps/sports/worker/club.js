@@ -11,6 +11,7 @@
 //   POST /club/me              {name?, character?}                  -> {account}
 //   POST /club/logout          {}                                   -> {}
 //   POST /club/delete          {}                                   -> {}                      (the account and everything with it)
+// Friends, presence, chat and matchmaking: social.js (the same object, the same sessions).
 // Binary fields are base64url. The page builds the WebAuthn options itself (rp id = the page's host name); the server
 // checks the challenge, the origin (the request's own), the rp id hash, user presence and the signature. Attestation is
 // not asked for ("none"). A session is a random token; only its SHA-256 is stored.
@@ -317,14 +318,20 @@ async function readJson(req) {
 }
 const bearer = (req) => /^Bearer ([A-Za-z0-9_-]{1,100})$/.exec(req.headers.get('authorization') || '')?.[1] || '';
 
-/** The requests of /club against a Club (inside the Durable Object). */
-export async function clubRequest(req, club, now) {
+/** The requests of /club against a Club (inside the Durable Object); social: the friends, chat and matches (social.js). */
+export async function clubRequest(req, club, now, social = null) {
   const url = new URL(req.url), path = url.pathname, origin = url.origin, rpId = url.hostname;
   const ip = req.headers.get('cf-connecting-ip') || '';
   const out = (r) => json(r.status || 200, r.body);
   if (path === '/club/me' && req.method === 'GET') {
     const who = await club.who(bearer(req), now);
     return who ? out(club.account(who) ? { body: { account: club.account(who) } } : { status: 401, body: { err: 'signed out' } }) : json(401, { err: 'signed out' });
+  }
+  if (req.method === 'GET' && social) {
+    const who = await club.who(bearer(req), now);
+    if (!who || !club.account(who)) return json(401, { err: 'signed out' });
+    const r = await social.request(req, url, who, {});
+    return r ? out(r) : json(404, { err: 'not found' });
   }
   if (req.method !== 'POST') return json(404, { err: 'not found' });
   const body = await readJson(req);
@@ -340,7 +347,8 @@ export async function clubRequest(req, club, now) {
   switch (path) {
     case '/club/me': return out(club.update(who, body));
     case '/club/logout': club.db.dropSession(b64u(await sha256(token))); return json(200, {});
-    case '/club/delete': club.db.dropAccount(who); return json(200, {});
+    case '/club/delete': social?.forget(who); club.db.dropAccount(who); return json(200, {});
   }
-  return json(404, { err: 'not found' });
+  const r = social && body && typeof body === 'object' ? await social.request(req, url, who, body) : null;
+  return r ? out(r) : json(404, { err: 'not found' });
 }
