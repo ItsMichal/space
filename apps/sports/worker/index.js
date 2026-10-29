@@ -8,11 +8,13 @@
 // Dev-only endpoints of serve-web are not exposed: /__stats and the debug log POST answer 404.
 // The online lobby and netplay mailbox (/lobby, /netplay; worker/online.js) go to the Durable Object ONLINE.
 // /stats (the online count and the all-time leaderboards, worker/stats.js) goes to the Durable Object STATS.
+// /club (accounts: passkeys, the display name and character, worker/club.js) goes to the Durable Object CLUB.
 //
 // Every path except /gate needs the cookie from a correct passkey. Without the SPORTS_PASSKEY secret everything answers 503.
 // SPORTS_GATE="off" (wrangler.jsonc vars) opens the site: no passkey, no secret needed, /gate goes straight on.
 import { isAuthed, makeCookieValue, passkeyMatches, passkeyOf, setCookieHeader } from './auth.js';
 import { gatePage } from './gate-page.js';
+import { Club as ClubCore, clubRequest, sqlStore as clubStore } from './club.js';
 import { createOnline } from './online.js';
 import { Board, sqlStore, statsRequest } from './stats.js';
 
@@ -146,6 +148,10 @@ export async function handle(req, env, opts = {}) {
     if (!env.STATS) return text(501, 'no stats here');
     return env.STATS.get(env.STATS.idFromName('global')).fetch(req);
   }
+  if (path.startsWith('/club/')) {
+    if (!env.CLUB) return text(501, 'no accounts here');
+    return env.CLUB.get(env.CLUB.idFromName('global')).fetch(req);
+  }
   if (path.startsWith('/lobby/') || path.startsWith('/netplay/')) {
     if (!env.ONLINE) return text(501, 'no online play here');
     return env.ONLINE.get(env.ONLINE.idFromName('global')).fetch(req);
@@ -162,6 +168,12 @@ export async function handle(req, env, opts = {}) {
 export class Stats {
   constructor(ctx) { this.board = new Board(sqlStore(ctx.storage.sql)); }
   fetch(req) { return statsRequest(req, this.board, Date.now()); }
+}
+
+/** The accounts: one instance ("global"), SQLite storage (wrangler.jsonc migrations). */
+export class Club {
+  constructor(ctx) { this.club = new ClubCore(clubStore(ctx.storage.sql)); }
+  fetch(req) { return clubRequest(req, this.club, Date.now()); }
 }
 
 /** The online lobbies and netplay rooms: one instance ("global"), in memory only (worker/online.js). */

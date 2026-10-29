@@ -17,14 +17,19 @@ files. The game files are not in this repo.
 - The gate can be switched off: `"vars": { "SPORTS_GATE": "off" }` in `wrangler.jsonc` opens the site to anyone with the
   address (no cookie, no secret needed; `/gate` redirects straight on). It is **off for now** (owner's call, 2026-10-27);
   set it to `"on"` and merge to put the gate back (the `SPORTS_PASSKEY` secret is still set).
-- Dev-only endpoints of the local server (`/__stats`, the debug log POST) answer 404. `/lobby` and `/netplay` (online play)
-  answer 501: not built here yet.
+- Dev-only endpoints of the local server (`/__stats`, the debug log POST) answer 404.
+- `/lobby` and `/netplay` (online play): the lobbies and the netplay signaling mailbox, in one in-memory Durable Object
+  (`Online`, `worker/online.js`).
 - `/stats` (behind the gate): the online count and the all-time leaderboards, in one Durable Object (`Stats`, SQLite
   storage, `worker/stats.js`). The page sends `POST /stats/hello {id}` every 20 s (a random per-tab id; online = seen in the
   last 45 s) and `POST /stats/score {player, name, sport, level}` after a game (a random per-profile id, the character's
   name, the game's own Skill Level; the best per profile and sport is kept). `GET /stats` answers
   `{online, boards: {sport: [{name, level}]}}`, the top 10 per sport. The deploy creates the object (the `v1` migration in
   `wrangler.jsonc`); no account resource to make by hand.
+- `/club` (behind the gate): accounts, in one Durable Object (`Club`, SQLite storage, `worker/club.js`; the `v3` migration).
+  An account is a display name, a character and a passkey (WebAuthn: no password, no e-mail); making one needs the player
+  to confirm they own the original game (kept with its time). The page signs in with a session token (only its hash is
+  stored; 90 days). Endpoints and checks: the top of `worker/club.js`.
 
 ## One-time setup (owner)
 
