@@ -1,5 +1,6 @@
 import { profile, type Publication } from '@/content/profile'
 import { SITE_URL } from '@/lib/seo'
+import citations from '@/content/citations.json'
 
 export const getPublication = (id: string): Publication | undefined => (profile.publications as readonly Publication[]).find((p) => p.id === id)
 
@@ -41,3 +42,10 @@ export function publicationJsonLd(p: Publication) {
     author: p.authors.map((name) => (name === profile.asciiName ? { '@type': 'Person', '@id': me, name: profile.name } : { '@type': 'Person', name })),
   }
 }
+
+/** "21 citations" for a DOI, from content/citations.json (Semantic Scholar, refreshed with `npm run citations`); '' when unknown or none. */
+export function citationLabel(doi?: string): string {
+  const n = doi ? (citations.counts as Record<string, number>)[doi] : undefined
+  return n ? `${n.toLocaleString('en-US')} ${n === 1 ? 'citation' : 'citations'}` : ''
+}
+export const citationsSource = `${citations.source}, ${citations.asOf}`

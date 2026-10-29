@@ -122,6 +122,10 @@
   min-height: 0;
   overflow: hidden;
 }
+/* while the surface is still growing the content is clipped to it (the engine sets --glass-cut), never past the glass */
+[data-glass-fold='open'][data-glass-live] {
+  clip-path: inset(0 0 var(--glass-cut, 0px) 0 round 28px);
+}
 .glass-fold-item {
   opacity: 0;
   transform: translate3d(0, -8px, 0);
@@ -233,23 +237,21 @@
    extremes toward the middle, brightness lifts, or lowers, the middle) so the bar's label holds 4.5:1 over a black photo
    in light mode and a white one in dark mode. Numbers and measurements: docs/design-references.md, "Nav glass". */
 .nav-glass {
-  /* Matched to iOS 26 Safari's own bars, measured on the same cream page (docs/design-references.md): the body is the
-     backdrop at about 73% lightness with its hue kept, a faint 1px rim, no gloss, no halo. A black tint at 27% gives
-     exactly that multiply; nothing brightens the backdrop, so the bar never clips to white. */
-  --glass-tint-light: rgba(0, 0, 0, 0.27);
+  /* Light-mode Liquid Glass (iOS 26 tab and tool bars in light appearance): a white wash over a blurred, more saturated
+     backdrop, page ink for the glyphs, a bright 1px rim with a faint dark lower edge, a little gloss. The open phone sheet
+     is the same material, only denser (--nav-sheet-tint), so pill and sheet read as one piece of glass. */
+  --glass-tint-light: rgba(255, 255, 255, 0.46);
   --glass-tint-dark: rgba(18, 22, 18, 0.42);
-  --glass-blur: 18px;
-  --glass-saturate: 1.15;
+  --glass-blur: 16px;
+  --glass-saturate: 1.8;
   --glass-blur-dark: 24px;
   --glass-saturate-dark: 1.9;
-  --glass-backdrop: brightness(1);
-  --glass-rim-light: rgba(255, 255, 255, 0.45);
-  /* Safari's bars are flat: a thin bright rim all round and no dark inner edge, so nothing sinks along the bottom */
-  --glass-edge-light: rgba(0, 0, 0, 0);
-  /* and their glyphs are white on that darkened backdrop, not page ink */
-  --glass-fg-on-light: rgba(255, 255, 255, 0.96);
-  --glass-sheen: 0;
-  --glass-shadow: 0.02;
+  --glass-backdrop: brightness(1.04);
+  --glass-rim-light: rgba(255, 255, 255, 0.85);
+  --glass-edge-light: rgba(0, 0, 0, 0.06);
+  --glass-fg-on-light: var(--ink);
+  --glass-sheen: 0.5;
+  --glass-shadow: 0.08;
   --nav-flat-tint: var(--glass-tint-light);
 }
 @media (prefers-color-scheme: dark) {
@@ -259,7 +261,7 @@
   }
 }
 /* the bar's glyphs flip with its tone, as iOS bars do: ink over light content, pale over a dark photo. The tone comes
-   from the backdrop (an image reports its manifest colour). Open, the sheet is opaque paper and keeps the page ink. */
+   from the backdrop (an image reports its manifest colour). Open, the sheet is the same light glass, denser, in page ink. */
 /* before the engine has picked a tone (server frame, no WebGL2) the bar is the light tone */
 .nav-glass .glass[data-glass-adaptive-text]:not([data-glass-tone]) {
   color: var(--glass-fg-on-light);

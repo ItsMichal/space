@@ -373,6 +373,7 @@ class Member extends ShapeState {
   readonly el: HTMLElement
   field: Field
   concR = 0
+  cut = 0
   lastW = -1
   lastH = -1
   private cleanups: Array<() => void> = []
@@ -469,6 +470,7 @@ class Member extends ShapeState {
     this.el.removeAttribute('data-glass-live')
     this.el.removeAttribute('data-glass-tone')
     this.el.style.removeProperty('scale')
+    this.el.style.removeProperty('--glass-cut')
   }
 }
 
@@ -990,6 +992,14 @@ export class Field {
       m.group = groupOf(m)
       if (probe) this.probeTone(m, hr)
       moving = m.step(dt, reduce) || moving
+      // while the surface springs taller than it is (a fold opening) the content is clipped to it, so rows never show
+      // past the glass edge: --glass-cut is how far the DOM box still reaches below the surface
+      const cut = reduce ? 0 : Math.max(0, Math.round(m.tcy + m.thy - (m.cy.x + m.hy.x)))
+      if (cut !== m.cut) {
+        m.cut = cut
+        if (cut) m.el.style.setProperty('--glass-cut', `${cut}px`)
+        else m.el.style.removeProperty('--glass-cut')
+      }
       // press scale is applied to the element itself so its content bounces with the glass
       if (m.cfg.effect.isInteractive && !reduce) {
         const s = m.scale.x
