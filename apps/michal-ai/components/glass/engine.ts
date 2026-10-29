@@ -39,6 +39,9 @@ import { GlassGL, type DrawParams, type MapTicket } from './gl'
 import { MAX_SHAPES } from './shaders'
 import { lightFor } from './lighting'
 import { decideTone, type Tone } from './theme'
+import { getSnapshot, onSnapshot, refreshSnapshot } from './snapshot'
+
+export { refreshSnapshot as refreshGlassLens }
 
 export type GlassTransition = 'materialize' | 'matchedGeometry' | 'identity'
 export type GlassAppearance = 'auto' | 'light' | 'dark'
@@ -96,6 +99,8 @@ function initEnv() {
     env.dpr = window.devicePixelRatio || 1
     // Edge, Opera, Brave, Samsung Internet and Android Chrome all say "Chrome/"; iOS browsers (CriOS) do not.
     env.chromium = /Chrome\//.test(navigator.userAgent) && !/Edg\/.*Mobile.*iPhone/.test(navigator.userAgent)
+    // ?glass=lens: the Safari path (frost + snapshot lens) in any browser, for debugging
+    if (location.search.includes('glass=lens')) env.chromium = false
   }
   read()
   const onChange = () => {
@@ -582,6 +587,10 @@ export class Field {
     pageLum: 0.9,
     themeDark: 0,
   }
+  /** Frost engine with the snapshot lens (requested 'auto' on a non-Chromium engine); off means plain frost. */
+  private lens = false
+  private lensOff: (() => void) | null = null
+  private onScroll = () => this.invalidate()
   private transitionEvt = () => {
     this.pollUntil = performance.now() + 700
     this.wake()
@@ -660,6 +669,7 @@ export class Field {
     else if (want === 'svg' || (want === 'auto' && env.chromium)) mode = 'svg'
     else mode = 'frost'
     if (mode !== 'flat' && !getGL()) mode = 'flat'
+    this.setLens(mode === 'frost' && want === 'auto')
     this.setMode(mode)
   }
 
@@ -779,8 +789,23 @@ export class Field {
     this.svg = svg
   }
 
+  private setLens(on: boolean) {
+    if (on === this.lens) return
+    this.lens = on
+    if (on) {
+      this.lensOff = onSnapshot(() => this.invalidate(true))
+      // the nav is fixed: what is under its rim changes with scroll, so scrolling draws (the surface pass only, sub-ms)
+      addEventListener('scroll', this.onScroll, { passive: true })
+    } else {
+      this.lensOff?.()
+      this.lensOff = null
+      removeEventListener('scroll', this.onScroll)
+    }
+  }
+
   dispose() {
     if (this.disposed) return
+    this.setLens(false)
     this.disposed = true
     fields.delete(this)
     active.delete(this)
@@ -1071,6 +1096,7 @@ export class Field {
 
   private signature(shapes: ShapeState[], hr: DOMRect, light: { x: number; y: number; k: number }): string {
     let s = `${this.mode}|${envEpoch}|${(light.x * 60) | 0},${(light.y * 60) | 0}|`
+    if (this.lens) s += `${getSnapshot()?.epoch ?? 0},${Math.round(scrollX + hr.left)},${Math.round(scrollY + hr.top)}|`
     for (const m of shapes) {
       s +=
         `${Math.round(m.cx.x * 8)},${Math.round(m.cy.x * 8)},${Math.round(m.hx.x * 8)},${Math.round(m.hy.x * 8)},${Math.round(m.r.x * 4)},` +
@@ -1152,6 +1178,16 @@ export class Field {
       themeDark: dark,
       frost: this.mode === 'frost',
       sheen: c.sheen,
+      back: null,
+    }
+    const snap = this.lens ? getSnapshot() : null
+    if (snap && gl.setBackdrop(snap.canvas, snap.epoch)) {
+      base.back = {
+        xf: [hr.left + scrollX, hr.top + scrollY, 1 / snap.w, 1 / snap.h],
+        // the lens blur as a mip level of the snapshot (texels per css px = scale)
+        lod: Math.log2(Math.max(1, (c.blur / 3) * snap.scale)),
+        refr: 0.5 * c.refraction * Math.min(1, bezel / 24),
+      }
     }
 
     // ---- surface pass

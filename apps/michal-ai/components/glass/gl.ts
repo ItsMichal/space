@@ -39,12 +39,14 @@ export type DrawParams = {
   /** Scale on the water-drop gloss and the frost bevel lift (1 = default, 0 = none). */
   sheen: number
   readback?: boolean
+  /** Lens from the page snapshot (frost engine): field css -> snapshot uv (offset x, y, 1/w, 1/h), mip level, shift scale in css px. */
+  back?: { xf: [number, number, number, number]; lod: number; refr: number } | null
 }
 
 const UNIFORMS = [
   'uPass', 'uN', 'uRect', 'uPar', 'uTint', 'uMisc', 'uFold', 'uK', 'uUnionK', 'uWin', 'uWinPx', 'uPx', 'uBezel',
   'uPeak', 'uLight', 'uLightK', 'uTintLight', 'uTintDark', 'uRim', 'uEdge', 'uRimD', 'uEdgeD', 'uShadow', 'uShadowCol', 'uGlow',
-  'uThemeDark', 'uReadback', 'uFrost', 'uSheen',
+  'uThemeDark', 'uReadback', 'uFrost', 'uSheen', 'uBack', 'uBackOn', 'uBackXf', 'uBackLod', 'uRefr',
 ] as const
 
 type UName = (typeof UNIFORMS)[number]
@@ -64,6 +66,8 @@ export class GlassGL {
   private loc = {} as Record<UName, WebGLUniformLocation | null>
   private lost = false
   private pboPool: WebGLBuffer[] = []
+  private backTex: WebGLTexture | null = null
+  private backEpoch = -1
   onLost: (() => void) | null = null
 
   private constructor(canvas: HTMLCanvasElement | OffscreenCanvas, gl: WebGL2RenderingContext, prog: WebGLProgram) {
@@ -123,6 +127,36 @@ export class GlassGL {
     } catch (err) {
       if (process.env.NODE_ENV !== 'production') console.warn('[glass] WebGL2 init failed', err)
       return null
+    }
+  }
+
+  /** Uploads the page snapshot once per capture (mipmapped: the blur is a mip level, not a kernel). False if it cannot. */
+  setBackdrop(src: TexImageSource | null, epoch: number): boolean {
+    const gl = this.gl
+    if (!src) {
+      if (this.backTex) gl.deleteTexture(this.backTex)
+      this.backTex = null
+      this.backEpoch = -1
+      return false
+    }
+    if (epoch === this.backEpoch && this.backTex) return true
+    try {
+      this.backTex ??= gl.createTexture()
+      gl.activeTexture(gl.TEXTURE0)
+      gl.bindTexture(gl.TEXTURE_2D, this.backTex)
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true)
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src)
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false)
+      gl.generateMipmap(gl.TEXTURE_2D)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+      this.backEpoch = epoch
+      return gl.getError() === gl.NO_ERROR
+    } catch {
+      this.setBackdrop(null, -1)
+      return false
     }
   }
 
@@ -222,6 +256,16 @@ export class GlassGL {
     gl.uniform1i(L.uReadback, p.readback ? 1 : 0)
     gl.uniform1i(L.uFrost, p.frost ? 1 : 0)
     gl.uniform1f(L.uSheen, p.sheen)
+    const back = p.back && this.backTex && p.pass === 1 ? p.back : null
+    gl.uniform1i(L.uBackOn, back ? 1 : 0)
+    if (back) {
+      gl.activeTexture(gl.TEXTURE0)
+      gl.bindTexture(gl.TEXTURE_2D, this.backTex)
+      gl.uniform1i(L.uBack, 0)
+      gl.uniform4f(L.uBackXf, ...back.xf)
+      gl.uniform1f(L.uBackLod, back.lod)
+      gl.uniform1f(L.uRefr, back.refr)
+    }
     gl.drawArrays(gl.TRIANGLES, 0, 3)
     return this.canvas.height - hpx
   }
