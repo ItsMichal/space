@@ -33,6 +33,9 @@ files. The game files are not in this repo.
   The same object keeps the club's social side (`worker/social.js`): friends by friend code, blocks and reports, and a
   rating (stored); presence, the club chat room and direct messages, invites and the quick-match queues (in memory),
   all over a long-poll of `/club/events`. Endpoints: the top of `worker/social.js`.
+- `POST /logs` (behind the gate): a page's gzipped session log, which the game's native build can replay (game repo:
+  `docs/session-logs.md`). It is stored in the bucket under `logs/` and never served. Limits: at most 1 MB a log and
+  2,000 a day over everyone (counted in `Stats`). An hourly cron deletes logs older than 24 hours (`worker/logs.js`).
 
 ## One-time setup (owner)
 

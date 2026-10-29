@@ -10,6 +10,8 @@
 // /stats (the online count and the all-time leaderboards, worker/stats.js) goes to the Durable Object STATS.
 // /club (accounts: passkeys, the display name and character, worker/club.js; friends, presence, chat, matchmaking,
 // worker/social.js) goes to the Durable Object CLUB.
+// POST /logs stores a page's gzipped session log in the bucket under logs/ for a day (worker/logs.js); the hourly cron
+// (scheduled) deletes older ones. logs/ is never served.
 //
 // Every path except /gate needs the cookie from a correct passkey. Without the SPORTS_PASSKEY secret everything answers 503.
 // SPORTS_GATE="off" (wrangler.jsonc vars) opens the site: no passkey, no secret needed, /gate goes straight on.
@@ -19,6 +21,7 @@ import { Club as ClubCore, clubRequest, sqlStore as clubStore } from './club.js'
 import { Social, socialSql } from './social.js';
 import { createOnline } from './online.js';
 import { Board, sqlStore, statsRequest } from './stats.js';
+import { PER_DAY, dayOf, logRequest, sweepLogs } from './logs.js';
 
 const TYPES = {
   '.html': 'text/html',
@@ -107,7 +110,8 @@ export function keyOf(pathname) {
   if (parts[parts.length - 1] === '') parts[parts.length - 1] = 'index.html';
   // no empty, dot or dot-dot segments (also keeps the bucket's own bookkeeping, ".publish-state.json", unreachable);
   // z/ holds the compressed chunks and is only reachable through /chunks
-  if (parts.some((s) => s === '' || s.startsWith('.')) || parts[0] === 'z') return null;
+  // logs/ holds the session logs (worker/logs.js), which are never served
+  if (parts.some((s) => s === '' || s.startsWith('.')) || parts[0] === 'z' || parts[0] === 'logs') return null;
   return parts.join('/');
 }
 
@@ -150,6 +154,15 @@ export async function handle(req, env, opts = {}) {
     if (!env.STATS) return text(501, 'no stats here');
     return env.STATS.get(env.STATS.idFromName('global')).fetch(req);
   }
+  if (path === '/logs') {
+    if (!env.STATS) return text(501, 'no logs here');
+    const stats = env.STATS.get(env.STATS.idFromName('global'));
+    const admit = async (now) => {
+      const r = await stats.fetch('https://stats/admit-log', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ day: dayOf(now), cap: PER_DAY }) });
+      return r.ok && (await r.json()).ok === true;
+    };
+    return logRequest(req, env.BUCKET, admit, opts.now ?? Date.now());
+  }
   if (path.startsWith('/club/')) {
     if (!env.CLUB) return text(501, 'no accounts here');
     return env.CLUB.get(env.CLUB.idFromName('global')).fetch(req);
@@ -187,4 +200,8 @@ export class Online {
   fetch(req) { return this.handle(req); }
 }
 
-export default { fetch: (req, env) => handle(req, env) };
+export default {
+  fetch: (req, env) => handle(req, env),
+  // the hourly cron (wrangler.jsonc triggers): session logs older than a day go
+  scheduled: (ev, env, ctx) => ctx.waitUntil(sweepLogs(env.BUCKET, ev.scheduledTime ?? Date.now())),
+};
