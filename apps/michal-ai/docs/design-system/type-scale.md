@@ -6,7 +6,9 @@ for code); this document is about sizes only.
 
 ## The tokens
 
-Defined once in `docs/design-system/tokens.json`, generated into `app/styles/tokens.css` (`npm run tokens`). Phones step the
+Defined once in `docs/design-system/tokens.json`, generated into `app/styles/tokens.css` (`npm run tokens`), applied by the role
+classes in `app/styles/type.css`, and typed in `lib/design/type.ts` (`TypeLevel`, `TypeRole`, `typeClass()`); `lib/design/type.test.ts`
+fails if the three disagree. Phones step the
 same tokens down below 600px (`fontSizeMobile`), so there are no per-component clamps. The step is at 600px, not at the 768px layout
 breakpoint: an unfolded phone or a small tablet (600 to 767px) keeps the phone layout but reads at the desktop sizes, so the 33rem
 text column is about 70 characters at 18px, a book page, instead of about 75 at 17px.
@@ -33,10 +35,11 @@ the name fills the column). Nothing else uses it. Page titles and article titles
    (or the `.t-*` classes in `app/styles/type.css`). In Tailwind: `text-title`, `text-heading`, `text-body`, `text-small`. No `text-[..px]`,
    no `text-sm`/`text-lg`, no `em` sizes, no `clamp()` outside the token definitions. `npm run check:type` enforces it.
 2. Hierarchy inside a size comes from weight (400 or 500), colour (`--ink` or `--ink-muted`) and space, not from a new size.
-3. Item titles. A card heading is `heading`. A title of one item inside a card or list (employer, publication, hackathon, press item,
-   award, post or project row, series, prev/next step, page-end link label of a row) is `body` at weight 500. A tile that is itself the
-   card (the work grid, `/projects` and `/writing` tiles) titles itself with `heading`. One rule per class of thing, used in every
-   card on the site.
+3. Item titles sit one level below the head of their section (2026-10-28, the owner: "limit text sizes on the main page to just 3
+   levels (plus header and one tiny one)"). Under a `title` section head (home: Selected work, Writing) every item title is
+   `heading`, so projects and posts read as one list. Under a `heading` sub-head (`.ix-sec`: Experience, Publications, the `/writing`
+   and `/about` sections) an item title is `body` at 500 (`ui`). A tile that is itself the card (the `/projects` and `/writing` tiles)
+   titles itself with `heading`. In code: `itemTitleRole(sectionHead)` in `lib/design/type.ts`.
 4. Roles, years, venue lines, dates, captions: `small`, ink-muted.
 5. Paragraphs in cards and article prose: `body`. A second paragraph in a lighter colour is still `body`.
 6. Article headings: h1 `title`, h2 `heading`, h3 `body` at 500 in the display-free text face, h4 `small` at 500. The lede is `heading` in italic.
