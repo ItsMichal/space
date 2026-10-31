@@ -3,7 +3,8 @@
 // (Authorization: Bearer <token>).
 //
 //   GET  /club/events?since=N&venue=V   long-poll (<= 20 s) -> {seq, events: [...]}; being in it is being online (in venue V)
-//   GET  /club/friends                  -> {tag, rating, friends: [{id, name, character, tag, state, online, venue}], blocked: [{id, name}]}
+//   GET  /club/friends                  -> {tag, rating, ratings, friends: [{id, name, character, tag, state, online, venue}], blocked: [{id, name}]}
+//                                          ratings: {sport: {rating, games, wins, losses, draws}} for the sports played
 //                                          state: 'friend', 'in' (asked you), 'out' (you asked)
 //   POST /club/friends/add    {tag}     -> {}   ask, or accept when they asked you
 //   POST /club/friends/remove {id}      -> {}   unfriend, decline or take back
@@ -12,13 +13,21 @@
 //   GET  /club/chat                     -> {messages}  the club room's recent messages
 //   POST /club/chat           {text, to?} -> {}   to: a friend's id (direct), or the club room
 //   POST /club/invite         {to, sport, code} -> {}   a friend gets {k: 'invite'}
-//   POST /club/match          {sport}   -> {}   queue for a quick match; {k: 'match'} when paired
+//   POST /club/match          {sport}   -> {waiting}   queue for a quick match; {k: 'match'} when paired. sport: one sport,
+//                                          a list, or 'any' (autofill: the first player whose band meets, in a sport
+//                                          both take; the closest ratings win, a tie is drawn by lot)
 //   POST /club/match/cancel   {}        -> {}
 //   POST /club/match/lobby    {match, code} -> {}   the host's lobby code for the matched guest ({k: 'match-lobby'})
-//   POST /club/result         {match, won}  -> {rating?}  both sides report; the ratings move when they agree
+//   POST /club/result         {match, outcome}  -> {rating?, delta?}  outcome 'win', 'loss' or 'draw' (or the older
+//                                          {won}); both sides report and the sport's ratings move when they agree
+//   GET  /club/leaderboard?sport=S      -> {sport, players, top: [{rank, name, character, tag, rating, games, wins, losses,
+//                                          draws}], me: {rank, ...} | null}   the rated players of a sport, best 50
 // Events: {k: 'presence', id, online, venue}, {k: 'friends'} (the list changed: fetch it), {k: 'chat', from, name, text,
 // at, to?}, {k: 'invite', from, name, sport, code}, {k: 'match', match, sport, host, peer: {name, character, rating}},
-// {k: 'match-lobby', match, code}, {k: 'match-gone', match}.
+// {k: 'match-lobby', match, code}, {k: 'match-gone', match}, {k: 'rating', sport, rating, delta, outcome} (a result counted).
+//
+// Ratings are Elo per sport (start 1000, K 32; a draw scores a half), counted only for matches the queue made: friends'
+// lobbies and invites are friendlies.
 //
 // Friends, blocks, reports and ratings are stored; presence, chat, invites and the queues live in memory (a restart of the
 // object loses them, which costs at most a message or a queue place). This file, like club.js, has no Worker-only imports.
@@ -29,6 +38,8 @@ const CHAT_BURST = 5, CHAT_WINDOW_MS = 10_000;
 const BAND = 200, WIDEN_MS = 15_000, RATING0 = 1000, ELO_K = 32;
 const MATCH_MS = 10 * 60_000;
 const SPORTS = new Set(['baseball', 'bowling', 'tennis', 'golf', 'boxing']);
+const OUTCOMES = { win: 1, draw: 0.5, loss: 0 };
+const BOARD = 50;
 const TAG_ALPHA = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', TAG_LEN = 6;
 const VENUE = /^[a-z-]{1,24}$/;
 const LOBBY_CODE = /^[A-Z2-9]{4,8}$/;
@@ -62,7 +73,7 @@ export class Social {
     this.on = new Map();       // id -> {seen, venue, seq, events: [], wait}
     this.room = [];            // the club room's recent messages
     this.said = new Map();     // id -> times of the last messages (rate limit)
-    this.queue = new Map();    // sport -> [{id, rating, since}]
+    this.queue = [];           // [{id, sports: [sport], ratings: {sport: rating}, since}]
     this.matches = new Map();  // match -> {sport, host, guest, at, code, results: {}}
   }
 
@@ -76,6 +87,8 @@ export class Social {
     }
     return p;
   }
+  /** the player's record in a sport (a fresh one when they never played it) */
+  rated(id, sport) { return this.db.rating(id, sport) || { id, sport, rating: RATING0, games: 0, wins: 0, losses: 0, draws: 0 }; }
   blocked(a, b) { return this.db.blocked(a, b) || this.db.blocked(b, a); }
   friends(id) { return this.db.friendsOf(id).filter((r) => r.state === 'ok').map((r) => (r.a === id ? r.b : r.a)); }
   isFriend(a, b) { const r = this.db.friend(a, b); return !!r && r.state === 'ok'; }
@@ -136,7 +149,9 @@ export class Social {
     }
     out.sort((x, y) => (y.online - x.online) || x.name.localeCompare(y.name));
     const blocked = this.db.blocksBy(id).map((b) => ({ id: b, name: this.club.account(b)?.name || '' }));
-    return { body: { tag: me.tag, rating: me.rating, friends: out, blocked } };
+    const ratings = {};
+    for (const r of this.db.ratingsOf(id)) ratings[r.sport] = { rating: r.rating, games: r.games, wins: r.wins, losses: r.losses, draws: r.draws };
+    return { body: { tag: me.tag, rating: me.rating, ratings, friends: out, blocked } };
   }
   add(id, tag) {
     const t = typeof tag === 'string' ? tag.toUpperCase().replace(/[^A-Z0-9]/g, '') : '';
@@ -206,40 +221,44 @@ export class Social {
   }
 
   // ---- matchmaking --------------------------------------------------------------------------------------------------
-  leaveQueue(id) { for (const q of this.queue.values()) { const i = q.findIndex((x) => x.id === id); if (i >= 0) q.splice(i, 1); } }
+  leaveQueue(id) { const i = this.queue.findIndex((x) => x.id === id); if (i >= 0) this.queue.splice(i, 1); }
   enqueue(id, sport) {
-    if (!SPORTS.has(sport)) return { status: 400, body: { err: 'that sport cannot be played online' } };
+    const sports = sport === 'any' ? [...SPORTS] : Array.isArray(sport) ? [...new Set(sport)] : [sport];
+    if (!sports.length || !sports.every((x) => SPORTS.has(x))) return { status: 400, body: { err: 'that sport cannot be played online' } };
     if (!this.on.has(id)) return { status: 409, body: { err: 'not connected' } };
     this.leaveQueue(id);
-    const q = this.queue.get(sport) || [];
-    if (q.length >= 500) return { status: 503, body: { err: 'the queue is full' } };
-    q.push({ id, rating: this.player(id).rating, since: this.now() });
-    this.queue.set(sport, q);
+    if (this.queue.length >= 500) return { status: 503, body: { err: 'the queue is full' } };
+    const ratings = {};
+    for (const x of sports) ratings[x] = this.rated(id, x).rating;
+    this.queue.push({ id, sports, ratings, since: this.now() });
     this.pair();
-    return { body: {} };
+    return { body: { waiting: this.queue.length } };
   }
-  /** pairs the queue's players whose bands meet: a band of BAND rating each side, widened by one per WIDEN_MS waited */
+  /** pairs the queue's players whose bands meet in a sport both take: a band of BAND rating each side, widened by one per
+   *  WIDEN_MS waited; the closest pair of ratings goes first, ties drawn by lot (so 'any' spreads over the sports) */
   pair() {
-    const t = this.now();
-    for (const [sport, q] of this.queue) {
-      for (let i = 0; i < q.length; i++) {
-        const a = q[i];
-        if (!this.online(a.id)) { q.splice(i--, 1); continue; }
-        const wa = BAND * (1 + Math.floor((t - a.since) / WIDEN_MS));
-        let best = -1;
-        for (let j = i + 1; j < q.length; j++) {
-          const b = q[j], wb = BAND * (1 + Math.floor((t - b.since) / WIDEN_MS)), d = Math.abs(a.rating - b.rating);
-          if (d <= Math.min(wa, wb) && this.online(b.id) && !this.blocked(a.id, b.id) && (best < 0 || d < Math.abs(a.rating - q[best].rating))) best = j;
+    const t = this.now(), q = this.queue, band = (x) => BAND * (1 + Math.floor((t - x.since) / WIDEN_MS));
+    for (let i = 0; i < q.length; i++) {
+      const a = q[i];
+      if (!this.online(a.id)) { q.splice(i--, 1); continue; }
+      let best = null;
+      for (let j = i + 1; j < q.length; j++) {
+        const b = q[j];
+        if (!this.online(b.id) || this.blocked(a.id, b.id)) continue;
+        for (const sport of a.sports) {
+          if (!(sport in b.ratings)) continue;
+          const d = Math.abs(a.ratings[sport] - b.ratings[sport]), lot = Math.random();
+          if (d <= Math.min(band(a), band(b)) && (!best || d < best.d || (d === best.d && lot < best.lot))) best = { j, sport, d, lot };
         }
-        if (best < 0) continue;
-        const b = q[best];
-        q.splice(best, 1); q.splice(i--, 1);
-        const match = rnd(), host = a.since <= b.since ? a : b, guest = host === a ? b : a;
-        this.matches.set(match, { sport, host: host.id, guest: guest.id, at: t, code: '', results: {} });
-        const peer = (x) => { const c = this.club.account(x.id); return { name: c?.name || '', character: c?.character || '', rating: x.rating }; };
-        this.push(host.id, { k: 'match', match, sport, host: true, peer: peer(guest) });
-        this.push(guest.id, { k: 'match', match, sport, host: false, peer: peer(host) });
       }
+      if (!best) continue;
+      const b = q[best.j], sport = best.sport;
+      q.splice(best.j, 1); q.splice(i--, 1);
+      const match = rnd(), host = a.since <= b.since ? a : b, guest = host === a ? b : a;
+      this.matches.set(match, { sport, host: host.id, guest: guest.id, at: t, code: '', results: {} });
+      const peer = (x) => { const c = this.club.account(x.id); return { name: c?.name || '', character: c?.character || '', rating: x.ratings[sport] }; };
+      this.push(host.id, { k: 'match', match, sport, host: true, rating: host.ratings[sport], peer: peer(guest) });
+      this.push(guest.id, { k: 'match', match, sport, host: false, rating: guest.ratings[sport], peer: peer(host) });
     }
   }
   matchLobby(id, o) {
@@ -258,22 +277,37 @@ export class Social {
     }
     return { body: {} };
   }
-  /** both report; when one says won and the other lost, the ratings move (Elo); anything else counts as nothing */
+  /** both report from their side; when the two agree (a win and a loss, or two draws) the sport's ratings move (Elo).
+   *  Anything else counts as nothing. A match is kept MATCH_MS for its reports. */
   result(id, o) {
     const m = this.matches.get(o?.match);
-    if (!m || (m.host !== id && m.guest !== id) || typeof o.won !== 'boolean') return { status: 404, body: { err: 'no such match' } };
-    m.results[id] = o.won;
+    const outcome = typeof o?.outcome === 'string' ? o.outcome : typeof o?.won === 'boolean' ? (o.won ? 'win' : 'loss') : '';
+    if (!m || (m.host !== id && m.guest !== id) || !(outcome in OUTCOMES)) return { status: 404, body: { err: 'no such match' } };
+    m.results[id] = outcome;
     const h = m.results[m.host], g = m.results[m.guest];
     if (h === undefined || g === undefined) return { body: {} };
     this.matches.delete(o.match);
-    if (h === g) return { body: { rating: this.player(id).rating } };
-    const ph = this.player(m.host), pg = this.player(m.guest);
-    const eh = 1 / (1 + 10 ** ((pg.rating - ph.rating) / 400)), sh = h ? 1 : 0;
-    const dh = Math.round(ELO_K * (sh - eh));
-    this.db.setRating(m.host, ph.rating + dh, ph.games + 1);
-    this.db.setRating(m.guest, pg.rating - dh, pg.games + 1);
-    return { body: { rating: this.player(id).rating } };
+    if (OUTCOMES[h] + OUTCOMES[g] !== 1) return { body: { rating: this.rated(id, m.sport).rating } };
+    const ph = this.rated(m.host, m.sport), pg = this.rated(m.guest, m.sport);
+    const eh = 1 / (1 + 10 ** ((pg.rating - ph.rating) / 400)), dh = Math.round(ELO_K * (OUTCOMES[h] - eh));
+    const count = (p, r, d) => this.db.putRating({ ...p, rating: p.rating + d, games: p.games + 1, wins: p.wins + (r === 'win'), losses: p.losses + (r === 'loss'), draws: p.draws + (r === 'draw') });
+    count(ph, h, dh); count(pg, g, -dh);
+    this.push(m.host, { k: 'rating', sport: m.sport, rating: ph.rating + dh, delta: dh, outcome: h });
+    this.push(m.guest, { k: 'rating', sport: m.sport, rating: pg.rating - dh, delta: -dh, outcome: g });
+    return { body: { rating: this.rated(id, m.sport).rating, delta: id === m.host ? dh : -dh } };
   }
+
+  /** a sport's rated players: the best BOARD, and where the asker stands */
+  board(id, sport) {
+    if (!SPORTS.has(sport)) return { status: 400, body: { err: 'no such sport' } };
+    const row = (r, rank) => { const c = this.club.account(r.id); return { rank, name: c?.name || '', character: c?.character || '', tag: this.player(r.id).tag, rating: r.rating, games: r.games, wins: r.wins, losses: r.losses, draws: r.draws }; };
+    const top = [];
+    for (const r of this.db.top(sport, BOARD)) top.push(row(r, top.length && top[top.length - 1].rating === r.rating ? top[top.length - 1].rank : top.length + 1));
+    const mine = this.db.rating(id, sport);
+    return { body: { sport, players: this.db.rated(sport), top, me: mine ? row(mine, this.db.above(sport, mine.rating) + 1) : null } };
+  }
+  /** a match the queue made is gone after MATCH_MS */
+  expire() { const t = this.now(); for (const [k, m] of this.matches) if (t - m.at > MATCH_MS) this.matches.delete(k); }
 
   /** the account went: everything social with it */
   forget(id) {
@@ -291,6 +325,7 @@ export class Social {
       if (path === '/club/events') return this.events(who, Number(url.searchParams.get('since')) || 0, url.searchParams.get('venue') || '');
       if (path === '/club/friends') return this.list(who);
       if (path === '/club/chat') return this.roomFor(who);
+      if (path === '/club/leaderboard') return this.board(who, url.searchParams.get('sport') || '');
       return null;
     }
     switch (path) {
@@ -303,7 +338,7 @@ export class Social {
       case '/club/match': return this.enqueue(who, body.sport);
       case '/club/match/cancel': return this.cancel(who);
       case '/club/match/lobby': return this.matchLobby(who, body);
-      case '/club/result': return this.result(who, body);
+      case '/club/result': this.expire(); return this.result(who, body);
     }
     return null;
   }
@@ -312,6 +347,8 @@ export class Social {
 /** The social tables over Durable Object SQLite, added to club.js's sqlStore. */
 export function socialSql(sql, store) {
   sql.exec('CREATE TABLE IF NOT EXISTS player (id TEXT PRIMARY KEY, tag TEXT NOT NULL UNIQUE, rating INTEGER NOT NULL, games INTEGER NOT NULL)');
+  sql.exec('CREATE TABLE IF NOT EXISTS rating (id TEXT NOT NULL, sport TEXT NOT NULL, rating INTEGER NOT NULL, games INTEGER NOT NULL, wins INTEGER NOT NULL, losses INTEGER NOT NULL, draws INTEGER NOT NULL, PRIMARY KEY (id, sport))');
+  sql.exec('CREATE INDEX IF NOT EXISTS rating_by_sport ON rating (sport, rating)');
   sql.exec('CREATE TABLE IF NOT EXISTS friend (a TEXT NOT NULL, b TEXT NOT NULL, state TEXT NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (a, b))');
   sql.exec('CREATE INDEX IF NOT EXISTS friend_by_b ON friend (b)');
   sql.exec('CREATE TABLE IF NOT EXISTS block (a TEXT NOT NULL, b TEXT NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (a, b))');
@@ -321,7 +358,12 @@ export function socialSql(sql, store) {
     player: (id) => one(sql.exec('SELECT * FROM player WHERE id = ?', id)),
     playerByTag: (tag) => one(sql.exec('SELECT * FROM player WHERE tag = ?', tag)),
     putPlayer: (p) => sql.exec('INSERT INTO player (id, tag, rating, games) VALUES (?, ?, ?, ?)', p.id, p.tag, p.rating, p.games),
-    setRating: (id, rating, games) => sql.exec('UPDATE player SET rating = ?, games = ? WHERE id = ?', rating, games, id),
+    rating: (id, sport) => one(sql.exec('SELECT * FROM rating WHERE id = ? AND sport = ?', id, sport)),
+    ratingsOf: (id) => sql.exec('SELECT * FROM rating WHERE id = ?', id).toArray(),
+    putRating: (r) => sql.exec('INSERT OR REPLACE INTO rating (id, sport, rating, games, wins, losses, draws) VALUES (?, ?, ?, ?, ?, ?, ?)', r.id, r.sport, r.rating, r.games, r.wins, r.losses, r.draws),
+    top: (sport, n) => sql.exec('SELECT * FROM rating WHERE sport = ? ORDER BY rating DESC, games DESC LIMIT ?', sport, n).toArray(),
+    rated: (sport) => sql.exec('SELECT COUNT(*) AS n FROM rating WHERE sport = ?', sport).one().n,
+    above: (sport, r) => sql.exec('SELECT COUNT(*) AS n FROM rating WHERE sport = ? AND rating > ?', sport, r).one().n,
     friend: (x, y) => one(sql.exec('SELECT * FROM friend WHERE (a = ? AND b = ?) OR (a = ? AND b = ?)', x, y, y, x)),
     friendsOf: (id) => sql.exec('SELECT * FROM friend WHERE a = ? OR b = ?', id, id).toArray(),
     putFriend: (a, b, state, at) => { sql.exec('DELETE FROM friend WHERE (a = ? AND b = ?) OR (a = ? AND b = ?)', a, b, b, a); sql.exec('INSERT INTO friend (a, b, state, at) VALUES (?, ?, ?, ?)', a, b, state, at); },
@@ -336,20 +378,27 @@ export function socialSql(sql, store) {
       sql.exec('DELETE FROM friend WHERE a = ? OR b = ?', id, id);
       sql.exec('DELETE FROM block WHERE a = ? OR b = ?', id, id);
       sql.exec('DELETE FROM player WHERE id = ?', id);
+      sql.exec('DELETE FROM rating WHERE id = ?', id);
     },
   });
 }
 
 /** The same over Maps (the tests, the game repo's local server). */
 export function socialMap(store) {
-  const player = new Map(), friend = [], block = [], report = [];
+  const player = new Map(), rating = new Map(), friend = [], block = [], report = [];
+  const ofSport = (sport) => [...rating.values()].filter((r) => r.sport === sport);
   const pair = (r, x, y) => (r.a === x && r.b === y) || (r.a === y && r.b === x);
   const drop = (arr, f) => { for (let i = arr.length - 1; i >= 0; i--) if (f(arr[i])) arr.splice(i, 1); };
   return Object.assign(store, {
     player: (id) => player.get(id) || null,
     playerByTag: (tag) => [...player.values()].find((p) => p.tag === tag) || null,
     putPlayer: (p) => player.set(p.id, { ...p }),
-    setRating: (id, rating, games) => Object.assign(player.get(id), { rating, games }),
+    rating: (id, sport) => rating.get(id + ' ' + sport) || null,
+    ratingsOf: (id) => [...rating.values()].filter((r) => r.id === id),
+    putRating: (r) => rating.set(r.id + ' ' + r.sport, { ...r }),
+    top: (sport, n) => ofSport(sport).sort((a, b) => b.rating - a.rating || b.games - a.games).slice(0, n),
+    rated: (sport) => ofSport(sport).length,
+    above: (sport, r) => ofSport(sport).filter((x) => x.rating > r).length,
     friend: (x, y) => friend.find((r) => pair(r, x, y)) || null,
     friendsOf: (id) => friend.filter((r) => r.a === id || r.b === id),
     putFriend: (a, b, state, at) => { drop(friend, (r) => pair(r, a, b)); friend.push({ a, b, state, at }); },
@@ -360,6 +409,6 @@ export function socialMap(store) {
     dropBlock: (a, b) => drop(block, (r) => r.a === a && r.b === b),
     putReport: (r) => report.push(r),
     reportsBy: (id, since) => report.filter((r) => r.by === id && r.at > since).length,
-    dropSocial: (id) => { drop(friend, (r) => r.a === id || r.b === id); drop(block, (r) => r.a === id || r.b === id); player.delete(id); },
+    dropSocial: (id) => { drop(friend, (r) => r.a === id || r.b === id); drop(block, (r) => r.a === id || r.b === id); player.delete(id); for (const [k, r] of rating) if (r.id === id) rating.delete(k); },
   });
 }

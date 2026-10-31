@@ -160,3 +160,24 @@ test('new accounts per address are limited', async () => {
   assert.equal((await call(club, ipPost('/club/register/begin', {}))).status, 429);
   assert.equal((await call(club, ipPost('/club/register/begin', {}), 1000 + 3600_000)).status, 200);
 });
+
+test('a quick account plays straight away and can take a passkey later', async () => {
+  const club = new Club(mapStore()), auth = await authenticator();
+  assert.equal((await call(club, post('/club/quick', { name: 'Zip', owns: false }))).status, 400);
+  const q = await call(club, post('/club/quick', { name: 'Zip', owns: true, character: CHAR }));
+  assert.equal(q.status, 200, JSON.stringify(q.body));
+  assert.equal(q.body.account.name, 'Zip'); assert.equal(q.body.account.passkey, false);
+  assert.equal((await call(club, post('/club/passkey/begin', {}))).status, 401);
+  const b = await call(club, post('/club/passkey/begin', {}, q.body.token));
+  const f = await call(club, post('/club/passkey/finish', { challenge: b.body.challenge, cred: await auth.create(b.body.challenge) }, q.body.token));
+  assert.equal(f.status, 200, JSON.stringify(f.body));
+  assert.equal(f.body.account.passkey, true); assert.equal(f.body.account.id, q.body.account.id);
+  const lb = await call(club, post('/club/login/begin', {}));
+  const li = await call(club, post('/club/login/finish', { challenge: lb.body.challenge, cred: await auth.get(lb.body.challenge) }));
+  assert.equal(li.body.account.id, q.body.account.id, 'the passkey signs in to the quick account');
+  // a challenge begun for one account does not attach to another
+  const o = await call(club, post('/club/quick', { name: 'Other', owns: true }));
+  const b2 = await call(club, post('/club/passkey/begin', {}, q.body.token));
+  assert.equal((await call(club, post('/club/passkey/finish', { challenge: b2.body.challenge, cred: await (await authenticator()).create(b2.body.challenge) }, o.body.token))).status, 400);
+  assert.equal((await call(club, post('/club/passkey/finish', { challenge: 'x', cred: {} }, q.body.token))).status, 400);
+});

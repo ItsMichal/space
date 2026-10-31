@@ -119,32 +119,93 @@ test('invites go to online friends only', async () => {
   assert.deepEqual([inv.name, inv.sport, inv.code], ['ann', 'tennis', 'ABCDE']);
 });
 
-test('matchmaking: a queue per sport, bands that widen, the lobby code, ratings from agreeing results', async () => {
+test('matchmaking: sports, bands that widen, the lobby code, per-sport ratings from agreeing results', async () => {
   const { t, call, who, poll, social } = await setup(['ann', 'bob', 'cat']);
   for (const n of ['ann', 'bob', 'cat']) await poll(n);
-  social.db.setRating(who.cat.id, 1500, 0);
+  social.db.putRating({ id: who.cat.id, sport: 'bowling', rating: 1500, games: 0, wins: 0, losses: 0, draws: 0 });
   await call(post('/club/match', { sport: 'bowling' }, who.ann.token));
   await call(post('/club/match', { sport: 'golf' }, who.bob.token));
-  await call(post('/club/match', { sport: 'bowling' }, who.cat.token));
+  const w = await call(post('/club/match', { sport: 'bowling' }, who.cat.token));
+  assert.equal(w.body.waiting, 3);
   assert.ok(!(await poll('ann')).some((e) => e.k === 'match'), 'different sports, a rating gap of 500: no match yet');
   t.now += 15_000; await poll('bob');
   t.now += 15_000; await poll('bob');   // 30 s: a band of 600 each side
   const m = (await poll('ann')).find((e) => e.k === 'match');
-  assert.ok(m && m.host && m.sport === 'bowling' && m.peer.name === 'cat');
+  assert.ok(m && m.host && m.sport === 'bowling' && m.peer.name === 'cat' && m.peer.rating === 1500 && m.rating === 1000);
   const mc = (await poll('cat')).find((e) => e.k === 'match');
   assert.equal(mc.match, m.match); assert.equal(mc.host, false);
   assert.equal((await call(post('/club/match/lobby', { match: m.match, code: 'QWERT' }, who.cat.token))).status, 404, 'only the host');
   await call(post('/club/match/lobby', { match: m.match, code: 'QWERT' }, who.ann.token));
   assert.equal((await poll('cat')).find((e) => e.k === 'match-lobby').code, 'QWERT');
-  await call(post('/club/result', { match: m.match, won: true }, who.ann.token));
-  const r = await call(post('/club/result', { match: m.match, won: false }, who.cat.token));
-  assert.ok(r.body.rating < 1500);
-  const ann = (await call(get('/club/friends', who.ann.token))).body.rating;
-  assert.equal(ann - 1000, 1500 - r.body.rating);
+  await call(post('/club/result', { match: m.match, outcome: 'win' }, who.ann.token));
+  const r = await call(post('/club/result', { match: m.match, outcome: 'loss' }, who.cat.token));
+  assert.ok(r.body.rating < 1500 && r.body.delta < 0);
+  const f = (await call(get('/club/friends', who.ann.token))).body;
+  assert.equal(f.ratings.bowling.rating - 1000, 1500 - r.body.rating);
+  assert.deepEqual([f.ratings.bowling.games, f.ratings.bowling.wins, f.ratings.bowling.losses], [1, 1, 0]);
+  assert.equal(f.ratings.golf, undefined, 'only the sports played');
+  const ev = (await poll('ann')).find((e) => e.k === 'rating');
+  assert.ok(ev && ev.sport === 'bowling' && ev.delta > 0 && ev.outcome === 'win');
+  assert.equal((await call(post('/club/result', { match: m.match, outcome: 'win' }, who.ann.token))).status, 404, 'counted once');
   // cancel: out of the queue
   await call(post('/club/match/cancel', {}, who.bob.token));
   await call(post('/club/match', { sport: 'golf' }, who.ann.token));
   assert.ok(!(await poll('ann')).some((e) => e.k === 'match'));
+});
+
+test('autofill: any sport meets whoever waits in a sport it takes; two autofills spread over the sports', async () => {
+  const { call, who, poll } = await setup(['ann', 'bob', 'cat', 'dan']);
+  for (const n of ['ann', 'bob', 'cat', 'dan']) await poll(n);
+  await call(post('/club/match', { sport: 'tennis' }, who.ann.token));
+  await call(post('/club/match', { sport: 'any' }, who.bob.token));
+  const m = (await poll('bob')).find((e) => e.k === 'match');
+  assert.ok(m && m.sport === 'tennis' && m.peer.name === 'ann');
+  assert.equal((await call(post('/club/match', { sport: ['golf', 'boxing'] }, who.cat.token))).status, 200);
+  await call(post('/club/match', { sport: 'bowling' }, who.dan.token));
+  assert.ok(!(await poll('cat')).some((e) => e.k === 'match'), 'no sport in common');
+  await call(post('/club/match', { sport: 'any' }, who.dan.token));
+  const mc = (await poll('cat')).find((e) => e.k === 'match');
+  assert.ok(mc && ['golf', 'boxing'].includes(mc.sport));
+  assert.equal((await call(post('/club/match', { sport: 'darts' }, who.ann.token))).status, 400);
+  assert.equal((await call(post('/club/match', { sport: [] }, who.ann.token))).status, 400);
+});
+
+test('draws score a half; disagreeing reports count for nothing', async () => {
+  const { call, who, poll, social } = await setup(['ann', 'bob']);
+  await poll('ann'); await poll('bob');
+  social.db.putRating({ id: who.bob.id, sport: 'boxing', rating: 1100, games: 3, wins: 2, losses: 1, draws: 0 });
+  const match = async () => {
+    await call(post('/club/match', { sport: 'boxing' }, who.ann.token));
+    await call(post('/club/match', { sport: 'boxing' }, who.bob.token));
+    return (await poll('ann')).find((e) => e.k === 'match').match;
+  };
+  let id = await match();
+  await call(post('/club/result', { match: id, outcome: 'draw' }, who.ann.token));
+  const r = await call(post('/club/result', { match: id, outcome: 'draw' }, who.bob.token));
+  assert.ok(r.body.rating < 1100 && r.body.rating > 1080, 'the stronger player loses a little to a draw');
+  assert.equal(social.rated(who.ann.id, 'boxing').draws, 1);
+  id = await match();
+  await call(post('/club/result', { match: id, outcome: 'win' }, who.ann.token));
+  await call(post('/club/result', { match: id, outcome: 'win' }, who.bob.token));
+  assert.equal(social.rated(who.ann.id, 'boxing').games, 1, 'both claimed the win: not counted');
+  assert.equal((await call(post('/club/result', { match: 'nope', outcome: 'win' }, who.ann.token))).status, 404);
+});
+
+test('leaderboard: the best of a sport, ties share a rank, and where I stand', async () => {
+  const { call, who, poll, social } = await setup(['ann', 'bob', 'cat', 'dan']);
+  for (const n of ['ann', 'bob', 'cat', 'dan']) await poll(n);
+  const put = (n, rating) => social.db.putRating({ id: who[n].id, sport: 'golf', rating, games: 2, wins: 1, losses: 1, draws: 0 });
+  put('ann', 1200); put('bob', 1050); put('cat', 1050);
+  const b = (await call(get('/club/leaderboard?sport=golf', who.dan.token))).body;
+  assert.equal(b.players, 3);
+  assert.deepEqual(b.top.map((r) => [r.name, r.rank]), [['ann', 1], ['bob', 2], ['cat', 2]]);
+  assert.equal(b.me, null, 'dan never played golf');
+  assert.ok(b.top[0].tag && b.top[0].games === 2);
+  const c = (await call(get('/club/leaderboard?sport=golf', who.cat.token))).body;
+  assert.equal(c.me.rank, 2);
+  assert.equal((await call(get('/club/leaderboard?sport=chess', who.cat.token))).status, 400);
+  await call(post('/club/delete', {}, who.ann.token));
+  assert.equal((await call(get('/club/leaderboard?sport=golf', who.cat.token))).body.top[0].name, 'bob', 'a deleted account leaves the board');
 });
 
 test('a deleted account takes its friends and blocks with it', async () => {
