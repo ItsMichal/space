@@ -8,6 +8,8 @@ import { Gallery } from '@/components/ui/Gallery'
 import { FactRows } from '@/components/ui/FactRows'
 import { ReadingToc } from '@/components/ui/ReadingToc'
 import { OtherSiteAnchor } from '@/components/content/OtherSiteLink'
+import type { GlyphGrid } from '@space/glyph-art'
+import { GlyphHeader } from './GlyphHeader'
 import './reading.css'
 
 /** A project link; `other` marks the link to the paired piece on the other site (label is that site's title). Set at render time, never in frontmatter. */
@@ -23,6 +25,8 @@ type Props = {
   cover?: string
   coverAlt?: string
   coverFocus?: string
+  /** The cover's subject as glyph art (articles whose cover has one); it replaces the cover photo at the top. */
+  glyph?: GlyphGrid
   role?: string
   years?: string
   links?: LayoutLink[]
@@ -51,6 +55,7 @@ export function ArticleLayout({
   cover,
   coverAlt,
   coverFocus,
+  glyph,
   role,
   years,
   links,
@@ -64,6 +69,7 @@ export function ArticleLayout({
   const stack = tags.filter((t) => t !== 'Web')
   return (
     <article data-post data-reading-minutes={readingMinutes} className="reading">
+      {glyph && cover ? <GlyphHeader grid={glyph} cover={cover} coverAlt={coverAlt} /> : null}
       <header className="reading__head">
         {back ? (
           <p className="mb-space-4 font-serif text-small text-ink-muted">
@@ -88,7 +94,7 @@ export function ArticleLayout({
         {/* The page's end of the card-to-page transition: the card surface opens into this box (CardTransitions). */}
         <span aria-hidden className="reading__surface" />
       </header>
-      {cover ? (
+      {cover && !glyph ? (
         <figure className="hero reading__wide">
           <Zoomable
             src={cover}

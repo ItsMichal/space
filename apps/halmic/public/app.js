@@ -237,6 +237,13 @@
   document.addEventListener('focusout', (e) => { const t = e.target.closest?.(PV_SEL); if (t && pv?.tile === t && !t.matches(':hover')) pvStop(); else clearTimeout(pvTimer); });
   document.addEventListener('visibilitychange', () => { if (document.hidden) pvStop(true); });
 
+  // ---- dev log figure chips (:fig[N] in md.mjs): hovering or focusing one lights the figure it points at ----
+  const lightFig = (e, on) => { const a = e.target.closest?.('a.figref'); if (a && !(on && a.contains(e.relatedTarget))) document.getElementById(`fig-${a.dataset.fig}`)?.classList.toggle('is-lit', on); };
+  document.addEventListener('mouseover', (e) => lightFig(e, true));
+  document.addEventListener('mouseout', (e) => { if (!e.target.closest?.('a.figref')?.contains(e.relatedTarget)) lightFig(e, false); });
+  document.addEventListener('focusin', (e) => lightFig(e, true));
+  document.addEventListener('focusout', (e) => lightFig(e, false));
+
   // ---- the dental logo loop: plays only while on screen and only when motion is allowed; the detail page has a pause button ----
   const loops = [...document.querySelectorAll('video[data-loop]')];
   const toggle = document.querySelector('[data-vtoggle]');

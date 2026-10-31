@@ -160,3 +160,27 @@
   margin-inline: 0;
   width: auto;
 }
+
+/* Article header art (GlyphHeader): the cover's subject in 0s and 1s, on the wide track above the title. Its height follows the
+   grid (--gw columns, --gh rows) and the width it gets: glyphs are at most 10px and shrink to fit narrow screens. */
+.glyphhead {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  cursor: zoom-in;
+  container-type: inline-size;
+  margin-top: calc(var(--space-8) * -1);
+  margin-bottom: var(--space-12);
+}
+.glyphhead canvas {
+  display: block;
+  width: 100%;
+  height: calc(min(10px, 100cqw / (var(--gw) * 0.6)) * var(--gh));
+}
+.glyphhead:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: var(--radius-xs);
+}

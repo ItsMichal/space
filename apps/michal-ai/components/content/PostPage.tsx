@@ -7,6 +7,7 @@ import { SeriesNav } from '@/components/content/SeriesNav'
 import { ArticleLayout } from '@/components/site/ArticleLayout'
 import { PostNav } from '@/components/content/PostNav'
 import type { PostKind } from '@/lib/content/types'
+import type { GlyphGrid } from '@space/glyph-art'
 import { ReadingTheme } from '@/components/site/ReadingTheme'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { PostExtras } from '@/components/content/PostExtras'
@@ -49,7 +50,7 @@ export function postMetadata(kind: PostKind, slug: string, parent?: string): Met
  * `body` (the rendered markdown) and `jsonLd` (needs the full text for its word count) are produced by the route loader, because
  * the browser only has post metadata (see lib/content/source.client.ts).
  */
-export function PostPage({ kind, slug, parent, body, jsonLd }: { kind: PostKind; slug: string; parent?: string; body: ReactNode; jsonLd: object | object[] }) {
+export function PostPage({ kind, slug, parent, body, jsonLd, glyph }: { kind: PostKind; slug: string; parent?: string; body: ReactNode; jsonLd: object | object[]; glyph?: GlyphGrid }) {
   const post = resolve(kind, slug, parent)
   if (!post) throw new Response('Not found', { status: 404 })
   const parentPost = post.parent ? getPost(post.parent) : undefined
@@ -84,6 +85,7 @@ export function PostPage({ kind, slug, parent, body, jsonLd }: { kind: PostKind;
         cover={post.cover}
         coverAlt={post.coverAlt}
         coverFocus={post.coverFocus}
+        glyph={glyph}
         role={post.role}
         years={post.years}
         links={links}

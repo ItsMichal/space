@@ -8,6 +8,7 @@ import { YouTube } from '@/components/mdx/YouTube'
 import { Embed } from '@/components/mdx/Embed'
 import { Callout } from '@/components/mdx/Callout'
 import { Handwriting, type HandwritingProps } from '@/components/mdx/Handwriting'
+import { FigRef, Term } from '@/components/mdx/FigRef'
 import { Picture } from '@/components/media/Picture'
 import { Zoomable } from '@/components/media/Zoomable'
 import { PostPreviewLink } from '@/components/ui/PostPreviewLink'
@@ -20,6 +21,8 @@ const components = {
   'mdx-embed': (p: Props) => <Embed url={String(p.url)} title={p.title as string | undefined} ratio={p.ratio as string | undefined} />,
   'mdx-callout': (p: Props & { children?: ReactNode }) => <Callout type={(p.type as string) ?? 'note'}>{p.children}</Callout>,
   'mdx-handwriting': (p: Props) => <Handwriting {...(p as HandwritingProps)} />,
+  'mdx-term': (p: Props & { children?: ReactNode }) => <Term c={String(p.c)}>{p.children}</Term>,
+  'mdx-fig': (p: Props) => <FigRef n={String(p.n)} />,
   // A wide table scrolls sideways inside its own wrapper (a focusable region), and the <table> keeps its semantics.
   table: (p: Props & { children?: ReactNode }) => (
     <div className="table-scroll" role="region" aria-label="Table" tabIndex={0}>
@@ -30,14 +33,22 @@ const components = {
     const { src, alt, title } = p as { src?: string; alt?: string; title?: string }
     if (!src) return null
     const sizes = '(min-width: 768px) 720px, calc(100vw - 32px)'
+    // numbered by the renderer (rehypeFigures); a cited figure shows its number, the one its :fig[N] chips use
+    const n = p['data-fig'] as string | undefined
+    const no = n && p['data-fig-cited'] !== undefined ? <span className="figno">fig {n}</span> : null
     return (
-      <figure>
+      <figure id={n ? `fig-${n}` : undefined}>
         {src.startsWith('/media/') ? (
           <Zoomable src={src} alt={alt ?? ''} sizes={sizes} caption={title} />
         ) : (
           <Picture src={src} alt={alt ?? ''} sizes={sizes} />
         )}
-        {title ? <figcaption>{title}</figcaption> : null}
+        {title || no ? (
+          <figcaption>
+            {no}
+            {title}
+          </figcaption>
+        ) : null}
       </figure>
     )
   },

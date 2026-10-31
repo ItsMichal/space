@@ -26,6 +26,8 @@ export declare const YOUTUBE_ID_RE: RegExp
 export declare const CALLOUT_TYPES: string[]
 export declare const RATIO_RE: RegExp
 export declare const DIRECTIVES: Record<string, string[]>
+export declare const INLINE_DIRECTIVES: string[]
+export declare const TERM_COLOURS: string[]
 export declare function directiveAttrs(name: string, attrs: Record<string, unknown> | undefined | null): Record<string, string> | null
 export declare function frontmatterProblem(id: string, fm: PostFrontmatter): string | null
 export declare function bodyProblems(body: string): string[]

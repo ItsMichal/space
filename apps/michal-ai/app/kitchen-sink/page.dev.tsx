@@ -85,6 +85,8 @@ export function veryLongFunctionName(argumentNumberOne: string, argumentNumberTw
 
 ![Alt text for the image](/media/spacex-starlink-general-projects/starlink-night-sky.webp "An image with a caption, opened in the lightbox on click")
 
+Terms and figure chips: the :term[signal]{c=blue} rides on the :term[carrier]{c=orange}, the :term[filter]{c=green} drops the :term[noise]{c=red}, the :term[clock]{c=purple} and the :term[ground]{c=sky} keep the rest honest. The photo above is :fig[1]; hover the chip to light it.
+
 ::youtube{id="dQw4w9WgXcQ" title="A YouTube embed"}
 
 Text after the embed, to check the space below it.

@@ -32,6 +32,13 @@
 .log .callout { background: var(--ink-2); border-radius: var(--r-in); padding: 16px 20px; border-left: 4px solid var(--blue-live); } .log .callout-tip { border-left-color: var(--paper); } .log .callout-warning { border-left-color: #e6a23c; }
 .log .callout > * + * { margin-top: 10px; } .log .callout p, .log .callout li { font-size: 15px; line-height: 1.5; }
 .log .vfeat { max-width: 100%; margin-block: var(--s4); }
+/* dev log header art (glyph.js): the hero's subject in 0s and 1s; glyph.js sets --gw and --gh (the grid size) before the text below lays out */
+.glyphhead { container-type: inline-size; margin: var(--s3) 0 var(--s4); } .glyphhead canvas { display: block; width: 100%; height: calc(min(10px, 100cqw / (var(--gw, 80) * .6)) * var(--gh, 37)); }
+/* dev log text marks (md.mjs): links with a finer underline, :term colours (Okabe-Ito without its yellow, lightened for the dark page), :fig chips that light their figure (app.js) */
+.log p a, .log li a { text-decoration-thickness: .08em; text-underline-offset: .14em; transition: color var(--t2) var(--ease), text-decoration-color var(--t2) var(--ease); } .log p a:hover, .log li a:hover { color: var(--blue-live); text-decoration-color: currentColor; } .log p a:visited { text-decoration-color: #b39ddb66; }
+.log .term { font-weight: 600; } .term-blue { color: oklch(.74 .12 245); } .term-orange { color: oklch(.8 .14 75); } .term-green { color: oklch(.76 .12 165); } .term-red { color: oklch(.72 .15 40); } .term-purple { color: oklch(.77 .11 340); } .term-sky { color: oklch(.8 .1 230); }
+.log a.figref { display: inline-flex; align-items: center; gap: .25em; padding: 0 .35em; border: 1px solid #7fa6ff59; border-radius: 4px; background: #7fa6ff1a; color: var(--text); font: 600 .8em/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; text-decoration: none; vertical-align: .06em; white-space: nowrap; } .log a.figref:hover, .log a.figref:focus-visible { background: #7fa6ff38; color: var(--text); } .log a.figref .ic { width: 1em; height: 1em; flex: none; }
+.log .fig img { outline: 2px solid transparent; outline-offset: 2px; transition: outline-color var(--t2) var(--ease), outline-offset var(--t2) var(--ease); } .log .fig.is-lit img { outline-color: var(--blue-live); outline-offset: 5px; } .log .figno { margin-right: .5em; font: 600 .85em/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--text); }
 .mtintro { display: grid; gap: var(--s6); margin: var(--s4) 0 var(--s6); } .mtintro .vfeat { margin: 0; }
 @media (min-width: 1000px) { .mtintro { grid-template-columns: minmax(0, 68ch) minmax(0, 1fr); align-items: start; } }
 .log .vfeat .vt { font: 600 16px/1.3 var(--sans); letter-spacing: 0; margin-top: 10px; }

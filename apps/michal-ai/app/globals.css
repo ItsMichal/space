@@ -711,12 +711,18 @@ html[data-fade] .page-enter {
     color: inherit;
     text-decoration: underline;
     text-decoration-color: var(--accent);
-    text-underline-offset: 0.18em;
-    text-decoration-thickness: 1px;
-    transition: color var(--motion-fast) var(--ease-out-soft);
+    text-underline-offset: 0.14em;
+    text-decoration-thickness: 0.08em;
+    transition:
+      color var(--motion-fast) var(--ease-out-soft),
+      text-decoration-color var(--motion-fast) var(--ease-out-soft);
+  }
+  .prose a:visited {
+    text-decoration-color: color-mix(in oklch, var(--accent) 45%, var(--ink-muted));
   }
   .prose a:hover {
     color: var(--accent);
+    text-decoration-color: currentColor;
   }
   .prose a:focus-visible,
   .prose .table-scroll:focus-visible,
@@ -897,6 +903,89 @@ html[data-fade] .page-enter {
     outline: 2px solid var(--focus);
     outline-offset: 3px;
     border-radius: var(--radius-md);
+  }
+  /* A figure its :fig[N] chip points at: lit while the chip is hovered or focused (FigRef), so the reader sees which one. */
+  .prose figure img {
+    transition:
+      outline-color var(--motion-fast) var(--ease-out-soft),
+      outline-offset var(--motion-fast) var(--ease-out-soft);
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+  .prose figure.is-lit img {
+    outline-color: var(--accent);
+    outline-offset: 5px;
+  }
+  .prose .figno {
+    margin-right: 0.5em;
+    font: 500 var(--type-code-size) / 1 var(--font-mono);
+    color: var(--ink);
+  }
+
+  /* Figure chips, the inline :fig[N] reference: a small tinted label in the mono face with a magnifier. */
+  .prose a.figref {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25em;
+    padding: 0 0.35em;
+    border: 1px solid color-mix(in oklch, var(--accent) 35%, transparent);
+    border-radius: 4px;
+    background: color-mix(in oklch, var(--accent) 10%, transparent);
+    color: var(--ink);
+    font: 500 var(--type-code-size) / 1.5 var(--font-mono);
+    text-decoration: none;
+    vertical-align: 0.06em;
+    white-space: nowrap;
+  }
+  .prose a.figref:hover,
+  .prose a.figref:focus-visible {
+    background: color-mix(in oklch, var(--accent) 22%, transparent);
+    color: var(--ink);
+  }
+  .prose a.figref svg {
+    flex: none;
+  }
+
+  /* Terms, :term[...]{c=...}: one colour per idea, the Okabe-Ito set (readable by most colour-blind readers) without its
+     yellow, shifted in lightness to hold contrast on light and dark paper. */
+  .prose {
+    --term-blue: oklch(0.5 0.13 245);
+    --term-orange: oklch(0.56 0.14 60);
+    --term-green: oklch(0.52 0.11 165);
+    --term-red: oklch(0.54 0.17 40);
+    --term-purple: oklch(0.52 0.13 340);
+    --term-sky: oklch(0.52 0.1 230);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-reading] .prose {
+      --term-blue: oklch(0.74 0.12 245);
+      --term-orange: oklch(0.8 0.14 75);
+      --term-green: oklch(0.76 0.12 165);
+      --term-red: oklch(0.72 0.15 40);
+      --term-purple: oklch(0.77 0.11 340);
+      --term-sky: oklch(0.8 0.1 230);
+    }
+  }
+  .prose .term {
+    font-weight: 500;
+  }
+  .prose .term--blue {
+    color: var(--term-blue);
+  }
+  .prose .term--orange {
+    color: var(--term-orange);
+  }
+  .prose .term--green {
+    color: var(--term-green);
+  }
+  .prose .term--red {
+    color: var(--term-red);
+  }
+  .prose .term--purple {
+    color: var(--term-purple);
+  }
+  .prose .term--sky {
+    color: var(--term-sky);
   }
 
   /* Tables: the renderer wraps each <table> in .table-scroll, so a wide table scrolls sideways inside the wide track
