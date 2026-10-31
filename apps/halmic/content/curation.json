@@ -1,5 +1,5 @@
 {
-  "_note": "Draft copy in halmic's voice, written by the assistant for the owner to rewrite. tier: feature | more | off. alt = what the cover actually shows.",
+  "_note": "Draft copy in halmic's voice, written by the assistant for the owner to rewrite. tier: feature | more | archive (own page and a tile on /games/, none on the home page) | off. alt = what the cover actually shows.",
   "games": {
     "glass-gunslinger-dod": {
       "tier": "feature",
@@ -12,7 +12,7 @@
       "alt": "Top-down grid view of a prison: a grey robot guard, a line of pink laser dots, and a small black thief."
     },
     "taco-neko": {
-      "tier": "more",
+      "tier": "archive",
       "line": "A stealth taco-making game. You are a very serious taco chef on an island full of robo-cats.",
       "alt": "Title card for Taco Neko: rough hand-drawn lettering, a taco with a paw print, and the line 'a stealth taco making game'."
     },

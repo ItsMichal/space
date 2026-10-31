@@ -83,12 +83,13 @@ export function resolve(m, layout) {
 // one cluster with its tile layout but never hidden: the inner pages (/games/, /videos/) show it whatever the home page does
 export function arrange(m, layout, cid) {
   const problems = [];
-  const c = cluster(m, cid, { ...layout.clusters[cid], hide: false }, problems);
+  const c = cluster(m, cid, { ...layout.clusters[cid], hide: false }, problems, true);
   if (problems.length) throw new LayoutError(`layout.json: ${problems.join('; ')}`);
   return c;
 }
 
-function cluster(m, cid, lay, problems) {
+// inner: an inner page, which also shows the innerOnly tiles the home page leaves out
+function cluster(m, cid, lay, problems, inner = false) {
   const def = m.clusters[cid];
   const all = [...def.tiles.map((x) => x.id), ...(def.flex ? [def.flex.id] : [])];
   for (const tid of [...(lay.order ?? []), ...(lay.hidden ?? []), ...Object.keys(lay.sizes ?? {})]) if (!all.includes(tid)) problems.push(`tile "${tid}" is not in cluster "${cid}"`);
@@ -99,7 +100,7 @@ function cluster(m, cid, lay, problems) {
   for (const r of required) if (hidden.has(r)) problems.push(`tile "${r}" cannot be hidden: the page depends on it`);
   if (lay.hide) { if (required.length) problems.push(`cluster "${cid}" cannot be hidden: it holds the required tile "${required[0]}"`); return null; }
   const pins = (lay.order ?? []).filter((x) => def.tiles.some((d) => d.id === x));
-  const tiles = [...pins, ...def.tiles.map((x) => x.id).filter((x) => !pins.includes(x))].filter((x) => !hidden.has(x)).map((x) => {
+  const tiles = [...pins, ...def.tiles.map((x) => x.id).filter((x) => !pins.includes(x))].filter((x) => !hidden.has(x) && (inner || !def.tiles.find((y) => y.id === x).innerOnly)).map((x) => {
     const d = def.tiles.find((y) => y.id === x);
     return { ...d, size: def.fixed ? d.size : lay.sizes?.[x] ?? d.size };
   });
