@@ -6,7 +6,6 @@ import { registerImages } from '@/lib/media'
 import { PostPage } from '@/components/content/PostPage'
 import { hastToReact } from '@/lib/content/to-react'
 import type { PostKind } from '@/lib/content/types'
-import type { GlyphGrid } from '@space/glyph-art'
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const { getAllPosts, getChildren, getPost } = await import('@/lib/content')
@@ -23,15 +22,12 @@ export async function loader({ params }: LoaderFunctionArgs) {
   const hast = await (await import('@/lib/ink/inline.server')).inlineHandwriting(await markdownToHast(post.body))
   const metadata = postMetadata(post.kind, post.slug, post.parent)
   const alt = post.parent ? 'Project update by Michał Bodzianowski' : post.kind === 'article' ? 'Article by Michał Bodzianowski' : 'Project by Michał Bodzianowski'
-  const covers = (await import('@/lib/glyph/covers.json')).default as unknown as Record<string, GlyphGrid>
   const related = [post, ...(parentPost ? [parentPost] : []), ...getChildren(post.parent ?? post.slug)]
   return {
     kind: post.kind as PostKind,
     slug: post.slug,
     parent: post.parent ?? null,
     hast,
-    // header art for an article cover with a clear subject (scripts/build-glyph-covers.mjs); only this post's grid is sent
-    glyph: post.kind === 'article' && post.cover ? (covers[post.cover] ?? null) : null,
     jsonLd: postJsonLd(post, parentPost),
     head: headFor(metadata, { viewport: readingViewport, share: shareFor(postPath(post), alt) }),
     images: imagesFor([hast, slim(post), related.map(slim)]),
@@ -44,5 +40,5 @@ export default function PostRoute() {
   const d = useLoaderData<typeof loader>()
   registerImages(d.images)
   const body = useMemo(() => hastToReact(d.hast as Root), [d.hast])
-  return <PostPage kind={d.kind} slug={d.slug} parent={d.parent ?? undefined} body={body} jsonLd={d.jsonLd} glyph={d.glyph ?? undefined} />
+  return <PostPage kind={d.kind} slug={d.slug} parent={d.parent ?? undefined} body={body} jsonLd={d.jsonLd} />
 }

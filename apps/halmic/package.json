@@ -14,8 +14,7 @@
     "check:social": "node scripts/check-social.mjs"
   },
   "dependencies": {
-    "@space/crosslinks": "*",
-    "@space/glyph-art": "*"
+    "@space/crosslinks": "*"
   },
   "devDependencies": {
     "wrangler": "^4.149.0"

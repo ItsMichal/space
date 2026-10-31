@@ -30,7 +30,6 @@
   "dependencies": {
     "@react-router/node": "^7.18.4",
     "@space/crosslinks": "*",
-    "@space/glyph-art": "*",
     "@space/motion": "*",
     "@space/tokens": "*",
     "autoprefixer": "^10.6.1",
