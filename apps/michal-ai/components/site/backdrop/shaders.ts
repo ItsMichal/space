@@ -4,7 +4,7 @@
 export const VERT = `#version 300 es
 void main(){ vec2 p = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2); gl_Position = vec4(p * 2. - 1., 0., 1.); }`
 
-export const NB = 5
+export const NB = 1
 export const NL = 16
 
 export const FS_LOW = `#version 300 es
@@ -20,8 +20,10 @@ float h11(vec2 p){ p = fract(p * vec2(.1031, .1030)); p += dot(p, p.yx + 33.33);
 float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3. - 2.*f);
   return mix(mix(h11(i), h11(i + vec2(1,0)), f.x), mix(h11(i + vec2(0,1)), h11(i + vec2(1,1)), f.x), f.y); }
 float Y(vec3 c){ return dot(pow(c, vec3(2.2)), vec3(.2126, .7152, .0722)); }
+// Shaft pattern across angle. The visible fan is only about a radian wide, so the frequencies are high enough for several
+// distinct shafts there; lower ones merge into one round glow.
 float rayAt(float ang, float t){
-  float n = .6 * vn(vec2(ang * 3.5, t * .011)) + .4 * vn(vec2(ang * 7.5 + 5., -t * .017));
+  float n = .6 * vn(vec2(ang * 16., t * .011)) + .4 * vn(vec2(ang * 37. + 5., -t * .017));
   return n;
 }
 void main(){
@@ -48,7 +50,7 @@ void main(){
   float dist = length(rv) / length(uView);
   float n0 = rayAt(ang, uT);
   float ray = smoothstep(.42, .78, n0) * (.8 + .2 * sin(uT * .12 + ang * 2.)) * exp(-dist * 1.1) * smoothstep(0., .15, dist);
-  float fr = (smoothstep(.42, .78, rayAt(ang + .03, uT)) - smoothstep(.42, .78, rayAt(ang - .03, uT))) * exp(-dist * 1.1);
+  float fr = (smoothstep(.42, .78, rayAt(ang + .008, uT)) - smoothstep(.42, .78, rayAt(ang - .008, uT))) * exp(-dist * 1.1);
   tint *= 1. - clamp(fr, 0., 1.) * uRay.w * (1. - vec3(.95, .62, .74));
   tint *= 1. - clamp(-fr, 0., 1.) * uRay.w * (1. - vec3(1., .9, .45));
   // light: warmth constraint (R >= B + margin, G <= R: no grey-green, no mint), then the hard luminance floor.

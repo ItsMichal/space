@@ -29,12 +29,10 @@ export type BlobSpec = {
 }
 
 export const BACKDROP = {
+  /** One inkless blob (amp 0): it only shapes where the glyphs gather. Any ink here read as a coloured sphere, so the god rays
+   *  are the page's only light. Kept because the shader's blob array needs a length of at least one (NB). */
   blobs: [
-    { pigment: 'yellow', x: 0.35, y: 0.15, r: 1.04, amp: 0.55, ax: 0.3, ay: 0.22, px: 280, py: 340 },
-    { pigment: 'magenta', x: 1.0, y: 0.75, r: 0.98, amp: 0.45, ax: 0.26, ay: 0.3, px: 330, py: 250 },
-    { pigment: 'peach', x: 0.15, y: 1.3, r: 1.09, amp: 0.6, ax: 0.32, ay: 0.2, px: 300, py: 380 },
-    { pigment: 'cyan', x: 0.9, y: 1.9, r: 0.64, amp: 0.3, ax: 0.22, ay: 0.26, px: 360, py: 290 },
-    { pigment: 'yellow', x: 0.5, y: 2.3, r: 1.04, amp: 0.5, ax: 0.28, ay: 0.24, px: 310, py: 400 },
+    { pigment: 'magenta', x: 1.0, y: 0.75, r: 0.98, amp: 0, ax: 0.26, ay: 0.3, px: 330, py: 250 },
   ] satisfies BlobSpec[],
   /** Vertical repeat of the blob field, in U. The field tiles, so a long page never runs out of colour. */
   repeat: 2.6,
@@ -52,8 +50,9 @@ export const BACKDROP = {
   /** Dark mode blob glow (added, dim). */
   darkGlow: 0.2,
 
+  /** Gentle god rays, the page's only light: thin shafts lifting the paper toward a near-white highlight (paper.lightHi). */
   rays: {
-    strength: 0.55, // how far the paper lifts toward the warm highlight inside a shaft (0..1)
+    strength: 0.7, // how far the paper lifts toward the warm highlight inside a shaft (0..1)
     fringe: 0.05, // pale cyan/magenta ink fringe on the shaft edges
     originX: 1.08, // shaft origin as a fraction of viewport width / height (off screen, top right)
     originY: -0.22,
@@ -98,7 +97,7 @@ export const BACKDROP = {
   /** Ignore height-only size changes below this (CSS px) when the layer is not sized in lvh. */
   resizeIgnorePx: 96,
 
-  paper: { light: [0xf4 / 255, 0xf1 / 255, 0xe8 / 255], lightHi: [1, 0.975, 0.925], dark: [0x12 / 255, 0x16 / 255, 0x12 / 255] },
+  paper: { light: [0xf4 / 255, 0xf1 / 255, 0xe8 / 255], lightHi: [1, 0.995, 0.975], dark: [0x12 / 255, 0x16 / 255, 0x12 / 255] },
 
   /** Frame pacing. Idle drift is slow, so it is redrawn rarely; scroll-driven redraws are capped so glass cards with
    *  backdrop-filter are not invalidated at 60Hz. */
