@@ -36,7 +36,7 @@ export const GONE_MS = 45_000;
 const ROOM_KEEP = 50, QUEUE_MAX = 100, TEXT_MAX = 200;
 const CHAT_BURST = 5, CHAT_WINDOW_MS = 10_000;
 const BAND = 200, WIDEN_MS = 15_000, RATING0 = 1000, ELO_K = 32;
-const MATCH_MS = 10 * 60_000;
+const MATCH_MS = 60 * 60_000;   // a whole game (nine innings online) and its reports
 const SPORTS = new Set(['baseball', 'bowling', 'tennis', 'golf', 'boxing']);
 const OUTCOMES = { win: 1, draw: 0.5, loss: 0 };
 const BOARD = 50;
