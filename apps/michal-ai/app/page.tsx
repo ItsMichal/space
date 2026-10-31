@@ -34,14 +34,16 @@ const experience: ExperienceItem[] = profile.experience.map((e) => ({
   href: ROLE_LINKS[e.company],
 }))
 
-// The Congressional Record tribute leads (profile.awards order). A row links to its post, or to the record itself.
-const awards: ExperienceItem[] = profile.awards.map((a) => ({
-  id: a.id,
-  org: a.title,
-  role: a.context,
-  years: a.year,
-  href: a.postId ? hrefById(a.postId) : a.url,
-}))
+// The Congressional Record tribute leads (profile.awards order). A row links to its post, or to the record itself. Built at
+// render, not at module load: posts are only available once the route's data is in (module scope throws on the client).
+const awardItems = (): ExperienceItem[] =>
+  profile.awards.map((a) => ({
+    id: a.id,
+    org: a.title,
+    role: a.context,
+    years: a.year,
+    href: a.postId ? hrefById(a.postId) : a.url,
+  }))
 
 const h2 = 'mb-space-6 font-display text-title'
 
@@ -49,6 +51,7 @@ export default function Home() {
   const projects = getMainProjects()
   const articles = getBlogPosts()
   const latest = homeWriting(articles)
+  const awards = awardItems()
   // Rotating hero line: every post that sets `hook`, the layout file's `hooks` first, then the site's own order (priority, then newest).
   const hookPosts = heroHooks(getAllPosts().filter((p) => p.hook))
   const hooks = hookPosts.map((p) => ({ text: p.hook!, href: postPath(p) }))
