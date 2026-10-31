@@ -118,7 +118,7 @@ const gtile = (g, cls = '') => tile({ href: `/games/${g.slug}/`, cls: `tm tg ${c
 const seddTile = (cls = '') => tile({ href: '/design/southeast-denver-dental/', cls: `tm ${cls}`, attrs: ' data-vt="m t"', inner: `<span class="tbg">${seddVideo(' aria-hidden="true"')}</span>${kbadge('pen-nib', 'Logo design')}${tcap({ title: 'Southeast Denver Dental', cap: 'Logo design' })}` });
 // MemeSports lives on its own subdomain: the title art links out, and so does the play tile
 const SPORTS = 'https://sports.halmic.com/';
-const sportsTile = (cls = '') => tile({ href: SPORTS, cls: `tm ${cls}`, inner: `<span class="tbg"><img src="/work/memesports/cover.jpg" width="960" height="504" loading="lazy" decoding="async" alt=""></span>${tchip('In the browser', 'game-controller')}${tcap({ title: 'MemeSports', cap: 'Bowling, tennis, golf, baseball and boxing with meme rules' })}` });
+const sportsTile = (cls = '', attrs = '') => tile({ href: SPORTS, cls: `tm ${cls}`, attrs, inner: `<span class="tbg"><img src="/work/memesports/cover.jpg" width="960" height="504" loading="lazy" decoding="async" alt=""></span>${tchip('In the browser', 'game-controller')}${tcap({ title: 'MemeSports', cap: 'A silly native web port of remixed Wii Sports, multiplayer and portrait mode included with touch controls' })}` });
 const mtTile = (cls = '') => tile({ href: mtBase, cls: `tm ${cls}`, attrs: ' data-vt="t"', inner: `<span class="tbg"><img src="/work/mountaintop/${mt.cover}" width="${mt.images[mt.cover].w}" height="${mt.images[mt.cover].h}" loading="lazy" decoding="async" alt=""></span>${tchip('Unity', 'cpu')}${tcap({ title: mt.title, cap: mt.hook })}` });
 // stat tile: a big word or number in the display face and one caption line. Numbers come from the content files, never typed in.
 // data-len (characters shown) sizes it to the tile's width; data-g (first glyph) lets the CSS pull the numeral's ink onto the caption's left edge
@@ -175,7 +175,6 @@ const TILES = {
   ...Object.fromEntries(edits.map((v) => [`video:${v.id}`, (cls) => vtile(v, cls)])),
   // a clip is inserted before the Twitch tile (app.js); the built stand-ins are what shows until /api/clips answers
   ...Object.fromEntries(clips.map(([title, game], i) => [`clip:${i}`, () => clipFallback(title, game, i)])),
-  'sports:lead': (cls) => sportsTile(cls),
   'mt:lead': (cls) => mtTile(cls),
   'mt:year': (cls) => yearTile({ year: mtYear, title: `${mt.title}, capstone and expo demo`, tone: 'tpaper', cls }),
   ...Object.fromEntries(gl.map((g) => [`game:${g.slug}`, (cls) => gtile(g, cls)])),
@@ -190,7 +189,7 @@ const FLEX = {
   'films:year': (fx) => yearTile({ year: Math.min(...films.map((f) => yr(f.published))), title: `${filmGroup} starts`, cap: `${cap1(WORDS[films.length])} short films, ${S.filmMinutes} minutes`, tone: 'tink', cls: fx, attrs: ' data-flex data-stat="film-minutes"' }),
   'edits:youtube': (fx) => ytTile(fx, 'All videos on YouTube', 'https://www.youtube.com/@halmic', ' data-flex'),
   twitch: (fx) => twitchTile(fx),
-  'sports:play': (fx) => ltile({ href: SPORTS, kind: 'site', glyph: 'game-controller', title: 'Play at sports.halmic.com', cap: 'Against the computer or a friend online', cls: fx, attrs: ' data-flex', rel: 'noopener' }),
+  'sports:lead': (fx) => sportsTile(fx, ' data-flex'),
   'mt:logs': (fx) => stat({ href: `${mtBase}#logs`, num: fmt(S.logWords), unit: 'words', title: `in ${WORDS[S.logCount]} dev logs`, cap: 'Written during the build', tone: 'tblue', cls: fx, attrs: ' data-flex data-stat="log-words"' }),
   itch: (fx) => itchTile(fx, ' data-flex'),
   'pr:reddit': (fx) => prRedditTile(fx, ' data-flex'),

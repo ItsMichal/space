@@ -32,7 +32,7 @@ export function model(content) {
   const { films, episodes, edits, gl, posts, vc } = d;
   const lead4 = posts.length >= 4;
   const clusters = {
-    sports: { name: 'MemeSports', tiles: [t('sports:lead', 'w2', 'MemeSports')], flex: t('sports:play', null, 'Play at sports.halmic.com') },
+    sports: { name: 'MemeSports', tiles: [], flex: t('sports:lead', null, 'MemeSports') },
     films: { name: films[0]?.group ?? 'Short films', tiles: [t(`film:${films[0].id}`, 'lead', films[0].name ?? films[0].title), t(`film:${films[1].id}`, 'x4', films[1].name ?? films[1].title)], flex: t('films:year', null, 'Year and runtime') },
     fifa: { name: vc.series.title, tiles: [t('fifa:year', 'x4', 'First episode year'), ...episodes.slice().reverse().map((v) => t(`ep:${v.id}`, 'one', `Episode ${v.ep}`)), t('fifa:minutes', 'x4', 'Minutes of bad shots')], flex: null },
     edits: { name: 'More from the channel', tiles: edits.map((v) => t(`video:${v.id}`, 'one', v.title)), flex: t('edits:youtube', null, 'All videos on YouTube') },
