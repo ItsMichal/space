@@ -15,11 +15,12 @@ import { LIVE_BLOCK_REACTIONS } from '@/lib/presence/flag'
 import { blockIds } from '@/lib/presence/blocks'
 import { rehypeDropDeadEmbeds } from '@/lib/embeds'
 import { rehypeContentSafety } from './safety'
+import { INLINE_DIRECTIVES } from './rules.mjs'
 
 // Turn directive nodes into hast elements with custom tag names that we map to components.
-// Only leaf (`::name`) and container (`:::name`) directives are components; inline `:name` text
-// directives are not part of the content format and mostly appear by accident ("10:30"), so they
-// are turned back into the literal text they came from.
+// Leaf (`::name`) and container (`:::name`) directives are components. In running text only `:term[...]` and `:fig[...]` are
+// (INLINE_DIRECTIVES); any other inline `:name` mostly appears by accident ("10:30"), so it is turned back into the literal text
+// it came from.
 type DirectiveNode = {
   type: string
   name?: string
@@ -31,6 +32,13 @@ function remarkDirectiveToHast() {
   return (tree: Root) => {
     visit(tree as never, 'textDirective', (node: DirectiveNode, index?: number, parent?: { children: unknown[] }) => {
       if (!parent || index === undefined) return
+      if (INLINE_DIRECTIVES.includes(node.name ?? '')) {
+        const data = node.data || (node.data = {})
+        data.hName = `mdx-${node.name}`
+        const label = (node.children ?? []).map((c) => (c as { value?: string }).value ?? '').join('').trim()
+        data.hProperties = node.name === 'fig' ? { n: label } : { ...(node.attributes || {}) }
+        return
+      }
       parent.children.splice(index, 1, { type: 'text', value: `:${node.name}` }, ...(node.children ?? []))
       return index + 1
     })
@@ -53,6 +61,24 @@ function rehypeUnwrapImages() {
       if (kids.length === 1 && kids[0].type === 'element' && kids[0].tagName === 'img') {
         parent.children[index] = kids[0]
       }
+    })
+  }
+}
+
+// Figure numbers: the post's images in order (1, 2, ...), as data-fig on each <img> (to-react puts id="fig-N" on its <figure>).
+// The ones a :fig[N] chip points at also get data-fig-cited, so their caption shows the number the chip uses.
+function rehypeFigures() {
+  return (tree: Root) => {
+    const cited = new Set<string>()
+    visit(tree, 'element', (node) => {
+      if (node.tagName === 'mdx-fig') cited.add(String(node.properties?.n))
+    })
+    let n = 0
+    visit(tree, 'element', (node) => {
+      if (node.tagName !== 'img') return
+      const props = (node.properties ??= {})
+      props.dataFig = String(++n)
+      if (cited.has(String(n))) props.dataFigCited = ''
     })
   }
 }
@@ -90,6 +116,7 @@ export async function markdownToHast(source: string): Promise<Root> {
     .use(remarkRehype, { allowDangerousHtml: false })
     .use(rehypeContentSafety)
     .use(rehypeUnwrapImages)
+    .use(rehypeFigures)
     .use(rehypeDropDeadEmbeds)
     .use(rehypeSlug)
     .use(LIVE_BLOCK_REACTIONS ? rehypeBlockIds : () => () => {})

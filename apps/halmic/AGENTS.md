@@ -160,6 +160,7 @@ venv under `$TMPDIR` and never enter the repo; only rendered outputs are committ
   `npm run content:pull` (`scripts/content/pull.mjs`) before building, and a checkout without that folder leaves this repo's copies in place.
 - `content-rules.mjs` is what an edit may contain (pure; the editor imports it too). `npm run content:check` runs it plus the identity denylist over the
   editable files, and `npm run build` runs it first. A new field in one of those files needs a rule, or the check rejects it.
+- Dev logs can write `:term[word]{c=green}` (coloured term) and `:fig[2]` (chip that lights the second image), see `md.mjs`.
 - `scripts/check-links.mjs` checks that the home page follows `layout.json` whatever it says; its editorial checks (which film leads, game order, the stat
   tiles) only run for the default arrangement.
 - Never write the content repo's name or its other site into anything under `apps/halmic` except `docs/`: the identity check scans the rest.

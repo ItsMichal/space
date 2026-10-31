@@ -9,7 +9,7 @@
     "content:check": "node scripts/content/validate.mjs",
     "deploy": "node scripts/content/validate.mjs && node build.mjs && wrangler deploy",
     "sync:youtube": "node ./scripts/sync-youtube.mjs",
-    "test": "node --test worker/live.test.mjs worker/clips.test.mjs && node scripts/check-links.mjs && node scripts/check-social.mjs --dir public --quiet",
+    "test": "node --test md.test.mjs worker/live.test.mjs worker/clips.test.mjs && node scripts/check-links.mjs && node scripts/check-social.mjs --dir public --quiet",
     "og": "node scripts/build-og.mjs",
     "check:social": "node scripts/check-social.mjs"
   },

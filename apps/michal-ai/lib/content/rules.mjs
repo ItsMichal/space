@@ -111,7 +111,15 @@ export const DIRECTIVES = {
   embed: ['url', 'title', 'ratio'],
   callout: ['type'],
   handwriting: ['src', 'alt', 'duration', 'blur', 'chroma', 'stagger', 'focus', 'ease', 'color'],
+  // inline, in running text: :term[bloom filter]{c=blue} colours a term the way a figure does; :fig[2] is a chip that points at the
+  // post's second image (it lights the figure on hover and jumps to it)
+  term: ['c'],
+  fig: ['n'],
 }
+/** The directives that may sit in running text (`:name[...]`); any other `:name` there stays literal text ("10:30"). */
+export const INLINE_DIRECTIVES = ['term', 'fig']
+/** Term colours: the Okabe-Ito set (distinct for colour-blind readers), without its yellow, which does not read on paper. */
+export const TERM_COLOURS = ['blue', 'orange', 'green', 'red', 'purple', 'sky']
 
 /**
  * ::handwriting{src alt ...}: the owner's pen strokes (a .ink.json media file, see parseInk) drawn on with a blur-to-sharp
@@ -151,6 +159,8 @@ export function directiveAttrs(name, attrs) {
     if (out.ratio && !RATIO_RE.test(out.ratio)) delete out.ratio
   }
   if (name === 'callout' && out.type && !CALLOUT_TYPES.includes(out.type)) out.type = 'note'
+  if (name === 'term' && !TERM_COLOURS.includes(out.c)) out.c = TERM_COLOURS[0]
+  if (name === 'fig' && !/^[1-9]\d?$/.test(out.n ?? '')) return null
   if (name === 'handwriting') {
     if (!HANDWRITING_SRC_RE.test(out.src ?? '') || !mediaPathOk(out.src)) return null
     out.alt = (out.alt ?? '').trim()
@@ -321,6 +331,8 @@ export function bodyProblems(body) {
       if (!DIRECTIVES[d.name]) out.push(`${at}: unknown directive ::${d.name} (allowed: ${Object.keys(DIRECTIVES).join(', ')})`)
       else if (!directiveAttrs(d.name, d.attrs)) out.push(`${at}: ::${d.name} has a missing or disallowed ${MISSING[d.name] ?? 'attribute'}`)
     }
+    for (const m of line.matchAll(/(?<![:\w]):fig\[([^\]]*)\]/g)) if (!directiveAttrs('fig', { n: m[1].trim() })) out.push(`${at}: :fig[${m[1].slice(0, 20)}] needs a figure number (1 to 99)`)
+    for (const m of line.matchAll(/(?<![:\w]):term\[[^\]]*\]\{[^}]*\bc=["']?([\w-]*)/g)) if (!TERM_COLOURS.includes(m[1])) out.push(`${at}: :term colour "${m[1]}" (allowed: ${TERM_COLOURS.join(', ')})`)
     for (const m of line.matchAll(/(!?)\[[^\]]*\]\(\s*<?([^)\s>]+)/g)) {
       const ok = m[1] ? safeImageSrc(m[2]) : safeHref(m[2])
       if (!ok) out.push(`${at}: unsafe ${m[1] ? 'image source' : 'link'} "${m[2].slice(0, 60)}"`)
