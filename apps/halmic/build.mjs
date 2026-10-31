@@ -7,6 +7,8 @@ import { md, inline, frontMatter } from './md.mjs';
 import { FOR_HALMIC as SIB, markSvg } from '@space/crosslinks';
 import { readSiblingPosts } from '@space/crosslinks/node';
 import { homeStats, fmt } from './stats.mjs';
+import { model, derive, SIZES, SIZE_CLS } from './bentos.mjs';
+import { parseLayout, resolve, arrange } from './layout.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const SITE = 'https://halmic.com';
@@ -51,21 +53,13 @@ const mark = `<svg class="mark" viewBox="${hv}" aria-hidden="true" focusable="fa
 
 // ---- content ----
 const fmtDate = (iso) => new Date(iso).toLocaleDateString('en', { year: 'numeric', month: 'short' });
-const exclude = new Set(json('./content/videos.exclude.json').ids);
-const byId = Object.fromEntries(videos.videos.filter((v) => !exclude.has(v.id)).map((v) => [v.id, v]));
-const vc = cur.videos;
-const episodes = vc.series.episodes.map((id, i) => ({ ...byId[id], ep: i + 1 }));
-const latestEp = episodes.at(-1), earlierEps = episodes.slice(0, -1);
-const others = vc.other.map((o) => ({ ...byId[o.id], ...o }));
+const content = { videos, exclude: json('./content/videos.exclude.json'), curation: cur, games: json('./content/games.json'), posts: json('./content/posts.json') };
+const { vc, episodes, others, films, edits, gl, posts } = derive(content);   // films are the headline of Watch: first on the home page, in /videos/, in the sitemap
 const smash = vc.smash;
-const films = others.filter((o) => o.kind === 'short film');   // the headline of Watch: first on the home page, in /videos/, in the sitemap
 const pageVideos = [...films, ...episodes.slice().reverse(), ...others.filter((o) => !films.includes(o))];   // everything that gets its own page, feed, sitemap entry and VideoObject
 const when = (v) => (v.published ? fmtDate(v.published) : v.ago ?? '');
 const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
 const vslug = (v) => `${slugify(v.title)}-${v.id}`;
-const order = Object.keys(cur.games);
-const gl = games.slice().sort((a, b) => order.indexOf(a.slug) - order.indexOf(b.slug)).filter((g) => (cur.games[g.slug]?.tier ?? 'more') !== 'off').map((g) => ({ ...g, ...cur.games[g.slug], tier: cur.games[g.slug]?.tier ?? 'more' }));
-const gFeature = gl.filter((g) => g.tier === 'feature'), gMore = gl.filter((g) => g.tier === 'more');
 
 const vtitle = (v) => (v.ep ? `Episode ${v.ep}` : v.title.replace(/ - /g, ': ').replace(/\s+/g, ' '));
 const ldDesc = (v) => v.desc || v.excerpt || v.title;
@@ -149,9 +143,8 @@ const mediumTile = (cls = '') => ltile({ href: 'https://halmic.medium.com/', kin
 // before app.js runs, app.js recomputes it when the cells change: a clip arrives, a tile plays).
 const S = homeStats();
 const cap1 = (t) => t[0].toUpperCase() + t.slice(1);
-const SZ = { one: [1, 1, 1], w2: [2, 2, 2], x4: [2, 1, 1], lead: [4, 4, 4] };
 const cluster = ({ name, items, flex }) => {
-  const fx = [4, 3, 2].map((k, i) => { const c = items.reduce((n, [z]) => n + SZ[z][i], 0); return `fx${k}-${k - (c % k)}`; }).join(' ');
+  const fx = [4, 3, 2].map((k, i) => { const c = items.reduce((n, [z]) => n + SIZES[z][i], 0); return `fx${k}-${k - (c % k)}`; }).join(' ');
   return `<div class="cl" role="group" aria-label="${esc(name)}">${items.map(([, h]) => h).join('')}${flex ? flex(fx) : ''}</div>`;
 };
 // a bento: a section label (small, quiet) and its clusters
@@ -159,41 +152,63 @@ const bento = ({ id = '', alias = [], title = '', more = '', cls = '', clusters 
 const more = (href, text) => `<a class="sl" href="${href}">${esc(text)}${icon('arrow-right', 'ic-end')}</a>`;
 
 // X highlights (content/posts.json, empty until there are showcases worth showing): static tiles, no widget or script, the media is a local copy. The whole tile links to the post.
-const posts = json('./content/posts.json').posts;
 const trimPost = (t) => { const x = t.replace(/https?:\/\/\S+/g, '').replace(/(^|\s)#\w+/g, '').replace(/\s+/g, ' ').trim(); return x.length > 110 ? `${x.slice(0, 107).replace(/\s+\S*$/, '')}…` : x; };
 const KINDS = { web: ['lightning', 'Web'], game: ['game-controller', 'Game'], hardware: ['cpu', 'Robotics'], design: ['pen-nib', 'Design'], video: ['film-strip', 'Video'], music: ['star', 'Music'] };
 const postTile = (p, cls = '') => tile({ href: p.url, cls: `tm t-post${p.media ? '' : ' tp-text'} ${cls}`, rel: 'noopener', inner: `${p.media ? `<span class="tbg"><img src="/posts/${p.media}" width="${p.w}" height="${p.h}" loading="lazy" decoding="async" alt="${esc(p.alt)}"></span>` : ''}${kbadge('b-x', 'Post on X')}${tchip(fmtDate(p.date), KINDS[p.kind]?.[0] ?? 'calendar-blank')}${p.video ? `<span class="play" aria-hidden="true">${icon('play')}</span>` : ''}${tcap({ title: trimPost(p.text), sr: `${KINDS[p.kind]?.[1] ?? 'Post'}${p.text.length > 110 ? `: ${p.text}` : ''}` })}` });
-const clPosts = () => cluster({ name: 'Posts on X', items: posts.map((p, i) => [i === 0 && posts.length >= 4 ? 'lead' : 'one', postTile(p, i === 0 && posts.length >= 4 ? 'lead w2' : '')]), flex: (fx) => ltile({ href: 'https://x.com/halmicc', kind: 'x', glyph: 'b-x', title: 'More on X', cls: fx, attrs: ' data-flex', rel: 'me noopener' }) });
-
 const clips = [['CREEPER, AW MAN', 'Minecraft'], ['4k clutch on Bind', 'VALORANT'], ['Hbox would be proud', ''], ['5 kills no win :<', ''], ['cross map tomahawk on miami', 'VALORANT'], ['run 6 dies after blaze rods...', 'Minecraft']];
 
-// ---- clusters: one project each, years from the content's own dates ----
+// ---- clusters: one project each, years from the content's own dates. Which tiles, in what order and at what size comes from bentos.mjs (the default)
+// and content/layout.json (what the editor changed); here each tile id gets its markup. ----
 // Watch. Special Force (the lead film, the year it came out, the sequel), FIFA With the Boys (its year, the four episodes, the playlist), the other edits with the channel link, then the Twitch clips with the Twitch tile.
 const filmGroup = films[0].group;
-const clFilms = () => cluster({ name: filmGroup, items: [['lead', filmTile(films[0])], ['x4', filmTile(films[1], 'x4')]], flex: (fx) => yearTile({ year: Math.min(...films.map((f) => yr(f.published))), title: `${filmGroup}, ${WORDS[films.length]} short films`, cap: `${S.filmMinutes} minutes in all`, tone: 'tink', cls: fx, attrs: ' data-flex data-stat="film-minutes"' }) });
 const epYears = episodes.map((e) => yr(e.published));
-const clFifa = () => cluster({ name: vc.series.title, items: [['x4', yearTile({ year: Math.min(...epYears), title: `First episode of ${vc.series.title}`, cap: Math.max(...epYears) > Math.min(...epYears) ? `Latest in ${Math.max(...epYears)}` : '', tone: 'tblue', cls: 'x4' })], ...episodes.slice().reverse().map((v) => ['one', epTile(v)]), ['x4', stat({ href: `https://www.youtube.com/playlist?list=${vc.series.playlist}`, num: S.fifaMinutes, unit: 'min', title: 'of bad shots', cap: `${cap1(WORDS[episodes.length])} episodes of ${vc.series.title}`, tone: 'tpaper', cls: 'x4', attrs: ' data-stat="fifa-minutes"' })]] });
-const edits = others.filter((o) => !films.includes(o));
-const clEdits = (title, href, attrs = '') => cluster({ name: 'More from the channel', items: edits.map((v) => ['one', vtile(v)]), flex: (fx) => ytTile(fx, title, href, ` data-flex${attrs}`) });
-// a clip is inserted before the Twitch tile (app.js); the built stand-ins are what shows until /api/clips answers
-const clClips = () => {
-  const fb = (i) => clipFallback(clips[i][0], clips[i][1], i);
-  return cluster({ name: 'Twitch clips', items: [['w2', fb(0)], ...[1, 2, 3, 4, 5].map((i) => ['one', fb(i)])], flex: (fx) => twitchTile(fx) });
-};
 // Play. Project Mountaintop (a rhythm game you play with hiking poles): the lead, its year, the dev logs. Then the tiny jam games and itch.io.
 const mtYear = Math.min(...mtLogs.map((l) => yr(l.date)), yr(mt.videoPublished));
-const clMountaintop = () => cluster({ name: mt.title, items: [['lead', mtTile('lead w2')], ['x4', yearTile({ year: mtYear, title: `${mt.title}, capstone and expo demo`, tone: 'tpaper', cls: 'x4' })]], flex: (fx) => stat({ href: `${mtBase}#logs`, num: fmt(S.logWords), unit: 'words', title: `across ${WORDS[S.logCount]} dev logs`, cap: 'Written while it was being built', tone: 'tblue', cls: fx, attrs: ' data-flex data-stat="log-words"' }) });
-const clTiny = () => cluster({ name: 'Tiny games', items: [...gl.filter((g) => g.tier === 'feature').map((g) => ['w2', gtile(g, 'w2')]), ...gl.filter((g) => g.tier !== 'feature').map((g) => ['one', gtile(g)]), ['one', stat({ href: '/games/', num: S.engines.length, unit: S.engines.length === 1 ? 'engine' : 'engines', title: S.engines.length === S.gameCount ? 'One for every game' : `Across ${WORDS[S.gameCount]} games`, cap: S.engines.join(', '), tone: 'tpaper', attrs: ' data-vt="t" data-stat="engines"' })]], flex: (fx) => itchTile(fx, ' data-flex') });
 // Work. Pokémon Phoenix Rising (the lead, the game's channel, the subreddit; no dates are known, so no year tile), then the dental logo with the practice's site. Only verified facts become tiles (see content/phoenix-rising.json).
-const clPhoenix = () => cluster({ name: pr.title, items: [['lead', phoenixTile('lead w2')], ['x4', prChannelTile('x4')]], flex: (fx) => prRedditTile(fx, ' data-flex') });
-const clDental = () => cluster({ name: 'Southeast Denver Dental', items: [['w2', seddTile('w2')]], flex: (fx) => ltile({ href: 'https://www.sedenverdental.com/', kind: 'site', glyph: 'compass', title: 'sedenverdental.com', cap: 'The practice, with the logo in use', cls: fx, attrs: ' data-flex', rel: 'noopener' }) });
-const homeCards = () => [
-  bento({ id: 'stream', alias: ['videos'], title: 'Watch', cls: 'b-watch', more: more('/videos/', 'All videos'), clusters: [clFilms(), clFifa(), clEdits('All videos on YouTube', 'https://www.youtube.com/@halmic'), clClips()] }),
-  bento({ id: 'games', title: 'Play', cls: 'b-play', more: more('/games/', 'All games'), clusters: [clMountaintop(), clTiny()] }),
-  bento({ id: 'work', alias: ['design'], title: 'Work', cls: 'b-work', more: more('/work/pokemon-phoenix-rising/', 'Pokémon Phoenix Rising'), clusters: [clPhoenix(), clDental()] }),
-  ...(posts.length ? [bento({ id: 'posts', title: 'Posts', cls: 'b-posts', more: more('https://x.com/halmicc', 'More on X'), clusters: [clPosts()] })] : []),
-  bento({ id: 'elsewhere', title: 'Elsewhere', cls: 'b-else', clusters: [cluster({ name: 'Elsewhere', items: [['w2', hiTile('w2')]], flex: (fx) => mediumTile(fx) })] }),
-].join('');
+const TILES = {
+  ...Object.fromEntries(films.map((v) => [`film:${v.id}`, (cls) => filmTile(v, cls)])),
+  'fifa:year': (cls) => yearTile({ year: Math.min(...epYears), title: `First episode of ${vc.series.title}`, cap: Math.max(...epYears) > Math.min(...epYears) ? `Latest in ${Math.max(...epYears)}` : '', tone: 'tblue', cls }),
+  ...Object.fromEntries(episodes.map((v) => [`ep:${v.id}`, (cls) => epTile(v, cls)])),
+  'fifa:minutes': (cls) => stat({ href: `https://www.youtube.com/playlist?list=${vc.series.playlist}`, num: S.fifaMinutes, unit: 'min', title: 'of bad shots', cap: `${cap1(WORDS[episodes.length])} episodes of ${vc.series.title}`, tone: 'tpaper', cls, attrs: ' data-stat="fifa-minutes"' }),
+  ...Object.fromEntries(edits.map((v) => [`video:${v.id}`, (cls) => vtile(v, cls)])),
+  // a clip is inserted before the Twitch tile (app.js); the built stand-ins are what shows until /api/clips answers
+  ...Object.fromEntries(clips.map(([title, game], i) => [`clip:${i}`, () => clipFallback(title, game, i)])),
+  'mt:lead': (cls) => mtTile(cls),
+  'mt:year': (cls) => yearTile({ year: mtYear, title: `${mt.title}, capstone and expo demo`, tone: 'tpaper', cls }),
+  ...Object.fromEntries(gl.map((g) => [`game:${g.slug}`, (cls) => gtile(g, cls)])),
+  'games:engines': (cls) => stat({ href: '/games/', num: S.engines.length, unit: S.engines.length === 1 ? 'engine' : 'engines', title: S.engines.length === S.gameCount ? 'One for every game' : `Across ${WORDS[S.gameCount]} games`, cap: S.engines.join(', '), tone: 'tpaper', cls, attrs: ' data-vt="t" data-stat="engines"' }),
+  'pr:lead': (cls) => phoenixTile(cls),
+  'pr:channel': (cls) => prChannelTile(cls),
+  sedd: (cls) => seddTile(cls),
+  ...Object.fromEntries(posts.map((p) => [`post:${p.id}`, (cls) => postTile(p, cls)])),
+  hi: (cls) => hiTile(cls),
+};
+const FLEX = {
+  'films:year': (fx) => yearTile({ year: Math.min(...films.map((f) => yr(f.published))), title: `${filmGroup}, ${WORDS[films.length]} short films`, cap: `${S.filmMinutes} minutes in all`, tone: 'tink', cls: fx, attrs: ' data-flex data-stat="film-minutes"' }),
+  'edits:youtube': (fx) => ytTile(fx, 'All videos on YouTube', 'https://www.youtube.com/@halmic', ' data-flex'),
+  twitch: (fx) => twitchTile(fx),
+  'mt:logs': (fx) => stat({ href: `${mtBase}#logs`, num: fmt(S.logWords), unit: 'words', title: `across ${WORDS[S.logCount]} dev logs`, cap: 'Written while it was being built', tone: 'tblue', cls: fx, attrs: ' data-flex data-stat="log-words"' }),
+  itch: (fx) => itchTile(fx, ' data-flex'),
+  'pr:reddit': (fx) => prRedditTile(fx, ' data-flex'),
+  'sedd:site': (fx) => ltile({ href: 'https://www.sedenverdental.com/', kind: 'site', glyph: 'compass', title: 'sedenverdental.com', cap: 'The practice, with the logo in use', cls: fx, attrs: ' data-flex', rel: 'noopener' }),
+  'x:more': (fx) => ltile({ href: 'https://x.com/halmicc', kind: 'x', glyph: 'b-x', title: 'More on X', cls: fx, attrs: ' data-flex', rel: 'me noopener' }),
+  medium: (fx) => mediumTile(fx),
+};
+const M = model({ ...content, mountaintop: mt, phoenix: pr });
+const LAYOUT = parseLayout(read('./content/layout.json'));
+const HOME = resolve(M, LAYOUT);
+if (HOME.problems.length) throw new Error(`content/layout.json:\n  ${HOME.problems.join('\n  ')}`);
+const renderCluster = (c, flex = FLEX[c.flex?.id]) => cluster({ name: c.name, items: c.tiles.map((x) => [x.size, TILES[x.id](SIZE_CLS[x.size])]), flex: c.flex ? flex : null });
+// inner pages show a cluster even when the home page hides it, with the same tile order and sizes
+const cl = (id, flex) => renderCluster(arrange(M, LAYOUT, id), flex);
+const SECTION = {
+  stream: { alias: ['videos'], cls: 'b-watch', more: more('/videos/', 'All videos') },
+  games: { cls: 'b-play', more: more('/games/', 'All games') },
+  work: { alias: ['design'], cls: 'b-work', more: more('/work/pokemon-phoenix-rising/', 'Pokémon Phoenix Rising') },
+  posts: { cls: 'b-posts', more: more('https://x.com/halmicc', 'More on X') },
+  elsewhere: { cls: 'b-else' },
+};
+const homeCards = () => HOME.sections.map((s) => bento({ id: s.id, title: s.title, ...SECTION[s.id], clusters: s.clusters.map((c) => renderCluster(c)) })).join('');
 
 const SAME_AS = ['https://www.twitch.tv/halmictv', 'https://www.youtube.com/@halmic', 'https://halmic.itch.io/', 'https://halmic.medium.com/', 'https://x.com/halmicc'];
 const PERSON = { '@type': 'Person', '@id': `${SITE}/#halmic`, name: 'halmic', alternateName: ['halmicTV', 'Halmic'], url: `${SITE}/`, description: 'halmic productions: an assortment of various somewhat creative work I’ve done.', image: `${SITE}/og/home.png`, sameAs: SAME_AS };
@@ -263,7 +278,7 @@ for (const g of gl) {
     body: `${crumb('/#games', 'games')}<h1>${esc(g.title)}</h1><div class="gpage"><img class="gcover" data-hero src="${g.coverLocal}" width="640" height="508" fetchpriority="high" alt="${esc(g.alt)}"><div><p class="lede2">${esc(g.line)}</p>${g.description ? `<p>${esc(g.description)}</p>` : ''}${meta(['tag', g.status], ['cpu', g.madeWith], ['game-controller', g.genre?.replace(/ ,/g, ',')], ['calendar-blank', g.jam])}${xpair(`/games/${g.slug}/`)}<p class="crow"><a class="btn btn-blue" href="${g.url}" rel="noopener">${icon('b-itchdotio')}<span>Play on itch.io</span>${icon('arrow-up-right', 'ic-end')}</a></p></div></div>${mrow({ href: '/#games', label: 'More little games', ic: 'game-controller' }, { href: '/#videos', label: 'Videos', ic: 'video-camera' }, { href: 'https://www.twitch.tv/halmictv', label: 'halmic on Twitch', ic: 'b-twitch', ext: true })}`,
   }));
 }
-write('games/index.html', inner({ title: 'Games by halmic: tiny jam games and experiments', desc: 'Tiny games made by halmic in PICO-8, PuzzleScript, Bitsy and GB Studio. Play them in the browser on itch.io.', path: '/games/', og: '/og/games.jpg', ogAlt: 'Little games by halmic: screenshots of four tiny games', section: 'games', wide: true, ld: [PERSON, ...gl.map(gameLd)], body: `<h1>Little games</h1><p class="lede2">Jam entries and experiments, mostly in tiny engines.</p>${bento({ cls: 'b-play', clusters: [clMountaintop(), clTiny()] })}` }));
+write('games/index.html', inner({ title: 'Games by halmic: tiny jam games and experiments', desc: 'Tiny games made by halmic in PICO-8, PuzzleScript, Bitsy and GB Studio. Play them in the browser on itch.io.', path: '/games/', og: '/og/games.jpg', ogAlt: 'Little games by halmic: screenshots of four tiny games', section: 'games', wide: true, ld: [PERSON, ...gl.map(gameLd)], body: `<h1>Little games</h1><p class="lede2">Jam entries and experiments, mostly in tiny engines.</p>${bento({ cls: 'b-play', clusters: [cl('mountaintop'), cl('tiny')] })}` }));
 for (const v of pageVideos) {
   urls.push({ loc: `/videos/${vslug(v)}/`, pri: films.includes(v) ? 0.7 : 0.6 });
   write(`videos/${vslug(v)}/index.html`, inner({
@@ -273,7 +288,7 @@ for (const v of pageVideos) {
 }
 const smashTile = (st) => tile({ href: `https://www.youtube.com/watch?v=${st.id}`, cls: 'tm', attrs: ` data-vid="${st.id}" data-title="${esc(`${st.event}: ${st.round}, halmic vs ${st.opp}`)}"`, inner: `<span class="tbg">${timg(`/videos/${st.id}.jpg`, 'yt-img')}</span>${badge('yt')}${tcap({ title: `vs ${st.opp}`, cap: `${st.event}, ${st.round}`, sr: '' })}` });
 const smashFlex = (fx) => `<div class="tile t-note ${fx}" data-flex><p>${esc(smash.credit)}</p></div>`;
-const vindex = `<h1>Videos</h1>${bento({ title: 'Short films, FIFA and edits', cls: 'b-watch', clusters: [clFilms(), clFifa(), clEdits('halmic on YouTube', 'https://www.youtube.com/@halmic?sub_confirmation=1')] })}${bento({ id: 'smash', title: 'Smash', more: `<span class="sl sl-note">${esc(smash.line)}</span>`, cls: 'b-smash', clusters: [cluster({ name: 'Smash sets', items: smash.sets.map((st) => ['one', smashTile(st)]), flex: smashFlex })] })}`;
+const vindex = `<h1>Videos</h1>${bento({ title: 'Short films, FIFA and edits', cls: 'b-watch', clusters: [cl('films'), cl('fifa'), cl('edits', (fx) => ytTile(fx, 'halmic on YouTube', 'https://www.youtube.com/@halmic?sub_confirmation=1', ' data-flex'))] })}${bento({ id: 'smash', title: 'Smash', more: `<span class="sl sl-note">${esc(smash.line)}</span>`, cls: 'b-smash', clusters: [cluster({ name: 'Smash sets', items: smash.sets.map((st) => ['one', smashTile(st)]), flex: smashFlex })] })}`;
 write('videos/index.html', inner({ title: 'Videos by halmic: edits, highlights and friends', desc: 'Videos from halmic on YouTube: edits, highlight reels and friends playing games.', path: '/videos/', og: '/og/videos.jpg', ogAlt: 'Videos by halmic: thumbnails of four videos', section: 'videos', wide: true, ld: [PERSON, ...pageVideos.map(videoLd)], body: vindex }));
 write('design/index.html', inner({ title: 'Design by halmic: logos and things I made', desc: 'Things halmic has designed: a logo for Southeast Denver Dental, a dental practice in Denver, Colorado, and how it looks in use.', path: '/design/', og: '/og/design.jpg', ogAlt: 'Design by halmic: the Southeast Denver Dental logo', section: 'work', wide: true, ld: [PERSON, designLd], body: `<h1>Things I’ve designed</h1>${bento({ cls: 'b-design', clusters: [cluster({ name: 'Southeast Denver Dental', items: [['lead', seddTile('lead w2')], ['one', hiTile('')], ['one', ytTile()]], flex: (fx) => mediumTile(fx) })] })}` }));
 write('design/southeast-denver-dental/index.html', inner({

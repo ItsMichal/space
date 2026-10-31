@@ -78,3 +78,7 @@ apps/michal-ai/.react-router/
 apps/michal-ai/docs/motion/run/
 apps/michal-ai/docs/motion/_*/
 apps/michal-ai/.wrangler-motion.jsonc
+
+# written into a space checkout by the content repo editor overlay (its scripts/halmic-generated.mjs)
+apps/michal-ai/lib/editor/halmic-facts.generated.ts
+apps/michal-ai/write/worker/halmic-deny.generated.ts

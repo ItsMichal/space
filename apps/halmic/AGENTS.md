@@ -47,9 +47,13 @@ local static server (port 4310, `PORT=` to change). The package depends on `@spa
   (Project Mountaintop leads), Work (Pokemon Phoenix Rising, the dental logo), Posts (`content/posts.json`; not rendered
   while empty), Elsewhere (X, Medium).
 - Clusters: a bento is a stack of `.cl` groups (one project or kind of thing each, built by `cluster()` in `build.mjs`); each is its own packed grid, so
-  another project's tile can never land inside it at any column count. Every tile declares its size at 4/3/2 columns (`SZ`: one, w2, x4 = two wide only at 4 columns,
-  lead = 2x2); the cluster's one `data-flex` tile gets the `fxC-N` classes (default width, so first paint has no holes) and `app.js` recomputes it. Add a tile by
-  adding it to the cluster's `items` with its size; do not put tiles directly in a bento. Year tiles (`yearTile`) read their year from content dates (video
+  another project's tile can never land inside it at any column count. Every tile declares its size at 4/3/2 columns (`SIZES` in `bentos.mjs`: one, w2, x4 = two wide only at 4 columns,
+  lead = 2x2); the cluster's one `data-flex` tile gets the `fxC-N` classes (default width, so first paint has no holes) and `app.js` recomputes it.
+- Arrangement is data: `bentos.mjs` is the model (sections, their clusters, each cluster's tiles with stable ids and default sizes, the flex tile, which tiles
+  are required), `content/layout.json` is what the CMS changed (section order, titles and visibility; cluster placement, visibility, tile order, size and
+  visibility), and `layout.mjs` applies one to the other and refuses arrangements that break the page (a hidden anchor section, a hidden required tile such
+  as `#twitch` or `#hi`, a cluster without a flex tile that leaves a gap). `build.mjs` only maps tile ids to markup (`TILES`, `FLEX`). Add a tile by giving it
+  an id and default size in `bentos.mjs` and its markup in `TILES`; do not put tiles directly in a bento. Keep tile ids stable: a saved layout names them. Year tiles (`yearTile`) read their year from content dates (video
   `published`, dev-log `date`); never type a year, and no dated source means no year tile. Clips are inserted before the Twitch tile in the Twitch cluster.
 - Tile system: square-unit grid, sizes 1x1, 2x1, 2x2. Column count comes from the bento's own width (container query:
   4 from 880px, 3 from 640px, else 2). The single `data-flex` tile gets the width that fills the last row (`app.js`); a playing
@@ -149,10 +153,22 @@ venv under `$TMPDIR` and never enter the repo; only rendered outputs are committ
 `brand/reel/` (hero reel, see its README) and `brand/previews/` (hover previews). Size budgets are enforced by
 `check-links.mjs`. Keep `apps/halmic/shots/` small: JPEG, and delete superseded sets.
 
+## CMS (docs/cms.md)
+
+- The editor edits `content/layout.json`, `content/curation.json`, `content/posts.json` with `public/posts/`, and the Mountaintop dev logs
+  (`content/mountaintop/` with `public/work/mountaintop/`). Their source of truth is the private content repo's `halmic/` folder; CI lays it in with
+  `npm run content:pull` (`scripts/content/pull.mjs`) before building, and a checkout without that folder leaves this repo's copies in place.
+- `content-rules.mjs` is what an edit may contain (pure; the editor imports it too). `npm run content:check` runs it plus the identity denylist over the
+  editable files, and `npm run build` runs it first. A new field in one of those files needs a rule, or the check rejects it.
+- `scripts/check-links.mjs` checks that the home page follows `layout.json` whatever it says; its editorial checks (which film leads, game order, the stat
+  tiles) only run for the default arrangement.
+- Never write the content repo's name or its other site into anything under `apps/halmic` except `docs/`: the identity check scans the rest.
+
 ## Test and verify
 
 ```bash
 npm test -w @space/halmic        # worker tests (node --test), check-links.mjs, check-social.mjs --dir public
+npm run content:check -w @space/halmic   # the CMS-editable content against content-rules.mjs and the identity denylist
 npm run check:identity           # from the root
 node apps/halmic/scripts/check-social.mjs https://halmic.com --ua=Twitterbot/1.0   # live social-card audit
 npm run og -w @space/halmic      # rebuild public/og/*.jpg share cards (needs Chrome and sharp)

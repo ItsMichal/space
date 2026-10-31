@@ -89,6 +89,12 @@ jobs:
           if [ -f apps/halmic/package.json ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; fi
       - uses: ./.github/actions/setup
         if: steps.present.outputs.present == 'true'
+      - uses: ./.github/actions/content
+        if: steps.present.outputs.present == 'true'
+        with:
+          app: halmic
+          deploy-key: ${{ secrets.CONTENT_DEPLOY_KEY }}
+          token: ${{ secrets.CONTENT_TOKEN }}
       - if: steps.present.outputs.present == 'true'
         run: npm run build:halmic
       - if: steps.present.outputs.present == 'true'
