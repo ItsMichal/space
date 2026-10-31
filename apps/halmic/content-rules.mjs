@@ -9,7 +9,7 @@ import { parseLayout, resolve, LayoutError } from './layout.mjs';
 
 export const RULES = { maxPosts: 24, maxText: 1000, maxLine: 300, maxAlt: 400, maxTitle: 80, maxMediaKB: 200, maxImagePx: 4000, maxLogBytes: 64 * 1024, maxLogs: 24 };
 export const POST_KINDS = ['web', 'game', 'hardware', 'design', 'video', 'music'];
-export const GAME_TIERS = ['feature', 'more', 'off'];
+export const GAME_TIERS = ['feature', 'more', 'archive', 'off'];
 export const VIDEO_KINDS = ['short film', 'highlight reel', 'onboard lap', 'video'];
 const CTRL = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;

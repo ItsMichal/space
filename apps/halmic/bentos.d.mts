@@ -1,6 +1,6 @@
 // Types for bentos.mjs, for the editor in the content repo (TypeScript). The build itself is plain JavaScript.
 export type Size = 'one' | 'w2' | 'x4' | 'lead';
-export type Tile = { id: string; size: Size; label: string; required?: boolean };
+export type Tile = { id: string; size: Size; label: string; required?: boolean; innerOnly?: boolean };
 export type Flex = { id: string; size: null; label: string; required?: boolean };
 export type Cluster = { name: string; tiles: Tile[]; flex: Flex | null; fixed?: boolean; needsTiles?: boolean };
 export type Section = { id: string; title: string; anchor?: boolean; clusters: string[] };
