@@ -158,6 +158,8 @@ venv under `$TMPDIR` and never enter the repo; only rendered outputs are committ
 - The editor edits `content/layout.json`, `content/curation.json`, `content/posts.json` with `public/posts/`, and the Mountaintop dev logs
   (`content/mountaintop/` with `public/work/mountaintop/`). Their source of truth is the private content repo's `halmic/` folder; CI lays it in with
   `npm run content:pull` (`scripts/content/pull.mjs`) before building, and a checkout without that folder leaves this repo's copies in place.
+- Dev log markdown (`md.mjs`) takes `:::callout{type="..."}` blocks: note, tip, warning, and the two conversational ones, `before` (a
+  prerequisite, led by "Before you continue") and `ask` (the reader's question as a chat bubble). The lead-ins are fixed in `md.mjs`.
 - `content-rules.mjs` is what an edit may contain (pure; the editor imports it too). `npm run content:check` runs it plus the identity denylist over the
   editable files, and `npm run build` runs it first. A new field in one of those files needs a rule, or the check rejects it.
 - `scripts/check-links.mjs` checks that the home page follows `layout.json` whatever it says; its editorial checks (which film leads, game order, the stat

@@ -14,6 +14,8 @@ export function inline(src) {
   return s.replace(/\u0000(\d+)\u0000/g, (_, i) => codes[i]);
 }
 
+// the two conversational callouts get a fixed lead-in: a prerequisite up front, and the question the reader is asking
+const CALLOUT_LABELS = { before: 'Before you continue', ask: 'You might be wondering' };
 const LI = /^(\s*)([-*]|\d+\.)\s+(.*)$/;
 function list(lines) {
   // lines: consecutive list lines; nesting by indent
@@ -49,7 +51,8 @@ export function md(src, opts) {
       const inner = []; i++;
       while (i < L.length && L[i].trim() !== ':::') inner.push(L[i++]);
       i++;
-      out.push(`<aside class="callout callout-${m[1]}">${md(inner.join('\n'), opts)}</aside>`);
+      const label = CALLOUT_LABELS[m[1]];
+      out.push(`<aside class="callout callout-${m[1]}"${label ? ` aria-label="${label}"` : ''}>${label ? `<p class="callout-label">${label}</p>` : ''}${md(inner.join('\n'), opts)}</aside>`);
     } else if ((m = /^::youtube\{id="([\w-]+)"\}/.exec(line))) { out.push(opts.youtube(m[1])); i++; }
     else if (/^---+\s*$/.test(line)) { out.push('<hr>'); i++; }
     else if ((m = /^(#{2,4})\s+(.*)$/.exec(line))) { out.push(`<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`); i++; }

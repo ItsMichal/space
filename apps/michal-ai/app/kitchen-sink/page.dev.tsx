@@ -69,6 +69,14 @@ A tip callout.
 A warning callout, with a second line of text so it wraps inside the box on a phone.
 :::
 
+:::callout{type="before"}
+This part assumes you know what a **pull-up resistor** is. [This page](https://example.com) explains it first.
+:::
+
+:::callout{type="ask"}
+Why not just read the pin directly and skip the resistor?
+:::
+
 ---
 
 \`\`\`ts

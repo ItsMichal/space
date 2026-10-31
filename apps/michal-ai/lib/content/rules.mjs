@@ -102,7 +102,7 @@ export function embedUrlOk(url) {
 }
 
 export const YOUTUBE_ID_RE = /^[A-Za-z0-9_-]{6,20}$/
-export const CALLOUT_TYPES = ['note', 'tip', 'warning']
+export const CALLOUT_TYPES = ['note', 'tip', 'warning', 'before', 'ask']
 export const RATIO_RE = /^\d{1,3}(?:\.\d{1,3})?\s*\/\s*\d{1,3}(?:\.\d{1,3})?$/
 
 /** The only directives a post may use, with the attributes each one keeps. */

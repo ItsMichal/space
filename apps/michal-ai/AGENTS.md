@@ -33,6 +33,7 @@ here, so keep diffs narrow and fetch before branching.
 - Card order and presentation (Selected work, /projects, the writing list, the hero's rotating line; per card size,
   look, image focus, home) come from `content/layout.json`, checked by `parseLayout` in `rules.mjs` and read through
   `lib/content/layout.ts`. Change the order there, not in components. Details: `docs/content-repo.md`.
+- How an article should read, and the `before` / `ask` callouts that support it: `docs/writing-articles.md`.
 - No em dash or en dash anywhere in shipped copy or source (`npm run check:dashes`).
 
 ## Build pipeline

@@ -946,6 +946,28 @@ html[data-fade] .page-enter {
   .prose .callout--warning {
     --callout-accent: var(--presence-4);
   }
+  /* The two conversational callouts (precedent: samwho.dev's "Before you continue!" note and the character asides that ask
+     the reader's question). before: a prerequisite, boxed like a note with a lead-in. ask: the reader's question as a chat
+     bubble (rounded, one tight corner where the tail would be), in the body face's italic so it reads as another voice. */
+  .prose .callout__label {
+    margin: 0 0 var(--space-2);
+    font: 500 var(--type-small-size) / var(--type-small-line) var(--font-sans);
+    color: var(--ink-muted);
+  }
+  .prose .callout--before {
+    --callout-accent: var(--accent);
+  }
+  .prose .callout--before .callout__label {
+    color: var(--ink);
+  }
+  .prose .callout--ask {
+    max-width: 52ch;
+    margin-left: var(--space-6);
+    border-radius: var(--radius-card) var(--radius-card) var(--radius-card) var(--radius-sm);
+    box-shadow: none;
+    font-family: var(--font-serif);
+    font-style: italic;
+  }
   .prose .callout > :first-child {
     margin-top: 0;
   }
