@@ -188,3 +188,39 @@ export function checkMountaintop(j, { logs = {}, intro = '', images = {}, thumbs
 export function checkLayout(text, content) {
   try { return resolve(model(content), parseLayout(text)).problems; } catch (e) { if (e instanceof LayoutError) return [e.message.replace(/^layout\.json: /, '')]; throw e; }
 }
+
+// Every path the halmic/ folder of the content repo may hold. The editor's Worker writes nothing else; validate.mjs --from refuses anything else.
+export const FOLDER_FILE = /^(?:layout\.json|curation\.json|posts\.json|posts\/[a-z0-9]+(?:-[a-z0-9]+)*\.(?:webp|jpg|png)|mountaintop\/(?:index\.json|[a-z0-9]+(?:-[a-z0-9]+)*\.md|images\/[a-z0-9]+(?:-[a-z0-9]+)*\.(?:webp|jpg|png)))$/;
+
+// The whole folder at once, the way the build will see it. files: { [path in the folder]: { size, text? } } with text for the .json and .md files.
+// facts: what the edits must agree with, from the space repo (scripts/content/facts.mjs): videos, exclude, games, phoenix, thumbs (video ids with a
+// poster). identity, if given: (text) => [{ line }], the denylist scan; it runs over every text file and every file name.
+export function checkFolder(files, { videos, exclude, games, phoenix, thumbs, identity } = {}) {
+  const problems = [];
+  const at = (f, list) => problems.push(...list.map((x) => (x.startsWith(f) || x.startsWith('mountaintop/') ? x : `${f}: ${x}`)));
+  for (const p of Object.keys(files)) if (!FOLDER_FILE.test(p)) problems.push(`${p}: unexpected file`);
+  const json = (p) => {
+    const t = files[p]?.text;
+    if (typeof t !== 'string') return problems.push(`${p} is missing`), null;
+    try { return JSON.parse(t); } catch (e) { return problems.push(`${p}: not JSON (${e.message})`), null; }
+  };
+  const under = (dir) => Object.fromEntries(Object.entries(files).filter(([p]) => p.startsWith(dir) && MEDIA.test(p.slice(dir.length))).map(([p, f]) => [p.slice(dir.length), f.size]));
+  const posts = json('posts.json'), curation = json('curation.json'), mt = json('mountaintop/index.json');
+  const media = under('posts/'), images = under('mountaintop/images/');
+  const logs = {};
+  for (const [p, f] of Object.entries(files)) { const m = /^mountaintop\/([a-z0-9-]+)\.md$/.exec(p); if (m && m[1] !== 'project') logs[m[1]] = f.text; }
+  const intro = files['mountaintop/project.md']?.text;
+  if (typeof intro !== 'string') problems.push('mountaintop/project.md is missing');
+  if (posts) at('posts.json', checkPosts(posts, { media }));
+  const out = new Set(exclude.ids);
+  const curP = curation ? checkCuration(curation, { videoIds: videos.videos.filter((v) => !out.has(v.id)).map((v) => v.id), gameSlugs: games.games.map((g) => g.slug) }) : [];
+  at('curation.json', curP);
+  if (mt) at('mountaintop/index.json', checkMountaintop(mt, { logs, intro: intro ?? '', images, thumbs }));
+  // the layout is checked against the content it will be built with; it cannot be judged while that content is broken
+  if (curation && posts && mt && !curP.length) at('layout.json', checkLayout(files['layout.json']?.text ?? '{ "version": 1 }', { videos, exclude, curation, games, posts, mountaintop: mt, phoenix }));
+  if (identity) for (const [p, f] of Object.entries(files)) {
+    if (typeof f.text === 'string') for (const h of identity(f.text)) problems.push(`${p}:${h.line}: a denied identity pattern matched`);
+    if (identity(p).length) problems.push(`${p}: the file name matches a denied identity pattern`);
+  }
+  return problems;
+}

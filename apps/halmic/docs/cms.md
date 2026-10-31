@@ -40,9 +40,11 @@ the denylists. The rules read those from this repo so an edit can only point at 
 
 ## Flow
 
-1. The owner edits in the write editor and saves. The editor's Worker commits to a `write/halmic-*` branch of the content repo and opens a pull
-   request; the content repo's CI checks out this repo and runs `node apps/halmic/scripts/content/validate.mjs --from <absolute path to its halmic/>`
-   (the same rules, the same denylist).
+1. The owner edits in the write editor and saves. The editor's Worker commits to the single draft branch `write/_halmic` of the content repo
+   (it may only write `halmic/` files matching `FOLDER_FILE`) and, on ship, opens a pull request. The Worker and the editor run the same
+   `checkFolder` from `content-rules.mjs` on the whole folder (the Worker with the identity denylist); the facts the rules need (videos, games,
+   the video posters) come from `scripts/content/facts.mjs`, which the editor build runs against this repo. The content repo's CI checks out this
+   repo and runs `node apps/halmic/scripts/content/validate.mjs --from <absolute path to its halmic/>` (the same rules, the same denylist).
 2. Merging that pull request dispatches this repo's Deploy workflow with `app=halmic` (like a manual run, it ignores the `DEPLOY_HALMIC` gate).
 3. Deploy checks out the content repo (`./.github/actions/content` with `app: halmic`), runs `npm run content:pull` (validate, then copy), builds,
    runs the identity check on the output and deploys.
