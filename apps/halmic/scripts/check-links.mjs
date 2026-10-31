@@ -93,7 +93,7 @@ if (DEF) {
   if (!/\blead w2\b/.test(vids[0]?.[1] ?? '') || !/\bx4\b/.test(vids[1]?.[1] ?? '')) bad.push('index.html: Special Force 1 should be the 2x2 lead and Special Force 2 its x4 satellite');
   if (!/<h3 class="tt">Special Force: Origins<\/h3>/.test(home) || !/<h3 class="tt">Special Force 2: The Array<\/h3>/.test(home)) bad.push('index.html: clean Special Force titles missing');
   if (!/data-title="SPECIAL FORCE 1 - ORIGINS"/.test(home)) bad.push('index.html: real Special Force title should stay in data-title');
-  if (!/<span class="chip kchip">[\s\S]*?<span>Short film<\/span>/.test(watch)) bad.push('index.html: Short film kind chip missing');
+  if (!/<p class="ts">Short film<\/p>/.test(watch)) bad.push('index.html: Short film caption missing');
   const vi = fs.readFileSync(path.join(pub, 'videos/index.html'), 'utf8');
   const vo = [...vi.matchAll(/<a class="tile tm [^"]*" href="[^"]*" data-vid="([^"]+)"/g)].map((m) => m[1]);
   if (vo[0] !== 'qVEDjNc5Gmg' || vo[1] !== 'IIJVKHEtawU') bad.push(`videos/index.html: Special Force films should come first (got ${vo.slice(0, 2)})`);

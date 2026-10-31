@@ -59,6 +59,7 @@ local static server (port 4310, `PORT=` to change). The package depends on `@spa
   4 from 880px, 3 from 640px, else 2). The single `data-flex` tile gets the width that fills the last row (`app.js`); a playing
   tile grows to 2x2. Stat tiles take their numbers from content (`stats.mjs`, re-derived by `check-links.mjs`), never typed in; a lone number gets a 1x1 or 2x1 tile (`x4`), never a stretched flex tile, and a cluster is balanced with sizes, not filler. Link tiles use brand colours; platform
   colours appear only on badges and link tiles. Click-to-play happens in place. Hover previews come from `public/previews/`.
+- Labels are sentence case, no uppercase tracking (section `h2`, card eyebrows). A video tile names its kind in the caption (`Short film`), not a chip; the only chip on a tile is the duration.
 - Spacing system (`base.css`, bento section): ONE rule set, no per-component insets. `:root` has `--gap` (tiles, 12/14/16px at 640/900), `--cgap` (2x, between clusters), `--sgap` (5x, between bentos), `--r` (radius of
   every tile, card and player) and `--r-in` (0.6x, small inner surfaces). Each `.tile` (and `.card`) derives from its OWN short side with `cqmin`: `--pad` (every inset: text left and bottom, numeral and brand mark ink left and top,
   badge top and left, chip, corner arrow and close button top and right, play disc bottom right), `--ctl` (height of badge, chip, corner button), `--tt-fs` / `--ts-fs`. A 2x1 tile has the short side of a 1x1, so they match; a 2x2 doubles. Never
@@ -85,17 +86,17 @@ local static server (port 4310, `PORT=` to change). The package depends on `@spa
 ## Motion
 
 One motion language, in `motion.css` (everything new) and `motion.js` (observers, pointer, counters); `app.js` owns the live flip, player loader and clip swap. Tokens in `base.css` `:root`: durations
-`--t1` 120ms (press, fades out), `--t2` 200ms (hover colour), `--t3` 360ms (moves), `--t4` 600ms (reveals, state changes); `--ease` (standard: fast start, long settle); `--spring` (emphasised, about 5% overshoot, a
-`linear()` curve with a cubic-bezier fallback). Use them; no literal durations in new CSS.
+`--t1` 120ms (press, fades out), `--t2` 200ms (hover colour), `--t3` 360ms (moves), `--t4` 600ms (reveals, state changes); `--ease` (standard: fast start, long settle; the only curve, no overshoot or spring). Use them; no literal durations in new CSS.
+No hover zoom on pictures, no picture parallax, no glyph tilt (removed in the unslop pass; keep it that way).
 
 - Gates. `vt.js` (head) sets `html.js` always, `html.mo` only when there is no reduced-motion preference and no `?motion=0`. Anything that hides something until a reveal needs `.mo`, so no scripts or reduced motion shows the plain page
   (a test asserts it). `?motion=0` (not linked) also sets `data-motion="0"`, which kills every animation and transition; `check-spacing.mjs`, `check-holes.mjs` use it so transforms never skew measurements.
 - Never touch scrolling: no wheel, touch or scroll-position code, no snapping, no smooth-scroll script. Scroll only drives progress (CSS timelines, IntersectionObserver). `html { scroll-behavior: smooth }` for anchors only
   under no-preference; `scroll-padding-top: var(--hdr)` because the header is fixed with scripts (`.js .top`). Programmatic scrolls in tools must pass `behavior: 'instant'`.
-- Scroll-driven (CSS `animation-timeline`, in `@supports`, `.mo` only; browsers without them get a one-shot `.rv` then `.in` reveal from `motion.js` for what starts below the fold, and none of the parallax, hand-off, hairline or progress bar):
-  tile and card entrance (`view()`, staggered by `--i` from `nth-child`; it reverses on scroll back up because a view timeline is position driven), picture parallax inside a tile (`.tbg` img and video, `scale` 1.08 plus `translate` 3.5%, skipped for `.fit-contain` and the pixel covers),
+- Scroll-driven (CSS `animation-timeline`, in `@supports`, `.mo` only; browsers without them get a one-shot `.rv` then `.in` reveal from `motion.js` for what starts below the fold, and none of the hand-off, hairline or progress bar):
+  tile and card entrance (`view()`, staggered by `--i` from `nth-child`; it reverses on scroll back up because a view timeline is position driven),
   section label slide and hairline (named `--sec` timeline on each `.bsec`), hero hand-off (`--hero` timeline on `.hero` with `timeline-scope` on `body.home`: wordmark settles, bars drift, header backdrop arrives), top progress hairline
-  (`scroll(root)`), brand glyph tilt on link tiles, dev-log figures, callouts and videos rise, `h2` marker draws. Tiles are `overflow: clip` (not hidden) so `view()` inside them still sees the viewport as its scroller.
+  (`scroll(root)`), dev-log figures, callouts and videos rise, `h2` marker draws. Tiles are `overflow: clip` (not hidden) so `view()` inside them still sees the viewport as its scroller.
 - JS micro-interactions (`motion.js`): header `.solid` backdrop toggle, tile sheen and 2.5 degree tilt (hover-capable fine pointers, one rAF-throttled delegated `pointermove`, CSS variables `--mx --my --rx --ry`), press state
   (`.is-press`, any pointer), nav marker (slides on hover or focus, rests under the current section; scroll-spy by IntersectionObserver sets `aria-current`), numeral count-up (restores the exact static text; years roll from year minus 8).
 - CSS only: arrow loop on `.goi` (two arrows in `GO`; the second slides in), play-disc ring, chip glide, link-tile lift, button lift and squash, arrow-down bob, animated focus ring, close button scale, players' buttons rise in.

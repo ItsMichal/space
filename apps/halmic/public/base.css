@@ -20,10 +20,8 @@
   --s1: 8px; --s2: 16px; --s3: 24px; --s4: 32px; --s6: 48px; --s8: 64px; --s12: 96px; --s20: 160px;
   --ease: cubic-bezier(.2, .8, .2, 1);   /* the one standard ease: fast start, long settle */
   --t1: 120ms; --t2: 200ms; --t3: 360ms; --t4: 600ms;   /* motion durations: press / hover / move / reveal */
-  --spring: cubic-bezier(.34, 1.4, .64, 1);   /* emphasised ease: a small overshoot, then rest */
   --gut: 16px; --hdr: 72px;
 }
-@supports (transition-timing-function: linear(0, 1)) { :root { --spring: linear(0, .06, .2, .372, .544, .698, .823, .917, .983, 1.024, 1.046, 1.054, 1.053, 1.046, 1.037, 1.028, 1.019, 1.012, 1.006, 1.002, .999, .998, .997, .997, 1); } }
 @media (min-width: 768px) { :root { --gut: 32px; } }
 * { box-sizing: border-box; }
 html { color-scheme: dark; background: var(--ink); scroll-behavior: auto; scroll-padding-top: var(--hdr); }
@@ -98,7 +96,6 @@ img { max-width: 100%; height: auto; display: block; }
 .vid { display: block; position: relative; }
 .vid .thumb { display: block; position: relative; aspect-ratio: 16 / 9; border-radius: var(--r); overflow: hidden; background: var(--ink-3); }
 .vid .thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--t3) var(--ease); }
-.vid:hover .thumb img { transform: scale(1.03); }
 .vid .vt { display: block; margin-top: 12px; font-weight: 600; line-height: 1.25; text-wrap: balance; }
 .vid .vm { display: block; color: var(--mute); font-size: 14px; margin-top: 2px; }
 
@@ -107,7 +104,7 @@ img { max-width: 100%; height: auto; display: block; }
 .gmeta li { display: inline-flex; align-items: center; gap: 7px; } .gmeta .ic { font-size: 16px; }
 
 /* cards: one system for the home page and the inner index pages. A 4/3/2/1 column grid of whole-card links (one link per card),
-   image flush to the card's edge, text below or over a gradient, no borders or shadows. Hover scales the image inside the clipped card. */
+   image flush to the card's edge, text below or over a gradient, no borders or shadows. */
 .grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap); grid-auto-flow: dense; }
 @media (min-width: 600px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 900px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
@@ -127,7 +124,6 @@ img { max-width: 100%; height: auto; display: block; }
 .c-paper:focus-visible { outline-color: var(--blue-paper); }
 .cm { position: relative; flex: 0 0 auto; aspect-ratio: 16 / 9; overflow: hidden; background: var(--ink-3); }
 .cm img, .cm video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform var(--t3) var(--ease); }
-a.card:hover .cm img, a.card:hover .cm video { transform: scale(1.03); }
 .h2 .cm, .h4 .cm, .side .cm { flex: 1 0 auto; }   /* only the tall cards let their image take the spare height; elsewhere the images line up along a row */
 /* game covers: the whole picture, never cropped, on the ink the covers were drawn for */
 .px .cm { aspect-ratio: 16 / 9; background: var(--ink); } .px .cm img { image-rendering: pixelated; object-fit: contain; }
@@ -135,7 +131,7 @@ a.card:hover .cm img, a.card:hover .cm video { transform: scale(1.03); }
 /* every card: 20/22 padding, eyebrow, title, line. Big cards step up one size. */
 .cb { flex: 1 0 auto; display: flex; flex-direction: column; padding: var(--pad); }
 .bt { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.ey { margin: 0; display: flex; align-items: center; gap: 6px; font: 700 12px/1.3 var(--sans); letter-spacing: .07em; text-transform: uppercase; font-variant-numeric: tabular-nums; color: var(--mute); }
+.ey { margin: 0; display: flex; align-items: center; gap: 6px; font: 500 13px/1.3 var(--sans); font-variant-numeric: tabular-nums; color: var(--mute); }
 .ey .ic { font-size: 15px; }
 .c-paper .ey { color: var(--paper-mute); } .c-blue .ey { color: var(--ink); }
 .ct { margin: 0; font: 750 clamp(19px, 1.7vw, 24px)/1.12 var(--display); letter-spacing: var(--dtrack); text-wrap: balance; overflow-wrap: anywhere; }
@@ -171,9 +167,9 @@ a:is(:hover, :focus-visible) > .goi .ic:not(.dup) { translate: 140% -140%; } a:i
 .chip { position: absolute; z-index: 1; right: var(--pad, 12px); bottom: var(--pad, 12px); display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px 0 8px; border-radius: 999px; background: #0f0e13c4; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); color: var(--paper); font: 700 12.5px/1 var(--sans); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
 .chip .ic { font-size: 14px; opacity: .85; }
 /* play button: a blurred, tinted disc with the play glyph; the same on clips, videos and the featured player */
-.play { position: absolute; z-index: 1; left: var(--pad, 14px); bottom: var(--pad, 14px); display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: #0f0e13a8; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: inset 0 0 0 1.5px #ffffff30; color: var(--paper); font-size: 22px; transition: background var(--t2) var(--ease), color var(--t2) var(--ease), transform var(--t3) var(--spring), box-shadow var(--t2) var(--ease); }
+.play { position: absolute; z-index: 1; left: var(--pad, 14px); bottom: var(--pad, 14px); display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: #0f0e13a8; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: inset 0 0 0 1.5px #ffffff30; color: var(--paper); font-size: 22px; transition: background var(--t2) var(--ease), color var(--t2) var(--ease), transform var(--t3) var(--ease), box-shadow var(--t2) var(--ease); }
 .play .ic { margin-left: 2px; }
-:is(.card, .vid):is(:hover, :focus-visible) .play { background: var(--blue); color: var(--ink); transform: scale(1.08); box-shadow: none; }
+:is(.card, .vid):is(:hover, :focus-visible) .play { background: var(--blue); color: var(--ink); box-shadow: none; }
 .vid .play { width: 68px; height: 68px; font-size: 28px; left: 18px; bottom: 18px; }
 /* image with the text over a gradient (hero cards) */
 .ov { aspect-ratio: 4 / 3; }
@@ -235,7 +231,7 @@ a:is(:hover, :focus-visible) > .goi .ic:not(.dup) { translate: 140% -140%; } a:i
 @media (min-width: 1100px) { .duo { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); } }
 /* section label: its left edge is the grid's left edge (optical: the capital's side bearing is pulled back) and its link ends on the grid's right edge */
 .sh { display: flex; align-items: baseline; justify-content: space-between; gap: 6px 20px; flex-wrap: wrap; margin: 0 0 var(--gap); }
-.sh h2 { margin: 0 0 0 -.07em; font: 800 14px/1.2 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+.sh h2 { margin: 0; font: 600 16px/1.2 var(--sans); color: var(--mute); }
 .sl { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: -14px -8px -14px 0; padding: 0 8px; border-radius: 999px; font: 700 14px/1 var(--sans); color: var(--mute); transition: color var(--t2) var(--ease); }
 .sl:hover { color: var(--text); } .sl:hover .ic-end { transform: translateX(2px); } .sl .ic-end { width: 1em; height: 1em; }
 .sl-note { display: block; min-height: 0; margin: 0; padding: 0; font-weight: 500; max-width: 70ch; }
@@ -259,7 +255,6 @@ a:is(:hover, :focus-visible) > .goi .ic:not(.dup) { translate: 140% -140%; } a:i
 .tbg img, .tbg video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(var(--z, 1)); transition: transform var(--t4) var(--ease); }
 .tbg .yt-img { --z: 1.334; }   /* YouTube's 4:3 thumbnails carry black bars: in a square tile the picture is zoomed past them */
 .w2:not(.lead) .tbg .yt-img { --z: 1; }
-a.tile:hover .tbg img, a.tile:hover .tbg video { transform: scale(calc(var(--z, 1) * 1.04)); }
 .tm::after { content: ""; position: absolute; inset: 0; z-index: 0; background: linear-gradient(to top, #0f0e13ee 0, #0f0e13a0 30%, #0f0e1300 62%); pointer-events: none; }
 .tg .tbg { background: var(--ink-2); } .tg .tbg img { object-fit: contain; object-position: 50% 36%; image-rendering: pixelated; }
 .tpaper { background: var(--paper); }
@@ -281,15 +276,13 @@ a.tile:hover .tbg img, a.tile:hover .tbg video { transform: scale(calc(var(--z, 
 .tile .play { left: auto; right: var(--pad); bottom: var(--pad); z-index: 2; width: calc(var(--ctl) * 1.5); height: calc(var(--ctl) * 1.5); font-size: calc(var(--ctl) * .62); }
 a.tile:hover .chip { background: var(--blue); color: var(--ink); }
 /* kind chip ("Short film") sits beside the platform badge */
-.tile .kchip { right: auto; left: calc(var(--pad) + var(--ctl) + var(--ctl) * .25); } .tile .kchip .ic { opacity: 1; }
-@container (max-width: 239px) { .tile .kchip { display: none; } }   /* a narrow tile has no room for the kind chip beside the badge and the duration */
 /* hover preview (app.js): a muted loop over the thumbnail, absolutely placed inside the media box so nothing shifts; the badge, chips and play button stay above it */
 /* the lead films' wide title-card thumbnails: the picture whole on black instead of the centre of a square */
 .tbg.fit-contain { background: #000; } .tbg.fit-contain img:not(.pv) { object-fit: contain; object-position: 50% 24%; }
 .tbg .pv { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; pointer-events: none; transition: opacity var(--t2) var(--ease), transform var(--t4) var(--ease); }
 .tbg .pv.on { opacity: 1; }
 .pvbar { position: absolute; z-index: 3; left: 0; right: 0; bottom: 0; height: 2px; background: var(--blue); opacity: .8; transform-origin: 0 50%; transform: scaleX(0); pointer-events: none; }
-a.tile:is(:hover, :focus-visible) .play { background: var(--blue); color: var(--ink); transform: scale(1.08); box-shadow: none; }
+a.tile:is(:hover, :focus-visible) .play { background: var(--blue); color: var(--ink); box-shadow: none; }
 /* stat tiles: a big word or number in the display face (its unit set small beside it), one caption. The numeral's INK starts where the caption's does: the glyph's side bearing (--lsb, em, by first glyph) and the
    caption's own bearing are compensated, and the top of the digits sits on --pad like a badge. cq units on a container's own properties resolve against the container above it, so the insets live on the children. */
 .t-stat { display: flex; flex-direction: column; justify-content: flex-start; background: var(--ink-3); }
