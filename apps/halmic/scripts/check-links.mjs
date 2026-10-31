@@ -190,7 +190,7 @@ if (DEF) {
     for (const [id, name, key, num, unit] of want) { const t = tile(cl(id, name), key); if (!t) bad.push(`index.html: stat "${key}" missing from the ${name} cluster`); else if (t.num !== num || t.unit !== unit) bad.push(`index.html: stat "${key}" shows ${t.num} ${t.unit}, the data says ${num} ${unit}`); }
     const eng = tile(cl('games', 'Tiny games'), 'engines'); if (eng && eng.cap.split(', ').length !== engines.size) bad.push('index.html: the engines tile should list every engine');
     const fm = tile(cl('stream', 'Special Force'), 'film-minutes'); const filmSecs = cur.videos.other.filter((o) => o.kind === 'short film').reduce((n, o) => n + sec(vids.find((v) => v.id === o.id).length), 0);
-    if (!fm || fm.cap !== `${Math.round(filmSecs / 60)} minutes in all`) bad.push(`index.html: Special Force runtime caption should say ${Math.round(filmSecs / 60)} minutes in all (got ${fm?.cap})`);
+    if (!fm || !fm.cap.endsWith(`, ${Math.round(filmSecs / 60)} minutes`)) bad.push(`index.html: Special Force runtime caption should end with ${Math.round(filmSecs / 60)} minutes (got ${fm?.cap})`);
     if (/class="num[^"]*"[^>]*aria-hidden/.test(home)) bad.push('index.html: a numeral is hidden from screen readers');
     if (S.logWords % 100 !== 0 || S.logWords < 1000) bad.push('stats.mjs: the dev-log word count looks wrong');
   }

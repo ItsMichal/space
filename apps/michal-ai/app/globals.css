@@ -99,59 +99,6 @@ html[data-fade] .page-enter {
   }
 }
 
-/* Hero fade, scrubbed by CSS scroll-driven animations (compositor, no JS): the hero's name and role fade back as the page
-   scrolls away from them. Opacity only: their glyphs must stay where the globe's text clearing measured them. Entrances
-   below the hero are components/fx/ArtisanFx.tsx (text scramble on section heads, ordered dither on pictures). */
-@keyframes hero-away {
-  to {
-    opacity: 0.25;
-  }
-}
-@keyframes intro-away {
-  to {
-    opacity: 0.35;
-  }
-}
-@supports (animation-timeline: scroll()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .name-hero {
-      animation: hero-away linear both;
-      animation-timeline: scroll(root);
-      animation-range: 0 55vh;
-    }
-    .name-intro {
-      animation: intro-away linear both;
-      animation-timeline: scroll(root);
-      animation-range: 0 40vh;
-    }
-  }
-}
-@media print {
-  .name-hero,
-  .name-intro {
-    animation: none !important;
-  }
-  .fx-dither {
-    display: none;
-  }
-}
-
-/* ArtisanFx pieces: a scrambling glyph is muted ink; the dither veil sits over its picture in hard 4px cells */
-.fx-dud {
-  color: var(--ink-muted);
-}
-.ix__thumb {
-  position: relative;
-}
-.fx-dither {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  image-rendering: pixelated;
-  pointer-events: none;
-}
-
 /* Skip link */
 .skip-link {
   position: fixed;

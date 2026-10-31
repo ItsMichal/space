@@ -181,17 +181,3 @@
   text-wrap: balance;
 }
 
-/* ---------- Image blur-up ----------
-   An image whose bytes arrived just now (root.tsx marks it data-sharpen) sharpens from a blur over its blurred placeholder,
-   instead of a hard swap. Filter and nothing else, 360ms, once. Cached images and reduced motion are not marked. */
-img[data-sharpen] {
-  animation: img-sharpen 360ms var(--craft-out) both;
-}
-@keyframes img-sharpen {
-  from {
-    filter: blur(10px);
-  }
-  to {
-    filter: blur(0);
-  }
-}

@@ -62,8 +62,8 @@ img { max-width: 100%; height: auto; display: block; }
 [data-live="1"] .status { background: #0f1a36; border-color: #274a99; }
 .status .meter { position: relative; width: 62px; height: 18px; flex: none; }
 .status b { font-weight: 600; } .status .sub { color: var(--mute); }
-.status .on, .status .off { display: none; }
-[data-live="1"] .status .on { display: inline; } [data-live="0"] .status .off, :root:not([data-live]) .status .off { display: inline; }
+/* the pill only shows while live; offline there is nothing to say */
+:root:not([data-live="1"]) .status { display: none; }
 
 /* meter parts */
 .meter, [data-meter] { position: relative; }

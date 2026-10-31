@@ -27,7 +27,7 @@ local static server (port 4310, `PORT=` to change). The package depends on `@spa
 
 ## Page model
 
-- Hero: inline SVG wordmark from `brand/wordmark-parts.json`, a status pill and a leaning-bar meter driven by `data-live` on
+- Hero: inline SVG wordmark from `brand/wordmark-parts.json`, a status pill (shown only while live) and a leaning-bar meter driven by `data-live` on
   `<html>`, and a WebGL highlights reel (`hero.js`, media in `public/hero/`, built by `brand/reel/`). The reel starts only
   after load, while the hero is visible and the tab is shown. A portrait cut serves phones. The poster (a baked render of the shader on one frame, `brand/reel/bake-poster.mjs`)
   is a TEMPORARY state except for reduced motion, data saver and no WebGL: a video error, refused autoplay, a source that decodes nothing for 8 s or a lost GL context show it, and the reel
@@ -93,12 +93,11 @@ No hover zoom on pictures, no picture parallax, no glyph tilt (removed in the un
   (a test asserts it). `?motion=0` (not linked) also sets `data-motion="0"`, which kills every animation and transition; `check-spacing.mjs`, `check-holes.mjs` use it so transforms never skew measurements.
 - Never touch scrolling: no wheel, touch or scroll-position code, no snapping, no smooth-scroll script. Scroll only drives progress (CSS timelines, IntersectionObserver). `html { scroll-behavior: smooth }` for anchors only
   under no-preference; `scroll-padding-top: var(--hdr)` because the header is fixed with scripts (`.js .top`). Programmatic scrolls in tools must pass `behavior: 'instant'`.
-- Scroll-driven (CSS `animation-timeline`, in `@supports`, `.mo` only; browsers without them get a one-shot `.rv` then `.in` reveal from `motion.js` for what starts below the fold, and none of the hand-off, hairline or progress bar):
-  tile and card entrance (`view()`, staggered by `--i` from `nth-child`; it reverses on scroll back up because a view timeline is position driven),
-  section label slide and hairline (named `--sec` timeline on each `.bsec`), hero hand-off (`--hero` timeline on `.hero` with `timeline-scope` on `body.home`: wordmark settles, bars drift, header backdrop arrives), top progress hairline
-  (`scroll(root)`), dev-log figures, callouts and videos rise, `h2` marker draws. Tiles are `overflow: clip` (not hidden) so `view()` inside them still sees the viewport as its scroller.
+- No scroll reveals: everything is on the page from the first paint. Nothing rises, slides, draws or counts up as it scrolls in, and numerals are static text.
+  The only scroll-driven effect (CSS `animation-timeline`, in `@supports`, `.mo` only) is the header backdrop arriving behind the nav (`--hero` timeline on `.hero` with
+  `timeline-scope` on `body.home`; `scroll(root)` on other pages). Without timelines `motion.js` toggles `.solid` instead.
 - JS micro-interactions (`motion.js`): header `.solid` backdrop toggle, tile sheen and 2.5 degree tilt (hover-capable fine pointers, one rAF-throttled delegated `pointermove`, CSS variables `--mx --my --rx --ry`), press state
-  (`.is-press`, any pointer), nav marker (slides on hover or focus, rests under the current section; scroll-spy by IntersectionObserver sets `aria-current`), numeral count-up (restores the exact static text; years roll from year minus 8).
+  (`.is-press`, any pointer), nav marker (slides on hover or focus, rests under the current section; scroll-spy by IntersectionObserver sets `aria-current`).
 - CSS only: arrow loop on `.goi` (two arrows in `GO`; the second slides in), play-disc ring, chip glide, link-tile lift, button lift and squash, arrow-down bob, animated focus ring, close button scale, players' buttons rise in.
 - `app.js`: live flip pulses the status pill (`.flip`) and kicks the meter springs; a player shows a spinner disc (`.pload`) until the iframe's `load`, then the iframe fades in; a closed player returns the tile with a fade (`.back`);
   clips arriving from `/api/clips` get `.clip-in` (content fades in, staggered; badge pops; picture fades in on load).

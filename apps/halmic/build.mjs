@@ -135,7 +135,7 @@ const ltile = ({ href, kind, glyph, title, cap = '', cls = '', attrs = '', rel =
 const twitchTile = (cls = '') => ltile({ href: 'https://www.twitch.tv/halmictv', kind: 'tw', glyph: 'b-twitch', cls: `${cls}`, rel: 'me noopener', attrs: ' id="twitch" data-flex', inner: `<span class="tcap"><span class="tx"><h3 class="tt"><span class="toff">Watch live on Twitch</span><span class="ton"><i class="ldot" aria-hidden="true"></i>Live now</span></h3><p class="ts"><span class="toff">No set schedule</span><span class="ton" data-live-game>halmictv</span></p></span></span>` });
 const ytTile = (cls = '', title = 'All videos on YouTube', href = 'https://www.youtube.com/@halmic', attrs = '') => ltile({ href, kind: 'yt', glyph: 'b-youtube', title, cls, attrs, rel: 'me noopener' });
 const itchTile = (cls = '', attrs = '') => ltile({ href: 'https://halmic.itch.io/', kind: 'itch', glyph: 'b-itchdotio', title: 'Play the games on itch.io', cls, attrs, rel: 'me noopener' });
-const hiTile = (cls = '') => ltile({ href: 'https://x.com/halmicc', kind: 'x', glyph: 'b-x', title: 'Say hi on X', cap: 'Want something made?', cls, attrs: ' id="hi"', rel: 'me noopener' });
+const hiTile = (cls = '') => ltile({ href: 'https://x.com/halmicc', kind: 'x', glyph: 'b-x', title: 'Say hi on X', cls, attrs: ' id="hi"', rel: 'me noopener' });
 const mediumTile = (cls = '') => ltile({ href: 'https://halmic.medium.com/', kind: 'md', glyph: 'b-medium', title: 'Posts on Medium', cls, attrs: ' data-flex', rel: 'me noopener' });
 // A bento is a stack of clusters; a cluster is one project (or one kind of thing) and is its own packed grid, so another project's tile can never land between its tiles.
 // Each tile has a size in grid cells at 4 / 3 / 2 columns; the one tile marked data-flex gets the width that fills the cluster's last row (the fx classes give it that width
@@ -166,16 +166,16 @@ const mtYear = Math.min(...mtLogs.map((l) => yr(l.date)), yr(mt.videoPublished))
 // Work. Pokémon Phoenix Rising (the lead, the game's channel, the subreddit; no dates are known, so no year tile), then the dental logo with the practice's site. Only verified facts become tiles (see content/phoenix-rising.json).
 const TILES = {
   ...Object.fromEntries(films.map((v) => [`film:${v.id}`, (cls) => filmTile(v, cls)])),
-  'fifa:year': (cls) => yearTile({ year: Math.min(...epYears), title: `First episode of ${vc.series.title}`, cap: Math.max(...epYears) > Math.min(...epYears) ? `Latest in ${Math.max(...epYears)}` : '', tone: 'tblue', cls }),
+  'fifa:year': (cls) => yearTile({ year: Math.min(...epYears), title: `${vc.series.title} starts`, cap: Math.max(...epYears) > Math.min(...epYears) ? `${cap1(WORDS[episodes.length])} episodes, the last in ${Math.max(...epYears)}` : '', tone: 'tblue', cls }),
   ...Object.fromEntries(episodes.map((v) => [`ep:${v.id}`, (cls) => epTile(v, cls)])),
-  'fifa:minutes': (cls) => stat({ href: `https://www.youtube.com/playlist?list=${vc.series.playlist}`, num: S.fifaMinutes, unit: 'min', title: 'of bad shots', cap: `${cap1(WORDS[episodes.length])} episodes of ${vc.series.title}`, tone: 'tpaper', cls, attrs: ' data-stat="fifa-minutes"' }),
+  'fifa:minutes': (cls) => stat({ href: `https://www.youtube.com/playlist?list=${vc.series.playlist}`, num: S.fifaMinutes, unit: 'min', title: `of ${vc.series.title}`, cap: `${cap1(WORDS[episodes.length])} episodes`, tone: 'tpaper', cls, attrs: ' data-stat="fifa-minutes"' }),
   ...Object.fromEntries(edits.map((v) => [`video:${v.id}`, (cls) => vtile(v, cls)])),
   // a clip is inserted before the Twitch tile (app.js); the built stand-ins are what shows until /api/clips answers
   ...Object.fromEntries(clips.map(([title, game], i) => [`clip:${i}`, () => clipFallback(title, game, i)])),
   'mt:lead': (cls) => mtTile(cls),
   'mt:year': (cls) => yearTile({ year: mtYear, title: `${mt.title}, capstone and expo demo`, tone: 'tpaper', cls }),
   ...Object.fromEntries(gl.map((g) => [`game:${g.slug}`, (cls) => gtile(g, cls)])),
-  'games:engines': (cls) => stat({ href: '/games/', num: S.engines.length, unit: S.engines.length === 1 ? 'engine' : 'engines', title: S.engines.length === S.gameCount ? 'One for every game' : `Across ${WORDS[S.gameCount]} games`, cap: S.engines.join(', '), tone: 'tpaper', cls, attrs: ' data-vt="t" data-stat="engines"' }),
+  'games:engines': (cls) => stat({ href: '/games/', num: S.engines.length, unit: S.engines.length === 1 ? 'engine' : 'engines', title: `across ${WORDS[S.gameCount]} games`, cap: S.engines.join(', '), tone: 'tpaper', cls, attrs: ' data-vt="t" data-stat="engines"' }),
   'pr:lead': (cls) => phoenixTile(cls),
   'pr:channel': (cls) => prChannelTile(cls),
   sedd: (cls) => seddTile(cls),
@@ -183,10 +183,10 @@ const TILES = {
   hi: (cls) => hiTile(cls),
 };
 const FLEX = {
-  'films:year': (fx) => yearTile({ year: Math.min(...films.map((f) => yr(f.published))), title: `${filmGroup}, ${WORDS[films.length]} short films`, cap: `${S.filmMinutes} minutes in all`, tone: 'tink', cls: fx, attrs: ' data-flex data-stat="film-minutes"' }),
+  'films:year': (fx) => yearTile({ year: Math.min(...films.map((f) => yr(f.published))), title: `${filmGroup} starts`, cap: `${cap1(WORDS[films.length])} short films, ${S.filmMinutes} minutes`, tone: 'tink', cls: fx, attrs: ' data-flex data-stat="film-minutes"' }),
   'edits:youtube': (fx) => ytTile(fx, 'All videos on YouTube', 'https://www.youtube.com/@halmic', ' data-flex'),
   twitch: (fx) => twitchTile(fx),
-  'mt:logs': (fx) => stat({ href: `${mtBase}#logs`, num: fmt(S.logWords), unit: 'words', title: `across ${WORDS[S.logCount]} dev logs`, cap: 'Written while it was being built', tone: 'tblue', cls: fx, attrs: ' data-flex data-stat="log-words"' }),
+  'mt:logs': (fx) => stat({ href: `${mtBase}#logs`, num: fmt(S.logWords), unit: 'words', title: `in ${WORDS[S.logCount]} dev logs`, cap: 'Written during the build', tone: 'tblue', cls: fx, attrs: ' data-flex data-stat="log-words"' }),
   itch: (fx) => itchTile(fx, ' data-flex'),
   'pr:reddit': (fx) => prRedditTile(fx, ' data-flex'),
   'sedd:site': (fx) => ltile({ href: 'https://www.sedenverdental.com/', kind: 'site', glyph: 'compass', title: 'sedenverdental.com', cap: 'The practice, with the logo in use', cls: fx, attrs: ' data-flex', rel: 'noopener' }),
