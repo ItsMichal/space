@@ -79,12 +79,12 @@ export const profile = {
   hookStem: "I've built",
   /** Site-wide meta description, 155 characters or fewer. */
   description:
-    'Michał Bodzianowski is an award-winning creative developer and a software engineer at SpaceX, working on Starlink.com.',
+    'Michał Bodzianowski is a creative developer and software engineer: full-stack web, interface design and AI integrations, lately Starlink.com at SpaceX.',
   /** Page-title tagline: "<name> · <tagline>". */
   titleTagline: 'Creative developer',
   /** About section paragraphs, first person. */
   about: [
-    "Hi, I'm Michał Bodzianowski, an award-winning creative developer with a passion for developing innovative and engaging user experiences. I specialize in full-stack web dev with React/TypeScript, as well as UI/UX design and AI/ML integrations.",
+    "Hi, I'm Michał Bodzianowski. I build full-stack web apps in React and TypeScript, design their interfaces, and wire in AI and ML where it earns its place. My classroom dashboard for the iSAT AI Institute won Best Interactive Event at AIED 2022.",
     "I'm a software engineer at SpaceX, growing the Starlink.com platform for millions and then billions worldwide. Before that I spent three and a half years at the Institute of Cognitive Science at the University of Colorado Boulder, working with the SHINE Laboratory and the AI Institute (iSAT).",
   ],
   /** Current employer for JSON-LD `worksFor`. Empty: no current employer is stated (SpaceX ended in 2026); lib/seo omits the property then. */
