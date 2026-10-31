@@ -27,8 +27,6 @@ const PRELOAD_FONTS = [
   'd3ebbfd689654d3a-s.p.woff2',
   'fe6c4b8cc116014d-s.p.woff2',
 ]
-const IMG_FADE = `document.addEventListener('load',function(e){var i=e.target;if(!i||i.tagName!=='IMG'||!i.hasAttribute('data-lqip'))return;var u=i.currentSrc,r=u&&performance.getEntriesByName(u)[0];if(r&&performance.now()-r.responseEnd<400&&!matchMedia('(prefers-reduced-motion: reduce)').matches)i.setAttribute('data-sharpen','')},true)`
-
 export const links: LinksFunction = () => PRELOAD_FONTS.map((f) => ({ rel: 'preload', href: `/fonts/${f}`, as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' }))
 
 export async function loader() {
@@ -48,9 +46,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta charSet="utf-8" />
         <Meta />
         <Links />
-        {/* Blur-up: an image that is downloaded now (not cached) sharpens from a blur over its LQIP placeholder instead of popping.
-            The load event does not bubble, so one capture listener on the document sees every image; it runs before any <img> is parsed. */}
-        <script dangerouslySetInnerHTML={{ __html: IMG_FADE }} />
       </head>
       <body className="flex min-h-screen flex-col font-sans text-ink">
         {children}

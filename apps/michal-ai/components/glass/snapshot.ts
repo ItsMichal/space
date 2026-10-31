@@ -111,7 +111,7 @@ function patch(img: HTMLImageElement) {
 }
 
 function skip(el: Element): boolean {
-  if (el.hasAttribute('data-glass-engine') || el.classList.contains('fx-dither')) return true
+  if (el.hasAttribute('data-glass-engine')) return true
   if (el.tagName === 'SCRIPT' || el.tagName === 'NOSCRIPT') return true
   return getComputedStyle(el).position === 'fixed'
 }

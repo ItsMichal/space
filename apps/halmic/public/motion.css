@@ -1,30 +1,19 @@
 /* halmic motion. Tokens (durations --t1..--t4, --ease) live in base.css :root; every effect here uses them.
    Gates: html.mo is set early by vt.js when scripts run, there is no reduced-motion preference and the URL has no ?motion=0.
    Everything that HIDES something before it is revealed needs html.mo, so no script or a reduced-motion preference always shows the plain page.
-   Scroll-driven effects use CSS timelines (animation-timeline) inside @supports; motion.js adds a one-shot reveal for browsers without them.
+   No scroll reveals: content is on the page from the first paint. The only scroll-driven effect is the header backdrop.
    Only transform, opacity (and translate/scale/rotate, which are transforms) are animated. Scrolling itself is never touched. */
 
 /* ?motion=0: the test override. No animation, no transition, nothing hidden. */
 html[data-motion="0"] *, html[data-motion="0"] *::before, html[data-motion="0"] *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 
-@keyframes rise { from { opacity: 0; translate: 0 22px; scale: .96; } to { opacity: 1; translate: 0 0; scale: 1; } }
-@keyframes rise-s { from { opacity: 0; translate: 0 16px; } to { opacity: 1; translate: 0 0; } }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes pop { from { opacity: 0; scale: .5; } to { opacity: 1; scale: 1; } }
 @keyframes ring { from { opacity: .75; scale: 1; } to { opacity: 0; scale: 1.7; } }
 @keyframes spin { to { rotate: 360deg; } }
 @keyframes bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 3px; } }
 @keyframes flip { from { scale: .94; } to { scale: 1; } }
-@keyframes lbl { from { opacity: 0; translate: -14px 0; } to { opacity: 1; translate: 0 0; } }
-@keyframes draw { from { scale: 0 1; } to { scale: 1 1; } }
-@keyframes wm-away { to { opacity: .5; scale: .95; translate: 0 3vh; } }
-@keyframes fld-away { to { transform: translateY(8%) skewX(-4deg); opacity: .6; } }
 @keyframes hdr-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes prog { to { transform: scaleX(1); } }
-
-/* stagger: a tile's position in its cluster (CSS only, no inline styles). Read by the entrance range and by the one-shot fallback. */
-.cl > :nth-child(2) { --i: 1; } .cl > :nth-child(3) { --i: 2; } .cl > :nth-child(4) { --i: 3; } .cl > :nth-child(5) { --i: 4; }
-.cl > :nth-child(6) { --i: 5; } .cl > :nth-child(7) { --i: 6; } .cl > :nth-child(n+8) { --i: 7; }
 
 /* ===== the loading state of a player: the play disc becomes a spinner until the iframe has loaded, then the iframe fades in ===== */
 .vframe { opacity: 0; transition: opacity var(--t3) var(--ease); }
@@ -97,53 +86,14 @@ html[data-motion="0"] *, html[data-motion="0"] *::before, html[data-motion="0"] 
 /* ===== smooth in-page anchors: the browser's own scrolling, nothing intercepted ===== */
 @media (prefers-reduced-motion: no-preference) { html:not([data-motion="0"]) { scroll-behavior: smooth; } }
 
-/* ===== scroll-driven (CSS timelines) ===== */
+/* ===== scroll-driven (CSS timelines): only the header backdrop arriving behind the nav. Nothing rises, slides or draws in. ===== */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
-    /* tiles rise and fade in as they enter, a little later for each position in the cluster; finished within ~200px of travel */
-    .mo .tile, .mo .grid > .card { animation: rise linear backwards; animation-timeline: view(); animation-range: entry calc(var(--i, 0) * 10px) entry calc(190px + var(--i, 0) * 10px); }
-    .mo .tile.playing, .mo .clip-in.tile { animation: none; }
-    .mo .clip-in { animation: none; }
-    .mo .tile.back, .mo .card.back { animation: pin var(--t3) var(--ease) both; animation-timeline: auto; }
-
-    /* section labels: the hairline draws across and the label slides in as the section arrives */
-    .mo .bsec { view-timeline: --sec block; }
-    .mo .sh { position: relative; }
-    .mo .sh h2 { animation: lbl linear both; animation-timeline: --sec; animation-range: entry 0px entry 150px; }
-    .mo .sh::after { content: ""; position: absolute; left: 0; right: 0; bottom: calc(var(--gap) * -.5); height: 1px; background: var(--line); transform-origin: 0 50%; animation: draw linear both; animation-timeline: --sec; animation-range: entry 0px entry 260px; pointer-events: none; }
-
-    /* hero hand-off: the wordmark settles back and the bars drift as the hero scrolls away; the header backdrop arrives behind it */
+    .mo .tile.back, .mo .card.back { animation: pin var(--t3) var(--ease) both; }
     .mo body.home { timeline-scope: --hero; }
     .mo .hero { view-timeline: --hero block; }
-    .mo .wm { transform-origin: 0 100%; animation: wm-away linear both; animation-timeline: --hero; animation-range: exit 0% exit 85%; }
-    .mo .hero .field { transform-origin: 50% 100%; animation: fld-away linear both; animation-timeline: --hero; animation-range: exit 0% exit 100%; }
     .mo.js body.home .top::before { transition: none; animation: hdr-in linear both; animation-timeline: --hero; animation-range: exit 45% exit 80%; }
     .mo.js body:not(.home) .top::before { transition: none; animation: hdr-in linear both; animation-timeline: scroll(root); animation-range: 0px 80px; }
-
-    /* a cobalt hairline at the very top of the page: how far down you are */
-    .mo body::before { content: ""; position: fixed; z-index: 30; top: 0; left: 0; right: 0; height: 2px; background: var(--blue); transform: scaleX(0); transform-origin: 0 50%; pointer-events: none; animation: prog linear both; animation-timeline: scroll(root); }
-
-    /* dev logs: figures, callouts and videos rise in; headings get a marker that draws */
-    .mo .log .fig, .mo .log .callout, .mo .log .vfeat { animation: rise-s linear backwards; animation-timeline: view(); animation-range: entry 0px entry 220px; }
-    .mo .log h2 { position: relative; }
-    .mo .log h2::before { content: ""; position: absolute; left: 0; top: -20px; width: 36px; height: 3px; border-radius: 3px; background: var(--blue); transform-origin: 0 50%; animation: draw linear both; animation-timeline: view(); animation-range: entry 0px entry 160px; }
   }
 }
 
-/* browsers without CSS timelines: a one-shot reveal, class added by motion.js only to what starts below the fold */
-@supports not (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .mo .rv { opacity: 0; translate: 0 22px; scale: .96; }
-    .mo .rv.in { opacity: 1; translate: 0 0; scale: 1; transition: opacity var(--t3) var(--ease), translate var(--t3) var(--ease), scale var(--t3) var(--ease); transition-delay: calc(var(--i, 0) * 50ms); }
-    .mo .sh { position: relative; }
-    .mo .sh::after { content: ""; position: absolute; left: 0; right: 0; bottom: calc(var(--gap) * -.5); height: 1px; background: var(--line); transform-origin: 0 50%; pointer-events: none; }
-    .mo .sh.rv { opacity: 1; translate: none; scale: 1; }
-    .mo .sh.rv h2 { opacity: 0; translate: -14px 0; }
-    .mo .sh.rv::after { scale: 0 1; }
-    .mo .sh.rv.in h2 { opacity: 1; translate: 0 0; transition: opacity var(--t3) var(--ease), translate var(--t3) var(--ease); }
-    .mo .sh.rv.in::after { scale: 1 1; transition: scale var(--t4) var(--ease) 120ms; }
-  }
-}
-
-/* arrow bob and counts need real motion; reduced motion shows final values (motion.js never touches them) */
-.num .nv.cnt { font-variant-numeric: tabular-nums; }

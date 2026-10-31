@@ -3,13 +3,10 @@
 //   - header: a "solid" class once the hero (or the first 56px of an inner page) is behind (the CSS timeline does the same where it exists)
 //   - tiles: pointer sheen and a 2.5 degree tilt on hover-capable pointers, a press state for mouse and touch
 //   - nav: one marker that follows hover/focus and rests under the section in view (scroll-spy)
-//   - stat and year numerals count up once when they come into view; the final text is restored exactly
-//   - browsers without CSS scroll timelines get a one-shot reveal (class "rv", then "in") for what starts below the fold
 // Gate: html.mo (vt.js): scripts on, no reduced-motion preference, no ?motion=0. Without it this file only keeps the header backdrop and the nav marker.
 (() => {
   const root = document.documentElement;
   const mo = root.classList.contains('mo');
-  const sd = CSS.supports('animation-timeline: view()');
   const io = (fn, opt) => new IntersectionObserver((es) => es.forEach(fn), opt);
 
   // ---- header backdrop (fallback and CSS-timeline browsers alike; the CSS animation wins where it exists) ----
@@ -80,43 +77,4 @@
   const release = () => { pressed?.classList.remove('is-press'); pressed = null; };
   document.addEventListener('pointerdown', (e) => { if (e.button > 0) return; const a = e.target.closest?.('a.tile:not(.playing), a.card'); if (a) { pressed = a; a.classList.add('is-press'); } }, { passive: true });
   for (const type of ['pointerup', 'pointercancel', 'dragstart']) document.addEventListener(type, release, { passive: true });
-
-  // ---- numerals count up once, as their tile comes into view ----
-  const parse = (t) => (/^(\d{1,3}(,\d{3})+|\d+)$/.test(t) ? +t.replace(/,/g, '') : null);
-  const fmt = (n, grouped) => (grouped ? n.toLocaleString('en') : String(n));
-  const ease = (x) => 1 - Math.pow(1 - x, 3);
-  function count(nv, from, to, grouped, text, ms) {
-    const t0 = performance.now();
-    const step = (now) => {
-      const k = Math.min(1, (now - t0) / ms);
-      if (k < 1) { nv.textContent = fmt(Math.round(from + (to - from) * ease(k)), grouped); requestAnimationFrame(step); }
-      else { nv.textContent = text; nv.style.minWidth = ''; nv.classList.remove('cnt'); }
-    };
-    requestAnimationFrame(step);
-  }
-  const numerals = [...document.querySelectorAll('.num:not(.word) .nv')].map((nv) => ({ nv, text: nv.textContent.trim() })).filter((o) => parse(o.text) !== null);
-  if (numerals.length) document.fonts.ready.then(() => {
-    const widths = numerals.map((o) => o.nv.getBoundingClientRect().width);   // all reads first, then all writes
-    const watch = io((e) => {
-      if (!e.isIntersecting) return;
-      watch.unobserve(e.target);
-      const o = numerals.find((x) => x.nv.closest('.tile') === e.target); if (!o) return;
-      const n = parse(o.text), year = !!o.nv.closest('.t-year');
-      count(o.nv, year ? n - 8 : 0, n, o.text.includes(','), o.text, year ? 600 : 800);
-    }, { threshold: 0.2 });
-    numerals.forEach((o, i) => {
-      const n = parse(o.text), year = !!o.nv.closest('.t-year');
-      o.nv.style.minWidth = `${Math.ceil(widths[i])}px`; o.nv.classList.add('cnt');
-      o.nv.textContent = fmt(year ? n - 8 : 0, o.text.includes(','));
-      watch.observe(o.nv.closest('.tile'));
-    });
-  });
-
-  // ---- no CSS scroll timelines: reveal what starts below the fold once, when it comes into view ----
-  if (!sd) {
-    const els = [...document.querySelectorAll('.tile, .grid > .card, .sh, .log .fig, .log .callout, .log .vfeat')];
-    const vh = innerHeight, below = els.filter((el) => el.getBoundingClientRect().top > vh * 0.92);
-    const seen = io((e) => { if (e.isIntersecting) { e.target.classList.add('in'); seen.unobserve(e.target); } }, { rootMargin: '0px 0px -8% 0px' });
-    below.forEach((el) => { el.classList.add('rv'); seen.observe(el); });
-  }
 })();

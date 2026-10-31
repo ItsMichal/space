@@ -235,6 +235,9 @@ vec4 G(vec2 pw){
       cob=mix(cob,vec3(.42,.58,.97),smoothstep(.64,.9,th)*(1.-.45*s.g));   // third ink: pale cobalt
       cob=mix(cob,vec3(.94,.92,.87),smoothstep(.88,1.04,th)*.85);            // fourth: near-paper, the very peaks only
       cob=mix(cob,vec3(.27,.38,.68),live*.15)*(1.+.1*live);
+      // the footage's own colour over the ramp: its chroma (colour minus grey), stronger on the brighter glyphs, so the picture reads in colour
+      vec2 cw=(ij+.5)*cell;cw.x-=cw.y*lean;vec3 sv=S(cw);
+      cob=max(cob+(sv-lum(sv))*1.9*smoothstep(.12,.7,th),0.);
       cob*=1.+.15*clamp(-fl.x/r,-1.,1.)*th;
       bc=cob;
     }
@@ -314,7 +317,7 @@ void main(){
 }`;
 
   let gl, progs = {}, vidTex, buf, W = 0, H = 0, BW = 0, BH = 0, running = false, raf = 0, last = 0, ready = false, started = false, fresh = true, liveV = 0, hasFrame = false, uploaded = -1, quietX = .4, quietY = .8, winCss = 0, winOff = 0;
-  let qi = 0, bufType, q8 = false, assetKey = '', cadence = [], lastRaf = 0, probing = true, cell0 = 6;
+  let qi = 0, bufType, q8 = false, assetKey = '', cadence = [], lastRaf = 0, probing = true, cell0 = 4, isPhone = false;
   let placeZ = 1, placeY = .5, stillOn = false, ctxLost = false, curSc = 1, texW = 0, texH = 0, layoutDirty = false, resizeT = 0, resizeFirst = 0, quietUntil = 0, retryT = 0, retries = 0, goAt = 0, uploadedAt = 0, swapAt = 0, dpr0 = window.devicePixelRatio || 1;
   const R = { buf: null, stat: null, cell: null, sim: null };   // ping-pong sets: { tex: [a, b], fbo: [a, b], cur, w, h }
   const loc = {};
@@ -422,7 +425,7 @@ void main(){
 
   // the fade-to-ink zones, as fractions of the canvas. Cheap, and re-read every frame: the wordmark moves with the scroll hand-off.
   function zones(r) {
-    const phone = cell0 < 6, cssH = Math.max(1, r.height);
+    const phone = isPhone, cssH = Math.max(1, r.height);
     const ft = hero.querySelector('.hero-foot'), wm = hero.querySelector('.wm');
     const end = ft ? Math.min(0.94, Math.max(0.4, (ft.getBoundingClientRect().top - r.top) / cssH)) : 0.8;
     const wb = wm ? wm.getBoundingClientRect() : null;
@@ -448,7 +451,7 @@ void main(){
     const bw = Math.max(360, Math.round((phone ? 540 : (cssW * (window.devicePixelRatio || 1) >= 1500 ? 1280 : 960)) * q.b));
     const bh = Math.round(bw * winCss / cssW);
     if (bw !== BW || bh !== BH) { BW = bw; BH = bh; alloc(R.buf, bw, bh, 0); fresh = true; }
-    cell0 = phone ? 5 : 6;
+    isPhone = phone; cell0 = phone ? 3.5 : 4;   // css px per glyph: small enough that faces and text in the footage stay readable
     const cell = cell0 * sc;
     const cw = Math.ceil((W + H * LEAN) / cell) + 3, ch = Math.ceil(H / cell) + 3;
     if (cw !== cdimW || ch !== cdimH) { cdimW = cw; cdimH = ch; alloc(R.cell, cw, ch, 0); cellFresh = true; }
@@ -492,7 +495,7 @@ void main(){
 
   function setCommon(u, sc, t) {
     gl.uniform2f(u.res, W, H); gl.uniform2f(u.quiet, quietX, quietY); gl.uniform1f(u.sc, sc);
-    const phone = cell0 < 6;
+    const phone = isPhone;
     gl.uniform1f(u.sideW, phone ? .24 : .22); gl.uniform1f(u.hdrE, phone ? 110 : 180); gl.uniform1f(u.winH, winCss * sc); gl.uniform1f(u.winO, winOff * sc); gl.uniform1f(u.time, t); gl.uniform1f(u.ctr, phone ? 1.2 : 1.05);
   }
   function tex2(u, name, unit, t) { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t); gl.uniform1i(u[name], unit); }
