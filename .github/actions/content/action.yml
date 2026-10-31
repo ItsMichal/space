@@ -6,7 +6,15 @@ description: >
   only (CONTENT_TOKEN, can be created from a phone); the key wins when both are set. Without either (fork pull requests,
   or before the content split is set up) it does nothing and the build uses the content still in this repo. Run it after
   ./.github/actions/setup and before ./.github/actions/media-cache (the cache key hashes public/media). See apps/michal-ai/docs/content-repo.md.
+  With app: halmic it lays the repo's halmic/ folder into apps/halmic instead (apps/halmic: npm run content:pull, validated by
+  scripts/content/validate.mjs first); a checkout without halmic/ leaves the halmic content in this repo as it is. The checkout always
+  goes to apps/michal-ai/.content, never under apps/halmic: the identity check scans everything under apps/halmic, and the content repo
+  holds the michal.ai posts.
 inputs:
+  app:
+    description: Which app to lay the content into, michal or halmic.
+    required: false
+    default: michal
   deploy-key:
     description: Private half of the read-only deploy key on ItsMichal/space-content (secret CONTENT_DEPLOY_KEY).
     required: false
@@ -39,7 +47,12 @@ runs:
         path: apps/michal-ai/.content
         persist-credentials: false
     - name: Lay content into the app (validated first)
-      if: inputs.deploy-key != '' || inputs.token != ''
+      if: (inputs.deploy-key != '' || inputs.token != '') && inputs.app != 'halmic'
       shell: bash
       working-directory: apps/michal-ai
       run: CONTENT_DIR=.content npm run content:pull
+    - name: Lay halmic content into the app (validated first)
+      if: (inputs.deploy-key != '' || inputs.token != '') && inputs.app == 'halmic'
+      shell: bash
+      working-directory: apps/halmic
+      run: CONTENT_DIR=../michal-ai/.content npm run content:pull

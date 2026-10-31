@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homeStats } from '../stats.mjs';
+import { model, SIZE_CLS } from '../bentos.mjs';
+import { parseLayout, resolve as arrangeHome, isDefault } from '../layout.mjs';
 const pub = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
 const SITE = 'https://halmic.com';
 const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]));
@@ -11,6 +13,12 @@ const sprite = fs.readFileSync(path.join(pub, 'icons.svg'), 'utf8');
 const symbols = new Set([...sprite.matchAll(/<symbol id="([^"]+)"/g)].map((m) => m[1]));
 const htmls = walk(pub).filter((f) => f.endsWith('.html'));
 const bad = [];
+// content/layout.json: the build must follow it whatever it says; the editorial checks below (which film leads, which games come first) hold for the default arrangement only
+const cj = (p) => JSON.parse(fs.readFileSync(path.join(pub, '..', 'content', p), 'utf8'));
+const LAY = parseLayout(fs.readFileSync(path.join(pub, '..', 'content/layout.json'), 'utf8'));
+const DEF = isDefault(LAY);
+const HOME = arrangeHome(model({ videos: cj('videos.json'), exclude: cj('videos.exclude.json'), curation: cj('curation.json'), games: cj('games.json'), posts: cj('posts.json'), mountaintop: cj('mountaintop/index.json'), phoenix: cj('phoenix-rising.json') }), LAY);
+if (HOME.problems.length) bad.push(...HOME.problems.map((x) => `layout.json: ${x}`));
 const resolve = (u) => {
   const p = decodeURIComponent(u.split('#')[0].split('?')[0]);
   const f = path.join(pub, p.endsWith('/') ? p + 'index.html' : p);
@@ -44,18 +52,18 @@ const home = fs.readFileSync(path.join(pub, 'index.html'), 'utf8');
 for (const id of ['stream', 'videos', 'games', 'work', 'design', 'hi', 'twitch', 'elsewhere']) if (!home.includes(`id="${id}"`)) bad.push(`index.html: missing #${id}`);
 if (/id="clips"|id="when"|class="plays"|On the stream/.test(home)) bad.push('index.html: the old stream section is back');
 if ((home.match(/<h2>/g) ?? []).length < 4) bad.push('index.html: expected the bento labels as h2');
-if ((home.match(/<a class="tile /g) ?? []).length < 20) bad.push('index.html: fewer tiles than expected');
+if (DEF && (home.match(/<a class="tile /g) ?? []).length < 20) bad.push('index.html: fewer tiles than expected');
 if (/class="[^"]*\b(ey|cb|card|ct|cx)\b/.test(home)) bad.push('index.html: old card/eyebrow markup is back (the home page is bento tiles)');
 if (/\b(clip|video)\b/i.test([...home.matchAll(/<span class="chip">[\s\S]*?<\/span><\/span>/g)].map((m) => m[0]).join(''))) bad.push('index.html: a chip says clip/video (platforms are shown by icon)');
 for (const m of home.matchAll(/<span class="bdg[^>]*>/g)) if (!/role="img"/.test(m[0]) || !/aria-label="[^"]+"/.test(m[0])) bad.push(`index.html: badge without an accessible name ${m[0].slice(0, 70)}`);
-for (const [id, name] of [['tw', 'Twitch'], ['yt', 'YouTube']]) if (!new RegExp(`class="bdg bdg-${id}" role="img" aria-label="${name}"`).test(home)) bad.push(`index.html: no ${name} badge`);
-for (const [kind, href, extra] of [['tw', 'https://www.twitch.tv/halmictv', 'id="twitch"'], ['yt', 'https://www.youtube.com/@halmic', ''], ['itch', 'https://halmic.itch.io/', ''], ['x', 'https://x.com/halmicc', 'id="hi"'], ['rd', 'https://www.reddit.com/r/pokemonphoenixrising/comments/8m5eew/phoenix_rising_demo_megathread/', ''], ['md', 'https://halmic.medium.com/', '']]) {
+for (const [id, name] of DEF ? [['tw', 'Twitch'], ['yt', 'YouTube']] : [['tw', 'Twitch']]) if (!new RegExp(`class="bdg bdg-${id}" role="img" aria-label="${name}"`).test(home)) bad.push(`index.html: no ${name} badge`);
+for (const [kind, href, extra] of [['tw', 'https://www.twitch.tv/halmictv', 'id="twitch"'], ['yt', 'https://www.youtube.com/@halmic', ''], ['itch', 'https://halmic.itch.io/', ''], ['x', 'https://x.com/halmicc', 'id="hi"'], ['rd', 'https://www.reddit.com/r/pokemonphoenixrising/comments/8m5eew/phoenix_rising_demo_megathread/', ''], ['md', 'https://halmic.medium.com/', '']].filter(([k]) => DEF || k === 'tw' || k === 'x')) { // under a custom layout only the required tiles (Twitch, hi) are sure to be shown
   const m = home.match(new RegExp(`<a class="tile t-link tl-${kind}[^"]*" href="([^"]+)"[^>]*${extra ? extra.replace(/"/g, '"') : ''}[^>]*>`)) ?? home.match(new RegExp(`<a class="tile t-link tl-${kind}[^"]*" href="([^"]+)"[^>]*>`)); // the Posts bento has its own link tile for the same network, so look for the tagged one first
   if (!m) bad.push(`index.html: link tile ${kind} missing`);
   else { if (m[1] !== href) bad.push(`index.html: link tile ${kind} points at ${m[1]}`); if (extra && !m[0].includes(extra)) bad.push(`index.html: link tile ${kind} lost ${extra}`); }
 }
 for (const m of home.matchAll(/<a class="tile [^"]*"[^>]*>([\s\S]*?)<\/a>/g)) if (!/<h3 class="tt">/.test(m[1])) bad.push(`index.html: tile without a title ${m[0].slice(0, 80)}`);
-if (!/<h2>Watch<\/h2>/.test(home) || !/<h2>Play<\/h2>/.test(home) || !/<h2>Work<\/h2>/.test(home)) bad.push('index.html: Watch / Play / Work bentos expected');
+if (DEF && (!/<h2>Watch<\/h2>/.test(home) || !/<h2>Play<\/h2>/.test(home) || !/<h2>Work<\/h2>/.test(home))) bad.push('index.html: Watch / Play / Work bentos expected');
 if (/<h2>(Clips|Videos)<\/h2>/.test(home)) bad.push('index.html: separate Clips / Videos groups are back (one Watch bento)');
 for (const t of ['watch', 'play', 'work', 'say hi']) if (!home.includes(`<span>${t}</span>`)) bad.push(`index.html: nav item "${t}" missing`);
 if (!home.includes('href="/#stream"')) bad.push('index.html: nav should point at #stream');
@@ -78,7 +86,7 @@ for (const m of heroJs.matchAll(/'(\/hero\/[^']+)'/g)) if (!resolve(m[1])) bad.p
 for (const [f, max] of [['reel-1080.webm', 4.5], ['reel-720.webm', 2.5], ['reel-720.mp4', 3.2], ['reel-m.webm', 1.6], ['reel-m.mp4', 2]]) { const fp = path.join(pub, 'hero', f); if (!fs.existsSync(fp)) bad.push(`hero/${f} missing`); else if (fs.statSync(fp).size > max * 1024 * 1024) bad.push(`hero/${f} is over ${max} MB`); }
 for (const [f, max] of [['reel-poster.jpg', 110], ['reel-poster-m.jpg', 80]]) { const fp = path.join(pub, 'hero', f); if (!fs.existsSync(fp)) bad.push(`hero/${f} missing`); else if (fs.statSync(fp).size > max * 1024) bad.push(`hero/${f} is over ${max} KB`); }
 // Special Force leads Watch (home) and /videos/; the clean names show, the real titles stay in data-title
-{
+if (DEF) {
   const watch = home.slice(home.indexOf('<div class="bento b-watch">'));
   const vids = [...watch.matchAll(/<a class="tile tm ([^"]*)" href="[^"]*" data-vid="([^"]+)" data-title="([^"]*)"/g)];
   if (vids[0]?.[2] !== 'qVEDjNc5Gmg' || vids[1]?.[2] !== 'IIJVKHEtawU') bad.push(`index.html: Special Force 1 and 2 should be the first two Watch tiles (got ${vids.slice(0, 2).map((m) => m[2])})`);
@@ -120,6 +128,7 @@ for (const l of mtLogLinks) { const h = fs.readFileSync(path.join(pub, l, 'index
 for (const f of walk(mtDir).filter((x) => x.endsWith('.html'))) { const h = fs.readFileSync(f, 'utf8'); if (/<iframe/.test(h)) bad.push(`${path.relative(pub, f)}: pre-loaded iframe (embeds must be click-to-load)`); }
 // Mountaintop leads Play (2x2), Phoenix Rising leads Work (2x2); Discord is gone everywhere; the hi tile is X
 {
+  if (DEF) {
   const sec = (id) => { const i = home.indexOf(`id="${id}"`); return home.slice(i, home.indexOf('class="bsec"', i + 10) > 0 ? home.indexOf('class="bsec"', i + 10) : undefined); };
   const play = sec('games'), work = sec('work');
   if (!/<div class="bento b-play"><div class="cl" role="group" aria-label="Project Mountaintop"><a class="tile tm lead w2" href="\/work\/project-mountaintop\/"/.test(play)) bad.push('index.html: Project Mountaintop should be the 2x2 lead tile of Play');
@@ -130,23 +139,25 @@ for (const f of walk(mtDir).filter((x) => x.endsWith('.html'))) { const h = fs.r
   if (!/<a class="tile t-link tl-rd[^"]*" href="https:\/\/www\.reddit\.com\/r\/pokemonphoenixrising\/comments\/8m5eew\/phoenix_rising_demo_megathread\/"/.test(work)) bad.push('index.html: demo megathread link tile missing from Work');
   const gamesOrder = [...play.matchAll(/<a class="tile [^"]*" href="([^"]+)"/g)].map((m) => m[1]).filter((h) => !h.includes('#logs'));
   if (gamesOrder[1] !== '/games/glass-gunslinger-dod/' || gamesOrder[2] !== '/games/lvasion-du-criminel-de-sa-prison/') bad.push(`index.html: Play order after the lead should be Glass Gunslinger, L'évasion (got ${gamesOrder.slice(1, 3)})`);
+  }
   for (const f of walk(pub).filter((x) => /\.(html|txt|xml|js|css)$/.test(x))) if (/discord/i.test(fs.readFileSync(f, 'utf8'))) bad.push(`${path.relative(pub, f)}: mentions Discord`);
   if (/discord/i.test(fs.readFileSync(path.join(pub, 'icons.svg'), 'utf8'))) bad.push('icons.svg: Discord glyph still in the sprite');
   const gi = fs.readFileSync(path.join(pub, 'games/index.html'), 'utf8');
-  if (!/<div class="bento b-play"><div class="cl" role="group" aria-label="Project Mountaintop"><a class="tile tm lead w2" href="\/work\/project-mountaintop\/"/.test(gi)) bad.push('games/index.html: Project Mountaintop should be the first tile');
+  if (DEF && !/<div class="bento b-play"><div class="cl" role="group" aria-label="Project Mountaintop"><a class="tile tm lead w2" href="\/work\/project-mountaintop\/"/.test(gi)) bad.push('games/index.html: Project Mountaintop should be the first tile');
   const postsJson = JSON.parse(fs.readFileSync(path.join(pub, '..', 'content/posts.json'), 'utf8')).posts;
-  if (postsJson.length) {
+  const postsShown = HOME.sections.some((x) => x.id === 'posts');
+  if (postsJson.length && postsShown) {
     if (!home.includes('id="posts"') || !/<h2>Posts<\/h2>/.test(home)) bad.push('index.html: #posts bento missing');
     for (const p of postsJson) { if (!/^https:\/\/x\.com\/[A-Za-z0-9_]+\/status\/\d+$/.test(p.url) || !home.includes(`href="${p.url}"`)) bad.push(`index.html: post tile ${p.id} missing or wrong url`); if (p.media && (!p.alt || !resolve(`/posts/${p.media}`) || fs.statSync(path.join(pub, 'posts', p.media)).size > 200 * 1024)) bad.push(`posts/${p.media}: missing, no alt, or over 200 KB`); }
-  } else if (home.includes('id="posts"')) bad.push('index.html: empty #posts bento rendered');
+  } else if (!postsShown && home.includes('id="posts"')) bad.push('index.html: empty #posts bento rendered');
 }
 const games = fs.readFileSync(path.join(pub, 'games/index.html'), 'utf8');
 const gOrder = [...games.matchAll(/<a class="tile [^"]*" href="\/games\/([^/"]+)\//g)].map((m) => m[1]);
-if (gOrder[0] !== 'glass-gunslinger-dod' || gOrder[1] !== 'lvasion-du-criminel-de-sa-prison') bad.push(`games/index.html: featured games should come first (got ${gOrder.slice(0, 2)})`);
+if (DEF && (gOrder[0] !== 'glass-gunslinger-dod' || gOrder[1] !== 'lvasion-du-criminel-de-sa-prison')) bad.push(`games/index.html: featured games should come first (got ${gOrder.slice(0, 2)})`);
 for (const f of ['games/index.html', 'videos/index.html', 'design/index.html']) { const h = fs.readFileSync(path.join(pub, f), 'utf8'); if (/class="[^"]*\b(ey|cb)\b/.test(h)) bad.push(`${f}: eyebrow/card markup on an index page`); if (!/class="bento /.test(h)) bad.push(`${f}: bento expected`); }
-if ((games.match(/class="tile tm lead w2"/g) ?? []).length !== 1) bad.push('games/index.html: expected exactly one lead tile (Project Mountaintop)');
+if (DEF && (games.match(/class="tile tm lead w2"/g) ?? []).length !== 1) bad.push('games/index.html: expected exactly one lead tile (Project Mountaintop)');
 // clusters: every bento is a stack of .cl groups; projects stay together; year tiles come from the data (years are never typed in build.mjs)
-{
+if (DEF) {
   const clusters = (h, id) => { const i = h.indexOf(`id="${id}"`); const sec = h.slice(i, h.indexOf('class="bsec"', i + 10) > 0 ? h.indexOf('class="bsec"', i + 10) : undefined); return [...sec.matchAll(/<div class="cl" role="group" aria-label="([^"]*)">([\s\S]*?)(?=<div class="cl"|$)/g)].map((m) => [m[1], m[2]]); };
   for (const id of ['stream', 'games', 'work', 'elsewhere']) if (/<div class="bento [^"]*">(?!<div class="cl")/.test(home.slice(home.indexOf(`id="${id}"`)).split('class="bsec"')[0])) bad.push(`index.html: #${id} has tiles outside a cluster`);
   const names = (id) => clusters(home, id).map((c) => c[0]);
@@ -187,6 +198,25 @@ if ((games.match(/class="tile tm lead w2"/g) ?? []).length !== 1) bad.push('game
   // each tile's internal destination appears in exactly one cluster
   const owners = {};
   for (const id of ['stream', 'games', 'work']) for (const [n, body] of clusters(home, id)) for (const m of body.matchAll(/<a class="tile [^"]*" href="(\/[^"#]+)"/g)) { if (owners[m[1]] && owners[m[1]] !== n) bad.push(`index.html: ${m[1]} in two clusters`); owners[m[1]] = n; }
+}
+// the home page follows content/layout.json: the sections in its order with its titles, the clusters in each, every tile at its size and one flex tile per cluster that has one
+{
+  const got = [...home.matchAll(/<div class="bsec" id="([^"]+)">/g)].map((m) => m[1]);
+  if (got.join() !== HOME.sections.map((x) => x.id).join()) bad.push(`index.html: sections should be ${HOME.sections.map((x) => x.id)} (got ${got})`);
+  const sizeOf = (cls) => Object.entries(SIZE_CLS).filter(([, c]) => c).reduce((z, [k, c]) => (c.split(' ').every((x) => cls.split(' ').includes(x)) && (z === 'one' || SIZE_CLS[z].length < c.length) ? k : z), 'one');
+  for (const sec of HOME.sections) {
+    const i = home.indexOf(`<div class="bsec" id="${sec.id}">`), n = home.indexOf('<div class="bsec"', i + 10), body = home.slice(i, n > 0 ? n : undefined);
+    if (!body.includes(`<h2>${sec.title.replace(/&/g, '&amp;')}</h2>`)) bad.push(`index.html: #${sec.id} should be titled ${sec.title}`);
+    if (/<div class="bento [^"]*">(?!<div class="cl")/.test(body)) bad.push(`index.html: #${sec.id} has tiles outside a cluster`);
+    const cls = [...body.matchAll(/<div class="cl" role="group" aria-label="([^"]*)">([\s\S]*?)(?=<div class="cl"|$)/g)];
+    if (cls.map((m) => m[1]).join('|') !== sec.clusters.map((c) => c.name).join('|')) { bad.push(`index.html: #${sec.id} clusters should be ${sec.clusters.map((c) => c.name).join(', ')} (got ${cls.map((m) => m[1]).join(', ')})`); continue; }
+    sec.clusters.forEach((c, k) => {
+      const tiles = [...cls[k][2].matchAll(/<(?:a|div) class="tile ([^"]*)"[^>]*>/g)].map((m) => ({ cls: m[1], flex: /\bdata-flex\b/.test(m[0]) }));
+      const own = tiles.filter((x) => !x.flex), flex = tiles.length - own.length;
+      if (own.length !== c.tiles.length || flex !== (c.flex ? 1 : 0)) { bad.push(`index.html: cluster ${c.name} should have ${c.tiles.length} tiles${c.flex ? ' and its flex tile' : ''} (got ${own.length} + ${flex})`); return; }
+      if (!c.id.startsWith('clips')) c.tiles.forEach((x, j) => { if (sizeOf(own[j].cls) !== x.size) bad.push(`index.html: tile ${x.id} in ${c.name} should be ${x.size} (got ${sizeOf(own[j].cls)})`); });
+    });
+  }
 }
 // switcher: header menu with Home and the one portfolio link; the footer row; aria-controls matches; the portfolio href and label appear exactly twice
 for (const h of htmls) {
