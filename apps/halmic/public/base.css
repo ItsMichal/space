@@ -304,7 +304,7 @@ a.tile:is(:hover, :focus-visible) .play { background: var(--blue); color: var(--
 .t-link { display: flex; flex-direction: column; justify-content: flex-start; color: #fff; }
 .lg { --lg-l: 0; --lg-t: 0; display: block; font-size: clamp(40px, 29cqmin, 96px); line-height: 1; margin: calc(var(--pad) - var(--lg-t) * 1em) 0 0 calc(var(--pad) - var(--lg-l) * 1em); }
 .lg .ic { width: 1em; height: 1em; vertical-align: top; }
-.lg[data-ic="b-twitch"] { --lg-l: .071; } .lg[data-ic="b-x"] { --lg-l: .011; } .lg[data-ic="b-itchdotio"] { --lg-t: .05; } .lg[data-ic="b-youtube"] { --lg-t: .148; } .lg[data-ic="compass"] { --lg-l: .094; --lg-t: .094; }
+.lg[data-ic="b-twitch"] { --lg-l: .071; } .lg[data-ic="b-x"] { --lg-l: .011; } .lg[data-ic="b-itchdotio"] { --lg-t: .05; } .lg[data-ic="b-youtube"] { --lg-t: .148; } .lg[data-ic="compass"] { --lg-l: .094; --lg-t: .094; } .lg[data-ic="game-controller"] { --lg-l: .031; --lg-t: .156; }
 .t-link .tt { color: inherit; } .t-link .ts { color: inherit; opacity: .92; }
 .tl-tw { background: #9146ff; } .tl-yt { background: #f00; } .tl-rd { background: #ff4500; color: #fff; }
 .tl-itch { background: #fa5c5c; color: var(--ink); }
