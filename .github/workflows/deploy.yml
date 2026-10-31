@@ -175,7 +175,7 @@ jobs:
           echo "halmic deployed, Worker version \`${v:-unknown}\` from ${GITHUB_SHA::7}" >> "$GITHUB_STEP_SUMMARY"
       - name: Smoke test
         if: env.HALMIC_URL != ''
-        run: scripts/smoke.sh "$HALMIC_URL" / /sitemap.xml /robots.txt /api/live /api/clips /games/taco-neko/
+        run: scripts/smoke.sh "$HALMIC_URL" / /sitemap.xml /robots.txt /api/live /api/clips /games/soupman/
 
   deploy-sports:
     # Private playtest host (sports.halmic.com). Dormant until the R2 bucket exists and the passkey secret is set:
