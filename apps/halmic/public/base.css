@@ -331,6 +331,7 @@ a.tile:is(:hover, :focus-visible) .goi { background: var(--paper); color: var(--
 .t-post .tt { -webkit-line-clamp: 3; line-clamp: 3; }
 .t-post .play { left: calc(50% - var(--ctl)); right: auto; top: 26%; bottom: auto; width: calc(var(--ctl) * 1.3); height: calc(var(--ctl) * 1.3); font-size: calc(var(--ctl) * .53); left: calc(50% - var(--ctl) * .65); } .t-post.lead .play { top: 38%; width: calc(var(--ctl) * 1.4); height: calc(var(--ctl) * 1.4); left: calc(50% - var(--ctl) * .7); font-size: calc(var(--ctl) * .56); }
 .tp-text { background: var(--ink-3); } .tp-text .tcap { top: 0; align-items: flex-end; } .tp-text .tt { -webkit-line-clamp: 5; line-clamp: 5; }
+#new .ts { -webkit-line-clamp: 3; line-clamp: 3; }   /* the New bento's one tile has the room for a longer line */
 
 /* ===== page transitions (cross-document View Transitions; vt.js names the tile being left or returned to) =====
    A tile's picture and title morph into the destination's hero picture ([data-hero]) and h1; the rest of the page cross-fades with a small rise. None under reduced motion. */
