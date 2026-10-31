@@ -15,7 +15,7 @@ import { profile } from '@/content/profile'
 import { citationLabel, citationsSource, doiUrl, venueLine } from '@/lib/publications'
 import { ExperienceList, type ExperienceItem } from '@/components/ui/ExperienceList'
 import { Picture } from '@/components/media/Picture'
-import { portraitAlt } from '@/lib/about'
+import { hrefById, portraitAlt } from '@/lib/about'
 import '@/components/site/about.css'
 import { homeMetadata, personJsonLd, websiteJsonLd } from '@/lib/seo'
 
@@ -32,6 +32,15 @@ const experience: ExperienceItem[] = profile.experience.map((e) => ({
   role: e.role,
   years: e.years,
   href: ROLE_LINKS[e.company],
+}))
+
+// The Congressional Record tribute leads (profile.awards order). A row links to its post, or to the record itself.
+const awards: ExperienceItem[] = profile.awards.map((a) => ({
+  id: a.id,
+  org: a.title,
+  role: a.context,
+  years: a.year,
+  href: a.postId ? hrefById(a.postId) : a.url,
 }))
 
 const h2 = 'mb-space-6 font-display text-title'
@@ -131,13 +140,21 @@ export default function Home() {
               <ExperienceList items={experience} label="Experience" />
             </div>
           </section>
+          <section aria-labelledby="awards-h" className="ix-sec">
+            <h3 id="awards-h" className="t-heading">
+              Awards
+            </h3>
+            <div className="ix-sec__body">
+              <ExperienceList items={awards} label="Awards" />
+            </div>
+          </section>
           <Link href="/about" className="about__more ix" aria-labelledby="about-more-h" aria-describedby="about-more-d">
             <span id="about-more-h" className="ix__title">
               More about me
               <ArrowRight size={18} strokeWidth={1.5} aria-hidden className="about__more-go" />
             </span>
             <span id="about-more-d" className="ix__desc">
-              Full experience, education, hackathons and press, and how to get in touch.
+              Full experience, education, awards, hackathons and press, and how to get in touch.
             </span>
           </Link>
         </div>
