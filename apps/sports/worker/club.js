@@ -2,9 +2,15 @@
 //
 // An account is a display name, a character and a passkey (WebAuthn: the device's own sign-in; no password, no e-mail).
 // Making one needs the player to confirm they own the original game; the confirmation and its time are kept with it.
+// A quick account (one tap, to play online at once) has no passkey: it lives as long as the device keeps its session, and
+// a passkey added later (/club/passkey) makes it an account like any other. `account.passkey` says which.
 //   POST /club/register/begin  {}                                   -> {challenge, user}       (user: the new account's id)
 //   POST /club/register/finish {challenge, name, owns, character, cred: {id, clientDataJSON, attestationObject}}
 //                                                                   -> {token, account}
+//   POST /club/quick           {name, owns, character}              -> {token, account}        a quick account: no passkey yet,
+//                                                                                              kept by this device's session
+//   POST /club/passkey/begin   {}                                   -> {challenge, user}       (signed in) a passkey for this account
+//   POST /club/passkey/finish  {challenge, cred: {...}}             -> {account}
 //   POST /club/login/begin     {}                                   -> {challenge}
 //   POST /club/login/finish    {challenge, cred: {id, clientDataJSON, authenticatorData, signature}} -> {token, account}
 //   GET  /club/me                                                   -> {account}               (Authorization: Bearer <token>)
@@ -155,7 +161,7 @@ export class Club {
 
   account(id) {
     const a = this.db.account(id);
-    return a && { id: a.id, name: a.name, character: a.character || '', owns: a.owns_at, created: a.created };
+    return a && { id: a.id, name: a.name, character: a.character || '', owns: a.owns_at, created: a.created, passkey: this.db.hasCred(id) };
   }
 
   challenge(kind, account, now) {
@@ -181,18 +187,32 @@ export class Club {
     return s && s.exp > now ? s.account : null;
   }
 
-  registerBegin(ip, now) {
-    const hour = Math.floor(now / 3600_000), k = ip || '?', r = this.signups.get(k);
-    if (r && r.hour === hour && r.n >= SIGNUPS_PER_HOUR) return { status: 429, body: { err: 'too many new accounts from here; try later' } };
-    const user = random(16), challenge = this.challenge('create', user, now);
-    return challenge ? { body: { challenge, user } } : { status: 503, body: { err: 'busy' } };
+  tooMany(ip, now) {
+    const r = this.signups.get(ip || '?');
+    return !!r && r.hour === Math.floor(now / 3600_000) && r.n >= SIGNUPS_PER_HOUR;
   }
-
-  async registerFinish(o, origin, rpId, ip, now) {
+  signedUp(ip, now) {
+    const hour = Math.floor(now / 3600_000), k = ip || '?', r = this.signups.get(k);
+    this.signups.set(k, r && r.hour === hour ? { hour, n: r.n + 1 } : { hour, n: 1 });
+    if (this.signups.size > 10_000) this.signups.clear();
+  }
+  /** name, character and the ownership answer of a new account: [name, character] or an error reply */
+  fields(o) {
     const name = cleanName(o?.name), character = typeof o?.character === 'string' ? o.character.toLowerCase() : '';
     if (!name) return { status: 400, body: { err: 'a name is needed' } };
     if (o?.owns !== true) return { status: 400, body: { err: 'confirm you own the original game first' } };
     if (character && !CHARACTER.test(character)) return { status: 400, body: { err: 'bad character' } };
+    return [name, character];
+  }
+
+  registerBegin(ip, now) {
+    if (this.tooMany(ip, now)) return { status: 429, body: { err: 'too many new accounts from here; try later' } };
+    const user = random(16), challenge = this.challenge('create', user, now);
+    return challenge ? { body: { challenge, user } } : { status: 503, body: { err: 'busy' } };
+  }
+
+  /** the passkey made for a 'create' challenge: {ch, cred} or an error reply */
+  async newCred(o, origin, rpId, now) {
     const ch = this.take(o?.challenge, 'create', now);
     if (!ch) return { status: 400, body: { err: 'that took too long; try again' } };
     const cd = bytesOf(o?.cred?.clientDataJSON), ao = bytesOf(o?.cred?.attestationObject), id = o?.cred?.id;
@@ -204,12 +224,42 @@ export class Club {
     const key = coseToJwk(ad.key);
     if (!key) return { status: 400, body: { err: 'this kind of passkey is not supported' } };
     if (this.db.cred(id)) return { status: 409, body: { err: 'that passkey already has an account' } };
-    this.db.putAccount({ id: ch.account, name, character, owns_at: now, created: now });
-    this.db.putCred({ id, account: ch.account, jwk: JSON.stringify(key.jwk), alg: key.alg, count: ad.count, created: now });
-    const hour = Math.floor(now / 3600_000), k = ip || '?', r = this.signups.get(k);
-    this.signups.set(k, r && r.hour === hour ? { hour, n: r.n + 1 } : { hour, n: 1 });
-    if (this.signups.size > 10_000) this.signups.clear();
-    return { body: { token: await this.session(ch.account, now), account: this.account(ch.account) } };
+    return { ch, cred: { id, account: ch.account, jwk: JSON.stringify(key.jwk), alg: key.alg, count: ad.count, created: now } };
+  }
+
+  async registerFinish(o, origin, rpId, ip, now) {
+    const f = this.fields(o);
+    if (!Array.isArray(f)) return f;
+    const n = await this.newCred(o, origin, rpId, now);
+    if (!n.cred) return n;
+    this.db.putAccount({ id: n.ch.account, name: f[0], character: f[1], owns_at: now, created: now });
+    this.db.putCred(n.cred);
+    this.signedUp(ip, now);
+    return { body: { token: await this.session(n.ch.account, now), account: this.account(n.ch.account) } };
+  }
+
+  /** a quick account: the same fields, no passkey */
+  async quick(o, ip, now) {
+    if (this.tooMany(ip, now)) return { status: 429, body: { err: 'too many new accounts from here; try later' } };
+    const f = this.fields(o);
+    if (!Array.isArray(f)) return f;
+    const id = random(16);
+    this.db.putAccount({ id, name: f[0], character: f[1], owns_at: now, created: now });
+    this.signedUp(ip, now);
+    return { body: { token: await this.session(id, now), account: this.account(id) } };
+  }
+
+  /** a passkey for a signed-in account (a quick one keeps everything it has) */
+  passkeyBegin(account, now) {
+    const challenge = this.challenge('create', account, now);
+    return challenge ? { body: { challenge, user: account } } : { status: 503, body: { err: 'busy' } };
+  }
+  async passkeyFinish(account, o, origin, rpId, now) {
+    const n = await this.newCred(o, origin, rpId, now);
+    if (!n.cred) return n;
+    if (n.ch.account !== account) return { status: 400, body: { err: 'that took too long; try again' } };
+    this.db.putCred(n.cred);
+    return { body: { account: this.account(account) } };
   }
 
   loginBegin(now) {
@@ -266,6 +316,7 @@ export function sqlStore(sql) {
       sql.exec('DELETE FROM account WHERE id = ?', id);
     },
     cred: (id) => one(sql.exec('SELECT * FROM cred WHERE id = ?', id)),
+    hasCred: (account) => !!one(sql.exec('SELECT 1 AS x FROM cred WHERE account = ? LIMIT 1', account)),
     putCred: (c) => sql.exec('INSERT INTO cred (id, account, jwk, alg, count, created) VALUES (?, ?, ?, ?, ?, ?)', c.id, c.account, c.jwk, c.alg, c.count, c.created),
     usedCred: (id, count, at) => sql.exec('UPDATE cred SET count = ?, used = ? WHERE id = ?', count, at, id),
     session: (hash) => one(sql.exec('SELECT account, exp FROM session WHERE hash = ?', hash)),
@@ -294,6 +345,7 @@ export function mapStore() {
       account.delete(id);
     },
     cred: (id) => cred.get(id) || null,
+    hasCred: (account_) => [...cred.values()].some((c) => c.account === account_),
     putCred: (c) => cred.set(c.id, { ...c }),
     usedCred: (id, count, at) => Object.assign(cred.get(id), { count, used: at }),
     session: (hash) => session.get(hash) || null,
@@ -339,6 +391,7 @@ export async function clubRequest(req, club, now, social = null) {
   switch (path) {
     case '/club/register/begin': return out(club.registerBegin(ip, now));
     case '/club/register/finish': return out(await club.registerFinish(body, origin, rpId, ip, now));
+    case '/club/quick': return out(await club.quick(body, ip, now));
     case '/club/login/begin': return out(club.loginBegin(now));
     case '/club/login/finish': return out(await club.loginFinish(body, origin, rpId, now));
   }
@@ -346,6 +399,8 @@ export async function clubRequest(req, club, now, social = null) {
   if (!who) return json(401, { err: 'signed out' });
   switch (path) {
     case '/club/me': return out(club.update(who, body));
+    case '/club/passkey/begin': return out(club.passkeyBegin(who, now));
+    case '/club/passkey/finish': return out(await club.passkeyFinish(who, body, origin, rpId, now));
     case '/club/logout': club.db.dropSession(b64u(await sha256(token))); return json(200, {});
     case '/club/delete': social?.forget(who); club.db.dropAccount(who); return json(200, {});
   }
