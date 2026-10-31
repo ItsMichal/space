@@ -40,7 +40,7 @@ for (const bento of bentos) {
       if (tx) { const first = art ?? tx; o.text = { l: rel(first, T).l, b: rel(tx, T).b, top: rel(tx, T).t }; o.ttInk = ink(tt)?.l - T.left; o.ttFs = parseFloat(getComputedStyle(tt).fontSize); o.ttClamp = getComputedStyle(tt).webkitLineClamp; o.tsFs = ts ? parseFloat(getComputedStyle(ts).fontSize) : null; if (art) o.art = rel(art, T); }
       const num = t.querySelector('.num'); if (num) { const nv = num.querySelector('.nv'), i0 = ink(nv); o.num = { inkL: i0.l - T.left, inkT: i0.t - T.top, bottom: num.getBoundingClientRect().bottom - T.top, right: Math.max(...[...num.children].map((c) => c.getBoundingClientRect().right)) - T.left }; o.numCap = tx ? tx.getBoundingClientRect().top - T.top : null; }
       const lg = t.querySelector('.lg'); if (lg) { const sv = lg.querySelector('svg'), q = sv.getBoundingClientRect(), id = (sv.querySelector('use').getAttribute('href') || '').split('#')[1], bb = bbox(id); o.lg = { inkL: q.left + bb[0] * q.width - T.left, inkT: q.top + bb[1] * q.height - T.top, id }; }
-      const bdg = t.querySelector('.bdg'), chip = t.querySelector('.chip:not(.kchip)'), goi = t.querySelector('.goi');
+      const bdg = t.querySelector('.bdg'), chip = t.querySelector('.chip'), goi = t.querySelector('.goi');
       if (bdg) o.bdg = rel(bdg, T); if (chip) o.chip = rel(chip, T); if (goi) o.goi = rel(goi, T);
       if (bdg || chip) { const row = [bdg, ...t.querySelectorAll('.chip')].filter(Boolean).map((e) => e.getBoundingClientRect().bottom - T.top); o.rowBottom = Math.max(...row); }
       const play = t.querySelector('.play'); if (play && !t.classList.contains('t-post')) o.play = rel(play, T);

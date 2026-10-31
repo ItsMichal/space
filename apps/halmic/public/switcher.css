@@ -24,7 +24,7 @@
 @media (hover: none), (max-width: 640px) {
   .xs-logo { padding-inline: 8px; margin-inline: -8px; }
   .xs-hl { display: block; }
-  .xs-menu { display: flex; left: calc(100% + 2px); top: 50%; padding: 0; background: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; box-shadow: 0 12px 32px -8px #000c; opacity: 0; transform: translate(-14px, -50%) scale(.92); transform-origin: 0 50%; clip-path: inset(0 100% 0 0 round 999px); transition: opacity var(--t1) var(--ease), transform var(--t3) var(--spring), clip-path var(--t3) var(--spring); }
+  .xs-menu { display: flex; left: calc(100% + 2px); top: 50%; padding: 0; background: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; box-shadow: 0 12px 32px -8px #000c; opacity: 0; transform: translate(-14px, -50%) scale(.92); transform-origin: 0 50%; clip-path: inset(0 100% 0 0 round 999px); transition: opacity var(--t1) var(--ease), transform var(--t3) var(--ease), clip-path var(--t3) var(--ease); }
   .xs-menu li { background: none; border: 0; border-radius: 0; box-shadow: none; }
   .xs-row, .xs-home { border-radius: 999px; padding: 0 14px 0 12px; gap: 8px; color: var(--text); }
   .xs-home { padding-left: 14px; }
