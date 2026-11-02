@@ -32,14 +32,14 @@
   width: 118vw;
   right: -36vw;
   top: 24px;
-  --hero-globe-opacity: var(--hero-globe-opacity-slot, 0.3);
+  --hero-globe-opacity: var(--hero-globe-opacity-slot, 0.21);
 }
 @media (min-width: 768px) {
   .hero-globe--slot {
     width: 84vw;
     right: -16vw;
     top: -10px;
-    --hero-globe-opacity: var(--hero-globe-opacity-slot, 0.34);
+    --hero-globe-opacity: var(--hero-globe-opacity-slot, 0.24);
   }
 }
 @media (min-width: 1024px) {
@@ -47,7 +47,7 @@
     width: min(66vw, 880px);
     right: -4vw;
     top: -50px;
-    --hero-globe-opacity: var(--hero-globe-opacity-slot, 0.4);
+    --hero-globe-opacity: var(--hero-globe-opacity-slot, 0.28);
   }
 }
 /* The satellite shell (dots, trails, pings) lives on its own canvas, 2.2 times the globe box and centred on it, drawn at low resolution

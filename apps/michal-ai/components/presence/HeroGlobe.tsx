@@ -16,7 +16,7 @@ const DEG_PER_S = 2.4
 const START = { lat: 18, lon: -100 } // must match GLOBE_FALLBACK_VIEW
 const FALLBACK_FRACTION = GLOBE_FALLBACK_VIEW.radius / (GLOBE_FALLBACK_VIEW.size / 2)
 /** Constellation dot strength (of the ink alpha) and fade-in time. */
-const SAT_ALPHA = 0.45
+const SAT_ALPHA = 0.34
 const SAT_FADE_MS = 1600
 /** Keep every n-th satellite (and trail): fewer on small canvases. `base` is the globe box in CSS px (the canvas is SHELL_SCALE larger). */
 const thinFor = (base: number) => (base < 520 ? 14 : 8)
