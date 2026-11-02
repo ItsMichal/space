@@ -23,5 +23,10 @@ apps/michal-ai/components/presence/PresenceLab.tsx
 # Reaction bar and highlight popover: owned by the michal-portrait-fix branch for now (components/presence/). Fold into the
 # scale once that branch has merged; until then they are the only sizes outside it on pages that show reactions.
 
+# Project demos draw other products' UI at a fixed 800x500 design size and scale as a picture (like the share cards):
+# their sizes belong to the product shown, not to page typography. The Stageshow kit they are built on, likewise.
+apps/michal-ai/components/demos/
+apps/michal-ai/components/stageshow/
+
 # The guard's own test holds offending sizes as fixtures.
 apps/michal-ai/lib/__tests__/type-guard.test.ts

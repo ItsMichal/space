@@ -7,6 +7,7 @@ const dev: RouteConfig =
   process.env.NODE_ENV === 'development'
     ? [
         route('cards', 'cards/page.dev.tsx'),
+        route('demos', 'dev/demos.tsx'),
         route('glass', 'glass/page.dev.tsx'),
         route('glass/matrix', 'glass/matrix/page.dev.tsx'),
         route('kitchen-sink', 'dev/kitchen-sink.tsx'),

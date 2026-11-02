@@ -1,0 +1,63 @@
+/* The slot every project demo sits in (ProjectDemo). One ground for all of them: the sunk paper well, rounded like the
+   pictures it replaces, so a row of demos reads as one set. The stage is the shot: no plate, border or shadow around it. */
+.pdemo {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--paper-sunk);
+}
+.pdemo > picture,
+.pdemo > img,
+.pdemo > picture img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.pdemo__stage {
+  position: absolute;
+  inset: 0;
+}
+/* every stage stands on the same well, dark products included: one ground across the page */
+.pdemo .ss-stage {
+  overflow: hidden;
+  background: var(--paper-sunk);
+}
+
+/* Shared placement (demos may override): the product window in from the top and left, off the right and the bottom.
+   Compact is a tighter crop: the same window nearer the edge, showing only the story's part of it. */
+.dm-win {
+  position: absolute;
+  top: 44px;
+  left: 56px;
+  width: 800px;
+  height: 500px;
+  box-shadow: var(--ss-shadow-hero);
+}
+.ss-stage[data-layout='compact'] .dm-win {
+  top: 20px;
+  left: 16px;
+  width: 460px;
+  height: 300px;
+}
+.ss-stage[data-layout='compact'] .dm-wide {
+  display: none !important;
+}
+.ss-stage[data-layout='wide'] .dm-compact {
+  display: none !important;
+}
+/* something that arrives: fades and rises in when data-on */
+.dm-in {
+  opacity: 0;
+  translate: 0 6px;
+  transition: opacity 0.35s ease, translate 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.dm-in[data-on] {
+  opacity: 1;
+  translate: 0 0;
+}
+/* the project page's hero: the same well at the hero's own corner */
+.hero .pdemo {
+  border-radius: var(--card-r);
+}

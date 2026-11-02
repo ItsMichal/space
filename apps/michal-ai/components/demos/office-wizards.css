@@ -1,0 +1,131 @@
+.ow-page {
+  position: relative;
+  height: 100%;
+  padding: 22px 80px 22px 24px;
+  background: radial-gradient(120% 90% at 50% 100%, #2b2350, #15131f);
+}
+.ow-hud {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+.ow-player {
+  display: grid;
+  gap: 10px;
+}
+.ow-name {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+.ow-stat {
+  display: grid;
+  grid-template-columns: 62px 1fr 30px;
+  align-items: center;
+  gap: 10px;
+  color: #b9b4d6;
+  font-size: 12px;
+}
+.ow-n {
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.ow-cast {
+  position: absolute;
+  top: 190px;
+  left: 330px;
+  color: #ffb648;
+  font-size: 26px;
+  font-weight: 800;
+}
+/* The printed half sheet: paper over the game, the barcode the scanner reads */
+.ow-slip {
+  position: absolute;
+  left: 110px;
+  bottom: -20px;
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  width: 220px;
+  padding: 16px 18px 40px;
+  background: #fbfaf6;
+  box-shadow: var(--ss-shadow-satellite);
+  color: #111;
+  rotate: -4deg;
+  translate: 0 120%;
+  transition: translate 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ow-slip[data-on] {
+  translate: 0 0;
+}
+.ow-attack {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 20px;
+  font-weight: 800;
+}
+.ow-meta {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+}
+.ow-code {
+  position: relative;
+  display: flex;
+  height: 54px;
+  margin-top: 6px;
+}
+.ow-code::after {
+  content: '';
+  position: absolute;
+  inset: -4px -10px auto;
+  height: 2px;
+  background: #ff2a2a;
+  box-shadow: 0 0 8px 2px rgb(255 42 42 / 0.6);
+  opacity: 0;
+}
+.ow-code[data-scan]::after {
+  opacity: 1;
+  animation: ow-scan 0.6s ease-in-out both;
+}
+@keyframes ow-scan {
+  from {
+    top: -4px;
+  }
+  to {
+    top: 56px;
+  }
+}
+.ow .ss-stage[data-layout='compact'] .ow-page {
+  padding: 12px 94px 12px 12px;
+}
+.ow .ss-stage[data-layout='compact'] .ow-hud {
+  gap: 14px;
+}
+.ow .ss-stage[data-layout='compact'] .ow-player {
+  gap: 5px;
+}
+.ow .ss-stage[data-layout='compact'] .ow-name {
+  font-size: 12px;
+}
+.ow .ss-stage[data-layout='compact'] .ow-stat {
+  grid-template-columns: 1fr 22px;
+  gap: 6px;
+  font-size: 10px;
+}
+.ow .ss-stage[data-layout='compact'] .ow-stat > span:first-child {
+  display: none;
+}
+.ow .ss-stage[data-layout='compact'] .ow-cast {
+  top: 96px;
+  left: 190px;
+  font-size: 14px;
+}
+.ow .ss-stage[data-layout='compact'] .ow-slip {
+  left: 40px;
+  bottom: -30px;
+  width: 140px;
+  gap: 3px;
+  padding: 10px 12px 34px;
+  scale: 0.8;
+  transform-origin: bottom left;
+}

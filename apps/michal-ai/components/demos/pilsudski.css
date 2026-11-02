@@ -1,0 +1,75 @@
+.pi-page {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100%;
+  padding: 16px 120px 70px 24px;
+  background: var(--ss-surface);
+}
+.pi-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--ss-line);
+}
+.pi-name {
+  white-space: nowrap;
+  color: var(--ss-text-strong);
+  font-size: 14px;
+  font-weight: 600;
+}
+.pi-temper {
+  white-space: nowrap;
+  margin-left: auto;
+  color: var(--ss-text);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.pi-meter {
+  width: 90px;
+}
+.pi-thread {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 12px;
+  min-height: 0;
+  padding: 14px 0;
+  overflow: hidden;
+}
+.pi-q {
+  width: fit-content;
+  max-width: 76%;
+  margin-left: auto;
+  padding: 8px 13px;
+  border-radius: 16px;
+  background: var(--ss-ink-1);
+  color: var(--ss-text-strong);
+  font-size: 13px;
+}
+.pi-a {
+  max-width: 86%;
+  color: var(--ss-text-strong);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.pi-composer {
+  font-size: 13px;
+}
+.pi .ss-stage[data-layout='compact'] .pi-page {
+  padding: 12px 108px 52px 16px;
+}
+.pi .ss-stage[data-layout='compact'] .pi-win {
+  height: 280px;
+}
+.pi-past {
+  display: grid;
+  gap: 8px;
+}
+.pi-past > :first-child {
+  justify-self: end;
+}
+.pi .ss-stage[data-layout='compact'] .pi-a {
+  font-size: 14px;
+}

@@ -1,0 +1,91 @@
+.of-page {
+  display: grid;
+  grid-template-columns: 330px 260px;
+  gap: 36px;
+  height: 100%;
+  padding: 28px;
+  background: #000;
+  color: #fff;
+}
+.of-form {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+.of-label {
+  color: var(--ss-text);
+  font-size: 12px;
+}
+.of-field {
+  font-size: 14px;
+}
+.of-check {
+  height: 26px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+}
+.of-busy {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ss-text);
+  font-size: 12px;
+}
+.of-rest {
+  display: grid;
+  gap: 8px;
+}
+.of-sum {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  padding: 18px;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.05);
+}
+.of-sum__title {
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.of-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  color: var(--ss-text);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.of-row--total {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgb(255 255 255 / 0.1);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+}
+.of-pay {
+  display: grid;
+  place-items: center;
+  height: 36px;
+  margin-top: 14px;
+  border-radius: 999px;
+  background: #fff;
+  color: #000;
+  font-size: 13px;
+  font-weight: 600;
+}
+.of-due-compact {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid rgb(255 255 255 / 0.1);
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.of .ss-stage[data-layout='compact'] .of-page {
+  grid-template-columns: 340px;
+  padding: 20px;
+}
