@@ -149,15 +149,13 @@ export function HeroAscii({ className = '' }: { className?: string }) {
     let sv = new Uint8Array(0)
     const stats = { frames: 0, totalMs: 0, maxMs: 0, earthDraws: 0, sats: 0, cells: 0, strands: 0 }
 
-    // The halo behind callout text: the hero tint on light paper, plain paper when the ink is light (dark theme), where the
-    // tint would glow around the letters.
+    // The halo behind callout text: the paper, stronger under dark ink than under light ink (dark theme).
     const pickHalo = (cs: CSSStyleDeclaration) => {
       const paper = cs.getPropertyValue('--paper').trim()
       const rgb = (ink.match(/\d+(\.\d+)?/g) ?? []).slice(0, 3).map(Number)
       const lightInk = rgb.length === 3 && rgb[0] * 0.299 + rgb[1] * 0.587 + rgb[2] * 0.114 > 128
       haloAlpha = lightInk ? 0.45 : 0.85
-      if (lightInk) return paper || halo
-      return getComputedStyle(document.documentElement).getPropertyValue('--edge-tint').trim() || paper || halo
+      return paper || halo
     }
     const readColours = () => {
       const cs = getComputedStyle(el)

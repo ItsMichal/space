@@ -75,9 +75,7 @@ The backdrop is mounted on every page (it was home-only). Light is the primary t
 dim additive blobs and rays, light glyph ink) applies only where the tokens go dark, which is `:root[data-reading]` under
 `prefers-color-scheme: dark`; the home and index pages are always light, as before. The theme change cross-fades (about 250ms).
 
-The home hero has its own flat tint layer (`.hero-atm`, z -1) that sits above the backdrop (z -2): in the first screen the
-backdrop is largely hidden behind that tint. The tint fades out toward the work section, so the backdrop takes over from
-there. Not changed.
+The home hero has no tint layer of its own (the cross-fading `.hero-atm` tints were removed): the backdrop shows behind it too.
 
 ## Tunables (`backdrop/config.ts`)
 
@@ -213,7 +211,7 @@ and the measures below remove every backdrop-side trigger. What changed, and why
 
 Not the cause, checked in the code: the CSS layer and canvas cross-fade happens once, on first ready; `will-change` is only
 added in the iOS mode; the low-res texture is only reallocated in `sizeTargets`, which now only runs on real size changes.
-Candidates outside this layer, not changed here: `.hero-atm` and `.hero-slot` (`components/site/hero.css`) combine
+Candidates outside this layer, not changed here: `.hero-slot` (`components/site/hero.css`; `.hero-atm` has since been removed) combined
 `contain: strict`, `overflow: hidden`, a `mask-image` gradient and opacity transitions on a scrolling layer, which WebKit is
 known to repaint badly; if the flicker survives this PR, test with the mask removed first. The hero globe canvas
 (`components/presence/globe/renderer.ts`, `resize()`) assigns `canvas.width/height` on every ResizeObserver callback even when

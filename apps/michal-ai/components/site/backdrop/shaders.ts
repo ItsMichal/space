@@ -23,7 +23,7 @@ float Y(vec3 c){ return dot(pow(c, vec3(2.2)), vec3(.2126, .7152, .0722)); }
 // Shaft pattern across angle. The visible fan is only about a radian wide, so the frequencies are high enough for several
 // distinct shafts there; lower ones merge into one round glow.
 float rayAt(float ang, float t){
-  float n = .6 * vn(vec2(ang * 16., t * .011)) + .4 * vn(vec2(ang * 37. + 5., -t * .017));
+  float n = .6 * vn(vec2(ang * 6., t * .011)) + .4 * vn(vec2(ang * 14. + 5., -t * .017));
   return n;
 }
 void main(){
@@ -49,8 +49,8 @@ void main(){
   float ang = atan(rv.y, rv.x);
   float dist = length(rv) / length(uView);
   float n0 = rayAt(ang, uT);
-  float ray = smoothstep(.42, .78, n0) * (.8 + .2 * sin(uT * .12 + ang * 2.)) * exp(-dist * 1.1) * smoothstep(0., .15, dist);
-  float fr = (smoothstep(.42, .78, rayAt(ang + .008, uT)) - smoothstep(.42, .78, rayAt(ang - .008, uT))) * exp(-dist * 1.1);
+  float ray = smoothstep(.38, .8, n0) * (.8 + .2 * sin(uT * .12 + ang * 2.)) * exp(-dist * 1.1) * smoothstep(0., .15, dist);
+  float fr = (smoothstep(.38, .8, rayAt(ang + .02, uT)) - smoothstep(.38, .8, rayAt(ang - .02, uT))) * exp(-dist * 1.1);
   tint *= 1. - clamp(fr, 0., 1.) * uRay.w * (1. - vec3(.95, .62, .74));
   tint *= 1. - clamp(-fr, 0., 1.) * uRay.w * (1. - vec3(1., .9, .45));
   // light: warmth constraint (R >= B + margin, G <= R: no grey-green, no mint), then the hard luminance floor.

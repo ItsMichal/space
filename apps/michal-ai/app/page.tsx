@@ -3,9 +3,8 @@ import { ArrowRight } from 'lucide-react'
 import { getAllPosts, getBlogPosts, getMainProjects } from '@/lib/content'
 import { HeroBackdrop } from '@/components/presence/HeroBackdrop'
 import { HeroHook } from '@/components/site/HeroHook'
-import { HeroAtmosphere } from '@/components/site/HeroAtmosphere'
+import '@/components/site/hero.css'
 import { postPath } from '@/lib/seo'
-import { tintFor } from '@/lib/tints'
 import { heroHooks, homeWriting } from '@/lib/content/layout'
 import { NameHeader } from '@/components/site/NameHeader'
 import { WritingRows } from '@/components/writing/WritingIndex'
@@ -55,12 +54,10 @@ export default function Home() {
   // Rotating hero line: every post that sets `hook`, the layout file's `hooks` first, then the site's own order (priority, then newest).
   const hookPosts = heroHooks(getAllPosts().filter((p) => p.hook))
   const hooks = hookPosts.map((p) => ({ text: p.hook!, href: postPath(p) }))
-  const tints = hookPosts.map((p) => tintFor(p.slug).hex)
 
   return (
     <div className="mx-auto max-w-content px-space-4 md:px-space-8">
       <JsonLd data={[personJsonLd, websiteJsonLd]} />
-      {hooks.length ? <HeroAtmosphere tints={tints} /> : null}
       {/* Hero background slot: a positioned layer behind the text and above the tint cross-fade, empty by default. A decorative
           component (aria-hidden, pointer-events none) can be dropped in here; the hero text keeps its own contrast. */}
       <div className="hero-slot" data-hero-slot="background" aria-hidden>
