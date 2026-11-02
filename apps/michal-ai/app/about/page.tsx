@@ -12,6 +12,7 @@ import { xHighlights } from '@/content/x-highlights'
 import { postById, portraitAlt, mentionAuthors } from '@/lib/about'
 import { paperMentions } from '@/content/mentions'
 import { Picture } from '@/components/media/Picture'
+import { Accolade } from '@/components/accolade/Accolade'
 import '@/components/about/about-page.css'
 
 export const metadata = aboutMetadata()
@@ -79,6 +80,11 @@ export default function AboutPage() {
             </div>
           </div>
         </section>
+
+        {/* Recognition leads the page: the Congressional Record tribute, the document, and the coverage (content/accolades.ts) */}
+        <Card id="recognition" title="Recognition" className="ab-recognition">
+          <Accolade id="ssep-2014" />
+        </Card>
 
         <Card id="contact" title="Contact" className="ab-contact">
           <ul className="ab-list">

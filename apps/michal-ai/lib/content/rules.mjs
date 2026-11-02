@@ -110,6 +110,8 @@ export const DIRECTIVES = {
   youtube: ['id', 'title'],
   embed: ['url', 'title', 'ratio'],
   callout: ['type'],
+  // ::accolade{id=ssep-2014}: a recognition card from content/accolades.ts (quote, the document, the coverage row)
+  accolade: ['id'],
   handwriting: ['src', 'alt', 'duration', 'blur', 'chroma', 'stagger', 'focus', 'ease', 'color'],
   // inline, in running text: :term[bloom filter]{c=blue} colours a term the way a figure does; :fig[2] is a chip that points at the
   // post's second image (it lights the figure on hover and jumps to it)
@@ -158,6 +160,7 @@ export function directiveAttrs(name, attrs) {
     if (!embedUrlOk(out.url)) return null
     if (out.ratio && !RATIO_RE.test(out.ratio)) delete out.ratio
   }
+  if (name === 'accolade' && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(out.id ?? '')) return null
   if (name === 'callout' && out.type && !CALLOUT_TYPES.includes(out.type)) out.type = 'note'
   if (name === 'term' && !TERM_COLOURS.includes(out.c)) out.c = TERM_COLOURS[0]
   if (name === 'fig' && !/^[1-9]\d?$/.test(out.n ?? '')) return null

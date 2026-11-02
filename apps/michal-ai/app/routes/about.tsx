@@ -7,9 +7,10 @@ export async function loader() {
   const { getAllPosts } = await import('@/lib/content')
   const { profile } = await import('@/content/profile')
   const { aboutMetadata } = await import('@/lib/seo')
+  const { accolades } = await import('@/content/accolades')
   return {
     head: headFor(aboutMetadata(), { share: shareFor('/about', 'About Michał Bodzianowski, software engineer') }),
-    images: imagesFor(slimAll(getAllPosts()), [profile.portrait.src]),
+    images: imagesFor(slimAll(getAllPosts()), [profile.portrait.src, ...accolades.flatMap((a) => (a.document ? [a.document.src] : []))]),
   }
 }
 
