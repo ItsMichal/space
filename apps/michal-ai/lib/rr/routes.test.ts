@@ -13,7 +13,7 @@ async function table(env: string) {
 afterEach(() => vi.unstubAllEnvs())
 
 describe('route table', () => {
-  const DEV_ONLY = ['cards', 'glass', 'kitchen-sink', 'micro', 'mood', 'motion', 'presence', 'shaders', 'ui']
+  const DEV_ONLY = ['cards', 'demos', 'glass', 'kitchen-sink', 'micro', 'mood', 'motion', 'presence', 'shaders', 'ui']
 
   it('has no dev tools in a production (or any non-development) build', async () => {
     for (const env of ['production', 'test']) {

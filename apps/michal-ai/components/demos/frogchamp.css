@@ -1,0 +1,84 @@
+.fc-page {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 16px;
+  height: 100%;
+  padding: 18px 76px 18px 18px;
+  background: var(--ss-canvas);
+}
+.fc-chat {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--ss-surface);
+  font-size: 13px;
+  color: var(--ss-text-strong);
+}
+.fc-head,
+.fc-label {
+  color: var(--ss-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+.fc-who {
+  color: #6fd36a;
+  font-weight: 700;
+}
+.fc-main {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+.fc-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.fc-stat,
+.fc-card {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--ss-surface);
+}
+.fc-big {
+  color: var(--ss-text-strong);
+  font-size: 28px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.fc-sumtext {
+  color: var(--ss-text-strong);
+  font-size: 15px;
+  line-height: 1.45;
+}
+.fc .ss-stage[data-layout='compact'] .fc-page {
+  grid-template-columns: 1fr;
+  padding: 10px 92px 10px 10px;
+}
+.fc .ss-stage[data-layout='compact'] .fc-main,
+.fc .ss-stage[data-layout='compact'] .fc-stats {
+  gap: 6px;
+}
+.fc .ss-stage[data-layout='compact'] .fc-stat,
+.fc .ss-stage[data-layout='compact'] .fc-card {
+  gap: 3px;
+  padding: 8px 10px;
+}
+.fc .ss-stage[data-layout='compact'] .fc-big {
+  font-size: 18px;
+}
+.fc .ss-stage[data-layout='compact'] .fc-label {
+  font-size: 10px;
+}
+.fc .ss-stage[data-layout='compact'] .fc-sum .fc-label {
+  display: none;
+}
+.fc .ss-stage[data-layout='compact'] .fc-sumtext {
+  font-size: 11px;
+  line-height: 1.35;
+}

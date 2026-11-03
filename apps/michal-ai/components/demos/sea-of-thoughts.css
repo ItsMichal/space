@@ -1,0 +1,115 @@
+.st-page {
+  position: relative;
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 16px;
+  height: 100%;
+  padding: 26px 80px 0 40px;
+  overflow: hidden;
+  background: linear-gradient(#bfe3f2, #e8f5f9 55%);
+}
+.st-count {
+  color: #2b5c70;
+  font-size: 13px;
+  font-weight: 600;
+}
+.st-write {
+  display: flex;
+  gap: 10px;
+  width: 520px;
+}
+.st-field {
+  flex: 1;
+}
+.st-send {
+  padding: 9px 18px;
+  border-radius: 8px;
+  background: #1f6f8b;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+/* the sent thought drifts out to sea and fades */
+.st-gone {
+  position: absolute;
+  top: 120px;
+  left: 40px;
+  color: #2b5c70;
+  font-size: 15px;
+  font-style: italic;
+  opacity: 0;
+  pointer-events: none;
+}
+.st-gone[data-on] {
+  animation: st-drift 1.4s ease-in both;
+}
+@keyframes st-drift {
+  0% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  100% {
+    opacity: 0;
+    translate: 380px 150px;
+    scale: 0.4;
+  }
+}
+.st-found {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 6px;
+  width: 420px;
+  margin-top: 60px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: #fffdf4;
+  box-shadow: var(--ss-shadow-card), inset 0 0 0 1px rgb(0 0 0 / 0.06);
+}
+.st-label {
+  color: #1f6f8b;
+  font-size: 12px;
+  font-weight: 700;
+}
+.st-msg {
+  color: #222;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 18px;
+  line-height: 1.4;
+}
+.st-sea {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 190px;
+  background: linear-gradient(#5aa9c6, #2b6f8f);
+}
+.st .ss-stage[data-layout='compact'] .st-page {
+  gap: 8px;
+  padding: 12px 90px 0 16px;
+}
+.st .ss-stage[data-layout='compact'] .st-write {
+  width: 300px;
+}
+.st .ss-stage[data-layout='compact'] .st-send {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+.st .ss-stage[data-layout='compact'] .st-found {
+  width: 300px;
+  margin-top: 6px;
+  padding: 10px 12px;
+}
+.st .ss-stage[data-layout='compact'] .st-msg {
+  font-size: 14px;
+}
+.st .ss-stage[data-layout='compact'] .st-sea {
+  height: 90px;
+}
+.st .ss-stage[data-layout='compact'] .st-gone {
+  top: 64px;
+  left: 16px;
+  font-size: 12px;
+}

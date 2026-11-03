@@ -5,6 +5,8 @@ import { OriginalLink } from '@/components/content/OriginalLink'
 import { OtherSiteEnd, otherSiteFor } from '@/components/content/OtherSiteLink'
 import { SeriesNav } from '@/components/content/SeriesNav'
 import { ArticleLayout } from '@/components/site/ArticleLayout'
+import { hasDemo, ProjectDemo } from '@/components/demos/ProjectDemo'
+import { Picture } from '@/components/media/Picture'
 import { PostNav } from '@/components/content/PostNav'
 import type { PostKind } from '@/lib/content/types'
 import { ReadingTheme } from '@/components/site/ReadingTheme'
@@ -84,6 +86,16 @@ export function PostPage({ kind, slug, parent, body, jsonLd }: { kind: PostKind;
         cover={post.cover}
         coverAlt={post.coverAlt}
         coverFocus={post.coverFocus}
+        hero={
+          kind === 'project' && hasDemo(post.slug) ? (
+            <ProjectDemo
+              slug={post.slug}
+              label={post.coverAlt ?? post.title}
+              eager
+              fallback={post.cover ? <Picture src={post.cover} alt={post.coverAlt ?? ''} priority aspect="16 / 10" focus={post.coverFocus} sizes="(min-width: 1184px) 1120px, calc(100vw - 32px)" /> : null}
+            />
+          ) : undefined
+        }
         role={post.role}
         years={post.years}
         links={links}
