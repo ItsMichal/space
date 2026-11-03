@@ -70,7 +70,7 @@ export default function Home() {
         intro={hooks.length ? <HeroHook stem={profile.hookStem} items={hooks} /> : undefined}
       />
 
-      <section id="work" aria-labelledby="work-h" className="home-sec mt-space-16">
+      <section id="work" aria-labelledby="work-h" className="home-sec home-ground mt-space-16">
         <h2 id="work-h" className={h2}>
           Projects
         </h2>

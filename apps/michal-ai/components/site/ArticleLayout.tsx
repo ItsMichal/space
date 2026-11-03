@@ -23,6 +23,8 @@ type Props = {
   cover?: string
   coverAlt?: string
   coverFocus?: string
+  /** Shown in the cover's place (a project's demo); the cover is its fallback. */
+  hero?: ReactNode
   role?: string
   years?: string
   links?: LayoutLink[]
@@ -51,6 +53,7 @@ export function ArticleLayout({
   cover,
   coverAlt,
   coverFocus,
+  hero,
   role,
   years,
   links,
@@ -88,7 +91,9 @@ export function ArticleLayout({
         {/* The page's end of the card-to-page transition: the card surface opens into this box (CardTransitions). */}
         <span aria-hidden className="reading__surface" />
       </header>
-      {cover ? (
+      {hero ? (
+        <figure className="hero reading__wide">{hero}</figure>
+      ) : cover ? (
         <figure className="hero reading__wide">
           <Zoomable
             src={cover}

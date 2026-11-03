@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { Post } from '@/lib/content/types'
 import { Picture } from '@/components/media/Picture'
+import { hasDemo, ProjectDemo } from '@/components/demos/ProjectDemo'
 import { cardOf, isFeature, siteLayout, type SiteLayout } from '@/lib/content/layout'
 import { matchesFilter, PROJECT_FILTERS } from '@/components/ui/segments'
 import './cards.css'
@@ -63,8 +64,8 @@ export function ProjectCard({
   focus?: string
   /** No picture, even on the feature entry. */
   textOnly?: boolean
-  /** Every entry shows its picture as part of the row (beside the text from 840px, above the title on phones), not as a
-   *  separate card block (the home page). */
+  /** Every entry shows its picture as part of the row (left of the text from 840px, above the title on phones), not as a
+   *  separate card block, and no year (the home page). */
   thumb?: boolean
 }) {
   const src = post.cardImage === 'none' ? undefined : (post.cardImage ?? post.cover)
@@ -72,6 +73,8 @@ export function ProjectCard({
   // dates only: no eyebrows (role, series, venue) over the title
   const metaParts: ReactNode[] = article ? [<time key="d" dateTime={post.date}>{monthYear(post.date)}</time>] : [year(post)]
   const id = `pc-${post.slug}`
+  // A project with a faux-UI demo plays it in the picture's place; the picture stays as its fallback (prerender, no JS)
+  const withDemo = (picture: ReactNode) => (hasDemo(post.slug) ? <ProjectDemo slug={post.slug} label={alt || post.title} fallback={picture} /> : picture)
   return (
     <Link
       href={href}
@@ -85,31 +88,37 @@ export function ProjectCard({
       <p id={`${id}-d`} className="ix__desc t-text">
         {post.description}
       </p>
-      <p className="ix__meta t-meta">
-        <MetaParts parts={metaParts} />
-      </p>
+      {thumb && src ? null : (
+        <p className="ix__meta t-meta">
+          <MetaParts parts={metaParts} />
+        </p>
+      )}
       {thumb && src ? (
         <div className="ix__media ix__thumb">
-          <Picture
-            src={src}
-            alt={alt}
-            sizes="(min-width: 840px) 240px, calc(100vw - 32px)"
-            priority={priority}
-            aspect="16 / 10"
-            focus={focus ?? (post.cardImage ? undefined : post.coverFocus)}
-          />
+          {withDemo(
+            <Picture
+              src={src}
+              alt={alt}
+              sizes="(min-width: 840px) 240px, calc(100vw - 32px)"
+              priority={priority}
+              aspect="16 / 10"
+              focus={focus ?? (post.cardImage ? undefined : post.coverFocus)}
+            />,
+          )}
         </div>
       ) : feature && src && !textOnly ? (
         <div className="ix__media tile__media">
-          <Picture
-            src={src}
-            alt={alt}
-            sizes="(min-width: 840px) 640px, calc(100vw - 32px)"
-            priority={priority}
-            className="tile__img"
-            aspect="16 / 9"
-            focus={focus ?? (post.cardImage ? undefined : post.coverFocus)}
-          />
+          {withDemo(
+            <Picture
+              src={src}
+              alt={alt}
+              sizes="(min-width: 840px) 640px, calc(100vw - 32px)"
+              priority={priority}
+              className="tile__img"
+              aspect={hasDemo(post.slug) ? '16 / 10' : '16 / 9'}
+              focus={focus ?? (post.cardImage ? undefined : post.coverFocus)}
+            />,
+          )}
         </div>
       ) : null}
     </Link>

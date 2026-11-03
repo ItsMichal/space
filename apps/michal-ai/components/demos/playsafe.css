@@ -1,0 +1,89 @@
+.ps-wrap {
+  position: absolute;
+  inset: 0;
+}
+.ps-pitch {
+  position: absolute;
+  top: 180px;
+  left: 90px;
+  display: grid;
+  gap: 8px;
+}
+.ps-name {
+  color: var(--ss-text-strong);
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.ps-tag {
+  color: var(--ss-text);
+  font-size: 18px;
+}
+/* the phone stands in the right half and runs off the bottom, the feed is what shows */
+.ps-phone {
+  position: absolute;
+  top: 40px;
+  left: 430px;
+  box-shadow: var(--ss-shadow-hero);
+  border-radius: 44px;
+}
+.ps-screen {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  height: 100%;
+  padding: 56px 14px 0;
+  background: #f4f6f2;
+}
+.ps-title {
+  color: #111;
+  font-size: 24px;
+  font-weight: 800;
+}
+.ps-feed {
+  display: grid;
+  gap: 8px;
+}
+.ps-card {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+.ps-body {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+}
+.ps-text {
+  color: #222;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.ps-tabs {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 470px;
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 6px;
+  border-top: 1px solid #e3e5df;
+  background: #fff;
+  color: #8a8f86;
+  font-size: 9px;
+}
+.ps-tabs [data-on] {
+  color: #2f8f4e;
+  font-weight: 700;
+}
+.ps .ss-stage[data-layout='compact'] .ps-phone {
+  top: 18px;
+  left: 50%;
+  translate: -50% 0;
+  scale: 0.9;
+  transform-origin: top center;
+}
