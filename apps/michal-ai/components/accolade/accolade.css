@@ -136,6 +136,8 @@
   margin: 0;
   list-style: none;
   overflow-x: auto;
+  /* Contains the absolute sr-only spans, or they escape the scroller and widen the page on phones */
+  position: relative;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
   scrollbar-width: thin;
