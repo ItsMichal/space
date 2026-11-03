@@ -63,8 +63,8 @@ export function ProjectCard({
   focus?: string
   /** No picture, even on the feature entry. */
   textOnly?: boolean
-  /** Every entry shows its picture as part of the row (beside the text from 840px, above the title on phones), not as a
-   *  separate card block (the home page). */
+  /** Every entry shows its picture as part of the row (left of the text from 840px, above the title on phones), not as a
+   *  separate card block, and no year (the home page). */
   thumb?: boolean
 }) {
   const src = post.cardImage === 'none' ? undefined : (post.cardImage ?? post.cover)
@@ -85,9 +85,11 @@ export function ProjectCard({
       <p id={`${id}-d`} className="ix__desc t-text">
         {post.description}
       </p>
-      <p className="ix__meta t-meta">
-        <MetaParts parts={metaParts} />
-      </p>
+      {thumb && src ? null : (
+        <p className="ix__meta t-meta">
+          <MetaParts parts={metaParts} />
+        </p>
+      )}
       {thumb && src ? (
         <div className="ix__media ix__thumb">
           <Picture

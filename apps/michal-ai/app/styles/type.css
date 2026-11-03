@@ -178,11 +178,12 @@ a.ix:focus-visible {
   .ix > * {
     grid-column: 2;
   }
+  /* a row with a picture (home): the picture leads in the left column, the text beside it; no secondary column */
   .ix--thumb {
-    grid-template-columns: var(--ix-col) minmax(0, 1fr) var(--ix-thumb);
+    grid-template-columns: var(--ix-thumb) minmax(0, var(--ix-measure));
   }
   .ix--thumb > .ix__thumb {
-    grid-column: 3;
+    grid-column: 1;
     grid-row: 1 / span 4;
     align-self: start;
     order: 0;
@@ -194,6 +195,13 @@ a.ix:focus-visible {
     grid-row: 1 / span 4;
     margin-top: 0;
     padding-top: 0.32em;
+  }
+  /* beside a picture the date is a quiet line under the description, not a column */
+  .ix--thumb > .ix__meta {
+    grid-column: 2;
+    grid-row: auto;
+    margin-top: var(--space-1);
+    padding-top: 0;
   }
   .ix-sec .ix--ui > .ix__meta {
     padding-top: 0.12em;
