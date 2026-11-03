@@ -22,6 +22,10 @@ export async function loader({ params }: LoaderFunctionArgs) {
   const hast = await (await import('@/lib/ink/inline.server')).inlineHandwriting(await markdownToHast(post.body))
   const metadata = postMetadata(post.kind, post.slug, post.parent)
   const alt = post.parent ? 'Project update by Michał Bodzianowski' : post.kind === 'article' ? 'Article by Michał Bodzianowski' : 'Project by Michał Bodzianowski'
+  // ::accolade cards read their document image from content/accolades.ts, not from the markdown, so register it here
+  const accoladeImages = post.body.includes('::accolade')
+    ? (await import('@/content/accolades')).accolades.flatMap((a) => (a.document ? [a.document.src] : []))
+    : []
   const related = [post, ...(parentPost ? [parentPost] : []), ...getChildren(post.parent ?? post.slug)]
   return {
     kind: post.kind as PostKind,
@@ -30,7 +34,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
     hast,
     jsonLd: postJsonLd(post, parentPost),
     head: headFor(metadata, { viewport: readingViewport, share: shareFor(postPath(post), alt) }),
-    images: imagesFor([hast, slim(post), related.map(slim)]),
+    images: imagesFor([hast, slim(post), related.map(slim)], accoladeImages),
   }
 }
 

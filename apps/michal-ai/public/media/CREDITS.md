@@ -7,6 +7,7 @@
 - `sea-of-thoughts/cover.webp`: the project logo, `content/static/img/logo.png` in the sea-of-thoughts repository (ItsMichal/sea-of-thoughts). Converted to WebP, otherwise unchanged. The logo's author is not stated in the repo (team of four): confirm it is his or the team's to use.
 - `../play/airplane-game/airplane.html` (not an image): the single-file game from the airplane-game repository (ItsMichal/airplane-game), copied byte for byte. His code. It loads one font from a third-party host (static.tumblr.com) and stores a hi-score cookie.
 - `about/portrait.webp`, `about/portrait-4x5.jpg`: the site owner's own photograph, web-sized from the original he supplied (EXIF, XMP, IPTC and ICC profile stripped; see `scripts/make-about-portrait.mjs`).
+- `about/congressional-record-e1105.webp`: crop of Congressional Record, Vol. 160, p. E1105 (July 3, 2014), rendered from the GPO PDF at govinfo.gov. A work of the US government, public domain.
 
 # Data credits
 

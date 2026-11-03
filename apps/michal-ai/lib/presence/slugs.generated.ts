@@ -4,6 +4,7 @@ export const LIVE_SLUGS: readonly string[] = [
   "airplane-game",
   "analog-experiments-screaming-robot",
   "askawai",
+  "beer-in-space",
   "creating-my-first-pcb-object",
   "creating-my-own-animated-logo",
   "creatle",
@@ -42,6 +43,7 @@ export const LIVE_SLUGS: readonly string[] = [
 export const LIVE_IDS: readonly string[] = [
   "airplane-game",
   "askawai",
+  "beer-in-space-ssep-2014",
   "creating-my-first-pcb-object",
   "creating-my-own-animated-logo",
   "creatle",
