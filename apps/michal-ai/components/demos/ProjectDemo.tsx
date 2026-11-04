@@ -9,7 +9,8 @@ import './demos.css'
  *
  * The slot shows `fallback`, the project's cover at the same 16:10 box, until it nears the viewport (and in the
  * prerendered HTML, and without JavaScript), so nothing moves when the preview arrives. Clips are 800x500, about 8 s,
- * under 1 MB, in public/media/previews/<slug>.mp4 with the first frame as <slug>.jpg; reduced motion shows that frame.
+ * under 1 MB, in public/media/previews/<slug>.mp4 (site media, kept by content:pull); the cover shows until the clip has a
+ * frame, and reduced motion holds the clip on its first frame.
  */
 const CLIPS = [
   'ai-crofty', // AI Croft Funny Moment (YouTube Qt-6oOMb4NQ), 0:02
@@ -45,9 +46,10 @@ function codeOf(slug: CodeSlug) {
   return d
 }
 
-function Loop({ slug }: { slug: Clip }) {
+function Loop({ slug, fallback }: { slug: Clip; fallback: ReactNode }) {
   const still = useReducedMotion()
   const ref = useRef<HTMLVideoElement>(null)
+  const [ready, setReady] = useState(false)
   // the preference is read after mount, so the loop is started and stopped here rather than by the autoplay attribute
   useEffect(() => {
     const v = ref.current
@@ -56,18 +58,23 @@ function Loop({ slug }: { slug: Clip }) {
     if (still) v.pause()
     else v.play().catch(() => {})
   }, [still])
+  // the cover (with its blur placeholder) stays underneath until the clip has a frame, and stays if the clip never loads
   return (
-    <video
-      ref={ref}
-      className="pdemo__clip"
-      src={`/media/previews/${slug}.mp4`}
-      poster={`/media/previews/${slug}.jpg`}
-      muted
-      loop
-      playsInline
-      preload="auto"
-      aria-hidden
-    />
+    <>
+      {fallback}
+      <video
+        ref={ref}
+        className="pdemo__clip"
+        src={`/media/previews/${slug}.mp4`}
+        muted
+        loop
+        playsInline
+        preload="auto"
+        aria-hidden
+        data-ready={ready || undefined}
+        onLoadedData={() => setReady(true)}
+      />
+    </>
   )
 }
 
@@ -83,7 +90,7 @@ export function ProjectDemo({ slug, label, fallback, eager = false }: { slug: st
     return () => io.disconnect()
   }, [slug, eager])
   let body = fallback
-  if (near && isClip(slug)) body = <Loop slug={slug} />
+  if (near && isClip(slug)) body = <Loop slug={slug} fallback={fallback} />
   else if (near && isCode(slug)) {
     const Demo = codeOf(slug)
     body = (

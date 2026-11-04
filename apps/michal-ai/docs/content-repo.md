@@ -11,7 +11,7 @@ definition of what content may contain. The editor's threat model and the owner 
 | --- | --- | --- |
 | Posts | `content/posts/*.md`, until the cutover below; then filled by `content:pull` | `posts/*.md` |
 | Post media | `public/media/<slug>/`, same | `media/<slug>/` |
-| Site media | `public/media/about/`, `_v`, `_og` (generated), `CREDITS.md` | none |
+| Site media | `public/media/about/`, `previews/` (project preview loops), `_v`, `_og` (generated), `CREDITS.md` | none |
 | Structured data | `content/*.ts`, `content/redirects.json` | none |
 | Content rules | `lib/content/rules.mjs`, `scripts/content/validate.mjs` | runs them from a checkout of space main |
 | Editor | none | `editor/` (Worker `write` plus the SPA) |

@@ -11,7 +11,7 @@ import matter from 'gray-matter'
 import { SAFE_MATTER, bodyProblems, dashLines, frontmatterProblem, handwritingSources, layoutRefProblems, mediaProblem, parseLayout, rawPostProblem, slugProblem } from '../../lib/content/rules.mjs'
 
 // Media folders that belong to the site, not to posts (they stay in the space repo).
-const SITE_MEDIA = new Set(['about', '_v', '_og'])
+const SITE_MEDIA = new Set(['about', 'previews', '_v', '_og'])
 const SITE_MEDIA_FILES = new Set(['CREDITS.md'])
 
 const arg = (name, fallback) => {
