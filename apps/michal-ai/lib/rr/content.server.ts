@@ -4,7 +4,8 @@ import path from 'node:path'
 import type { Metadata, Viewport } from '@/lib/meta-types'
 import { getImageInfo, type ImageInfo } from '@/lib/media/index'
 import type { Post } from '@/lib/content/types'
-import { buildMeta, type Descriptor, type ShareImage } from './head'
+import { buildMeta, type Descriptor, type ShareImage, type ShareVideo } from './head'
+import { mediaPathOk, VIDEO_SRC_RE } from '@/lib/content/rules.mjs'
 import { rootMetadata, rootViewport } from './root-meta'
 
 export type SlimPost = Omit<Post, 'body'>
@@ -51,9 +52,10 @@ function cardHash(key: string): string {
 }
 
 /** Share-card reference for a page path ("/" for home): og and twitter URLs plus content hashes. */
-export function shareFor(pagePath: string, alt: string): ShareImage {
+export function shareFor(pagePath: string, alt: string, video?: ShareVideo): ShareImage {
   const base = pagePath === '/' ? '' : pagePath
   return {
+    ...(video ? { video } : {}),
     og: `${base}/opengraph-image`,
     twitter: `${base}/twitter-image`,
     ogHash: cardHash(`${base}/opengraph-image`),
@@ -64,4 +66,29 @@ export function shareFor(pagePath: string, alt: string): ShareImage {
 
 export function headFor(page: Metadata, opts: { viewport?: Viewport; share?: ShareImage } = {}): Descriptor[] {
   return buildMeta(rootMetadata, page, opts.viewport ?? rootViewport, opts.share)
+}
+
+/** The frame size an mp4 declares in its video track header (tkhd), or null when there is none. */
+export function mp4Size(buf: Buffer): { width: number; height: number } | null {
+  for (let i = buf.indexOf('tkhd'); i > 0; i = buf.indexOf('tkhd', i + 4)) {
+    const at = i + 4 + (buf[i + 4] === 1 ? 88 : 76)
+    if (at + 8 > buf.length) break
+    const width = buf.readUInt32BE(at) >>> 16
+    const height = buf.readUInt32BE(at + 4) >>> 16
+    if (width && height) return { width, height }
+  }
+  return null
+}
+
+/** The first mp4 a post's markdown plays (::video), as a share clip. Webm is left out: iMessage and X only play mp4. */
+export function shareVideoFor(body: string, root = path.join(process.cwd(), 'public')): ShareVideo | undefined {
+  for (const m of body.matchAll(/::video\{[^}]*?\bsrc="([^"]+)"/g)) {
+    const src = m[1]
+    if (!VIDEO_SRC_RE.test(src) || !mediaPathOk(src) || !src.endsWith('.mp4')) continue
+    try {
+      const size = mp4Size(fs.readFileSync(path.join(root, src)))
+      if (size) return { src, ...size }
+    } catch {}
+  }
+  return undefined
 }
