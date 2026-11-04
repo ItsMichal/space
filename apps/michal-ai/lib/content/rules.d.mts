@@ -51,6 +51,7 @@ export declare const VIDEO_SRC_RE: RegExp
 export declare const POSTER_SRC_RE: RegExp
 export declare function handwritingNumber(key: string, value: unknown): string | null
 export declare function handwritingSources(body: string): { line: number; src: string }[]
+export declare function videoSources(body: string): { src: string; poster?: string; title?: string }[]
 export type Ink = { version: 1; width: number; height: number; size: number; pressure: boolean; strokes: number[][] }
 export declare const INK: {
   bytes: number

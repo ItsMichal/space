@@ -10,7 +10,7 @@ import type { PostKind } from '@/lib/content/types'
 export async function loader({ params }: LoaderFunctionArgs) {
   const { getAllPosts, getChildren, getPost } = await import('@/lib/content')
   const { markdownToHast } = await import('@/lib/content/render')
-  const { headFor, imagesFor, shareFor, slim } = await import('@/lib/rr/content.server')
+  const { headFor, imagesFor, shareFor, shareVideoFor, slim } = await import('@/lib/rr/content.server')
   const { postMetadata, readingViewport } = await import('@/components/content/PostPage')
   const { postJsonLd, postPath } = await import('@/lib/seo')
 
@@ -33,7 +33,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
     parent: post.parent ?? null,
     hast,
     jsonLd: postJsonLd(post, parentPost),
-    head: headFor(metadata, { viewport: readingViewport, share: shareFor(postPath(post), alt) }),
+    head: headFor(metadata, { viewport: readingViewport, share: shareFor(postPath(post), alt, shareVideoFor(post.body)) }),
     images: imagesFor([hast, slim(post), related.map(slim)], accoladeImages),
   }
 }

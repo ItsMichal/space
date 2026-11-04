@@ -14,6 +14,7 @@ import { profile } from '@/content/profile'
 import { citationLabel, citationsSource, doiUrl, venueLine } from '@/lib/publications'
 import { ExperienceList, type ExperienceItem } from '@/components/ui/ExperienceList'
 import { Picture } from '@/components/media/Picture'
+import { Video } from '@/components/mdx/Video'
 import { hrefById, portraitAlt } from '@/lib/about'
 import '@/components/site/about.css'
 import { homeMetadata, personJsonLd, websiteJsonLd } from '@/lib/seo'
@@ -46,7 +47,10 @@ const awardItems = (): ExperienceItem[] =>
 
 const h2 = 'mb-space-6 font-display text-title'
 
-export default function Home() {
+/** A clip from a post, shown on its own under the writing: where it plays, its caption, and the way to the post. */
+export type HomeReel = { src: string; poster?: string; caption?: string; href: string; post: string }
+
+export default function Home({ reel }: { reel?: HomeReel | null }) {
   const projects = getMainProjects()
   const articles = getBlogPosts()
   const latest = homeWriting(articles)
@@ -88,6 +92,18 @@ export default function Home() {
               View {articles.length - 3} more {articles.length - 3 === 1 ? 'post' : 'posts'} <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
             </Link>
           ) : null}
+        </section>
+      ) : null}
+
+      {reel ? (
+        <section id="reel" aria-labelledby="reel-h" className="home-sec home-reel">
+          <h2 id="reel-h" className={h2}>
+            In the news
+          </h2>
+          <Video src={reel.src} poster={reel.poster} title={reel.caption} />
+          <Link href={reel.href} className="ix-more link">
+            Read {reel.post} <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
+          </Link>
         </section>
       ) : null}
 

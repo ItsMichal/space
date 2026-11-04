@@ -12,7 +12,12 @@ export type ShareImage = {
   ogHash: string
   twitterHash: string
   alt: string
+  /** A clip the page leads with: link previews (iMessage, X, Slack, Discord) play it, and a tap still opens the page. */
+  video?: ShareVideo
 }
+
+/** An mp4 under /media/, with its frame size as stored in the file. */
+export type ShareVideo = { src: string; width: number; height: number }
 
 type Title = string | { default?: string; template?: string; absolute?: string } | undefined
 
@@ -81,6 +86,13 @@ export function buildMeta(root: Metadata, page: Metadata, viewport: Viewport, sh
       meta('property', 'og:image', `${site}${share.og}?${share.ogHash}`)
       meta('property', 'og:image:width', 1200)
       meta('property', 'og:image:height', 630)
+      if (share.video) {
+        meta('property', 'og:video', abs(share.video.src))
+        meta('property', 'og:video:secure_url', abs(share.video.src))
+        meta('property', 'og:video:type', 'video/mp4')
+        meta('property', 'og:video:width', share.video.width)
+        meta('property', 'og:video:height', share.video.height)
+      }
     }
     meta('property', 'og:type', og.type)
     meta('property', 'profile:first_name', og.firstName)
@@ -92,7 +104,8 @@ export function buildMeta(root: Metadata, page: Metadata, viewport: Viewport, sh
   }
   const tw = md.twitter as Record<string, unknown> | undefined
   if (tw) {
-    meta('name', 'twitter:card', tw.card)
+    // X plays a clip through a player card: an https page it frames (public/player.html, served at /player), plus the raw stream
+    meta('name', 'twitter:card', share?.video ? 'player' : tw.card)
     meta('name', 'twitter:site', tw.site)
     meta('name', 'twitter:creator', tw.creator)
     meta('name', 'twitter:title', tw.title)
@@ -103,6 +116,13 @@ export function buildMeta(root: Metadata, page: Metadata, viewport: Viewport, sh
       meta('name', 'twitter:image', `${site}${share.twitter}?${share.twitterHash}`)
       meta('name', 'twitter:image:width', 1200)
       meta('name', 'twitter:image:height', 630)
+      if (share.video) {
+        meta('name', 'twitter:player', `${site}/player?v=${encodeURIComponent(share.video.src)}`)
+        meta('name', 'twitter:player:width', share.video.width)
+        meta('name', 'twitter:player:height', share.video.height)
+        meta('name', 'twitter:player:stream', abs(share.video.src))
+        meta('name', 'twitter:player:stream:content_type', 'video/mp4')
+      }
     }
   }
 

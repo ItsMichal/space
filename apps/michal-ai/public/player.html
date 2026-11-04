@@ -1,0 +1,19 @@
+<!doctype html>
+<!-- The page X frames for a player card (twitter:player in lib/rr/head.ts): one clip from /media/, edge to edge. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Michał Bodzianowski</title>
+<style>html,body{margin:0;height:100%;background:#000}video{display:block;width:100%;height:100%;object-fit:contain}</style>
+</head>
+<body>
+<video controls playsinline autoplay muted></video>
+<script>
+  // Same shape as VIDEO_SRC_RE in lib/content/rules.mjs, mp4 only
+  var v = new URLSearchParams(location.search).get('v') || ''
+  if (/^\/media\/[a-z0-9]+(?:-[a-z0-9]+)*\/[A-Za-z0-9_][A-Za-z0-9_-]{0,100}\.mp4$/.test(v)) document.querySelector('video').src = v
+</script>
+</body>
+</html>
