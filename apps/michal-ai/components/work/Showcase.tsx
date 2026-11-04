@@ -73,7 +73,7 @@ export function ProjectCard({
   // dates only: no eyebrows (role, series, venue) over the title
   const metaParts: ReactNode[] = article ? [<time key="d" dateTime={post.date}>{monthYear(post.date)}</time>] : [year(post)]
   const id = `pc-${post.slug}`
-  // A project with a faux-UI demo plays it in the picture's place; the picture stays as its fallback (prerender, no JS)
+  // A project with a preview (real footage or its own code, see ProjectDemo) plays it in the picture's place; the picture stays as its fallback (prerender, no JS)
   const withDemo = (picture: ReactNode) => (hasDemo(post.slug) ? <ProjectDemo slug={post.slug} label={alt || post.title} fallback={picture} /> : picture)
   return (
     <Link
