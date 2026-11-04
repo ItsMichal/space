@@ -85,7 +85,7 @@ export default function Home() {
           <WritingRows posts={latest.slice(0, 3)} thumbs />
           {articles.length > 3 ? (
             <Link href="/writing" className="ix-more link">
-              View all {articles.length} posts <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
+              View {articles.length - 3} more {articles.length - 3 === 1 ? 'post' : 'posts'} <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
             </Link>
           ) : null}
         </section>

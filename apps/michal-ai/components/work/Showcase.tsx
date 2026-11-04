@@ -168,7 +168,7 @@ export function Showcase({
       </ul>
       {limit && posts.length > shown.length ? (
         <Link href={base} className="ix-more link">
-          View all {posts.length} projects <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
+          View {posts.length - shown.length} more {posts.length - shown.length === 1 ? 'project' : 'projects'} <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
         </Link>
       ) : null}
     </div>
