@@ -1,44 +1,74 @@
 import { lazy, Suspense, useEffect, useRef, useState, type ComponentType, type LazyExoticComponent, type ReactNode } from 'react'
+import { useReducedMotion } from '@/components/stageshow/kit'
 import './demos.css'
 
 /**
- * Faux-UI demos (Stageshow kit, components/stageshow): one short loop per project, the product simplified to the one
- * thing it does. Each is its own chunk, loaded when its slot nears the viewport; until then (and in the prerendered
- * HTML, and without JavaScript) the slot shows `fallback`, the project's cover at the same 16:10 box, so nothing moves
- * when the demo arrives. Every demo is one design at 800x500 and a tighter one at 400x250 below 600px wide; the slot
- * sets the size (data-ss-fill), so a demo grows past its design width in a wide hero.
+ * A project's preview, and only ever real material: a short silent loop cut from the project's own footage (its demo
+ * videos, a recording of the live site or game, its own screenshots), or its own source code written out line by line
+ * (Stageshow kit, components/stageshow). Nothing here shows a made-up result. Projects with neither keep their cover.
+ *
+ * The slot shows `fallback`, the project's cover at the same 16:10 box, until it nears the viewport (and in the
+ * prerendered HTML, and without JavaScript), so nothing moves when the preview arrives. Clips are 800x500, about 8 s,
+ * under 1 MB, in public/media/previews/<slug>.mp4 with the first frame as <slug>.jpg; reduced motion shows that frame.
  */
-const load = {
-  'ai-crofty': () => import('./ai-crofty'),
-  'airplane-game': () => import('./airplane-game'),
+const CLIPS = [
+  'ai-crofty', // AI Croft Funny Moment (YouTube Qt-6oOMb4NQ), 0:02
+  'airplane-game', // the game itself (public/play/airplane-game), played
+  'creatle', // creatle.vercel.app, live
+  'grocerybot', // Robo-Shopper 3000 demo (YouTube YaHhRhEKA_I), 0:40
+  'intro-to-web-dev', // the workshop's checkpoint pages 1 to 4 (ItsMichal/IntroToWebDev/examples)
+  'jia-webapp', // the post's own screenshots
+  'office-wizards', // Barcode Game playthrough (YouTube hSZSht_D7hM), 1:13
+  'ohisee', // the bot's SGDQ 2019 notes page with its real notes (ItsMichal/ohisee sgdq19.html)
+  'pilsudski', // the kAIser pitch (YouTube a09E8_-fFIc), 0:25
+  'playsafe', // the post's own screenshots
+  'project-mountaintop', // ATLAS Expo 2023 demo video (YouTube Gv-xMeMM8m4), 0:31
+] as const
+
+const CODE = {
   askawai: () => import('./askawai'),
-  creatle: () => import('./creatle'),
-  frogchamp: () => import('./frogchamp'),
-  grocerybot: () => import('./grocerybot'),
-  'intro-to-web-dev': () => import('./intro-to-web-dev'),
-  'isat-dashboard': () => import('./isat-dashboard'),
-  'jia-webapp': () => import('./jia-webapp'),
-  'office-wizards': () => import('./office-wizards'),
-  ohisee: () => import('./ohisee'),
-  'order-flow': () => import('./order-flow'),
-  pilsudski: () => import('./pilsudski'),
-  playsafe: () => import('./playsafe'),
-  'product-launches': () => import('./product-launches'),
-  'project-mountaintop': () => import('./project-mountaintop'),
   'sea-of-thoughts': () => import('./sea-of-thoughts'),
-  starlink: () => import('./starlink'),
 } satisfies Record<string, () => Promise<{ default: ComponentType }>>
 
-type Slug = keyof typeof load
+type Clip = (typeof CLIPS)[number]
+type CodeSlug = keyof typeof CODE
+const isClip = (slug: string): slug is Clip => (CLIPS as readonly string[]).includes(slug)
+const isCode = (slug: string): slug is CodeSlug => slug in CODE
 const demos = new Map<string, LazyExoticComponent<ComponentType>>()
 
-export const DEMO_SLUGS = Object.keys(load) as Slug[]
-export const hasDemo = (slug: string): slug is Slug => slug in load
+export const DEMO_SLUGS = [...CLIPS, ...Object.keys(CODE)] as string[]
+export const hasDemo = (slug: string) => isClip(slug) || isCode(slug)
 
-function demoOf(slug: Slug) {
+function codeOf(slug: CodeSlug) {
   let d = demos.get(slug)
-  if (!d) demos.set(slug, (d = lazy(load[slug] as () => Promise<{ default: ComponentType }>)))
+  if (!d) demos.set(slug, (d = lazy(CODE[slug] as () => Promise<{ default: ComponentType }>)))
   return d
+}
+
+function Loop({ slug }: { slug: Clip }) {
+  const still = useReducedMotion()
+  const ref = useRef<HTMLVideoElement>(null)
+  // the preference is read after mount, so the loop is started and stopped here rather than by the autoplay attribute
+  useEffect(() => {
+    const v = ref.current
+    if (!v) return
+    v.muted = true // React does not always set the muted attribute, and an unmuted video may not autoplay
+    if (still) v.pause()
+    else v.play().catch(() => {})
+  }, [still])
+  return (
+    <video
+      ref={ref}
+      className="pdemo__clip"
+      src={`/media/previews/${slug}.mp4`}
+      poster={`/media/previews/${slug}.jpg`}
+      muted
+      loop
+      playsInline
+      preload="auto"
+      aria-hidden
+    />
+  )
 }
 
 export function ProjectDemo({ slug, label, fallback, eager = false }: { slug: string; label: string; fallback: ReactNode; eager?: boolean }) {
@@ -52,18 +82,21 @@ export function ProjectDemo({ slug, label, fallback, eager = false }: { slug: st
     io.observe(el)
     return () => io.disconnect()
   }, [slug, eager])
-  const Demo = near && hasDemo(slug) ? demoOf(slug) : null
+  let body = fallback
+  if (near && isClip(slug)) body = <Loop slug={slug} />
+  else if (near && isCode(slug)) {
+    const Demo = codeOf(slug)
+    body = (
+      <Suspense fallback={fallback}>
+        <div className="pdemo__stage" aria-hidden>
+          <Demo />
+        </div>
+      </Suspense>
+    )
+  }
   return (
     <div ref={ref} className="pdemo" role="img" aria-label={label} data-ss-fill>
-      {Demo ? (
-        <Suspense fallback={fallback}>
-          <div className="pdemo__stage" aria-hidden>
-            <Demo />
-          </div>
-        </Suspense>
-      ) : (
-        fallback
-      )}
+      {body}
     </div>
   )
 }

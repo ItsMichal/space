@@ -1,0 +1,9 @@
+.cd-ed {
+  height: 100%;
+  padding: 18px 8px;
+  background: var(--ss-surface);
+  font-size: 14px;
+}
+.ss-stage[data-layout='compact'] .cd-ed {
+  font-size: 11px;
+}

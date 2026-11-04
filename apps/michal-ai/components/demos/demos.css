@@ -9,6 +9,7 @@
 }
 .pdemo > picture,
 .pdemo > img,
+.pdemo > .pdemo__clip,
 .pdemo > picture img {
   display: block;
   width: 100%;
