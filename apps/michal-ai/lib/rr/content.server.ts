@@ -5,7 +5,7 @@ import type { Metadata, Viewport } from '@/lib/meta-types'
 import { getImageInfo, type ImageInfo } from '@/lib/media/index'
 import type { Post } from '@/lib/content/types'
 import { buildMeta, type Descriptor, type ShareImage, type ShareVideo } from './head'
-import { mediaPathOk, VIDEO_SRC_RE } from '@/lib/content/rules.mjs'
+import { videoSources } from '@/lib/content/rules.mjs'
 import { rootMetadata, rootViewport } from './root-meta'
 
 export type SlimPost = Omit<Post, 'body'>
@@ -80,15 +80,21 @@ export function mp4Size(buf: Buffer): { width: number; height: number } | null {
   return null
 }
 
-/** The first mp4 a post's markdown plays (::video), as a share clip. Webm is left out: iMessage and X only play mp4. */
-export function shareVideoFor(body: string, root = path.join(process.cwd(), 'public')): ShareVideo | undefined {
-  for (const m of body.matchAll(/::video\{[^}]*?\bsrc="([^"]+)"/g)) {
-    const src = m[1]
-    if (!VIDEO_SRC_RE.test(src) || !mediaPathOk(src) || !src.endsWith('.mp4')) continue
+/** The first mp4 a post's markdown plays (::video) that is on disk, with its frame size. Webm is left out: iMessage and X only
+ * play mp4. Media comes from the content repo at build time, so a clip that is not there is skipped. */
+export function postVideo(body: string, root = path.join(process.cwd(), 'public')): (ShareVideo & { poster?: string; title?: string }) | undefined {
+  for (const v of videoSources(body)) {
+    if (!v.src.endsWith('.mp4')) continue
     try {
-      const size = mp4Size(fs.readFileSync(path.join(root, src)))
-      if (size) return { src, ...size }
+      const size = mp4Size(fs.readFileSync(path.join(root, v.src)))
+      if (size) return { ...v, ...size }
     } catch {}
   }
   return undefined
+}
+
+/** A post's share clip: its first mp4 (postVideo), as og:video and the X player card take it. */
+export function shareVideoFor(body: string, root?: string): ShareVideo | undefined {
+  const v = postVideo(body, root)
+  return v && { src: v.src, width: v.width, height: v.height }
 }

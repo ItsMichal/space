@@ -364,6 +364,17 @@ export function handwritingSources(body) {
   return out
 }
 
+/** The clips a body's ::video directives play (valid ones only), in order, with their poster and title when set. */
+export function videoSources(body) {
+  const out = []
+  for (const { line } of proseLines(body)) {
+    const d = directiveOf(line)
+    const attrs = d?.name === 'video' ? directiveAttrs('video', d.attrs) : null
+    if (attrs) out.push(attrs)
+  }
+  return out
+}
+
 /* ------------------------------------------------------------------- media */
 
 /** Accepted media types, by extension, each checked against the file's first bytes. No SVG: it can carry script. */
