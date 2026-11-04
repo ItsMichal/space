@@ -1050,6 +1050,23 @@ html[data-fade] .page-enter {
     background: var(--paper-sunk);
     break-inside: avoid;
   }
+  .prose .embed video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #000;
+  }
+  .prose figure.video {
+    margin: var(--space-8) 0;
+  }
+  .prose figure.video .embed {
+    margin: 0;
+  }
+  .prose figure.video figcaption {
+    margin-top: var(--space-2);
+    font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
+    color: var(--ink-muted);
+  }
   .prose iframe {
     display: block;
     max-width: 100%;
