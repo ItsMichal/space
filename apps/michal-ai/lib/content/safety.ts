@@ -1,7 +1,7 @@
 // rehype plugin: the renderer's backstop for untrusted post bodies (posts live in the space-content repo, which the hosted editor
 // can write to). The build already refuses content that breaks lib/content/rules.mjs; this makes sure that anything that slips
 // through still renders inert. remark-rehype runs without allowDangerousHtml, so raw HTML in markdown never becomes markup; on top:
-//   - only the known directives (::youtube, ::embed, ::callout) survive, with only their allowlisted attributes
+//   - only the known directives (::youtube, ::embed, ::video, ::callout, ...) survive, with only their allowlisted attributes
 //   - links keep their href only when it is http(s), mailto or relative; images need a /media/ or http(s) source
 //   - no event handler, style or srcdoc attribute anywhere, and no element that can run or frame anything
 import type { Element, Root, RootContent } from 'hast'

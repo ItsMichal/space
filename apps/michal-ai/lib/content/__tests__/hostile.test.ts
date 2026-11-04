@@ -9,7 +9,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { jsonLdText } from '@/components/seo/JsonLd'
 import { renderMarkdown } from '../render'
-import { DASH_RE, SAFE_MATTER, bodyProblems, dashLines, embedUrlOk, frontmatterProblem, mediaProblem, rawPostProblem, safeHref, safeImageSrc, sniffMedia } from '../rules.mjs'
+import { DASH_RE, SAFE_MATTER, bodyProblems, dashLines, directiveAttrs, embedUrlOk, frontmatterProblem, mediaProblem, rawPostProblem, safeHref, safeImageSrc, sniffMedia } from '../rules.mjs'
 import type { PostFrontmatter } from '../types'
 
 const EM = String.fromCharCode(0x2014)
@@ -88,6 +88,17 @@ describe('renderer backstop', () => {
   it('drops unknown directives and event-handler attributes on known ones', async () => {
     const out = await html('::callout{type="note" onclick="alert(1)" style="x"}\n\n:::frame{src="https://evil.example"}\nx\n:::\n\n::youtube{id="dQw4w9WgXcQ" onmouseover="alert(1)"}')
     expect(out).not.toMatch(/onclick|onmouseover|style="x"|mdx-frame|evil\.example/i)
+  })
+
+  it('plays only /media/ video files, and drops a poster from anywhere else', async () => {
+    const src = '/media/beer-in-space/reel.mp4'
+    expect(directiveAttrs('video', { src, poster: '/media/beer-in-space/reel.jpg', title: 'Reel' })).toEqual({ src, poster: '/media/beer-in-space/reel.jpg', title: 'Reel' })
+    for (const bad of ['https://evil.example/x.mp4', '/media/a/../b.mp4', '/media/a/x.mov', 'javascript:alert(1)', '/media/a/x.mp4?x'])
+      expect(directiveAttrs('video', { src: bad })).toBeNull()
+    expect(directiveAttrs('video', { src, poster: 'https://evil.example/p.jpg' })).toEqual({ src })
+    const out = await html(`::video{src="${src}" poster="javascript:alert(1)" onplay="alert(1)"}\n\n::video{src="https://evil.example/x.mp4"}`)
+    expect(out).toContain(`src="${src}"`)
+    expect(out).not.toMatch(/javascript:|onplay|evil\.example/i)
   })
 
   it('does not frame non-allowlisted embeds', async () => {

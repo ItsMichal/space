@@ -47,6 +47,8 @@ export declare const HANDWRITING: {
   color: string[]
 }
 export declare const HANDWRITING_SRC_RE: RegExp
+export declare const VIDEO_SRC_RE: RegExp
+export declare const POSTER_SRC_RE: RegExp
 export declare function handwritingNumber(key: string, value: unknown): string | null
 export declare function handwritingSources(body: string): { line: number; src: string }[]
 export type Ink = { version: 1; width: number; height: number; size: number; pressure: boolean; strokes: number[][] }

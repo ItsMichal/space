@@ -19,6 +19,8 @@ On October 8, 2013 the National Center for Earth and Space Science Education ann
 
 That week the story got away from me. It ran on ABC World News and Fox News, Al Jazeera America had me on for a live interview, Jay Leno made a joke about it in his monologue, and Gazeta Wyborcza wrote it up in Poland, where my parents are from.
 
+::video{src="/media/beer-in-space/beer-in-space-highlights.mp4" poster="/media/beer-in-space/beer-in-space-highlights.jpg" title="The coverage, October 2013 to July 2014: ABC, KRON, Fox, Al Jazeera America, WJLA, Jay Leno and the Smithsonian."}
+
 ## Flight
 
 The launch slipped through the winter. The experiments finally flew on Orbital Sciences' first Cygnus resupply mission, which left Wallops Island, Virginia on January 9, 2014. The samples came home in March. The programme published my account of watching the launch, [My Greatest Moment of My Life So Far](https://ssep.ncesse.org/2014/03/my-greatest-moment-of-my-life-so-far-michal-bodzianowski-ssep-mission-4-student-researcher-highlands-ranch-colorado/), and the title still holds up.

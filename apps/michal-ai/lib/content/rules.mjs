@@ -113,6 +113,8 @@ export const DIRECTIVES = {
   // ::accolade{id=ssep-2014}: a recognition card from content/accolades.ts (quote, the document, the coverage row)
   accolade: ['id'],
   handwriting: ['src', 'alt', 'duration', 'blur', 'chroma', 'stagger', 'focus', 'ease', 'color'],
+  // ::video{src poster title}: a self-hosted clip (mp4 or webm under /media/), played only when the reader presses play
+  video: ['src', 'poster', 'title'],
   // inline, in running text: :term[bloom filter]{c=blue} colours a term the way a figure does; :fig[2] is a chip that points at the
   // post's second image (it lights the figure on hover and jumps to it)
   term: ['c'],
@@ -139,6 +141,8 @@ export const HANDWRITING = {
   color: ['ink', 'accent'],
 }
 export const HANDWRITING_SRC_RE = /^\/media\/[a-z0-9]+(?:-[a-z0-9]+)*\/[A-Za-z0-9_][A-Za-z0-9_-]{0,100}\.ink\.json$/
+export const VIDEO_SRC_RE = /^\/media\/[a-z0-9]+(?:-[a-z0-9]+)*\/[A-Za-z0-9_][A-Za-z0-9_-]{0,100}\.(?:mp4|webm)$/
+export const POSTER_SRC_RE = /^\/media\/[a-z0-9]+(?:-[a-z0-9]+)*\/[A-Za-z0-9_][A-Za-z0-9_-]{0,100}\.(?:jpe?g|png|webp|avif)$/
 const DECIMAL_RE = /^\s*-?\d{1,6}(?:\.\d{1,6})?\s*$/
 
 /** A clamped handwriting number as a canonical string, or null when the value is not a plain decimal. */
@@ -164,6 +168,10 @@ export function directiveAttrs(name, attrs) {
   if (name === 'callout' && out.type && !CALLOUT_TYPES.includes(out.type)) out.type = 'note'
   if (name === 'term' && !TERM_COLOURS.includes(out.c)) out.c = TERM_COLOURS[0]
   if (name === 'fig' && !/^[1-9]\d?$/.test(out.n ?? '')) return null
+  if (name === 'video') {
+    if (!VIDEO_SRC_RE.test(out.src ?? '') || !mediaPathOk(out.src)) return null
+    if (out.poster !== undefined && !(POSTER_SRC_RE.test(out.poster) && mediaPathOk(out.poster))) delete out.poster
+  }
   if (name === 'handwriting') {
     if (!HANDWRITING_SRC_RE.test(out.src ?? '') || !mediaPathOk(out.src)) return null
     out.alt = (out.alt ?? '').trim()
@@ -319,7 +327,7 @@ function directiveOf(line) {
   return { name: d[1], attrs }
 }
 
-const MISSING = { embed: 'url (https on an allowed host)', handwriting: 'src (/media/<slug>/<name>.ink.json) or alt text', youtube: 'id' }
+const MISSING = { embed: 'url (https on an allowed host)', handwriting: 'src (/media/<slug>/<name>.ink.json) or alt text', youtube: 'id', video: 'src (/media/<slug>/<name>.mp4 or .webm)' }
 
 /**
  * Problems in a markdown body that the renderer would silently drop: unknown or broken directives and unsafe link or image targets.
