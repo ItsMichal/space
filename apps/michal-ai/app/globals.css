@@ -1050,11 +1050,12 @@ html[data-fade] .page-enter {
     background: var(--paper-sunk);
     break-inside: avoid;
   }
+  /* transparent, so a ::video poster's blurred placeholder on .embed shows until the poster arrives */
   .prose .embed video {
     display: block;
     width: 100%;
     height: 100%;
-    background: #000;
+    background: transparent;
   }
   .prose figure.video {
     margin: var(--space-8) 0;

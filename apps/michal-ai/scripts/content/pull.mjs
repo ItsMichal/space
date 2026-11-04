@@ -8,13 +8,13 @@
 //   otherwise apps/michal-ai/.content   cloned or fast-forwarded to origin/main with your own git credentials
 //                                       (CONTENT_REPO overrides the clone URL, default git@github.com:ItsMichal/space-content.git)
 // The checkout is validated first (scripts/content/validate.mjs). Nothing is copied unless it passes.
-// Site media (public/media/about, CREDITS.md, the generated _v and _og) is never touched.
+// Site media (public/media/about, the project preview loops in previews, CREDITS.md, the generated _v and _og) is never touched.
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 
 const app = path.resolve(import.meta.dirname, '..', '..')
-const KEEP_MEDIA = new Set(['about', '_v', '_og', 'CREDITS.md'])
+const KEEP_MEDIA = new Set(['about', 'previews', '_v', '_og', 'CREDITS.md'])
 const arg = (name) => {
   const i = process.argv.indexOf(name)
   return i > 0 ? process.argv[i + 1] : undefined
