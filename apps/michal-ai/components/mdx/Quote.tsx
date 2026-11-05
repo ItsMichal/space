@@ -1,16 +1,12 @@
 'use client'
 
 import { Children, isValidElement, useId, useState, type ReactNode } from 'react'
-import { ArrowUpRight } from 'lucide-react'
+import { longDate } from '@/lib/dates'
 import { Collapse, Swap } from '@/components/stageshow/kit'
+import { ExternalLink } from '@/components/ui/ExternalLink'
 import './quote.css'
 
 export type QuoteProps = { title?: string; by?: string; role?: string; date?: string; cite?: string; url?: string; children?: ReactNode }
-
-/** "Thursday, July 3, 2014" from 2014-07-03. */
-function longDate(iso: string) {
-  return new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
-}
 
 /** "govinfo.gov" from a link, or null when it does not parse. */
 function host(url: string) {
@@ -65,11 +61,7 @@ export function Quote({ title, by, role, date, cite, url, children }: QuoteProps
       </blockquote>
       {url && source ? (
         <p className="rq__src t-meta">
-          <a href={url} className="link" target="_blank" rel="noopener noreferrer">
-            The original at {source}
-            <ArrowUpRight size={13} strokeWidth={1.5} aria-hidden className="rq__arrow" />
-            <span className="sr-only"> (opens in a new tab)</span>
-          </a>
+          <ExternalLink href={url}>The original at {source}</ExternalLink>
         </p>
       ) : null}
     </figure>

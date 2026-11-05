@@ -105,20 +105,6 @@ a.about__more:focus-visible .about__more-go {
   }
 }
 
-/* Experience heading with the total years under it (app/page.tsx); from 840px it is the section's left column. */
-.xp-head > * {
-  margin: 0;
-}
-.xp-head > .t-meta {
-  margin-top: var(--space-1);
-  font-variant-numeric: tabular-nums lining-nums;
-}
-@media (min-width: 840px) {
-  .xp-head {
-    padding-top: 0.1em;
-  }
-}
-
 /* Experience as a vertical timeline (ExperienceList `timeline`): each entry hangs off a hairline rail by a round node holding the
    organisation's own mark, one colour (a CSS mask filled with the ink, so it follows the theme). The node is lifted so its
    centre sits on the title's first line; the rail runs from one node to the next across the list gap, and stops at the last. */

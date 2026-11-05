@@ -1,4 +1,4 @@
-import Link from '@/lib/nav'
+import { IndexEntry } from '@/components/ui/IndexEntry'
 import type { CSSProperties, ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -15,13 +15,6 @@ export function ExperienceList({ items, label, timeline }: { items: readonly Exp
   return (
     <ol className={`ix-list ix-list--tight xp${timeline ? ' xp--timeline' : ''}`} aria-label={label}>
       {items.map((it) => {
-        const inner = (
-          <>
-            <span className="ix__title">{it.org}</span>
-            <span className="ix__desc">{it.role}</span>
-            <span className="ix__meta">{it.years}</span>
-          </>
-        )
         return (
           <li key={it.id} className={it.highlight ? 'xp__card' : undefined}>
             {timeline ? (
@@ -33,13 +26,7 @@ export function ExperienceList({ items, label, timeline }: { items: readonly Exp
                 ) : null}
               </span>
             ) : null}
-            {it.href ? (
-              <Link href={it.href} className="ix ix--ui">
-                {inner}
-              </Link>
-            ) : (
-              <div className="ix ix--ui">{inner}</div>
-            )}
+            <IndexEntry href={it.href} title={it.org} desc={it.role} meta={it.years} ui />
             {it.extra}
           </li>
         )

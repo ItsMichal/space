@@ -7,6 +7,7 @@ import { hasDemo, ProjectDemo } from '@/components/demos/ProjectDemo'
 import { cardOf, isFeature, siteLayout, type SiteLayout } from '@/lib/content/layout'
 import { matchesFilter, PROJECT_FILTERS } from '@/components/ui/segments'
 import { postPath } from '@/lib/seo'
+import { monthYear } from '@/lib/dates'
 import './cards.css'
 
 /** Filter buckets a post belongs to, for the /projects segmented control (all items stay in the HTML). */
@@ -27,8 +28,6 @@ function MetaParts({ parts }: { parts: ReactNode[] }) {
     </>
   )
 }
-
-const monthYear = (iso: string) => new Date(iso + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
 
 export type CardVariant = 'newsroom' | 'fill' | 'cap'
 
@@ -92,11 +91,11 @@ export function ProjectCard({
       <h3 id={`${id}-t`} className="ix__title tile__title" data-card-title>
         {post.title}
       </h3>
-      <p id={`${id}-d`} className="ix__desc t-text">
+      <p id={`${id}-d`} className="ix__desc">
         {post.description}
       </p>
       {thumb && src && !dated ? null : (
-        <p className="ix__meta t-meta">
+        <p className="ix__meta">
           <MetaParts parts={metaParts} />
         </p>
       )}
@@ -170,20 +169,21 @@ export function Showcase({
           )
         })}
       </ul>
-      {limit ? <MoreLink href={base} count={posts.length - shown.length} noun="project" /> : null}
+      {limit && posts.length > shown.length ? <MoreLink href={base}>{viewMore(posts.length - shown.length, 'project')}</MoreLink> : null}
     </div>
   )
 }
 
-/** "View 4 more projects" under a shortened list; nothing when nothing is left out. */
-export function MoreLink({ href, count, noun }: { href: string; count: number; noun: string }) {
-  if (count <= 0) return null
+/** The link under a shortened list to the whole of it ("View 4 more projects", "All projects"). */
+export function MoreLink({ href, children }: { href: string; children: ReactNode }) {
   return (
     <Link href={href} className="ix-more link">
-      View {count} more {count === 1 ? noun : `${noun}s`} <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
+      {children} <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
     </Link>
   )
 }
+
+const viewMore = (count: number, noun: string) => `View ${count} more ${count === 1 ? noun : `${noun}s`}`
 
 /**
  * The home page's Projects and Writing: the first `limit` posts as the same entry (ProjectCard with its picture above the
@@ -201,7 +201,7 @@ export function CardGrid({ posts, limit = 4, more, noun, priority = false }: { p
           </li>
         ))}
       </ul>
-      <MoreLink href={more} count={posts.length - shown.length} noun={noun} />
+      {posts.length > shown.length ? <MoreLink href={more}>{viewMore(posts.length - shown.length, noun)}</MoreLink> : null}
     </>
   )
 }

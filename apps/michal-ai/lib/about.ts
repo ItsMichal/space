@@ -21,9 +21,6 @@ export const hackathonPostHref = (h: Hackathon) => (HACKATHON_POST_ID[h.id] ? hr
 /** Hackathons that have a submission, newest first. The registration-only entry is not shown. */
 export const hackathonList = (): Hackathon[] => [...hackathons]
 
-/** "2022-03" to "Mar 2022". */
-export const monthYear = (iso: string) => new Date(`${iso}-01T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
-export const fullDate = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
 
 const byId = (id: string) => {
   const item = press.find((p) => p.id === id)
