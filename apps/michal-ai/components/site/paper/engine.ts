@@ -3,13 +3,13 @@
 // 1. The visible viewport of the old page is captured (html2canvas-pro, the capture the glass lens already uses) over the
 //    backdrop, and laid on a coarse sheet in a fixed canvas over the page, at exactly the page's pixels.
 // 2. The router renders the new page underneath at once; it is shown, live, as soon as it has committed.
-// 3. The sheet crumples in three squeezes into a ball (drawn as unshaded line art: ink along the creases, a hard shadow
+// 3. The sheet crumples in three springy squeezes into a ball (drawn as unshaded line art: ink along the creases, a hard shadow
 //    under it) while a fire eats it from the face. What burns turns to glyphs in the site's monospace, in the page's colour and then the fire's,
-//    that rise and go out. Drawn on twos.
+//    that rise and go out. The sheet moves every frame; the glyphs flicker on twos.
 // The capture takes real time (about 100 to 400ms on a laptop) and comes on top of PAPER_MS: the page just waits for the click.
-import { PAPER_ASH, PAPER_MS } from './config'
+import { PAPER_ASH, PAPER_FPS, PAPER_MS } from './config'
 import { ASH_FS, QUAD_VS, SHEET_FS, SHEET_VS } from './shaders'
-import { frameAt, onTwos, type Frame } from './timeline'
+import { flickerAt, frameAt, type Frame } from './timeline'
 
 const MAX_DPR = 2
 /** Cells along the sheet's long side: fine enough that the creases are lines and the paper between them curves. */
@@ -282,7 +282,10 @@ function createStage(w: number, h: number, dpr: number) {
     gl.uniform1f(u.u_ball, s.ball)
     gl.uniform1f(u.u_fold, s.fold)
     gl.uniform1f(u.u_R, R)
-    gl.uniformMatrix3fv(u.u_rot, false, rotation(...s.spin).map((v) => v * s.scale))
+    // squash and stretch on screen, volume kept: wider and shorter when squished (rows of the column-major matrix)
+    const sy = 1 - s.squash
+    const sxz = 1 / Math.sqrt(sy)
+    gl.uniformMatrix3fv(u.u_rot, false, rotation(...s.spin).map((v, i) => v * (i % 3 === 1 ? sy : sxz)))
     gl.uniform3f(u.u_center, 0, 0, R * 0.5 * s.ball)
     gl.uniformMatrix4fv(u.u_vp, false, vp)
     gl.uniform1i(u.u_a, 0)
@@ -360,26 +363,24 @@ function createStage(w: number, h: number, dpr: number) {
     gl.bindVertexArray(null)
   }
 
-  /** Plays the whole animation, a new drawing every 1 / PAPER_FPS s. In development `window.__paperHold = <0 to 1>` stops it there,
-   * for screenshots, and `window.__paperScrub(T)` then draws any other point of it. */
+  /** Plays the whole animation, drawn every frame. In development `window.__paperHold = <0 to 1>` stops it there, for screenshots,
+   * and `window.__paperScrub(T)` then draws any other point of it. */
   const play = async () => {
     const hold = process.env.NODE_ENV !== 'production' ? (window as { __paperHold?: number }).__paperHold : undefined
     const t0 = performance.now()
-    let last = -1
     for (;;) {
-      const ms = onTwos((await frame()) - t0)
-      if (ms === last) continue
-      last = ms
-      drawing++
+      const ms = Math.min((await frame()) - t0, PAPER_MS)
       const T = ms / PAPER_MS
       if (hold != null && T >= hold) {
+        drawing = flickerAt(hold * PAPER_MS, PAPER_FPS)
         draw(frameAt(hold))
         ;(window as { __paperScrub?: (T: number) => void }).__paperScrub = (T) => {
-          drawing++
+          drawing = flickerAt(T * PAPER_MS, PAPER_FPS)
           draw(frameAt(T))
         }
         await new Promise(() => {}) // held for inspection until the page is reloaded
       }
+      drawing = flickerAt(ms, PAPER_FPS)
       draw(frameAt(T))
       if (T >= 1) return
     }
