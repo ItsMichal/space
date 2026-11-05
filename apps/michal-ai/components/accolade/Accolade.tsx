@@ -1,6 +1,5 @@
 import { ArrowUpRight } from 'lucide-react'
 import Link from '@/lib/nav'
-import { Picture } from '@/components/media/Picture'
 import { accoladeById, type AccoladeSource } from '@/content/accolades'
 import './accolade.css'
 
@@ -37,8 +36,9 @@ function Source({ s }: { s: AccoladeSource }) {
   return (
     <li>
       <a className="acc__src" href={s.url} target="_blank" rel="noopener noreferrer">
-        <span className="acc__thumb" aria-hidden>
-          {s.image ? <img src={s.image} alt="" width={320} height={180} loading="lazy" decoding="async" /> : null}
+        {/* no picture of its own survives: the outlet's name set on paper, so the row never borrows another item's image */}
+        <span className={s.image ? 'acc__thumb' : 'acc__thumb acc__thumb--name'} aria-hidden>
+          {s.image ? <img src={s.image} alt="" width={320} height={180} loading="lazy" decoding="async" /> : s.outlet}
         </span>
         <span className="acc__outlet t-ui">{s.outlet}</span>
         <span className="acc__headline" lang={s.titleEn ? 'en' : s.lang}>
@@ -59,11 +59,9 @@ function Source({ s }: { s: AccoladeSource }) {
 }
 
 /**
- * An accolade card (content/accolades.ts): what it was (the eyebrow and title), then the document in its own column with,
- * beside it, the quote from it, one line of what happened and the coverage as a tidy list, the most prominent outlets
- * first and the rest behind "Show all". The scan is a tall page, so the text column runs its length rather than leaving
- * it alone; on phones it is cropped to its masthead. Inside a post the card takes the wide track. `story` links the post that tells the story (off inside that post).
- * An unknown id renders nothing.
+ * An accolade card (content/accolades.ts): what it was (the eyebrow and title), then the quote, one line of what happened and
+ * the coverage as a tidy list, the most prominent outlets first and the rest behind "Show all". Inside a post the card takes
+ * the wide track. `story` links the post that tells the story (off inside that post). An unknown id renders nothing.
  */
 export function Accolade({ id, story = true }: { id: string; story?: boolean }) {
   const a = accoladeById(id)
@@ -81,15 +79,6 @@ export function Accolade({ id, story = true }: { id: string; story?: boolean }) 
       </header>
 
       <div className="acc__main">
-        {a.document ? (
-          <figure className="acc__docfig">
-            <a className="acc__doc" href={a.quote.url} target="_blank" rel="noopener noreferrer">
-              <Picture src={a.document.src} alt={a.document.alt} sizes="(min-width: 840px) 280px, 60vw" className="acc__docimg" />
-              <span className="sr-only"> (opens in a new tab)</span>
-            </a>
-            <figcaption className="acc__doccap t-meta">{a.document.caption}</figcaption>
-          </figure>
-        ) : null}
         <div className="acc__body">
           <figure className="acc__quote">
             <blockquote cite={a.quote.url}>

@@ -14,7 +14,8 @@ export async function loader() {
   const { profile } = await import('@/content/profile')
   const post = getPost(REEL_POST)
   const clip = post && postVideo(post.body)
-  const reel = post && clip ? { src: clip.src, poster: clip.poster, caption: clip.title, href: postPath(post), post: post.title } : null
+  // the post's cover stands in for the clip until it plays, so the reel shows the same picture as the post's cards
+  const reel = post && clip ? { src: clip.src, poster: post.cover ?? clip.poster, caption: clip.title, href: postPath(post), post: post.title } : null
   return {
     reel,
     head: headFor(homeMetadata(), { share: shareFor('/', 'Michał Bodzianowski: creative developer. AI, web and systems.') }),

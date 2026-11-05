@@ -8,6 +8,7 @@ import { YouTube } from '@/components/mdx/YouTube'
 import { Embed } from '@/components/mdx/Embed'
 import { Video } from '@/components/mdx/Video'
 import { Callout } from '@/components/mdx/Callout'
+import { Quote, type QuoteProps } from '@/components/mdx/Quote'
 import { Accolade } from '@/components/accolade/Accolade'
 import { Handwriting, type HandwritingProps } from '@/components/mdx/Handwriting'
 import { FigRef, Term } from '@/components/mdx/FigRef'
@@ -24,6 +25,7 @@ const components = {
   'mdx-video': (p: Props) => <Video src={String(p.src)} poster={p.poster as string | undefined} title={p.title as string | undefined} />,
   'mdx-accolade': (p: Props) => <Accolade id={String(p.id)} story={false} />,
   'mdx-callout': (p: Props & { children?: ReactNode }) => <Callout type={(p.type as string) ?? 'note'}>{p.children}</Callout>,
+  'mdx-quote': (p: QuoteProps) => <Quote {...p} />,
   'mdx-handwriting': (p: Props) => <Handwriting {...(p as HandwritingProps)} />,
   'mdx-term': (p: Props & { children?: ReactNode }) => <Term c={String(p.c)}>{p.children}</Term>,
   'mdx-fig': (p: Props) => <FigRef n={String(p.n)} />,

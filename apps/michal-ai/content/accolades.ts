@@ -1,5 +1,5 @@
-// Accolades: one recognition shown as a card (a quote from the record, a picture of the document, then the coverage as a
-// list of link previews). Rendered by components/accolade/Accolade.tsx on the About page and by `::accolade{id=...}` in posts.
+// Accolades: one recognition shown as a card (a quote from the record, then the coverage as a list of link previews; a post
+// quotes the record in full with `:::quote`). Rendered by components/accolade/Accolade.tsx on the About page and by `::accolade{id=...}` in posts.
 // Headlines are copied as published; Polish ones carry an English gloss. Every link was opened on 2026-11-02; TV segments are
 // Internet Archive TV News captures, timestamped to the segment (`#start/S/end/E`, seconds into the recording).
 
@@ -30,8 +30,6 @@ export type Accolade = {
   title: string
   year: string
   quote: { text: string; by: string; role: string; url: string; cite: string }
-  /** The document itself (public domain), shown beside the quote. */
-  document?: { src: string; alt: string; caption: string }
   summary: string
   /** Coverage, most prominent institution first. */
   sources: readonly AccoladeSource[]
@@ -55,28 +53,10 @@ export const accolades: readonly Accolade[] = [
       url: 'https://www.govinfo.gov/link/crec/160/e/1105',
       cite: 'Congressional Record, Vol. 160, p. E1105, July 3, 2014',
     },
-    document: {
-      src: '/media/about/congressional-record-e1105.webp',
-      alt: 'The printed tribute to Michal Bodzianowski by Rep. Mike Coffman, Congressional Record, Extensions of Remarks, July 3, 2014.',
-      caption: 'Congressional Record, Extensions of Remarks, p. E1105',
-    },
     summary:
       'At eleven, his question of whether beer can be brewed in microgravity was picked from 744 proposals for the International Space Station. It flew on Orbital Sciences’ Cygnus in January 2014 and came home in March.',
     postSlug: 'beer-in-space',
     sources: [
-      {
-        id: 'abc-world-news',
-        outlet: 'ABC World News with Diane Sawyer',
-        title: 'Evening newscast segment',
-        url: IA(
-          'WMAR_20131008_223000_ABC_World_News_With_Diane_Sawyer',
-          1744,
-          1779
-        ),
-        date: '2013-10-08',
-        kind: 'tv',
-        image: '/media/about/coverage/abc-world-news.webp',
-      },
       {
         id: 'nbc-news',
         outlet: 'NBC News',
@@ -117,7 +97,7 @@ export const accolades: readonly Accolade[] = [
         id: 'tonight-show',
         outlet: 'The Tonight Show with Jay Leno',
         title: 'Monologue, October 10, 2013',
-        url: 'https://archive.org/details/KNTV_20131011_063500_The_Tonight_Show_With_Jay_Leno',
+        url: IA('KNTV_20131011_063500_The_Tonight_Show_With_Jay_Leno', 280, 350),
         date: '2013-10-10',
         kind: 'tv',
         image: '/media/about/coverage/tonight-show.webp',
@@ -132,6 +112,20 @@ export const accolades: readonly Accolade[] = [
         date: '2013-10-08',
         kind: 'news',
         image: '/media/about/coverage/fox-news.webp',
+      },
+      {
+        id: 'the-list',
+        outlet: 'The List',
+        title: 'Top of the List, number 5: Little Boy Brew',
+        url: IA(
+          'WMAR_20131008_223000_ABC_World_News_With_Diane_Sawyer',
+          1744,
+          1779
+        ),
+        date: '2013-10-08',
+        kind: 'tv',
+        image: '/media/about/coverage/the-list.webp',
+        note: 'The syndicated countdown show, captured as it aired on WMAR Baltimore.',
       },
       {
         id: 'csmonitor',
@@ -149,7 +143,7 @@ export const accolades: readonly Accolade[] = [
         titleEn: '11-year-old Michał will help astronauts brew beer in space',
         lang: 'pl',
         url: 'https://wyborcza.pl/7,75400,14784892,11-letni-michal-pomoze-astronautom-warzyc-piwo-w-kosmosie.html',
-        date: '2013-10',
+        date: '2013-10-15',
         kind: 'news',
         image: '/media/about/coverage/wyborcza.webp',
       },
@@ -164,7 +158,6 @@ export const accolades: readonly Accolade[] = [
         url: 'https://wyborcza.pl/7,75400,15262254,astronauci-dostali-wreszcie-prezenty-na-gwiazdke-a-takze-browar.html',
         date: '2014-01-12',
         kind: 'news',
-        image: '/media/about/coverage/wyborcza.webp',
       },
       {
         id: 'space-com',

@@ -101,6 +101,16 @@ describe('renderer backstop', () => {
     expect(out).not.toMatch(/javascript:|onplay|evil\.example/i)
   })
 
+  it('links a :::quote only to an http(s) source, and drops a date that is not YYYY-MM-DD', async () => {
+    expect(directiveAttrs('quote', { title: 'T', url: 'https://www.govinfo.gov/x', date: '2014-07-03' })).toEqual({ title: 'T', url: 'https://www.govinfo.gov/x', date: '2014-07-03' })
+    for (const bad of ['javascript:alert(1)', ' JaVa\tScRiPt:alert(1)', 'data:text/html,x', 'mailto:a@b.c', '/relative'])
+      expect(directiveAttrs('quote', { url: bad })).toEqual({})
+    expect(directiveAttrs('quote', { date: '"><script>' })).toEqual({})
+    const out = await html(':::quote{title="T" url="javascript:alert(1)" onclick="alert(1)" date="x"}\nOne.\n\n<script>alert(1)</script>\n\nTwo.\n:::')
+    expect(out).toContain('One.')
+    expect(out).not.toMatch(/javascript:|onclick|<script/i)
+  })
+
   it('does not frame non-allowlisted embeds', async () => {
     const out = await html('::embed{url="https://evil.example/x" title="x"}')
     expect(out).not.toContain('evil.example')

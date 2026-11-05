@@ -1,0 +1,113 @@
+/* :::quote (components/mdx/Quote.tsx). The accolade card's surface and type (accolade.css): paper-raised, a hairline, the
+   eyebrow, title and meta lines of its heading, and the quote set in the serif behind the accent rule. It stays in the text
+   column (reading.css keeps it off the wide track). "Read the full text" is the accolade's "Show all": a native disclosure
+   whose label flips, and which moves under the text once open. Unlayered, so it wins over `.prose` inside a post. */
+.rq {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: var(--space-6);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+  font-family: var(--font-sans);
+}
+.prose .rq {
+  margin: var(--space-8) 0;
+}
+.rq p,
+.rq blockquote {
+  margin: 0;
+}
+.prose .rq.rq a[href]::after {
+  content: none;
+}
+
+.rq__head {
+  display: grid;
+  gap: var(--space-1);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--hairline);
+}
+.rq__eyebrow,
+.rq__by {
+  color: var(--ink-muted);
+  text-wrap: pretty;
+}
+.rq .rq__title {
+  font-size: var(--type-body-strong-size);
+  line-height: var(--type-body-strong-line);
+  font-weight: var(--type-body-strong-weight);
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.prose .rq blockquote.rq__text,
+.rq__text {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0 0 0 var(--space-4);
+  border-left: 2px solid var(--accent);
+  font-family: var(--font-serif);
+  font-style: normal;
+  font-size: var(--type-body-size);
+  line-height: 1.55;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+.rq__rest {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.rq__more {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.rq__more > summary {
+  display: inline-flex;
+  align-self: start;
+  font-family: var(--font-sans);
+  color: var(--ink-muted);
+  cursor: pointer;
+  list-style: none;
+}
+.rq__more > summary::-webkit-details-marker {
+  display: none;
+}
+.rq__more > summary:hover {
+  color: var(--ink);
+}
+.rq__more > summary:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+.rq__more[open] > summary {
+  order: 1;
+}
+.rq__more-close,
+.rq__more[open] .rq__more-open {
+  display: none;
+}
+.rq__more[open] .rq__more-close {
+  display: inline;
+}
+
+.rq__src {
+  padding-left: calc(var(--space-4) + 2px);
+  color: var(--ink-muted);
+}
+.rq__arrow {
+  display: inline;
+  margin-left: 0.15em;
+  vertical-align: -0.1em;
+}
+
+@media (max-width: 639px) {
+  .rq {
+    padding: var(--space-4);
+  }
+}
