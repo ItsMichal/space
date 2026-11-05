@@ -26,6 +26,7 @@ const CLIPS = [
   'pilsudski', // the kAIser pitch (YouTube a09E8_-fFIc), 0:25
   'playsafe', // the post's own screenshots
   'project-mountaintop', // ATLAS Expo 2023 demo video (YouTube Gv-xMeMM8m4), 0:31
+  'starlink', // starlink.com, live: the Roam order flow and its product detail cards, recorded
 ] as const
 
 /**
