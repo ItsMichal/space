@@ -91,6 +91,7 @@ export function PostPage({ kind, slug, parent, body, jsonLd }: { kind: PostKind;
               slug={post.slug}
               label={post.coverAlt ?? post.title}
               eager
+              live
               fallback={post.cover ? <Picture src={post.cover} alt={post.coverAlt ?? ''} priority aspect="16 / 10" focus={post.coverFocus} sizes="(min-width: 1184px) 1120px, calc(100vw - 32px)" /> : null}
             />
           ) : undefined

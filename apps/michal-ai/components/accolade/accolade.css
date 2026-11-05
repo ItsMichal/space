@@ -1,11 +1,13 @@
 /* Accolade card (components/accolade/Accolade.tsx). The paper surface and hairline of the post callouts (globals.css
-   `.prose .callout`); the coverage row is a horizontal scroll-snap strip of link previews, the bookmark card pattern
-   (outlet, headline, date) without remote thumbnails. Unlayered, so it also wins over `.prose` inside a post. */
+   `.prose .callout`), in three bands split by hairlines: the heading, the record (the document beside the quote), and
+   the coverage as an index list (the home page's `.ix` rows in small) under the quote, so the tall scan has a column of
+   text beside it. Inside a post it takes the wide track
+   (reading.css). Unlayered, so it also wins over `.prose` inside a post. */
 .acc {
   display: grid;
-  gap: var(--space-6);
+  gap: 0;
   margin: 0;
-  padding: var(--space-6);
+  padding: var(--space-6) var(--space-6) var(--space-4);
   border: 1px solid var(--hairline);
   border-radius: var(--radius-md);
   background: var(--paper-raised);
@@ -20,35 +22,66 @@
   content: none;
 }
 .prose .acc a.acc__doc,
-.prose .acc a.acc__src {
+.prose .acc a.acc__src,
+.prose .acc a.acc__src:hover {
   text-decoration: none;
 }
 .acc p,
 .acc figure,
 .acc blockquote,
-.acc ul {
+.acc ul,
+.acc h3,
+.acc h4 {
   margin: 0;
 }
 
+.acc__head {
+  display: grid;
+  gap: var(--space-1);
+  padding-bottom: var(--space-4);
+}
+.acc__eyebrow {
+  color: var(--ink-muted);
+}
+.acc .acc__title {
+  font-family: var(--font-sans);
+  font-size: var(--type-body-strong-size);
+  line-height: var(--type-body-strong-line);
+  font-weight: var(--type-body-strong-weight);
+  color: var(--ink);
+}
+
+/* the record: the document and what it says, side by side from 640 */
 .acc__main {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--hairline);
 }
 @media (min-width: 640px) {
   .acc__main {
-    grid-template-columns: 180px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+    column-gap: var(--space-8);
     align-items: start;
+  }
+  /* the scan spans the quote and the coverage, and stays in view (below the floating bar) while "Show all" runs long */
+  .acc__docfig {
+    grid-row: 1 / span 2;
+    position: sticky;
+    top: var(--space-24);
   }
 }
 
 /* the document: the printed page, cropped to the tribute, set like a scan on the desk */
-.acc__doc {
+.acc__docfig {
   display: grid;
   gap: var(--space-2);
-  max-width: 200px;
+  max-width: 15rem;
+}
+.acc__doc {
+  display: block;
   color: inherit;
-  text-decoration: none;
 }
 .acc__doc picture,
 .acc__docimg {
@@ -61,6 +94,7 @@
     0 1px 2px rgb(0 0 0 / 0.06),
     0 6px 18px -8px rgb(0 0 0 / 0.18);
   background: #fff;
+  transition: border-color var(--motion-fast, 120ms) ease;
 }
 .acc__doc:hover .acc__docimg,
 .acc__doc:focus-visible .acc__docimg {
@@ -68,23 +102,13 @@
 }
 .acc__doccap {
   color: var(--ink-muted);
+  text-wrap: pretty;
 }
 
 .acc__body {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-4);
   align-content: start;
-}
-.acc__eyebrow {
-  color: var(--ink-muted);
-}
-.acc .acc__title {
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: var(--type-body-strong-size);
-  line-height: var(--type-body-strong-line);
-  font-weight: var(--type-body-strong-weight);
-  color: var(--ink);
 }
 .acc__quote blockquote {
   margin: 0;
@@ -112,112 +136,176 @@
 }
 .acc__summary {
   color: var(--ink-muted);
+  text-wrap: pretty;
 }
 .acc__story {
   justify-self: start;
 }
 
-/* coverage: a row that scrolls sideways and snaps per card; the last card's edge shows there is more */
+/* coverage: one row per item, outlet and headline on the left, kind and date on the right; on phones the meta drops under */
 .acc__press {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-2);
   min-width: 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--hairline);
 }
-.acc__presshead {
+@media (min-width: 640px) {
+  .acc__press {
+    grid-column: 2;
+  }
+}
+.acc .acc__presshead {
+  font: inherit;
   color: var(--ink-muted);
 }
-.acc .acc__row {
+.acc .acc__list {
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(200px, 15rem);
-  align-items: start;
-  gap: var(--space-3);
-  padding: 0 0 var(--space-3);
-  margin: 0;
-  list-style: none;
-  overflow-x: auto;
-  /* Contains the absolute sr-only spans, or they escape the scroller and widen the page on phones */
-  position: relative;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: thin;
-}
-.acc .acc__row > li {
   margin: 0;
   padding: 0;
-  scroll-snap-align: start;
+  list-style: none;
+  /* Contains the absolute sr-only spans */
+  position: relative;
 }
-.acc .acc__row > li::before,
-.acc .acc__row > li::marker {
+.acc .acc__list > li {
+  margin: 0;
+  padding: 0;
+}
+.acc .acc__list > li + li {
+  border-top: 1px solid var(--hairline);
+}
+.acc .acc__list > li::before,
+.acc .acc__list > li::marker {
   content: none;
 }
 .acc a.acc__src {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-4);
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-sm);
-  background: var(--paper);
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr);
+  grid-template-areas: 'thumb outlet' 'thumb headline' 'thumb meta' 'thumb host';
+  align-content: start;
+  column-gap: var(--space-4);
+  row-gap: 2px;
+  margin-inline: calc(var(--space-2) * -1);
+  padding: var(--space-3) var(--space-2);
+  border-radius: var(--radius-xs);
   color: var(--ink);
-  text-decoration: none;
-  transition: border-color var(--motion-fast, 120ms) ease;
+  transition: background-color var(--motion-fast, 120ms) ease;
+}
+@media (min-width: 640px) {
+  .acc a.acc__src {
+    grid-template-columns: 7.5rem minmax(0, 1fr) auto;
+    grid-template-areas: 'thumb outlet meta' 'thumb headline headline' 'thumb host host';
+  }
 }
 .acc a.acc__src:hover {
-  border-color: var(--ink-faint);
+  background: color-mix(in oklch, var(--ink) 4%, transparent);
   color: var(--ink);
 }
 .acc a.acc__src:focus-visible {
   outline: 2px solid var(--focus);
-  outline-offset: 2px;
+  outline-offset: 0;
 }
-.acc__srctop {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--ink-muted);
-}
-.acc__chip {
-  padding: 0 0.45em;
+/* the outlet's own share image or a frame of the segment, 16:9; an empty frame keeps the column when there is none */
+.acc__thumb {
+  grid-area: thumb;
+  align-self: start;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
   border: 1px solid var(--hairline);
-  border-radius: var(--radius-pill);
-  line-height: 1.4;
+  border-radius: calc(var(--radius-xs) / 2);
+  background: var(--paper);
+}
+.acc__thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.acc__host {
+  grid-area: host;
   color: var(--ink-muted);
 }
-.acc__chip[data-kind='tv'] {
-  border-color: color-mix(in oklch, var(--presence-4) 50%, var(--hairline));
-}
-.acc__chip[data-kind='program'] {
-  border-color: color-mix(in oklch, var(--presence-1) 50%, var(--hairline));
+.acc a.acc__src:hover .acc__host {
+  color: var(--ink);
 }
 .acc__outlet {
+  grid-area: outlet;
   color: var(--ink);
 }
 .acc__headline {
+  grid-area: headline;
   font-family: var(--font-serif);
   font-size: var(--type-small-size);
   line-height: 1.4;
-  color: var(--ink);
-  text-wrap: pretty;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
-  overflow: hidden;
-}
-.acc__gloss {
   color: var(--ink-muted);
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.acc__srcmeta {
+  grid-area: meta;
+  align-self: start;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+/* "Show all": a native disclosure, its label flipping when open; the extra rows continue the list's rules */
+.acc__more > summary {
+  display: inline-flex;
+  margin-top: var(--space-2);
+  color: var(--ink-muted);
+  cursor: pointer;
+  list-style: none;
+}
+.acc__more > summary::-webkit-details-marker {
+  display: none;
+}
+.acc__more > summary:hover {
+  color: var(--ink);
+}
+.acc__more > summary:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+.acc__more[open] > summary {
+  order: 1;
+}
+.acc__more {
+  display: flex;
+  flex-direction: column;
+}
+.acc__more > .acc__list {
+  border-top: 1px solid var(--hairline);
+}
+.acc__more-close,
+.acc__more[open] .acc__more-open {
+  display: none;
+}
+.acc__more[open] .acc__more-close {
+  display: inline;
 }
 
 @media (max-width: 639px) {
   .acc {
-    padding: var(--space-4);
+    padding: var(--space-4) var(--space-4) var(--space-3);
   }
-  .acc__doc {
-    max-width: 150px;
+  .acc__srcmeta {
+    white-space: normal;
+  }
+  /* a full-width window on the masthead and the opening lines; the link opens the whole record */
+  .acc__docfig {
+    max-width: none;
+  }
+  .acc__docimg {
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    object-position: top;
+    mask-image: linear-gradient(to bottom, #000 60%, transparent);
+    border-bottom: 0;
+    box-shadow: none;
+  }
+  .acc__headline {
+    white-space: normal;
   }
 }

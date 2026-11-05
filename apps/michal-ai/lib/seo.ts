@@ -60,7 +60,7 @@ export const personJsonLd = {
   description: siteConfig.description,
   // State only, never a city.
   homeLocation: { '@type': 'Place', address: { '@type': 'PostalAddress', addressRegion: 'CA', addressCountry: 'US' } },
-  award: profile.awards.map((a) => `${a.title}, ${a.context}`),
+  award: profile.awards.filter((a) => a.kind !== 'press').map((a) => `${a.title}, ${a.context}`),
   sameAs: [siteConfig.github, siteConfig.linkedin, siteConfig.x],
 }
 

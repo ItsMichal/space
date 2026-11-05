@@ -116,6 +116,9 @@ const CLIPS_URL = 'https://www.twitch.tv/halmictv/clips?range=all';
 const clipFallback = (t, g, i) => tile({ href: CLIPS_URL, cls: `tm tm-nopic${i === 0 ? ' w2' : ''}`, attrs: ' data-clipcard', inner: `<span class="tbg">${icon('scissors', 'ghost')}</span>${badge('tw')}${tcap({ title: t, sr: g ? `Game: ${g}` : '' })}` });
 const gtile = (g, cls = '') => tile({ href: `/games/${g.slug}/`, cls: `tm tg ${cls}`, attrs: ' data-vt="m t"', inner: `<span class="tbg"><img src="${g.coverLocal}" width="640" height="508" loading="lazy" decoding="async" alt=""></span>${tchip(g.madeWith, 'cpu')}${tcap({ title: g.title.replace(/ \(.*\)$/, ''), cap: cls.includes('lead') ? g.line.split(/(?<=\.) /)[0] : '' })}` });
 const seddTile = (cls = '') => tile({ href: '/design/southeast-denver-dental/', cls: `tm ${cls}`, attrs: ' data-vt="m t"', inner: `<span class="tbg">${seddVideo(' aria-hidden="true"')}</span>${kbadge('pen-nib', 'Logo design')}${tcap({ title: 'Southeast Denver Dental', cap: 'Logo design' })}` });
+// Swipe Trades lives on its own subdomain too
+const TRADES = 'https://trades.halmic.com/';
+const tradesTile = (cls = '', attrs = '') => tile({ href: TRADES, cls: `tm ${cls}`, attrs, inner: `<span class="tbg"><img src="/work/swipe-trades/cover.jpg" width="960" height="504" loading="lazy" decoding="async" alt=""></span>${tchip('Fantasy football', 'football')}${tcap({ title: 'Swipe Trades', cap: 'Swipe on fair trades for your Sleeper, ESPN or Yahoo league. Match when the other manager likes it too' })}` });
 // MemeSports lives on its own subdomain: the title art links out, and so does the play tile
 const SPORTS = 'https://sports.halmic.com/';
 const sportsTile = (cls = '', attrs = '') => tile({ href: SPORTS, cls: `tm ${cls}`, attrs, inner: `<span class="tbg"><img src="/work/memesports/cover.jpg" width="960" height="504" loading="lazy" decoding="async" alt=""></span>${tchip('In the browser', 'game-controller')}${tcap({ title: 'MemeSports', cap: 'A silly native web port of remixed Wii Sports, multiplayer and portrait mode included with touch controls' })}` });
@@ -189,6 +192,7 @@ const FLEX = {
   'films:year': (fx) => yearTile({ year: Math.min(...films.map((f) => yr(f.published))), title: `${filmGroup} starts`, cap: `${cap1(WORDS[films.length])} short films, ${S.filmMinutes} minutes`, tone: 'tink', cls: fx, attrs: ' data-flex data-stat="film-minutes"' }),
   'edits:youtube': (fx) => ytTile(fx, 'All videos on YouTube', 'https://www.youtube.com/@halmic', ' data-flex'),
   twitch: (fx) => twitchTile(fx),
+  'trades:lead': (fx) => tradesTile(fx, ' data-flex'),
   'sports:lead': (fx) => sportsTile(fx, ' data-flex'),
   'mt:logs': (fx) => stat({ href: `${mtBase}#logs`, num: fmt(S.logWords), unit: 'words', title: `in ${WORDS[S.logCount]} dev logs`, cap: 'Written during the build', tone: 'tblue', cls: fx, attrs: ' data-flex data-stat="log-words"' }),
   itch: (fx) => itchTile(fx, ' data-flex'),
