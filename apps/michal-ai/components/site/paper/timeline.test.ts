@@ -16,30 +16,26 @@ describe('paper transition timeline', () => {
     expect(at(0).burn).toBeLessThan(0)
   })
 
-  it('crumples in three squeezes, held in between, never undoing one', () => {
+  it('crumples in three squeezes that run into each other, never undoing one', () => {
     for (let i = 1; i < ts.length; i++) expect(at(ts[i]).ball).toBeGreaterThanOrEqual(at(ts[i - 1]).ball - 1e-9)
-    // the holds between squeezes sit on each squeeze's target
-    expect(at(SQUEEZES[1].at).ball).toBeCloseTo(SQUEEZES[0].ball)
-    expect(at(SQUEEZES[2].at).ball).toBeCloseTo(SQUEEZES[1].ball)
-    expect(at(SQUEEZES[2].at + SQUEEZES[2].len).ball).toBeCloseTo(1)
-    // three separate bursts of movement: count the drawings on twos in which the ball moves
+    const last = SQUEEZES[2]
+    expect(at(last.at + last.len).ball).toBeCloseTo(1)
+    // three bursts of speed, slowing between them but not stopping for more than a drawing
     const step = 1000 / PAPER_FPS / PAPER_MS
-    let bursts = 0
-    let moving = false
-    for (let T = 0; T < 1; T += step) {
-      const m = at(T + step).ball - at(T).ball > 0.01
-      if (m && !moving) bursts++
-      moving = m
-    }
-    expect(bursts).toBe(3)
+    const v: number[] = []
+    for (let T = 0; T < last.at + last.len; T += step) v.push(at(T + step).ball - at(T).ball)
+    const peaks = v.filter((x, i) => i > 0 && i < v.length - 1 && x > v[i - 1] && x >= v[i + 1] && x > 0.02)
+    expect(peaks).toHaveLength(3)
+    const firstMove = v.findIndex((x) => x > 0)
+    const still = v.slice(firstMove, v.length - 1).filter((x) => x < 1e-4).length
+    expect(still).toBeLessThanOrEqual(1)
   })
 
-  it('draws in before each squeeze and overshoots after it, then rests at 1', () => {
-    for (const s of SQUEEZES) {
-      expect(at(s.at + s.len * 0.12).scale).toBeLessThan(1)
-      expect(Math.max(...[0.7, 0.75, 0.8].map((u) => at(s.at + s.len * u).scale))).toBeGreaterThan(1)
-      expect(at(s.at + s.len).scale).toBeCloseTo(1, 6)
-    }
+  it('draws in and overshoots only a little, and rests at 1', () => {
+    for (const T of ts) expect(Math.abs(at(T).scale - 1)).toBeLessThan(0.06)
+    expect(at(SQUEEZES[0].len * 0.07).scale).toBeLessThan(1)
+    expect(Math.max(...ts.map((T) => at(T).scale))).toBeGreaterThan(1.02)
+    expect(at(1).scale).toBe(1)
   })
 
   it('lights during the second squeeze and burns until the last ash is gone', () => {

@@ -3,8 +3,8 @@
 // 1. The visible viewport of the old page is captured (html2canvas-pro, the capture the glass lens already uses) over the
 //    backdrop, and laid on a coarse sheet in a fixed canvas over the page, at exactly the page's pixels.
 // 2. The router renders the new page underneath at once; it is shown, live, as soon as it has committed.
-// 3. The sheet crumples in three squeezes into a faceted ball (noise folds on a low poly mesh, flat shaded per facet) while a
-//    fire eats it from a corner. What burns turns to glyphs in the site's monospace, in the page's colour and then the fire's,
+// 3. The sheet crumples in three squeezes into a faceted ball (creases of three sizes on a low poly mesh, flat shaded per facet,
+//    a hard shadow under it) while a fire eats it from the face. What burns turns to glyphs in the site's monospace, in the page's colour and then the fire's,
 //    that rise and go out. Drawn on twos.
 // The capture takes real time (about 100 to 400ms on a laptop) and comes on top of PAPER_MS: the page just waits for the click.
 import { PAPER_ASH, PAPER_MS } from './config'
@@ -13,12 +13,14 @@ import { frameAt, onTwos, type Frame } from './timeline'
 
 const MAX_DPR = 2
 /** Cells along the sheet's long side: coarse on purpose, the facets are the look. */
-const CELLS = 26
+const CELLS = 32
 /** A glyph cell, CSS px (the hero globe's cell). */
 const GLYPH_W = 8
 const GLYPH_H = 13
 /** The glyphs, sparse to dense. */
 const RAMP = '.:-=+*#%@'
+/** How deep the burning edge of glyphs runs ahead of the fire, in burn units. */
+const EDGE = 0.05
 /** How far a spot rises over its life, in glyph cells. */
 const RISE = 11
 /** Nothing may hold the overlay longer than this. */
@@ -85,6 +87,11 @@ async function capture(w: number, h: number, scale: number): Promise<HTMLCanvasE
       const s = doc.createElement('style')
       s.textContent = '*,*::before,*::after{animation:none!important;transition:none!important}'
       doc.head.appendChild(s)
+      // html2canvas fades `transparent` as transparent black, so the home section's paper ground (home.css) came out as a grey
+      // band: the same fade from the paper colour at no alpha. The ::before is a real element in the clone by now, styled inline.
+      const p = rgb(getComputedStyle(document.documentElement).getPropertyValue('--paper').trim() || '#f4f1e8').map((c) => Math.round(c * 255)).join(',')
+      for (const el of doc.querySelectorAll<HTMLElement>('.home-ground > .___html2canvas___pseudoelement_before'))
+        el.style.backgroundImage = `linear-gradient(to bottom,rgba(${p},0),rgba(${p},.9) var(--space-24),rgba(${p},.9) calc(100% - var(--space-16)),rgba(${p},0))`
     },
   })
   const out = document.createElement('canvas')
@@ -149,7 +156,7 @@ function createStage(w: number, h: number, dpr: number) {
   canvas.setAttribute('aria-hidden', 'true')
   canvas.width = Math.round(w * dpr)
   canvas.height = Math.round(h * dpr)
-  const gl = canvas.getContext('webgl2', { alpha: true, antialias: true, premultipliedAlpha: true, depth: true })
+  const gl = canvas.getContext('webgl2', { alpha: true, antialias: true, premultipliedAlpha: true, depth: true, stencil: true })
   if (!gl) throw new Error('[paper] no WebGL2')
   const block = (e: Event) => e.preventDefault()
   canvas.addEventListener('wheel', block, { passive: false })
@@ -249,11 +256,26 @@ function createStage(w: number, h: number, dpr: number) {
   vp[13] += vp[9] * -D
   vp[14] += vp[10] * -D
   vp[15] += vp[11] * -D
-  const back = rgb(getComputedStyle(document.documentElement).getPropertyValue('--paper').trim() || '#f4f1e8').map((c) => c * 0.97)
+  // the site's palette, as the current theme sets it
+  const css = getComputedStyle(document.documentElement)
+  const token = (name: string, fallback: string) => rgb(css.getPropertyValue(name).trim() || fallback)
+  const paper = token('--paper', '#f4f1e8')
+  const ink = token('--ink', '#18211b')
+  const back = paper.map((c) => c * 0.97)
+  const lum = (c: number[]) => 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]
+  const fire = {
+    hot: token('--presence-5', '#9a7a00'),
+    flame: token('--presence-4', '#c9592a'),
+    rose: token('--presence-6', '#b04462'),
+    cool: token('--ink-faint', '#7f8777'),
+    // char is the darker of paper and ink, whichever the theme makes it
+    char: lum(ink) < lum(paper) ? ink : paper.map((c) => c * 0.6),
+  }
 
   let drawing = 0
 
-  const drawSheet = (s: Frame, state: boolean) => {
+  /** state: 0 the sheet, 1 the burn state per glyph cell, 2 the cast shadow. */
+  const drawSheet = (s: Frame, state: 0 | 1 | 2) => {
     gl.useProgram(sheet.p)
     const u = sheet.u
     gl.uniform2f(u.u_size, w, h)
@@ -266,8 +288,14 @@ function createStage(w: number, h: number, dpr: number) {
     gl.uniform1i(u.u_a, 0)
     gl.uniform1f(u.u_burn, s.burn)
     gl.uniform1f(u.u_ash, PAPER_ASH)
-    gl.uniform1f(u.u_state, state ? 1 : 0)
-    gl.uniform3f(u.u_back, back[0], back[1], back[2])
+    gl.uniform1f(u.u_edge, EDGE)
+    gl.uniform1f(u.u_state, state)
+    gl.uniform1f(u.u_shadow, state === 2 ? 1 : 0)
+    // the floor the shadow falls on, behind the ball; it comes in as the sheet lifts off the page
+    gl.uniform1f(u.u_floor, -0.55 * R * s.ball)
+    gl.uniform1f(u.u_shadowA, 0.16 * Math.min(1, s.ball / 0.3))
+    gl.uniform3fv(u.u_back, back)
+    gl.uniform3fv(u.u_char, fire.char)
     gl.uniform3f(u.u_light, -0.45, 0.55, 0.7)
     gl.uniform3f(u.u_eye, 0, 0, D)
     gl.activeTexture(gl.TEXTURE0)
@@ -277,7 +305,7 @@ function createStage(w: number, h: number, dpr: number) {
   }
 
   const draw = (s: Frame) => {
-    const lit = s.burn > 0
+    const lit = s.burn > -EDGE
     gl.disable(gl.BLEND)
     gl.enable(gl.DEPTH_TEST)
     if (lit) {
@@ -285,13 +313,26 @@ function createStage(w: number, h: number, dpr: number) {
       gl.viewport(0, 0, gridW, gridH)
       gl.clearColor(0, 0, 0, 0)
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-      drawSheet(s, true)
+      drawSheet(s, 1)
       gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     }
     gl.viewport(0, 0, canvas.width, canvas.height)
     gl.clearColor(0, 0, 0, 0)
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-    drawSheet(s, false)
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
+    if (s.ball > 0) {
+      // the shadow first, under the sheet: one flat tone, each pixel darkened once however many folds land on it
+      gl.disable(gl.DEPTH_TEST)
+      gl.enable(gl.BLEND)
+      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
+      gl.enable(gl.STENCIL_TEST)
+      gl.stencilFunc(gl.EQUAL, 0, 0xff)
+      gl.stencilOp(gl.KEEP, gl.KEEP, gl.INCR)
+      drawSheet(s, 2)
+      gl.disable(gl.STENCIL_TEST)
+      gl.disable(gl.BLEND)
+      gl.enable(gl.DEPTH_TEST)
+    }
+    drawSheet(s, 0)
     if (lit) {
       // the glyphs over everything, embers rising in front of what is left of the sheet
       gl.disable(gl.DEPTH_TEST)
@@ -304,6 +345,12 @@ function createStage(w: number, h: number, dpr: number) {
       gl.uniform1i(ash.u.u_count, RAMP.length)
       gl.uniform1f(ash.u.u_rise, RISE)
       gl.uniform1f(ash.u.u_drawing, drawing)
+      gl.uniform3fv(ash.u.u_paper, paper)
+      gl.uniform3fv(ash.u.u_hot, fire.hot)
+      gl.uniform3fv(ash.u.u_flame, fire.flame)
+      gl.uniform3fv(ash.u.u_rose, fire.rose)
+      gl.uniform3fv(ash.u.u_cool, fire.cool)
+      gl.uniform3fv(ash.u.u_char, fire.char)
       gl.activeTexture(gl.TEXTURE2)
       gl.bindTexture(gl.TEXTURE_2D, glyphs)
       gl.activeTexture(gl.TEXTURE3)
@@ -362,6 +409,9 @@ export async function runPaper(go: () => Promise<void> | void): Promise<void> {
     if (done) return
     done = true
     clearTimeout(watchdog)
+    // the burn is this route change's transition: the fade-up a navigation without a view transition gets (data-fade, set by
+    // CardTransitions in the commit, often after `go` resolves) must not start now that the page is up, or it pops out and in
+    root.removeAttribute('data-fade')
     root.removeAttribute('data-paper')
     stage.destroy()
   }
@@ -372,8 +422,6 @@ export async function runPaper(go: () => Promise<void> | void): Promise<void> {
     // the old page goes under the sheet at once; the new one shows through as soon as it has committed
     root.setAttribute('data-paper', 'hide')
     const nav = Promise.resolve(go()).then(() => {
-      // the new route set the fade-up that a navigation without a view transition gets; the burn is that transition here
-      root.removeAttribute('data-fade')
       if (!done) root.setAttribute('data-paper', '')
     })
     if (process.env.NODE_ENV !== 'production') console.info(`[paper] capture ${(t1 - t0).toFixed(0)}ms`)

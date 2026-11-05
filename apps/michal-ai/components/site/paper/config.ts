@@ -3,7 +3,7 @@
 export const PAPER_TRANSITION = true
 
 /** The whole animation (three crumples, the burn, the last ash fading), in ms. The page capture comes on top, see ./engine.ts. */
-export const PAPER_MS = 1900
+export const PAPER_MS = 1500
 
 /** Drawings per second: the sheet is drawn "on twos", held for two 24 fps frames, as hand animation is. */
 export const PAPER_FPS = 12
