@@ -22,6 +22,8 @@ export function derive({ videos, exclude, curation, games, posts }) {
 }
 
 const t = (id, size, label, o = {}) => ({ id, size, label, ...o });
+// the picture a tile shows, as a path on halmic.com (build.mjs uses the same files; the editor's preview draws it). Video tiles show /videos/<id>.jpg.
+export const COVERS = { trades: '/work/swipe-trades/cover.jpg', sports: '/work/memesports/cover.jpg' };
 
 // tier archive: the game keeps its page and a tile on /games/ (behind the Play section's "All games" link) but has none on the home page (innerOnly).
 // sections in their default order; a cluster belongs to one section. anchor: other pages link to the section's id, so it cannot be hidden.
@@ -32,21 +34,21 @@ export function model(content) {
   const { films, episodes, edits, gl, posts, vc } = d;
   const lead4 = posts.length >= 4;
   const clusters = {
-    trades: { name: 'Swipe Trades', tiles: [], flex: t('trades:lead', null, 'Swipe Trades') },
-    sports: { name: 'MemeSports', tiles: [], flex: t('sports:lead', null, 'MemeSports') },
+    // the two newest projects side by side: Swipe Trades is one cell wide at 3 and 2 columns, MemeSports fills the rest of the row
+    new: { name: 'New projects', tiles: [t('trades:lead', 'x4', 'Swipe Trades', { img: COVERS.trades })], flex: t('sports:lead', null, 'MemeSports', { img: COVERS.sports }) },
     films: { name: films[0]?.group ?? 'Short films', tiles: [t(`film:${films[0].id}`, 'lead', films[0].name ?? films[0].title), t(`film:${films[1].id}`, 'x4', films[1].name ?? films[1].title)], flex: t('films:year', null, 'Year and runtime') },
     fifa: { name: vc.series.title, tiles: [t('fifa:year', 'x4', 'First episode year'), ...episodes.slice().reverse().map((v) => t(`ep:${v.id}`, 'one', `Episode ${v.ep}`)), t('fifa:minutes', 'x4', 'Minutes of bad shots')], flex: null },
     edits: { name: 'More from the channel', tiles: edits.map((v) => t(`video:${v.id}`, 'one', v.title)), flex: t('edits:youtube', null, 'All videos on YouTube') },
     clips: { name: 'Twitch clips', tiles: [0, 1, 2, 3, 4, 5].map((i) => t(`clip:${i}`, i === 0 ? 'w2' : 'one', `Clip ${i + 1}`)), fixed: true, flex: t('twitch', null, 'Watch live on Twitch', { required: true }) },
-    mountaintop: { name: content.mountaintop?.title ?? 'Project Mountaintop', tiles: [t('mt:lead', 'lead', content.mountaintop?.title ?? 'Project Mountaintop'), t('mt:year', 'x4', 'Capstone year')], flex: t('mt:logs', null, 'Dev log word count') },
-    tiny: { name: 'Tiny games', tiles: [...gl.filter((g) => g.tier === 'feature').map((g) => t(`game:${g.slug}`, 'w2', g.title)), ...gl.filter((g) => g.tier === 'more').map((g) => t(`game:${g.slug}`, 'one', g.title)), t('games:engines', 'one', 'Engines'), ...gl.filter((g) => g.tier === 'archive').map((g) => t(`game:${g.slug}`, 'one', g.title, { innerOnly: true }))], flex: t('itch', null, 'Play on itch.io') },
-    phoenix: { name: content.phoenix?.title ?? 'Pokémon Phoenix Rising', tiles: [t('pr:lead', 'lead', 'QA on Phoenix Rising'), t('pr:channel', 'x4', 'The game on YouTube')], flex: t('pr:reddit', null, 'The subreddit') },
+    mountaintop: { name: content.mountaintop?.title ?? 'Project Mountaintop', tiles: [t('mt:lead', 'lead', content.mountaintop?.title ?? 'Project Mountaintop', content.mountaintop?.cover ? { img: `/work/mountaintop/${content.mountaintop.cover}` } : {}), t('mt:year', 'x4', 'Capstone year')], flex: t('mt:logs', null, 'Dev log word count') },
+    tiny: { name: 'Tiny games', tiles: [...gl.filter((g) => g.tier === 'feature').map((g) => t(`game:${g.slug}`, 'w2', g.title, { img: g.coverLocal })), ...gl.filter((g) => g.tier === 'more').map((g) => t(`game:${g.slug}`, 'one', g.title, { img: g.coverLocal })), t('games:engines', 'one', 'Engines'), ...gl.filter((g) => g.tier === 'archive').map((g) => t(`game:${g.slug}`, 'one', g.title, { innerOnly: true, img: g.coverLocal }))], flex: t('itch', null, 'Play on itch.io') },
+    phoenix: { name: content.phoenix?.title ?? 'Pokémon Phoenix Rising', tiles: [t('pr:lead', 'lead', 'QA on Phoenix Rising', content.phoenix?.thumb ? { img: `/videos/${content.phoenix.thumb}.jpg` } : {}), t('pr:channel', 'x4', 'The game on YouTube')], flex: t('pr:reddit', null, 'The subreddit') },
     dental: { name: 'Southeast Denver Dental', tiles: [t('sedd', 'w2', 'Southeast Denver Dental logo')], flex: t('sedd:site', null, 'sedenverdental.com') },
-    posts: { name: 'Posts on X', needsTiles: true, tiles: posts.map((p, i) => t(`post:${p.id}`, i === 0 && lead4 ? 'lead' : 'one', p.text.slice(0, 60))), flex: t('x:more', null, 'More on X') },
+    posts: { name: 'Posts on X', needsTiles: true, tiles: posts.map((p, i) => t(`post:${p.id}`, i === 0 && lead4 ? 'lead' : 'one', p.text.slice(0, 60), p.media ? { img: `/posts/${p.media}` } : {})), flex: t('x:more', null, 'More on X') },
     elsewhere: { name: 'Elsewhere', tiles: [t('hi', 'w2', 'Say hi on X', { required: true })], flex: t('medium', null, 'Posts on Medium') },
   };
   const sections = [
-    { id: 'new', title: 'New', clusters: ['trades', 'sports'] },
+    { id: 'new', title: 'New', clusters: ['new'] },
     { id: 'stream', title: 'Watch', anchor: true, clusters: ['films', 'fifa', 'edits', 'clips'] },
     { id: 'games', title: 'Play', anchor: true, clusters: ['mountaintop', 'tiny'] },
     { id: 'work', title: 'Work', anchor: true, clusters: ['phoenix', 'dental'] },
