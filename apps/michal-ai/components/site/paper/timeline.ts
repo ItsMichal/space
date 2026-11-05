@@ -3,9 +3,9 @@
 // and squishes into the floor, rebounds once a little way back and settles on the second landing without bouncing again. It takes
 // the flat page to the ball. The motion is a small physics run (gravity, a spring and damper floor), made once and read back by
 // time, so everything is a continuous curve, drawn every frame.
-// An ember catches late in the fall, before the sheet is fully crumpled, and spreads once the ball has sprung back; what burns turns to glyphs that rise, billow
+// An ember catches just before the drop and has eaten the whole sheet by the time it lands, before it is fully balled up; what burns turns to glyphs that rise, billow
 // outward and fade (drawn by the engine from `burn`).
-import { IGNITE_MS, LEAD_MS, PAPER_ASH, PAPER_MS } from './config'
+import { FRONT_MS, IGNITE_MS, LEAD_MS, PAPER_ASH, PAPER_MS } from './config'
 
 export { IGNITE_MS }
 
@@ -23,6 +23,41 @@ export type Frame = {
 }
 
 const clamp01 = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x)
+
+/** What differs from one crumple to the next, picked per run (randomCrumple): how far and which way the ball turns on each axis
+ * as it gathers, its twist and which way it is wrung, and for the sheet itself (./shaders.ts) where its folds fall, which way it
+ * twirls in and which side gathers first. */
+export type Crumple = {
+  spin: [number, number, number]
+  twist: number
+  wring: number
+  /** Offset into the fold and flap noise, so every sheet creases differently. */
+  seed: [number, number]
+  /** How far, and which way, the sheet twirls round as it wraps the ball. */
+  twirl: number
+  /** The side that gathers first (sheet units, y up); its length is how far ahead it runs. */
+  lead: [number, number]
+}
+
+/** The crumple as first designed, the same every time: what tests and the default read. */
+export const STILL: Crumple = { spin: [-0.35, 0.55, 0.5], twist: 1, wring: 1, seed: [0, 0], twirl: 1.1, lead: [0, 0] }
+
+/** A crumple of its own, near the designed one: the turn on each axis a little more or less and either way round (the tilt mostly
+ * away), the wring either way, the folds anywhere, the twirl either way, a side gathering first. */
+export function randomCrumple(rand: () => number = Math.random): Crumple {
+  const range = (a: number, b: number) => a + (b - a) * rand()
+  const sign = () => (rand() < 0.5 ? -1 : 1)
+  const a = rand() * 2 * Math.PI
+  const l = range(0.1, 0.35)
+  return {
+    spin: [range(-0.5, 0.15), sign() * range(0.35, 0.7), sign() * range(0.3, 0.7)],
+    twist: sign() * range(0.5, 2),
+    wring: sign() * range(0.7, 1.3),
+    seed: [range(0, 100), range(0, 100)],
+    twirl: sign() * range(0.7, 1.5),
+    lead: [Math.cos(a) * l, Math.sin(a) * l],
+  }
+}
 
 /** The drops: when each is let go (ms), how far it takes the ball and its folds, its twist, and how hard it squishes on landing. */
 export const DROPS = [{ at: LEAD_MS, ball: 1, fold: 1, twist: 0.1, squish: 0.17 }] as const
@@ -91,9 +126,14 @@ function dropAt(t: number) {
 
 /** The front starts short of the sheet, its burning edge of glyphs too (engine EDGE), so the first drawings are untouched. */
 const BURN_FROM = -0.02
+/** The front's speed across the sheet, burn units a ms: steady from catching to FRONT_MS. */
+const FRONT_SPEED = (1 - BURN_FROM) / (FRONT_MS - IGNITE_MS)
+/** The ash's ease out after the front, 1 - (1 - q)^ASH_EASE over the rest of the time: it leaves at the front's own speed, so the
+ * rising glyphs never jolt, and slows to rest as the last of them goes. */
+const ASH_EASE = (FRONT_SPEED * (PAPER_MS - FRONT_MS)) / PAPER_ASH
 
-/** The whole animation at `T` (0 to 1 over PAPER_MS). */
-export function frameAt(T: number): Frame {
+/** The whole animation at `T` (0 to 1 over PAPER_MS), for crumple `c`. */
+export function frameAt(T: number, c: Crumple = STILL): Frame {
   T = clamp01(T)
   const ms = T * PAPER_MS
   let ball = 0
@@ -111,7 +151,7 @@ export function frameAt(T: number): Frame {
     const { p, squish } = dropAt(ms - d.at)
     ball += (d.ball - prevBall) * p
     fold += (d.fold - prevFold) * p
-    twist += d.twist * p
+    twist += d.twist * c.twist * p
     squash += d.squish * squish
     prevBall = d.ball
     prevFold = d.fold
@@ -126,16 +166,19 @@ export function frameAt(T: number): Frame {
   }
   // wrung back and forth from the landing, dying out with the bounce
   const since = ms - DROPS[0].at - FALL_MS
-  const wring = since > 0 && T < 1 ? WRING * Math.sin((2 * Math.PI * since) / WRING_MS) * Math.exp(-since / WRING_FADE) : 0
-  const p = clamp01((ms - IGNITE_MS) / (PAPER_MS - IGNITE_MS))
-  // the fire catches as the drop leaves and spreads at once, then the last of it burns out slowly (eased out, so the extra time
-  // goes to the tail); at the end the last ash has lived out its PAPER_ASH
-  const burn = BURN_FROM + (1 + PAPER_ASH - BURN_FROM) * (1 - (1 - p) ** 2)
+  const wring = since > 0 && T < 1 ? c.wring * WRING * Math.sin((2 * Math.PI * since) / WRING_MS) * Math.exp(-since / WRING_FADE) : 0
+  // the fire catches just before the drop and races across the sheet as it falls, so it is gone before the ball is made; then the
+  // ash burns out slowly (eased out, so the extra time goes to the tail) and at the end the last of it has lived out its PAPER_ASH
+  const q = clamp01((ms - FRONT_MS) / (PAPER_MS - FRONT_MS))
+  const burn =
+    ms < FRONT_MS
+      ? BURN_FROM + FRONT_SPEED * Math.max(0, ms - IGNITE_MS)
+      : 1 + PAPER_ASH * (1 - (1 - q) ** ASH_EASE)
   return {
     ball,
     fold,
     squash,
-    spin: [-0.35 * ball + 0.3 * wring, 0.55 * ball - 0.5 * wring, 0.5 * ball + twist + wring],
+    spin: [c.spin[0] * ball + 0.3 * wring, c.spin[1] * ball - 0.5 * wring, c.spin[2] * ball + twist + wring],
     burn,
   }
 }

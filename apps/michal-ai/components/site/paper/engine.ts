@@ -9,9 +9,9 @@
 // The capture reads the page as laid out, a few tens of ms, and comes on top of PAPER_MS.
 import { paintPage } from '@/lib/paint/page'
 import { BACKDROP_DRAW } from '../backdrop/config'
-import { LEAD_MS, PAPER_ASH, PAPER_FPS, PAPER_MS } from './config'
+import { IGNITE_MS, LEAD_MS, PAPER_ASH, PAPER_FPS, PAPER_MS } from './config'
 import { ASH_FS, QUAD_VS, SHEET_FS, SHEET_VS } from './shaders'
-import { flickerAt, frameAt, type Frame, waitingAt } from './timeline'
+import { flickerAt, frameAt, type Frame, randomCrumple, waitingAt } from './timeline'
 
 const MAX_DPR = 2
 /** Cells along the sheet's long side: fine enough that the creases are lines and the paper between them curves. */
@@ -250,6 +250,8 @@ function createStage(w: number, h: number, dpr: number) {
 
   let drawing = 0
   let stopped = false
+  // this run's own crumple: which way it turns, twirls and gathers, and where its folds fall
+  const crumple = randomCrumple()
 
   /** state: 0 the sheet, 1 the burn state per glyph cell, 2 the cast shadow. */
   const drawSheet = (s: Frame, state: 0 | 1 | 2) => {
@@ -257,6 +259,9 @@ function createStage(w: number, h: number, dpr: number) {
     const u = sheet.u
     gl.uniform2f(u.u_size, w, h)
     gl.uniform1f(u.u_ball, s.ball)
+    gl.uniform2f(u.u_seed, ...crumple.seed)
+    gl.uniform1f(u.u_twirl, crumple.twirl)
+    gl.uniform2f(u.u_lead, ...crumple.lead)
     gl.uniform1f(u.u_fold, s.fold)
     gl.uniform1f(u.u_R, R)
     // squash and stretch on screen, volume kept: wider and shorter when squished (rows of the column-major matrix)
@@ -341,8 +346,11 @@ function createStage(w: number, h: number, dpr: number) {
     gl.bindVertexArray(null)
   }
 
+  /** Where the clock waits for a slow route: the lead-in's end, or just before the fire catches if that is earlier. */
+  const HOLD_MS = Math.min(LEAD_MS, IGNITE_MS - 1)
+
   /** Plays the whole animation, drawn every frame. In development `window.__paperHold = <0 to 1>` stops it there, for screenshots,
-   * and `window.__paperScrub(T)` then draws any other point of it. The drop waits at the end of the lead-in until `ready` resolves
+   * and `window.__paperScrub(T)` then draws any other point of it. The drop waits in the lead-in, before the fire catches, until `ready` resolves
    * (the new route has committed under the sheet). */
   const play = async (ready: Promise<unknown>) => {
     const hold = process.env.NODE_ENV !== 'production' ? (window as { __paperHold?: number }).__paperHold : undefined
@@ -355,22 +363,23 @@ function createStage(w: number, h: number, dpr: number) {
     for (;;) {
       const now = await frame()
       if (stopped) return
-      // still loading: the clock stops at the end of the lead-in, the sheet held just short of the drop, its fringes working
-      if (!loaded && now - t0 > LEAD_MS) {
-        waited += now - t0 - LEAD_MS
-        t0 = now - LEAD_MS
+      // still loading: the clock stops in the lead-in just short of the fire catching (it would hold a half-burnt sheet after that),
+      // the sheet held before the drop, its fringes working
+      if (!loaded && now - t0 > HOLD_MS) {
+        waited += now - t0 - HOLD_MS
+        t0 = now - HOLD_MS
         leftAt = now
       }
       const ms = Math.min(now - t0, PAPER_MS)
       const fade = waited > 0 ? Math.max(0, 1 - (now - leftAt) / SWING_OUT_MS) : 0
-      const at = (T: number) => (fade > 0 ? waitingAt(frameAt(T), waited + (now - leftAt), fade * fade * (3 - 2 * fade)) : frameAt(T))
+      const at = (T: number) => (fade > 0 ? waitingAt(frameAt(T, crumple), waited + (now - leftAt), fade * fade * (3 - 2 * fade)) : frameAt(T, crumple))
       const T = ms / PAPER_MS
       if (hold != null && T >= hold) {
         drawing = flickerAt(hold * PAPER_MS, PAPER_FPS)
-        draw(frameAt(hold))
+        draw(frameAt(hold, crumple))
         ;(window as { __paperScrub?: (T: number) => void }).__paperScrub = (T) => {
           drawing = flickerAt(T * PAPER_MS, PAPER_FPS)
-          draw(frameAt(T))
+          draw(frameAt(T, crumple))
         }
         // held for inspection until the page is reloaded, or the next navigation takes over
         while (!stopped) await frame()

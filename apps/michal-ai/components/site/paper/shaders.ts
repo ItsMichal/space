@@ -33,6 +33,8 @@ float burnField(vec2 uv, vec2 size) {
 // The crumple's relief over the sheet, shared by the mesh (which moves by it) and the shading (which takes its slope per pixel,
 // so the creases stay sharp whatever the mesh).
 const FOLDS = /* glsl */ `
+// Where this run's folds fall in the noise (timeline Crumple seed), so every sheet creases differently.
+uniform highp vec2 u_seed;
 // Paper facets: the distance to the nearest Voronoi edge, raised or sunk per cell by its own amount, so neighbouring cells meet
 // in straight creases and each cell is a broad tent of its own height, as a crushed sheet is.
 float facets(vec2 p) {
@@ -84,7 +86,7 @@ float cellEdge(vec2 p) {
 float folds(vec2 uv, vec2 size) {
   vec2 p0 = (uv - 0.5) * vec2(1.0, -1.0) * size;
   float minDim = min(size.x, size.y);
-  vec2 fp = p0 / (0.3 * minDim);
+  vec2 fp = p0 / (0.3 * minDim) + u_seed;
   float m = smoothstep(-0.3, 0.3, gnoise(p0 / (0.55 * minDim) + 4.1));
   return facets(fp * 0.5) * 1.5 * m + facets(fp + 3.3) + creases(fp * 1.1 + 11.7) * mix(1.0, 0.6, m);
 }
@@ -94,7 +96,8 @@ export const SHEET_VS = /* glsl */ `#version 300 es
 precision highp float;
 in vec2 a_uv;
 uniform vec2 u_size, u_cell;
-uniform float u_ball, u_fold, u_R, u_shadow, u_floor;
+uniform float u_ball, u_fold, u_R, u_shadow, u_floor, u_twirl;
+uniform vec2 u_lead;
 uniform mat3 u_rot;
 uniform vec3 u_center;
 uniform mat4 u_vp;
@@ -123,9 +126,10 @@ vec3 base(vec2 uv, out vec3 dir, out float h) {
   float diag = 0.5 * length(u_size);
   vec2 q = p0 / diag;
   float r = min(length(q), 1.0);
-  float bl = clamp(u_ball * 1.3 - (1.0 - r) * 0.3, 0.0, 1.0);
+  // the side u_lead points to gathers ahead of the rest, the lead gone again by the time the ball is made
+  float bl = clamp(u_ball * 1.3 - (1.0 - r) * 0.3 + dot(q, u_lead) * 4.0 * u_ball * (1.0 - u_ball), 0.0, 1.0);
   // atan(0, 0) is undefined (NaN on some GPUs) and would tear a hole at the centre vertex
-  float th = (r > 1e-4 ? atan(q.y, q.x) : 0.0) + 1.1 * bl * r;
+  float th = (r > 1e-4 ? atan(q.y, q.x) : 0.0) + u_twirl * bl * r;
   float ph = r * 3.0;
   vec3 sn = vec3(sin(ph) * cos(th), sin(ph) * sin(th), cos(ph));
   vec3 pos = mix(vec3(p0, 0.0), sn * u_R, bl);
@@ -133,7 +137,7 @@ vec3 base(vec2 uv, out vec3 dir, out float h) {
   h = u_fold * mix(0.07 * minDim, 0.34 * u_R, bl);
   // the outer part of the sheet does not tuck in smoothly behind the ball: it stands off it in pointed flaps and corners, so the
   // silhouette is jagged
-  float flap = smoothstep(0.35, 1.0, r) * spikes(q * 5.0);
+  float flap = smoothstep(0.35, 1.0, r) * spikes(q * 5.0 + u_seed);
   return pos + sn * u_R * 1.4 * flap * bl;
 }
 // With u_shadow set the point is laid on a floor behind the ball, pushed a little down and right with its height, for a close drop

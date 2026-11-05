@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { CRUMPLE_MS, FIRE_MS, LEAD_MS, PAPER_ASH, PAPER_FPS, PAPER_MS } from './config'
-import { FALL_MS, IGNITE_MS, flickerAt, frameAt } from './timeline'
+import { CRUMPLE_MS, FIRE_MS, FRONT_MS, LEAD_MS, PAPER_ASH, PAPER_FPS, PAPER_MS } from './config'
+import { FALL_MS, IGNITE_MS, STILL, flickerAt, frameAt, randomCrumple } from './timeline'
 
 const at = (T: number) => frameAt(T)
 const ms = (m: number) => m / PAPER_MS
@@ -21,10 +21,9 @@ describe('paper transition timeline', () => {
   it('slowly starts to crumple through the lead-in, before the drop', () => {
     expect(LEAD_MS).toBe(150)
     expect(at(ms(LEAD_MS / 2)).ball).toBeGreaterThan(0.01)
-    expect(at(ms(LEAD_MS)).ball).toBeLessThan(0.1)
-    // the fire catches just before the drop: unlit until then, a spark where a slow route holds the lead-in's end
+    expect(at(ms(LEAD_MS)).ball).toBeLessThan(0.2)
+    // the fire catches just before the drop: unlit until then
     expect(at(ms(IGNITE_MS - 1)).burn).toBeLessThan(0)
-    expect(at(ms(LEAD_MS)).burn).toBeLessThan(0.05)
   })
 
   it('moves smoothly: no jump between frames at 60 fps', () => {
@@ -40,7 +39,7 @@ describe('paper transition timeline', () => {
   it('leaves gently and gathers speed, like a dropped ball', () => {
     const early = at(ms(LEAD_MS + FALL_MS * 0.25)).ball
     const late = at(ms(LEAD_MS + FALL_MS * 0.9)).ball
-    expect(early).toBeLessThan(0.15)
+    expect(early).toBeLessThan(0.2)
     expect(late).toBeGreaterThan(0.7)
   })
 
@@ -80,7 +79,10 @@ describe('paper transition timeline', () => {
   it('is burning before it is fully crumpled, and burns until the last ash is gone', () => {
     expect(IGNITE_MS).toBeLessThan(LEAD_MS + FALL_MS)
     expect(at(ms(IGNITE_MS)).burn).toBeLessThan(0)
-    expect(at(ms(LEAD_MS + FALL_MS)).burn).toBeGreaterThan(0)
+    // the front has crossed the whole sheet by FRONT_MS, before the drop lands and the ball is fully drawn in
+    expect(FRONT_MS).toBeLessThan(LEAD_MS + FALL_MS)
+    expect(at(ms(FRONT_MS)).burn).toBeCloseTo(1, 5)
+    expect(at(ms(LEAD_MS + FALL_MS)).burn).toBeGreaterThan(1)
     const burns = each(0, PAPER_MS).map((f) => f.burn)
     for (let i = 1; i < burns.length; i++) expect(burns[i]).toBeGreaterThanOrEqual(burns[i - 1])
     expect(at(1).burn).toBeCloseTo(1 + PAPER_ASH)
@@ -91,5 +93,24 @@ describe('paper transition timeline', () => {
     expect(flickerAt(0, PAPER_FPS)).toBe(0)
     expect(flickerAt(80, PAPER_FPS)).toBe(0)
     expect(flickerAt(90, PAPER_FPS)).toBe(1)
+  })
+  it('crumples a little differently each time, from the same flat sheet and with the same fire', () => {
+    let k = 0
+    const seq = [0.1, 0.9, 0.3, 0.7, 0.5, 0.2, 0.8, 0.4, 0.6, 0.05, 0.95, 0.35, 0.65]
+    const c = randomCrumple(() => seq[k++ % seq.length])
+    expect(frameAt(0.3)).toEqual(frameAt(0.3, STILL))
+    for (const T of [0, 0.4, 1]) {
+      expect(frameAt(T, c).ball).toBe(frameAt(T).ball)
+      expect(frameAt(T, c).burn).toBe(frameAt(T).burn)
+    }
+    expect(frameAt(0, c).spin).toEqual([0, 0, 0])
+    expect(frameAt(0.6, c).spin).not.toEqual(frameAt(0.6).spin)
+    for (let i = 0; i < 50; i++) {
+      const r = randomCrumple()
+      expect(Math.abs(r.spin[1])).toBeGreaterThanOrEqual(0.35)
+      expect(Math.abs(r.spin[1])).toBeLessThanOrEqual(0.7)
+      expect(Math.hypot(...r.lead)).toBeLessThanOrEqual(0.35 + 1e-9)
+      expect(Math.abs(r.twirl)).toBeGreaterThanOrEqual(0.7)
+    }
   })
 })
