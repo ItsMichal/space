@@ -2,8 +2,8 @@
 // Turn it off here; with the flag off nothing of it loads and links behave exactly as before.
 export const PAPER_TRANSITION = true
 
-/** The whole animation (two drops into the ball, the burn, the last ash fading), in ms. The page capture comes on top, see ./engine.ts. */
-export const PAPER_MS = 1350
+/** The whole animation (the drop into the ball, the burn, the last ash fading), in ms. The page capture comes on top, see ./engine.ts. */
+export const PAPER_MS = 1100
 
 /** How often the burning glyphs flicker, a second: on twos, as hand-drawn fire is. The sheet itself moves every frame. */
 export const PAPER_FPS = 12

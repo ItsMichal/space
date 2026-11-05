@@ -3,7 +3,7 @@
 // 1. The visible viewport of the old page is captured (html2canvas-pro, the capture the glass lens already uses) over the
 //    backdrop, and laid on a coarse sheet in a fixed canvas over the page, at exactly the page's pixels.
 // 2. The router renders the new page underneath at once; it is shown, live, as soon as it has committed.
-// 3. The sheet crumples in two drops into a ball, each landing like a bouncy ball, (drawn as unshaded line art: ink along the creases, a hard shadow
+// 3. The sheet crumples in one drop into a ball, landing like a bouncy ball, (drawn as unshaded line art: ink along the creases, a hard shadow
 //    under it) while a fire eats it from the face. What burns turns to glyphs in the site's monospace, in the page's colour and then the fire's,
 //    that rise and go out. The sheet moves every frame; the glyphs flicker on twos.
 // The capture takes real time (about 100 to 400ms on a laptop) and comes on top of PAPER_MS: the page just waits for the click.

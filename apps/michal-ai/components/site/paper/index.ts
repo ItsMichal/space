@@ -2,7 +2,7 @@
 // the WebGL engine (./engine.ts, plus html2canvas-pro) only when one is about to run, or on idle after the page is up.
 //
 // What runs: the visible part of the current page is captured to a texture and laid on a WebGL sheet over the page; React Router
-// renders the destination underneath, shown as soon as it has committed; the sheet crumples in two bouncy drops into a ball while it
+// renders the destination underneath, shown as soon as it has committed; the sheet crumples in one bouncy drop into a ball while it
 // burns away into rising ASCII, and the overlay goes. Only plain left clicks on in-app links to another path; no hash or same-page links,
 // never the first load, never with reduced motion, and any failure falls back to the plain navigation.
 import { PAPER_TRANSITION } from './config'

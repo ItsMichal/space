@@ -1,9 +1,9 @@
 // Pure timing for the paper transition: what the sheet looks like at a moment. No DOM, no GL.
-// The crumple is two drops, each moving like a bouncy ball dropped on a slightly soft floor: it leaves gently and gathers speed,
-// lands and squishes into the floor, rebounds a little way back and settles after a smaller bounce. The first drop takes the flat
-// page to a loose crumple, the second to the ball. The motion is a small physics run (gravity, a spring and damper floor), made
-// once and read back by time, so everything is a continuous curve, drawn every frame.
-// The fire catches between the drops, on the face of the sheet, and opens it up; what burns turns to glyphs that rise, billow
+// The crumple is one drop, moving like a bouncy ball dropped on a slightly soft floor: it leaves gently and gathers speed, lands
+// and squishes into the floor, rebounds once a little way back and settles on the second landing without bouncing again. It takes
+// the flat page to the ball. The motion is a small physics run (gravity, a spring and damper floor), made once and read back by
+// time, so everything is a continuous curve, drawn every frame.
+// The fire catches while the sheet is still falling, before it is fully crumpled, on its face, and opens it up; what burns turns to glyphs that rise, billow
 // outward and fade (drawn by the engine from `burn`).
 import { PAPER_ASH, PAPER_MS } from './config'
 
@@ -23,17 +23,14 @@ export type Frame = {
 const clamp01 = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x)
 
 /** The drops: when each is let go (ms), how far it takes the ball and its folds, its twist, and how hard it squishes on landing. */
-export const DROPS = [
-  { at: 0, ball: 0.55, fold: 0.8, twist: 0.2, squish: 0.17 },
-  { at: 300, ball: 1, fold: 1, twist: -0.1, squish: 0.13 },
-] as const
+export const DROPS = [{ at: 0, ball: 1, fold: 1, twist: 0.1, squish: 0.17 }] as const
 
 /** How long a drop falls before it first lands, ms. */
-export const FALL_MS = 140
+export const FALL_MS = 105
 /** How long the ball is in contact with the soft floor on a landing, ms: the squish. */
-const CONTACT_MS = 75
-/** How much of its speed the ball keeps off the floor; the first rebound rises BOUNCE² of the drop. */
-const BOUNCE = 0.5
+const CONTACT_MS = 60
+/** How much of its speed the ball keeps off the floor; the one rebound rises BOUNCE² of the drop, the next landing stays down. */
+const BOUNCE = 0.7
 /** How much the ball stretches along its fall at full speed, against its squish. */
 const STRETCH = 0.15
 
@@ -45,6 +42,8 @@ const DROP = (() => {
   const w = Math.PI / CONTACT_MS / Math.sqrt(1 - zeta ** 2)
   const k = w * w
   const c = 2 * zeta * w
+  // from the second landing on the floor is critically damped: it squishes and comes to rest, no second bounce
+  const still = 2 * w
   const v0 = g * FALL_MS
   const rest = g / k
   const dt = 0.25
@@ -53,12 +52,14 @@ const DROP = (() => {
   const speed = new Float32Array(n + 1)
   let x = 1
   let v = 0
+  let landings = 0
   for (let i = 0; i <= n * 4; i++) {
     if (i % 4 === 0) {
       height[i / 4] = x
       speed[i / 4] = v
     }
-    const a = -g + (x < 0 ? -k * x - c * v : 0)
+    if (x < 0 && x - v * dt >= 0) landings++
+    const a = -g + (x < 0 ? -k * x - (landings > 1 ? still : c) * v : 0)
     v += a * dt
     x += v * dt
   }
@@ -79,10 +80,10 @@ function dropAt(t: number) {
   return { p: 1 - Math.max(0, h), squish: DROP.squish[a] + (DROP.squish[b] - DROP.squish[a]) * f }
 }
 
-/** When the fire catches, in ms: between the drops. */
-export const IGNITE_MS = 220
+/** When the fire catches, in ms: early in the fall, so the sheet is burning before it is a ball. */
+export const IGNITE_MS = 10
 /** The front starts short of the sheet, its burning edge of glyphs too (engine EDGE), so the first drawings are untouched. */
-const BURN_FROM = -0.1
+const BURN_FROM = -0.02
 
 /** The whole animation at `T` (0 to 1 over PAPER_MS). */
 export function frameAt(T: number): Frame {
@@ -112,8 +113,8 @@ export function frameAt(T: number): Frame {
     squash = 0
   }
   const p = clamp01((ms - IGNITE_MS) / (PAPER_MS - IGNITE_MS))
-  // the fire is slow to catch and quickens; at the end the last ash has lived out its PAPER_ASH
-  const burn = BURN_FROM + (1 + PAPER_ASH - BURN_FROM) * p ** 1.3
+  // the fire takes hold fast, while the sheet is still falling, then burns on steadily so the last ash lingers out its PAPER_ASH
+  const burn = BURN_FROM + (1 + PAPER_ASH - BURN_FROM) * (p + 0.6 * p * (1 - p) ** 3)
   return {
     ball,
     fold,
