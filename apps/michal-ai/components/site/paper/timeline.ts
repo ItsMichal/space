@@ -47,7 +47,7 @@ export type Crumple = {
 }
 
 /** The crumple as first designed, the same every time: what tests and the default read. */
-export const STILL: Crumple = { spin: [-0.35, 0.55, 0.5], twist: 1, wring: 1, seed: [0, 0], twirl: 1.1, lead: [0, 0], flower: 'lotus' }
+export const STILL: Crumple = { spin: [-0.35, 0.55, 0.5], twist: 1, wring: 1, seed: [0, 0], twirl: 1.1, lead: [0, 0], flower: 'tulip' }
 
 const FLOWERS = Object.keys(PATTERNS)
 

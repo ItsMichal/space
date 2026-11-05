@@ -13,7 +13,7 @@ import { BACKDROP_DRAW } from '../backdrop/config'
 import { IGNITE_MS, LEAD_MS, PAPER_ASH, PAPER_FPS, PAPER_MS } from './config'
 import { type Blast, air, embers, seeded, spawn, STEP_MS, step } from './embers'
 import { ASH_FS, EMBER_FS, EMBER_VS, QUAD_VS, SHEET_FS, SHEET_VS } from './shaders'
-import { type Fold, MAX_FOLDS, PATTERNS, type Piece, foldsAt, packet, pieces, place, turns } from './origami'
+import { type Design, PATTERNS, type Piece, foldsAt, mesh, packet, pieces, place, pose, reaches } from './origami'
 import { flickerAt, frameAt, type Frame, randomCrumple, waitingAt } from './timeline'
 
 const MAX_DPR = 2
@@ -47,6 +47,8 @@ const FOV = (32 * Math.PI) / 180
 const CURL_OUT = 0.06
 /** The most of the lead-in's and the wait's edge curl, in the timeline's ball (LEAD_BALL + WAIT_BALL); it lets go as the folding starts. */
 const FOLD_FROM = 0.105
+/** How much of the crumple's turn the finished flower keeps. */
+const LEAN = 0.3
 /** How far the page is lifted toward the camera before it crumples, as a share of the camera's distance: a little, about 5% larger,
  * so while the new route loads the old page overhangs every edge and still covers it all. */
 const LIFT = 0.05
@@ -289,59 +291,66 @@ function createStage(w: number, h: number, dpr: number) {
   let stopped = false
   // this run's own crumple: which way it turns, twirls and gathers, and where its folds fall
   const crumple = randomCrumple()
-  // and the flower it folds into: its creases, fixed for the run, and how far each is turned, set per frame
-  const fc = new Float32Array(MAX_FOLDS * 2)
-  const fn = new Float32Array(MAX_FOLDS * 2)
-  const ff = new Float32Array(MAX_FOLDS)
-  const fa = new Float32Array(MAX_FOLDS)
+  // and the flower it folds into: its folds, fixed for the run, and how far each is made, set per frame
+  let placedFor = ''
   let flowerName = ''
-  let flower: Fold[] = []
+  let flower: Design = { folds: [], turn: 0 }
   let bloom: [number, number] = [0, 0]
   let plates: Piece[] = []
+  let reach: number[] = []
   let plateFlat = new Float32Array(0)
   let plateOf = new Uint16Array(0)
+  let plateIndex = new Uint32Array(0)
   let platePos = new Float32Array(0)
+  let plateNrm = new Float32Array(0)
+  let plateCount = 0
   const plateUvBuffer = gl.createBuffer()
   const platePosBuffer = gl.createBuffer()
+  const plateNrmBuffer = gl.createBuffer()
+  const plateIdxBuffer = gl.createBuffer()
   const platesVao = gl.createVertexArray()
   gl.bindVertexArray(platesVao)
   gl.bindBuffer(gl.ARRAY_BUFFER, plateUvBuffer)
   gl.enableVertexAttribArray(aUv)
   gl.vertexAttribPointer(aUv, 2, gl.FLOAT, false, 0, 0)
-  const aPos = gl.getAttribLocation(sheet.p, 'a_pos')
-  gl.bindBuffer(gl.ARRAY_BUFFER, platePosBuffer)
-  gl.enableVertexAttribArray(aPos)
-  gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 0, 0)
+  for (const [buffer, name] of [
+    [platePosBuffer, 'a_pos'],
+    [plateNrmBuffer, 'a_nrm'],
+  ] as const) {
+    const at = gl.getAttribLocation(sheet.p, name)
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+    gl.enableVertexAttribArray(at)
+    gl.vertexAttribPointer(at, 3, gl.FLOAT, false, 0, 0)
+  }
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, plateIdxBuffer)
   gl.bindVertexArray(null)
   const fold = (name: string) => {
     flowerName = name
     flower = PATTERNS[name](w, h)
-    bloom = packet(flower, w, h).center
-    flower.forEach((f, k) => {
-      fc.set(f.c, 2 * k)
-      fn.set(f.n, 2 * k)
-      ff[k] = f.angle >= 1 ? 1 : 0
-    })
-    // the folding sheet is drawn as its pieces, each a flat plate between creases (a fan of triangles each), placed every frame
-    plates = pieces(flower, w, h)
-    const n = plates.reduce((sum, p) => sum + 3 * (p.poly.length - 2), 0)
-    plateFlat = new Float32Array(n * 2)
-    plateOf = new Uint16Array(n)
-    platePos = new Float32Array(n * 3)
-    const plateUv = new Float32Array(n * 2)
-    let v = 0
-    plates.forEach((p, k) => {
-      for (let i = 1; i + 1 < p.poly.length; i++)
-        for (const [x, y] of [p.poly[0], p.poly[i], p.poly[i + 1]]) {
-          plateFlat.set([x, y], 2 * v)
-          plateUv.set([x / w + 0.5, 0.5 - y / h], 2 * v)
-          plateOf[v++] = k
-        }
-    })
+    bloom = packet(flower.folds, w, h).center
+    // the folding sheet is drawn as its pieces cut fine, so the bends curve, placed every frame
+    plates = pieces(flower.folds, w, h)
+    reach = reaches(flower.folds, plates)
+    const m = mesh(flower.folds, plates, Math.max(6, minDim / 64))
+    plateFlat = m.flat
+    plateOf = m.of
+    plateIndex = m.index
+    plateCount = m.index.length
+    platePos = new Float32Array(m.of.length * 3)
+    plateNrm = new Float32Array(m.of.length * 3)
+    const plateUv = new Float32Array(m.of.length * 2)
+    for (let v = 0; v < m.of.length; v++) plateUv.set([m.flat[2 * v] / w + 0.5, 0.5 - m.flat[2 * v + 1] / h], 2 * v)
+    gl.bindVertexArray(null)
     gl.bindBuffer(gl.ARRAY_BUFFER, plateUvBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, plateUv, gl.STATIC_DRAW)
     gl.bindBuffer(gl.ARRAY_BUFFER, platePosBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, platePos, gl.DYNAMIC_DRAW)
+    gl.bindBuffer(gl.ARRAY_BUFFER, plateNrmBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, plateNrm, gl.DYNAMIC_DRAW)
+    gl.bindVertexArray(platesVao)
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, m.index, gl.STATIC_DRAW)
+    gl.bindVertexArray(null)
+    placedFor = ''
   }
   fold(crumple.flower)
 
@@ -364,7 +373,6 @@ function createStage(w: number, h: number, dpr: number) {
   }
   resetSim()
 
-  let placedFor = ''
   /** state: 0 the sheet, 1 the burn state per glyph cell, 2 the cast shadow. */
   const drawSheet = (s: Frame, state: 0 | 1 | 2) => {
     gl.useProgram(sheet.p)
@@ -386,20 +394,18 @@ function createStage(w: number, h: number, dpr: number) {
     gl.uniform2f(u.u_lead, ...crumple.lead)
     gl.uniform1f(u.u_fold, curl)
     gl.uniform1f(u.u_lit, Math.min(1, folding * 4))
-    fa.set(turns(flower, foldsAt(folding, flower.length)))
-    gl.uniform1i(u.u_folds, flower.length)
-    gl.uniform2fv(u.u_fc, fc)
-    gl.uniform2fv(u.u_fn, fn)
-    gl.uniform1fv(u.u_ff, ff)
-    gl.uniform1fv(u.u_fa, fa)
+    const made = foldsAt(folding, flower.folds.length)
     // the flower drawn to the middle as it closes, so it finishes centred
     const e = t * t * (3 - 2 * t)
     gl.uniform2f(u.u_shift, bloom[0] * e, bloom[1] * e)
+    gl.uniform1f(u.u_turn, flower.turn * e)
     gl.uniform1f(u.u_R, R)
     // squash and stretch on screen, volume kept: wider and shorter when squished (rows of the column-major matrix)
     const sy = 1 - s.squash
     const sxz = 1 / Math.sqrt(sy)
-    gl.uniformMatrix3fv(u.u_rot, false, rotation(...s.spin).map((v, i) => v * (i % 3 === 1 ? sy : sxz)))
+    // a folded flower is not a ball: it keeps only a little of the crumple's tumble, a slight lean that shows its relief
+    const spin = s.spin.map((v) => v * (1 - (1 - LEAN) * e)) as [number, number, number]
+    gl.uniformMatrix3fv(u.u_rot, false, rotation(...spin).map((v, i) => v * (i % 3 === 1 ? sy : sxz)))
     gl.uniform3f(u.u_center, 0, 0, R * 0.5 * s.ball + LIFT * D * s.lift)
     gl.uniformMatrix4fv(u.u_vp, false, vp)
     gl.uniform1i(u.u_a, 0)
@@ -422,17 +428,30 @@ function createStage(w: number, h: number, dpr: number) {
       gl.drawElements(gl.TRIANGLES, idx.length, gl.UNSIGNED_SHORT, 0)
       return
     }
-    // placed once a frame, not again for the burn cells and the shadow drawn from the same frame
-    if (placedFor !== flowerName + fa.join()) {
-      placedFor = flowerName + fa.join()
-      const turn = Array.from(fa.subarray(0, flower.length))
+    // placed once a frame, not again for the burn cells and the shadow drawn from the same frame; each vertex's normal the sum of
+    // its triangles' (weighted by their size), so the bends shade smoothly and a vertex on a crease takes its own side's
+    const key = flowerName + made.join()
+    if (placedFor !== key) {
+      placedFor = key
+      const at = pose(flower.folds, made, reach)
       for (let v = 0; v < plateOf.length; v++)
-        platePos.set(place(flower, plates[plateOf[v]].moves, turn, plateFlat[2 * v], plateFlat[2 * v + 1]), 3 * v)
+        platePos.set(place(flower.folds, plates[plateOf[v]].moves, at, plateFlat[2 * v], plateFlat[2 * v + 1]), 3 * v)
+      plateNrm.fill(0)
+      const P = platePos
+      for (let i = 0; i < plateIndex.length; i += 3) {
+        const [a, b, c] = [3 * plateIndex[i], 3 * plateIndex[i + 1], 3 * plateIndex[i + 2]]
+        const [ax, ay, az] = [P[b] - P[a], P[b + 1] - P[a + 1], P[b + 2] - P[a + 2]]
+        const [bx, by, bz] = [P[c] - P[a], P[c + 1] - P[a + 1], P[c + 2] - P[a + 2]]
+        const n = [ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx]
+        for (const v of [a, b, c]) for (let j = 0; j < 3; j++) plateNrm[v + j] += n[j]
+      }
       gl.bindBuffer(gl.ARRAY_BUFFER, platePosBuffer)
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, platePos)
+      gl.bindBuffer(gl.ARRAY_BUFFER, plateNrmBuffer)
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, plateNrm)
     }
     gl.bindVertexArray(platesVao)
-    gl.drawArrays(gl.TRIANGLES, 0, plateOf.length)
+    gl.drawElements(gl.TRIANGLES, plateCount, gl.UNSIGNED_INT, 0)
   }
 
   /** The burn state per glyph cell, into `cells`; read back into `read` too when asked. */
