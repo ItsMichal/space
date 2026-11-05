@@ -22,8 +22,7 @@ describe('paper transition timeline', () => {
     expect(LEAD_MS).toBe(150)
     expect(at(ms(LEAD_MS / 2)).ball).toBeGreaterThan(0.01)
     expect(at(ms(LEAD_MS)).ball).toBeLessThan(0.2)
-    // the fire catches just before the drop: unlit until then
-    expect(at(ms(IGNITE_MS - 1)).burn).toBeLessThan(0)
+    expect(at(ms(LEAD_MS)).burn).toBeLessThan(0)
   })
 
   it('moves smoothly: no jump between frames at 60 fps', () => {
@@ -79,10 +78,12 @@ describe('paper transition timeline', () => {
   it('is burning before it is fully crumpled, and burns until the last ash is gone', () => {
     expect(IGNITE_MS).toBeLessThan(LEAD_MS + FALL_MS)
     expect(at(ms(IGNITE_MS)).burn).toBeLessThan(0)
-    // the front has crossed the whole sheet by FRONT_MS, before the drop lands and the ball is fully drawn in
-    expect(FRONT_MS).toBeLessThan(LEAD_MS + FALL_MS)
+    // lit in the fall, the front still crossing the sheet as it lands and across it as the impact ends
+    expect(IGNITE_MS).toBeGreaterThan(LEAD_MS)
+    expect(IGNITE_MS).toBeLessThan(LEAD_MS + FALL_MS)
+    expect(at(ms(LEAD_MS + FALL_MS)).burn).toBeGreaterThan(0)
+    expect(at(ms(LEAD_MS + FALL_MS)).burn).toBeLessThan(1)
     expect(at(ms(FRONT_MS)).burn).toBeCloseTo(1, 5)
-    expect(at(ms(LEAD_MS + FALL_MS)).burn).toBeGreaterThan(1)
     const burns = each(0, PAPER_MS).map((f) => f.burn)
     for (let i = 1; i < burns.length; i++) expect(burns[i]).toBeGreaterThanOrEqual(burns[i - 1])
     expect(at(1).burn).toBeCloseTo(1 + PAPER_ASH)

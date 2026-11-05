@@ -119,7 +119,7 @@ float spikes(vec2 p) {
   return max(h, 0.0);
 }
 // The sheet point for a uv before its relief, and the way and how far the relief pushes it. The ball: the sheet wraps around a
-// sphere, its centre in front and its corners meeting behind, the edges pulled in first; the folds push along the surface normal.
+// sphere, its centre in front and its corners cupped round the back, the edges pulled in first; the folds push along the surface normal.
 vec3 base(vec2 uv, out vec3 dir, out float h) {
   vec2 p0 = (uv - 0.5) * vec2(1.0, -1.0) * u_size;
   float minDim = min(u_size.x, u_size.y);
@@ -130,7 +130,8 @@ vec3 base(vec2 uv, out vec3 dir, out float h) {
   float bl = clamp(u_ball * 1.3 - (1.0 - r) * 0.3 + dot(q, u_lead) * 4.0 * u_ball * (1.0 - u_ball), 0.0, 1.0);
   // atan(0, 0) is undefined (NaN on some GPUs) and would tear a hole at the centre vertex
   float th = (r > 1e-4 ? atan(q.y, q.x) : 0.0) + u_twirl * bl * r;
-  float ph = r * 3.0;
+  // wrapped 2.3 radians round, not all the way: the corners stay apart behind, a loose wad rather than a tight ball
+  float ph = r * 2.3;
   vec3 sn = vec3(sin(ph) * cos(th), sin(ph) * sin(th), cos(ph));
   vec3 pos = mix(vec3(p0, 0.0), sn * u_R, bl);
   dir = normalize(mix(vec3(0.0, 0.0, 1.0), sn, bl));
@@ -206,91 +207,69 @@ layout(location = 0) in vec2 a_p;
 void main() { gl_Position = vec4(a_p, 0.0, 1.0); }
 `
 
-// The ash: a cell on the burning edge is the paper turned to a glyph, sparse and dark where the fire is coming, dense and hot at
-// its front, so the edge steps along the glyph grid. Behind it every cell looks down its column for the burnt spot that has risen
-// to it. A spot sits where it burnt as a dense glyph (in the page's ink where it burnt through text), then rises (each column at
-// its own speed), thins to sparser glyphs, cools and goes.
+// The burning edge: a cell on it is the paper turned to a glyph, sparse and dark where the fire is coming, dense and hot at its
+// front, so the edge steps along the glyph grid. What has burnt behind it has let go of its glyph as an ember (./embers.ts).
 export const ASH_FS = /* glsl */ `#version 300 es
 precision highp float;
 uniform sampler2D u_cells, u_glyphs;
 uniform ivec2 u_cellPx;
 uniform int u_count;
-uniform float u_rise, u_spread, u_drawing;
-uniform vec3 u_paper, u_hot, u_flame, u_rose, u_cool, u_char;
+uniform float u_drawing;
+uniform vec3 u_hot, u_flame, u_char;
 out vec4 o;
 float h1(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 float glyph(int g, ivec2 at) { return texelFetch(u_glyphs, ivec2(g * u_cellPx.x + at.x, u_cellPx.y - 1 - at.y), 0).a; }
-// hot to cold in the site's palette (the theme's own values, so it reads on the paper in light and in dark): gold, rust, rose,
-// then the faint ink of ash
-vec3 ember(float u) {
-  vec3 c = mix(u_hot, u_flame, smoothstep(0.05, 0.3, u));
-  c = mix(c, u_rose, smoothstep(0.3, 0.65, u));
-  return mix(c, u_cool, smoothstep(0.65, 0.95, u));
-}
-const int REACH = 17;
-// the most columns a row of sources can span once billowed out
-const int WIDE = 6;
 void main() {
   ivec2 px = ivec2(gl_FragCoord.xy);
   ivec2 cell = px / u_cellPx;
-  ivec2 in_cell = px - cell * u_cellPx;
+  float v = texelFetch(u_cells, cell, 0).a * 255.0;
+  if (v < 0.5 || v > 63.5) discard;
   float flick = (h1(vec2(cell) + u_drawing * 1.31) - 0.5) * 1.6;
-  vec4 here = texelFetch(u_cells, cell, 0);
-  float v = here.a * 255.0;
-  if (v > 0.5 && v < 63.5) {
-    float f = (v - 1.0) / 62.0;
-    int g = clamp(int(round(f * float(u_count - 1) + flick)), 0, u_count - 1);
-    vec3 ink = mix(u_char, u_flame, smoothstep(0.45, 0.8, f));
-    ink = mix(ink, u_hot, smoothstep(0.85, 1.0, f));
-    // only the glyph: a cell is square and the paper under it is not, so filling it would show as a block past the burn and the edge
-    float c = glyph(g, in_cell);
-    o = vec4(ink * c, c);
-    return;
-  }
-  // each spot rises in its column and billows out sideways from the middle, where the ball is; so look back down for the spots
-  // that would land here, among the few columns that could reach it at each height
-  float mid = float(textureSize(u_cells, 0).x) * 0.5;
-  float out_x = float(cell.x) + 0.5 - mid;
-  vec4 s = vec4(0.0);
-  float u = 0.0;
-  bool hit = false;
-  for (int k = 0; k <= REACH && !hit; k++) {
-    if (cell.y - k < 0) break;
-    // how far along its rise a spot k cells up is, at the slowest and the fastest speeds, and the columns those come from
-    float slow = min(1.0, float(k) / (u_rise * 0.65));
-    float fast = float(k) / (u_rise * 1.35);
-    float a0 = mid + out_x / (1.0 + u_spread * fast);
-    float a1 = mid + out_x / (1.0 + u_spread * slow);
-    int lo = int(floor(min(a0, a1) - 0.5));
-    int hi = int(floor(max(a0, a1) + 0.5));
-    hi = min(hi, lo + WIDE);
-    for (int x = lo; x <= hi; x++) {
-      ivec2 src = ivec2(x, cell.y - k);
-      if (x < 0) continue;
-      vec4 t = texelFetch(u_cells, src, 0);
-      if (t.a * 255.0 < 63.5) continue;
-      float a = (t.a * 255.0 - 64.0) / 191.0;
-      float speed = u_rise * (0.65 + 0.7 * h1(vec2(float(x), 3.1)));
-      // held in place for the first part of its life, then rising and spreading
-      float along = max(0.0, a - 0.14) / 0.86;
-      if (abs(along * speed - float(k)) > 0.5) continue;
-      float lands = mid + (float(x) + 0.5 - mid) * (1.0 + u_spread * along);
-      if (abs(lands - (float(cell.x) + 0.5)) > 0.5) continue;
-      // fewer, sparser embers as they rise
-      if (h1(vec2(src) + 0.37) < a * a * 0.6) continue;
-      s = t;
-      u = a;
-      hit = true;
-      break;
-    }
-  }
-  if (!hit || u >= 1.0) discard;
-  int g = clamp(int(round((1.0 - u) * (1.0 - u) * float(u_count - 1) + flick)), 0, u_count - 1);
-  float cov = glyph(g, in_cell);
-  // where it burnt through text (anything well off the paper colour) it starts in that colour
-  float ink = smoothstep(0.15, 0.4, distance(s.rgb, u_paper));
-  vec3 col = mix(ember(u), s.rgb, ink * (1.0 - smoothstep(0.04, 0.16, u)));
-  float alpha = cov * (1.0 - smoothstep(0.75, 1.0, u));
-  o = vec4(col * alpha, alpha);
+  float f = (v - 1.0) / 62.0;
+  int g = clamp(int(round(f * float(u_count - 1) + flick)), 0, u_count - 1);
+  vec3 ink = mix(u_char, u_flame, smoothstep(0.45, 0.8, f));
+  ink = mix(ink, u_hot, smoothstep(0.85, 1.0, f));
+  // only the glyph: a cell is square and the paper under it is not, so filling it would show as a block past the burn and the edge
+  float c = glyph(g, px - cell * u_cellPx);
+  o = vec4(ink * c, c);
+}
+`
+
+// The embers: one glyph cell per ember, drawn at its own place (snapped to the pixel, so the glyph stays crisp), its glyph and its
+// colour (premultiplied) given per ember.
+export const EMBER_VS = /* glsl */ `#version 300 es
+layout(location = 0) in vec2 a_corner;
+layout(location = 1) in vec2 a_pos;
+layout(location = 2) in float a_glyph;
+layout(location = 3) in vec4 a_col;
+uniform vec2 u_canvas;
+uniform ivec2 u_cellPx;
+out vec2 v_at;
+flat out int v_glyph;
+out vec4 v_col;
+void main() {
+  vec2 cell = vec2(u_cellPx);
+  vec2 p = floor(a_pos - cell * 0.5) + a_corner * cell;
+  v_at = a_corner * cell;
+  v_glyph = int(a_glyph);
+  v_col = a_col;
+  gl_Position = vec4(p / u_canvas * 2.0 - 1.0, 0.0, 1.0);
+}
+`
+
+export const EMBER_FS = /* glsl */ `#version 300 es
+precision highp float;
+precision highp int;
+uniform sampler2D u_glyphs;
+uniform ivec2 u_cellPx;
+in vec2 v_at;
+flat in int v_glyph;
+in vec4 v_col;
+out vec4 o;
+void main() {
+  ivec2 at = clamp(ivec2(v_at), ivec2(0), u_cellPx - 1);
+  float c = texelFetch(u_glyphs, ivec2(v_glyph * u_cellPx.x + at.x, u_cellPx.y - 1 - at.y), 0).a;
+  if (c <= 0.0) discard;
+  o = v_col * c;
 }
 `

@@ -4,14 +4,16 @@
 //    over the backdrop, and laid on a coarse sheet in a fixed canvas over the page, at exactly the page's pixels.
 // 2. The router renders the new page underneath at once; it is shown, live, as soon as it has committed.
 // 3. The sheet crumples in one drop into a ball, landing like a bouncy ball, (drawn as unshaded line art: ink along the creases, a hard shadow
-//    under it) while a fire eats it from the face. What burns turns to glyphs in the site's monospace, in the page's colour and then the fire's,
-//    that rise and go out. The sheet moves every frame; the glyphs flicker on twos.
+//    under it) while a fire eats it from the face. What burns lets go of a glyph in the site's monospace, in the page's colour and then
+//    the fire's, an ember thrown out by the blast of the landing and carried off on swirling air (./embers.ts) until it goes out. The
+//    sheet and the embers move every frame; the glyphs flicker on twos.
 // The capture reads the page as laid out, a few tens of ms, and comes on top of PAPER_MS.
 import { paintPage } from '@/lib/paint/page'
 import { BACKDROP_DRAW } from '../backdrop/config'
 import { IGNITE_MS, LEAD_MS, PAPER_ASH, PAPER_FPS, PAPER_MS } from './config'
-import { ASH_FS, QUAD_VS, SHEET_FS, SHEET_VS } from './shaders'
-import { flickerAt, frameAt, type Frame, randomCrumple, waitingAt } from './timeline'
+import { type Blast, air, embers, seeded, spawn, STEP_MS, step } from './embers'
+import { ASH_FS, EMBER_FS, EMBER_VS, QUAD_VS, SHEET_FS, SHEET_VS } from './shaders'
+import { DROPS, FALL_MS, flickerAt, frameAt, type Frame, randomCrumple, waitingAt } from './timeline'
 
 const MAX_DPR = 2
 /** Cells along the sheet's long side: fine enough that the creases are lines and the paper between them curves. */
@@ -23,10 +25,9 @@ const GLYPH_H = 13
 const RAMP = '.:-=+*#%@'
 /** How deep the burning edge of glyphs runs ahead of the fire, in burn units. */
 const EDGE = 0.05
-/** How far a spot rises over its life, in glyph cells. */
-const RISE = 13
-/** How far a spot billows out sideways over its life, as a share of its distance from the middle of the ball. */
-const SPREAD = 0.9
+/** A burnt cell lets go of its ember while its burn is this fresh, in burn units, and again no sooner than this, ms. */
+const FRESH = 0.3
+const COOLDOWN_MS = 250
 /** Nothing may hold the overlay longer than this. */
 const WATCHDOG_MS = 8000
 /** How long the waiting fringes take to settle once the drop leaves, ms. */
@@ -140,6 +141,7 @@ function createStage(w: number, h: number, dpr: number) {
 
   const sheet = program(gl, SHEET_VS, SHEET_FS)
   const ash = program(gl, QUAD_VS, ASH_FS)
+  const ember = program(gl, EMBER_VS, EMBER_FS)
 
   // sheet mesh: a grid of uv, the inner vertices nudged off the grid so it does not read as one, the edges kept straight
   const cols = w >= h ? CELLS : Math.max(8, Math.round((CELLS * w) / h))
@@ -222,9 +224,29 @@ function createStage(w: number, h: number, dpr: number) {
   gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, cellsDepth)
   gl.bindFramebuffer(gl.FRAMEBUFFER, null)
 
+  // the embers: a unit quad, and per ember its place, glyph and colour (7 floats)
+  const emberVao = gl.createVertexArray()
+  gl.bindVertexArray(emberVao)
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1]), gl.STATIC_DRAW)
+  gl.enableVertexAttribArray(0)
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0)
+  const emberBuf = gl.createBuffer()
+  gl.bindBuffer(gl.ARRAY_BUFFER, emberBuf)
+  for (const [loc, size, at] of [
+    [1, 2, 0],
+    [2, 1, 2],
+    [3, 4, 3],
+  ] as const) {
+    gl.enableVertexAttribArray(loc)
+    gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 28, at * 4)
+    gl.vertexAttribDivisor(loc, 1)
+  }
+  gl.bindVertexArray(null)
+
   const minDim = Math.min(w, h)
-  // the ball keeps the sheet area in mind, so a tall phone page still makes a fist-sized ball
-  const R = Math.min(0.16 * Math.sqrt(w * h), 0.32 * minDim)
+  // the ball keeps the sheet area in mind, so a tall phone page still makes a loose, fist-sized wad
+  const R = Math.min(0.2 * Math.sqrt(w * h), 0.4 * minDim)
   const D = h / 2 / Math.tan(FOV / 2)
   const vp = perspective(FOV, w / h, D * 0.1, D * 4)
   // view = translate(0, 0, -D): only the last column of the projection changes
@@ -252,6 +274,25 @@ function createStage(w: number, h: number, dpr: number) {
   let stopped = false
   // this run's own crumple: which way it turns, twirls and gathers, and where its folds fall
   const crumple = randomCrumple()
+
+  // the embers' sim: the blast from the middle of the ball as it lands, this run's air, and the burnt cells read back to spawn from
+  const runSeed = Math.floor(Math.random() * 2 ** 31)
+  const scale = Math.min(canvas.width, canvas.height)
+  const blast: Blast = { cx: canvas.width / 2, cy: canvas.height / 2, at: DROPS[0].at + FALL_MS, scale, waves: air(scale, seeded(runSeed)) }
+  const sparks = embers()
+  const instances = new Float32Array(sparks.x.length * 7)
+  const read = new Uint8Array(gridW * gridH * 4)
+  const lastSpawn = new Float32Array(gridW * gridH)
+  let rand = seeded(runSeed + 1)
+  let simMs = 0
+  const freshMax = 64 + (191 * FRESH) / PAPER_ASH
+  const resetSim = () => {
+    sparks.n = 0
+    lastSpawn.fill(-1e9)
+    rand = seeded(runSeed + 1)
+    simMs = 0
+  }
+  resetSim()
 
   /** state: 0 the sheet, 1 the burn state per glyph cell, 2 the cast shadow. */
   const drawSheet = (s: Frame, state: 0 | 1 | 2) => {
@@ -287,18 +328,81 @@ function createStage(w: number, h: number, dpr: number) {
     gl.drawElements(gl.TRIANGLES, idx.length, gl.UNSIGNED_SHORT, 0)
   }
 
-  const draw = (s: Frame) => {
-    const lit = s.burn > -EDGE
+  /** The burn state per glyph cell, into `cells`; read back into `read` too when asked. */
+  const burnCells = (s: Frame, readBack: boolean) => {
     gl.disable(gl.BLEND)
     gl.enable(gl.DEPTH_TEST)
-    if (lit) {
-      gl.bindFramebuffer(gl.FRAMEBUFFER, cellsFb)
-      gl.viewport(0, 0, gridW, gridH)
-      gl.clearColor(0, 0, 0, 0)
-      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-      drawSheet(s, 1)
-      gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, cellsFb)
+    gl.viewport(0, 0, gridW, gridH)
+    gl.clearColor(0, 0, 0, 0)
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+    drawSheet(s, 1)
+    if (readBack) gl.readPixels(0, 0, gridW, gridH, gl.RGBA, gl.UNSIGNED_BYTE, read)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+  }
+
+  /** Runs the embers on to `ms` in fixed steps: each step every freshly burnt cell lets go of its ember, then they all move. */
+  const advance = (ms: number) => {
+    while (simMs + STEP_MS <= ms) {
+      const t = simMs + STEP_MS
+      const s = frameAt(t / PAPER_MS, crumple)
+      // cells are freshly burnt only while the front crosses the sheet and a little after
+      if (s.burn > 0 && s.burn < 1 + FRESH) {
+        burnCells(s, true)
+        for (let j = 0, k = 0; j < gridH; j++)
+          for (let i = 0; i < gridW; i++, k++) {
+            const a = read[k * 4 + 3]
+            if (a < 64 || a > freshMax || t - lastSpawn[k] < COOLDOWN_MS) continue
+            lastSpawn[k] = t
+            const rgb: [number, number, number] = [read[k * 4] / 255, read[k * 4 + 1] / 255, read[k * 4 + 2] / 255]
+            // where it burnt through text (anything well off the paper colour) it starts in that colour
+            const off = Math.hypot(rgb[0] - paper[0], rgb[1] - paper[1], rgb[2] - paper[2])
+            const ink = Math.min(1, Math.max(0, (off - 0.15) / 0.25))
+            spawn(sparks, blast, (i + rand()) * cw, (j + rand()) * ch, t, PAPER_MS - 20, rgb, ink, rand)
+          }
+      }
+      step(sparks, blast, t, STEP_MS)
+      simMs = t
     }
+  }
+
+  const mix3 = (a: number[], b: number[], k: number) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k]
+  const smooth = (a: number, b: number, x: number) => {
+    const t = Math.min(1, Math.max(0, (x - a) / (b - a)))
+    return t * t * (3 - 2 * t)
+  }
+  /** Hot to cold in the site's palette (the theme's own values, so it reads on the paper in light and in dark): gold, rust, rose,
+   * then the faint ink of ash. */
+  const emberColor = (u: number) => mix3(mix3(mix3(fire.hot, fire.flame, smooth(0.05, 0.3, u)), fire.rose, smooth(0.3, 0.65, u)), fire.cool, smooth(0.65, 0.95, u))
+
+  const drawEmbers = () => {
+    const e = sparks
+    for (let i = 0; i < e.n; i++) {
+      const u = Math.min(1, (simMs - e.born[i]) / e.life[i])
+      const h = Math.sin((e.seed[i] * 917.3 + drawing * 1.31) * 12.9898) * 43758.5453
+      const flick = (h - Math.floor(h) - 0.5) * 1.6
+      const g = Math.min(RAMP.length - 1, Math.max(0, Math.round((1 - u) * (1 - u) * (RAMP.length - 1) + flick)))
+      const c = mix3(emberColor(u), [e.r[i], e.g[i], e.b[i]], e.ink[i] * (1 - smooth(0.04, 0.16, u)))
+      const alpha = 1 - smooth(0.7, 1, u)
+      instances.set([e.x[i], e.y[i], g, c[0] * alpha, c[1] * alpha, c[2] * alpha, alpha], i * 7)
+    }
+    gl.useProgram(ember.p)
+    gl.uniform2f(ember.u.u_canvas, canvas.width, canvas.height)
+    gl.uniform2i(ember.u.u_cellPx, cw, ch)
+    gl.uniform1i(ember.u.u_glyphs, 2)
+    gl.activeTexture(gl.TEXTURE2)
+    gl.bindTexture(gl.TEXTURE_2D, glyphs)
+    gl.bindVertexArray(emberVao)
+    gl.bindBuffer(gl.ARRAY_BUFFER, emberBuf)
+    gl.bufferData(gl.ARRAY_BUFFER, instances.subarray(0, e.n * 7), gl.STREAM_DRAW)
+    gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, e.n)
+  }
+
+  const draw = (s: Frame) => {
+    const lit = s.burn > -EDGE
+    if (lit) burnCells(s, false)
+    gl.disable(gl.BLEND)
+    gl.enable(gl.DEPTH_TEST)
     gl.viewport(0, 0, canvas.width, canvas.height)
     gl.clearColor(0, 0, 0, 0)
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
@@ -317,7 +421,7 @@ function createStage(w: number, h: number, dpr: number) {
     }
     drawSheet(s, 0)
     if (lit) {
-      // the glyphs over everything, embers rising in front of what is left of the sheet
+      // the burning edge and the embers over everything, in front of what is left of the sheet
       gl.disable(gl.DEPTH_TEST)
       gl.enable(gl.BLEND)
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
@@ -326,14 +430,9 @@ function createStage(w: number, h: number, dpr: number) {
       gl.uniform1i(ash.u.u_glyphs, 2)
       gl.uniform2i(ash.u.u_cellPx, cw, ch)
       gl.uniform1i(ash.u.u_count, RAMP.length)
-      gl.uniform1f(ash.u.u_rise, RISE)
-      gl.uniform1f(ash.u.u_spread, SPREAD)
       gl.uniform1f(ash.u.u_drawing, drawing)
-      gl.uniform3fv(ash.u.u_paper, paper)
       gl.uniform3fv(ash.u.u_hot, fire.hot)
       gl.uniform3fv(ash.u.u_flame, fire.flame)
-      gl.uniform3fv(ash.u.u_rose, fire.rose)
-      gl.uniform3fv(ash.u.u_cool, fire.cool)
       gl.uniform3fv(ash.u.u_char, fire.char)
       gl.activeTexture(gl.TEXTURE2)
       gl.bindTexture(gl.TEXTURE_2D, glyphs)
@@ -341,6 +440,7 @@ function createStage(w: number, h: number, dpr: number) {
       gl.bindTexture(gl.TEXTURE_2D, cells)
       gl.bindVertexArray(quadVao)
       gl.drawArrays(gl.TRIANGLES, 0, 3)
+      if (sparks.n > 0) drawEmbers()
       gl.disable(gl.BLEND)
     }
     gl.bindVertexArray(null)
@@ -375,16 +475,20 @@ function createStage(w: number, h: number, dpr: number) {
       const at = (T: number) => (fade > 0 ? waitingAt(frameAt(T, crumple), waited + (now - leftAt), fade * fade * (3 - 2 * fade)) : frameAt(T, crumple))
       const T = ms / PAPER_MS
       if (hold != null && T >= hold) {
-        drawing = flickerAt(hold * PAPER_MS, PAPER_FPS)
-        draw(frameAt(hold, crumple))
-        ;(window as { __paperScrub?: (T: number) => void }).__paperScrub = (T) => {
+        // the embers are a sim: a held or scrubbed point replays it from the start
+        const show = (T: number) => {
+          resetSim()
+          advance(T * PAPER_MS)
           drawing = flickerAt(T * PAPER_MS, PAPER_FPS)
           draw(frameAt(T, crumple))
         }
+        show(hold)
+        ;(window as { __paperScrub?: (T: number) => void }).__paperScrub = show
         // held for inspection until the page is reloaded, or the next navigation takes over
         while (!stopped) await frame()
         return
       }
+      advance(ms)
       drawing = flickerAt(ms, PAPER_FPS)
       draw(at(T))
       if (T >= 1) return

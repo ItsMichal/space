@@ -3,7 +3,7 @@
 // and squishes into the floor, rebounds once a little way back and settles on the second landing without bouncing again. It takes
 // the flat page to the ball. The motion is a small physics run (gravity, a spring and damper floor), made once and read back by
 // time, so everything is a continuous curve, drawn every frame.
-// An ember catches just before the drop and has eaten the whole sheet by the time it lands, before it is fully balled up; what burns turns to glyphs that rise, billow
+// An ember catches late in the fall and has eaten the whole sheet as the impact ends; what burns turns to glyphs that rise, billow
 // outward and fade (drawn by the engine from `burn`).
 import { FRONT_MS, IGNITE_MS, LEAD_MS, PAPER_ASH, PAPER_MS } from './config'
 
@@ -167,7 +167,7 @@ export function frameAt(T: number, c: Crumple = STILL): Frame {
   // wrung back and forth from the landing, dying out with the bounce
   const since = ms - DROPS[0].at - FALL_MS
   const wring = since > 0 && T < 1 ? c.wring * WRING * Math.sin((2 * Math.PI * since) / WRING_MS) * Math.exp(-since / WRING_FADE) : 0
-  // the fire catches just before the drop and races across the sheet as it falls, so it is gone before the ball is made; then the
+  // the fire catches late in the fall and races across the sheet through the landing, so it is gone as the impact ends; then the
   // ash burns out slowly (eased out, so the extra time goes to the tail) and at the end the last of it has lived out its PAPER_ASH
   const q = clamp01((ms - FRONT_MS) / (PAPER_MS - FRONT_MS))
   const burn =
