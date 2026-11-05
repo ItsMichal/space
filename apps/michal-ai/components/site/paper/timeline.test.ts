@@ -7,8 +7,8 @@ const ms = (m: number) => m / PAPER_MS
 const each = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, i) => at(ms(from + i)))
 
 describe('paper transition timeline', () => {
-  it('crumples in 400ms and burns for two seconds, overlapping', () => {
-    expect(CRUMPLE_MS).toBe(400)
+  it('crumples in 480ms and burns for two seconds, overlapping', () => {
+    expect(CRUMPLE_MS).toBe(480)
     expect(FIRE_MS).toBe(2000)
     expect(PAPER_MS).toBeLessThan(LEAD_MS + CRUMPLE_MS + FIRE_MS)
   })

@@ -65,9 +65,9 @@ export const DROPS = [{ at: LEAD_MS, ball: 1, fold: 1, twist: 0.1, squish: 0.17 
 const LEAD_BALL = 0.08
 
 /** How long a drop falls before it first lands, ms. */
-export const FALL_MS = 150
+export const FALL_MS = 180
 /** How long the ball is in contact with the soft floor on a landing, ms: the squish. */
-const CONTACT_MS = 88
+const CONTACT_MS = 105
 /** How much of its speed the ball keeps off the floor; the one rebound rises BOUNCE² of the drop, the next landing stays down. */
 const BOUNCE = 0.5
 /** How much the ball stretches along its fall at full speed, against its squish. */
@@ -75,8 +75,8 @@ const STRETCH = 0.15
 
 /** On landing the ball is wrung, turned back and forth by the hands crumpling it: how far (radians), one swing (ms), its fade (ms). */
 const WRING = 0.16
-const WRING_MS = 170
-const WRING_FADE = 110
+const WRING_MS = 200
+const WRING_FADE = 130
 
 /** One drop, run once at 1ms: height above the floor (1 at the start, 0 on the floor, below 0 pressed in) and squish, 0 to 1. */
 const DROP = (() => {
