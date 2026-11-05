@@ -187,8 +187,8 @@ const viewMore = (count: number, noun: string) => `View ${count} more ${count ==
 
 /**
  * The home page's Projects and Writing: the first `limit` posts as the same entry (ProjectCard with its picture above the
- * text and its year or date under the description), two across from 640px (`.ix-grid`, app/styles/type.css), then a link
- * to the full list.
+ * text, and a project's year under the description; a post shows no date), two across from 640px (`.ix-grid`,
+ * app/styles/type.css), then a link to the full list.
  */
 export function CardGrid({ posts, limit = 4, more, noun, priority = false }: { posts: Post[]; limit?: number; more: string; noun: string; priority?: boolean }) {
   const shown = posts.slice(0, limit)
@@ -197,7 +197,7 @@ export function CardGrid({ posts, limit = 4, more, noun, priority = false }: { p
       <ul className="ix-list ix-grid">
         {shown.map((p) => (
           <li key={p.slug}>
-            <ProjectCard post={p} href={postPath(p)} priority={priority} article={p.kind === 'article'} thumb dated sizes="(min-width: 1120px) 512px, (min-width: 640px) 50vw, calc(100vw - 32px)" />
+            <ProjectCard post={p} href={postPath(p)} priority={priority} article={p.kind === 'article'} thumb dated={p.kind !== 'article'} sizes="(min-width: 1120px) 512px, (min-width: 640px) 50vw, calc(100vw - 32px)" />
           </li>
         ))}
       </ul>
