@@ -13,7 +13,7 @@ import { frameAt, onTwos, type Frame } from './timeline'
 
 const MAX_DPR = 2
 /** Cells along the sheet's long side: fine enough that the creases are lines and the paper between them curves. */
-const CELLS = 72
+const CELLS = 128
 /** A glyph cell, CSS px (the hero globe's cell). */
 const GLYPH_W = 8
 const GLYPH_H = 13

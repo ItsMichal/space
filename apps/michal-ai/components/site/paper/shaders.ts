@@ -31,17 +31,9 @@ float burnField(vec2 uv, vec2 size) {
 }
 `
 
-export const SHEET_VS = /* glsl */ `#version 300 es
-precision highp float;
-in vec2 a_uv;
-uniform vec2 u_size, u_cell;
-uniform float u_ball, u_fold, u_R, u_shadow, u_floor;
-uniform mat3 u_rot;
-uniform vec3 u_center;
-uniform mat4 u_vp;
-out vec2 v_uv;
-out vec3 v_pos, v_n;
-${NOISE}
+// The crumple's relief over the sheet, shared by the mesh (which moves by it) and the shading (which takes its slope per pixel,
+// so the creases stay sharp whatever the mesh).
+const FOLDS = /* glsl */ `
 // Paper facets: the distance to the nearest Voronoi edge, raised or sunk per cell by its own amount, so neighbouring cells meet
 // in straight creases and each cell is a broad tent of its own height, as a crushed sheet is.
 float facets(vec2 p) {
@@ -59,6 +51,41 @@ float facets(vec2 p) {
   float e = (sqrt(d2) - sqrt(d1)) * mix(0.5, 1.3, hash22(c1 + 3.7).y);
   return hash22(c1 + 7.31).x > 0.45 ? e * 1.5 : -e;
 }
+// Crease lines: the zero lines of noise folded to a sharp V, the paper between them curving away, smaller and fainter at each
+// octave and turning ridge or valley in turn, so they cross and break off as the wrinkles of a crushed sheet do.
+float creases(vec2 p) {
+  float s = 0.0, a = 1.0;
+  for (int k = 0; k < 2; k++) {
+    s += (abs(gnoise(p)) - 0.2) * a * (k == 1 ? -1.0 : 1.0);
+    p = mat2(1.6, 1.2, -1.2, 1.6) * p + 7.3;
+    a *= 0.55;
+  }
+  return s;
+}
+// The relief at a uv: broad facets in some regions of the sheet and finer in others, so it does not crush evenly, crossed by
+// crease lines.
+float folds(vec2 uv, vec2 size) {
+  vec2 p0 = (uv - 0.5) * vec2(1.0, -1.0) * size;
+  float minDim = min(size.x, size.y);
+  vec2 fp = p0 / (0.3 * minDim);
+  float m = smoothstep(-0.3, 0.3, gnoise(p0 / (0.55 * minDim) + 4.1));
+  return facets(fp * 0.5) * 1.5 * m + facets(fp + 3.3) + creases(fp * 1.1 + 11.7) * mix(1.0, 0.6, m);
+}
+`
+
+export const SHEET_VS = /* glsl */ `#version 300 es
+precision highp float;
+in vec2 a_uv;
+uniform vec2 u_size, u_cell;
+uniform float u_ball, u_fold, u_R, u_shadow, u_floor;
+uniform mat3 u_rot;
+uniform vec3 u_center;
+uniform mat4 u_vp;
+out vec2 v_uv;
+out vec3 v_pos, v_tu, v_tv, v_dir;
+out float v_h;
+${NOISE}
+${FOLDS}
 // Spikes: a cone on some cells of a Voronoi grid, 1 at its point and 0 a little way out, so what it raises comes to a point.
 float spikes(vec2 p) {
   vec2 i = floor(p), f = fract(p);
@@ -73,26 +100,11 @@ float spikes(vec2 p) {
   }
   return max(h, 0.0);
 }
-// Crease lines: the zero lines of noise folded to a sharp V, the paper between them curving away, smaller and fainter at each
-// octave and turning ridge or valley in turn, so they cross and break off as the wrinkles of a crushed sheet do.
-float creases(vec2 p) {
-  float s = 0.0, a = 1.0;
-  for (int k = 0; k < 2; k++) {
-    s += (abs(gnoise(p)) - 0.2) * a * (k == 1 ? -1.0 : 1.0);
-    p = mat2(1.6, 1.2, -1.2, 1.6) * p + 7.3;
-    a *= 0.55;
-  }
-  return s;
-}
-// The sheet point for a uv. The ball: the sheet wraps around a sphere, its centre in front and its corners meeting behind,
-// the edges pulled in first; the folds push along the surface normal.
-vec3 place(vec2 uv) {
+// The sheet point for a uv before its relief, and the way and how far the relief pushes it. The ball: the sheet wraps around a
+// sphere, its centre in front and its corners meeting behind, the edges pulled in first; the folds push along the surface normal.
+vec3 base(vec2 uv, out vec3 dir, out float h) {
   vec2 p0 = (uv - 0.5) * vec2(1.0, -1.0) * u_size;
   float minDim = min(u_size.x, u_size.y);
-  vec2 fp = p0 / (0.3 * minDim);
-  // broad facets in some regions of the sheet and finer in others, so it does not crush evenly, crossed by crease lines
-  float m = smoothstep(-0.3, 0.3, gnoise(p0 / (0.55 * minDim) + 4.1));
-  float F = facets(fp * 0.5) * 1.5 * m + facets(fp + 3.3) + creases(fp * 1.1 + 11.7) * mix(1.0, 0.6, m);
   float diag = 0.5 * length(u_size);
   vec2 q = p0 / diag;
   float r = min(length(q), 1.0);
@@ -102,34 +114,38 @@ vec3 place(vec2 uv) {
   float ph = r * 3.0;
   vec3 sn = vec3(sin(ph) * cos(th), sin(ph) * sin(th), cos(ph));
   vec3 pos = mix(vec3(p0, 0.0), sn * u_R, bl);
-  vec3 dir = normalize(mix(vec3(0.0, 0.0, 1.0), sn, bl));
+  dir = normalize(mix(vec3(0.0, 0.0, 1.0), sn, bl));
+  h = u_fold * mix(0.07 * minDim, 0.34 * u_R, bl);
   // the outer part of the sheet does not tuck in smoothly behind the ball: it stands off it in pointed flaps and corners, so the
   // silhouette is jagged
   float flap = smoothstep(0.35, 1.0, r) * spikes(q * 5.0);
-  return pos + dir * u_fold * mix(0.07 * minDim, 0.34 * u_R, bl) * F + sn * u_R * 1.4 * flap * bl;
+  return pos + sn * u_R * 1.4 * flap * bl;
 }
 // With u_shadow set the point is laid on a floor behind the ball, pushed a little down and right with its height, for a close drop
 // shadow (thrown along the real light it would fall far off the ball).
 void main() {
-  vec3 pos = place(a_uv);
+  vec3 dir, d;
+  float h, k;
+  vec3 pos = base(a_uv, dir, h);
   v_uv = a_uv;
-  v_pos = u_rot * pos + u_center;
+  v_pos = u_rot * (pos + dir * h * folds(a_uv, u_size)) + u_center;
+  // the smooth surface's slopes across half a mesh cell; the shading adds the relief's own slope to them per pixel
+  vec2 e = 0.5 * u_cell;
+  v_tu = u_rot * (base(a_uv + vec2(e.x, 0.0), d, k) - base(a_uv - vec2(e.x, 0.0), d, k)) / (2.0 * e.x);
+  v_tv = u_rot * (base(a_uv + vec2(0.0, e.y), d, k) - base(a_uv - vec2(0.0, e.y), d, k)) / (2.0 * e.y);
+  v_dir = u_rot * dir;
+  v_h = h;
   vec3 wp = v_pos;
   if (u_shadow > 0.5) {
     wp.xy += vec2(0.14, -0.18) * (wp.z - u_floor);
     wp.z = u_floor;
-    v_n = vec3(0.0, 0.0, 1.0);
-  } else {
-    // the surface normal across half a mesh cell, so the shading follows the paper's curve rather than its triangles
-    vec2 e = 0.5 * u_cell;
-    v_n = u_rot * cross(place(a_uv + vec2(e.x, 0.0)) - place(a_uv - vec2(e.x, 0.0)), place(a_uv + vec2(0.0, e.y)) - place(a_uv - vec2(0.0, e.y)));
   }
   gl_Position = u_vp * vec4(wp, 1.0);
 }
 `
 
-// Shaded by the paper's own normal with a little of each triangle's flat normal kept for crispness, so the flat sheet is exactly
-// the page and a crumpled one curves between sharp creases: a hard key light, the paper turned from it going to the theme's dark
+// Shaded by the paper's own normal (never the mesh's triangles), so the flat sheet is exactly the page and a crumpled one
+// curves between sharp creases: a hard key light, the paper turned from it going to the theme's dark
 // ink rather than grey.
 // Behind the fire front the sheet is gone; the ash pass draws the glyphs there and on the burning edge ahead of it.
 // u_state 1 writes, at one texel per glyph cell, what the ash pass needs: for a burnt cell the page colour under it and how long
@@ -138,7 +154,8 @@ void main() {
 export const SHEET_FS = /* glsl */ `#version 300 es
 precision highp float;
 in vec2 v_uv;
-in vec3 v_pos, v_n;
+in vec3 v_pos, v_tu, v_tv, v_dir;
+in float v_h;
 uniform sampler2D u_a;
 uniform float u_burn, u_ash, u_edge, u_state, u_shadowA;
 uniform vec2 u_size;
@@ -146,6 +163,7 @@ uniform vec3 u_back, u_light, u_eye, u_char;
 out vec4 o;
 ${NOISE}
 ${BURN}
+${FOLDS}
 void main() {
   vec3 base = gl_FrontFacing ? texture(u_a, v_uv).rgb : u_back;
   float age = u_burn - burnField(v_uv, u_size);
@@ -154,13 +172,13 @@ void main() {
     o = vec4(u_char * u_shadowA, u_shadowA);
     return;
   }
-  // the flat normal before the discard, while the neighbouring fragments are all still running
-  vec3 Nf = normalize(cross(dFdx(v_pos), dFdy(v_pos)));
-  vec3 Ns = normalize(v_n);
-  vec3 toEye = u_eye - v_pos;
-  if (dot(Nf, toEye) < 0.0) Nf = -Nf;
-  if (dot(Ns, toEye) < 0.0) Ns = -Ns;
-  vec3 N = normalize(mix(Ns, Nf, 0.75));
+  // the surface normal with the relief's slope taken here, a pixel apart, so a crease is as sharp as the screen
+  vec2 px = 1.0 / u_size;
+  float f0 = folds(v_uv, u_size);
+  float fu = (folds(v_uv + vec2(px.x, 0.0), u_size) - f0) / px.x;
+  float fv = (folds(v_uv + vec2(0.0, px.y), u_size) - f0) / px.y;
+  vec3 N = normalize(cross(v_tu + v_dir * v_h * fu, v_tv + v_dir * v_h * fv));
+  if (dot(N, u_eye - v_pos) < 0.0) N = -N;
   vec3 L = normalize(u_light);
   // 1 on the flat sheet, well below for a facet turned from the light, above for one turned to it
   float shade = min(0.28 + 0.72 * max(dot(N, L), 0.0) / L.z, 1.2);
