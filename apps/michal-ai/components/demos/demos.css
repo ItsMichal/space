@@ -26,6 +26,27 @@
 .pdemo > .pdemo__clip[data-ready] {
   opacity: 1;
 }
+/* a project's own app running in the hero (ProjectDemo's Live): laid out at its design width, scaled to the box,
+   over the cover until it has painted, and not in the way of a click before then */
+.pdemo > .pdemo__live {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+.pdemo > .pdemo__live[data-ready] {
+  opacity: 1;
+  pointer-events: auto;
+}
+.pdemo__live iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  border: 0;
+  transform-origin: 0 0;
+}
 .pdemo__stage {
   position: absolute;
   inset: 0;
