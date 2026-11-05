@@ -21,8 +21,15 @@ const CELLS = 128
 /** A glyph cell, CSS px (the hero globe's cell). */
 const GLYPH_W = 8
 const GLYPH_H = 13
-/** The glyphs, sparse to dense. */
+/** The glyphs of the burning edge, sparse to dense. */
 const RAMP = '.:-=+*#%@'
+/** The embers' glyphs, in tiers sparse to dense: each ember picks its own within its tier, so no two drift alike. */
+const TIERS = ['.`\',', ':;-~^"', '=+!|/\\<>', '*()?{}[]', '#%&$', '@&#']
+/** Every glyph drawn: the edge's ramp first, then the embers' (one atlas). */
+const ATLAS = RAMP + [...new Set(TIERS.join(''))].join('')
+const TIER_AT = TIERS.map((t) => [...t].map((c) => ATLAS.indexOf(c)))
+/** The share of burnt cells that let go of an ember. */
+const SPAWN = 0.4
 /** How deep the burning edge of glyphs runs ahead of the fire, in burn units. */
 const EDGE = 0.05
 /** A burnt cell lets go of its ember while its burn is this fresh, in burn units, and again no sooner than this, ms. */
@@ -41,14 +48,14 @@ const mono = () => getComputedStyle(document.documentElement).getPropertyValue('
 /** The glyph strip, one cell per glyph, white on clear, in device px. */
 function glyphAtlas(cw: number, ch: number) {
   const c = document.createElement('canvas')
-  c.width = cw * RAMP.length
+  c.width = cw * ATLAS.length
   c.height = ch
   const g = c.getContext('2d')!
   g.fillStyle = '#fff'
   g.font = `500 ${Math.round(ch * 0.86)}px ${mono()}`
   g.textAlign = 'center'
   g.textBaseline = 'middle'
-  for (let i = 0; i < RAMP.length; i++) g.fillText(RAMP[i], (i + 0.5) * cw, ch * 0.54)
+  for (let i = 0; i < ATLAS.length; i++) g.fillText(ATLAS[i], (i + 0.5) * cw, ch * 0.54)
   return c
 }
 
@@ -354,6 +361,7 @@ function createStage(w: number, h: number, dpr: number) {
             const a = read[k * 4 + 3]
             if (a < 64 || a > freshMax || t - lastSpawn[k] < COOLDOWN_MS) continue
             lastSpawn[k] = t
+            if (rand() > SPAWN) continue
             const rgb: [number, number, number] = [read[k * 4] / 255, read[k * 4 + 1] / 255, read[k * 4 + 2] / 255]
             // where it burnt through text (anything well off the paper colour) it starts in that colour
             const off = Math.hypot(rgb[0] - paper[0], rgb[1] - paper[1], rgb[2] - paper[2])
@@ -381,8 +389,11 @@ function createStage(w: number, h: number, dpr: number) {
       const u = Math.min(1, (simMs - e.born[i]) / e.life[i])
       const h = Math.sin((e.seed[i] * 917.3 + drawing * 1.31) * 12.9898) * 43758.5453
       const flick = (h - Math.floor(h) - 0.5) * 1.6
-      const g = Math.min(RAMP.length - 1, Math.max(0, Math.round((1 - u) * (1 - u) * (RAMP.length - 1) + flick)))
-      const c = mix3(emberColor(u), [e.r[i], e.g[i], e.b[i]], e.ink[i] * (1 - smooth(0.04, 0.16, u)))
+      const tier = TIER_AT[Math.min(TIERS.length - 1, Math.max(0, Math.round((1 - u) * (1 - u) * (TIERS.length - 1) + flick)))]
+      // its own glyph in the tier, now and then another on the flicker
+      const g = tier[Math.floor((e.seed[i] * 7919 + (h - Math.floor(h) > 0.8 ? drawing : 0)) % tier.length)]
+      // it starts as the page it burnt from (text keeps its colour a little longer), then heats into the fire's colours
+      const c = mix3(emberColor(u), [e.r[i], e.g[i], e.b[i]], 1 - smooth(0.04 + 0.06 * e.ink[i], 0.24 + 0.08 * e.ink[i], u))
       const alpha = 1 - smooth(0.7, 1, u)
       instances.set([e.x[i], e.y[i], g, c[0] * alpha, c[1] * alpha, c[2] * alpha, alpha], i * 7)
     }
@@ -559,7 +570,17 @@ export async function runPaper(go: () => Promise<void> | void): Promise<void> {
       if (!done) root.setAttribute('data-paper', '')
     })
     // the drop leaves once the new route has committed (its data loaded) and the images it shows have come in
-    const loaded = nav.then(() => new Promise(requestAnimationFrame)).then(imagesOnScreen)
+    let loaded = nav.then(() => new Promise(requestAnimationFrame)).then(imagesOnScreen)
+    if (process.env.NODE_ENV !== 'production') {
+      // in development `localStorage.paperSlow = <ms>` makes every route that much slower to load, to watch the drop wait for it
+      let slow = 0
+      try {
+        slow = Number(localStorage.getItem('paperSlow')) || 0
+      } catch {
+        // no storage: no delay
+      }
+      if (slow > 0) loaded = loaded.then(() => new Promise((r) => setTimeout(r, slow)))
+    }
     if (process.env.NODE_ENV !== 'production') console.info(`[paper] capture ${(t1 - t0).toFixed(0)}ms`)
     await stage.play(loaded)
     await nav

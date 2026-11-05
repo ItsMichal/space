@@ -191,6 +191,8 @@ void main() {
     return;
   }
   vec3 col = mix(base, u_char, ink * 0.5);
+  // the paper scorches just ahead of the fire, so it darkens into the burning edge instead of meeting it bare
+  col = mix(col, u_char, 0.55 * smoothstep(-3.0 * u_edge, 0.0, age));
   if (u_state > 0.5) {
     if (age > 0.0) o = vec4(base, (64.0 + 191.0 * clamp(age / u_ash, 0.0, 1.0)) / 255.0);
     else if (age > -u_edge) o = vec4(col, (1.0 + 62.0 * (1.0 + age / u_edge)) / 255.0);

@@ -20,3 +20,8 @@ html[data-paper='hide'] #main > :not(.paper-grid) {
 html[data-paper] .page-enter {
   animation: none !important;
 }
+
+/* the route under the sheet lands at its scroll position at once: never the smooth scroll used for in-page links */
+html[data-paper] {
+  scroll-behavior: auto;
+}

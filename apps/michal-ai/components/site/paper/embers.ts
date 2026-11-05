@@ -1,5 +1,5 @@
 // The fire's glyphs as particles: every glyph cell the fire eats lets go of one glyph, thrown out from the ball, blown wider by the
-// blast as the ball hits the floor, then carried on a moving, swirling air and lifted while it is hot. The air is the curl of a few
+// blast as the ball hits the floor, then carried on a moving, swirling air that draws upward, and lifted while it is hot. The air is the curl of a few
 // travelling waves, so it has no sources or sinks: the glyphs billow and curl round each other as smoke does, never bunching into
 // a point. Pure: numbers in, numbers out, no DOM, no GL; the engine (./engine.ts) spawns them from the burnt cells and draws them.
 
@@ -9,19 +9,23 @@ export const CAP = 6000
 export const STEP_MS = 1000 / 60
 
 /** How a glyph moves, in shares of the stage's short side (`scale`) a second. */
-const THROW = [0.12, 0.55] as const
+const THROW = [0.03, 0.13] as const
 /** How far the throw may turn off straight out from the ball, radians. */
 const THROW_TURN = 0.6
-/** The glyph's own speed fades with this time constant, s: thrown hard, then left to the air. */
-const DRAG_S = 0.42
+/** The glyph's own speed fades with this time constant, s: a soft push, soon left to the air. */
+const DRAG_S = 0.3
 /** The blast as the ball lands: its push outward (a second²) and how fast it dies, s. */
-const BLAST = 4.5
+const BLAST = 1
 const BLAST_S = 0.09
 /** The swirling air: its speed, and the wavelengths of its waves. */
-const AIR = 0.26
+const AIR = 0.3
 const AIR_WAVES = [0.22, 0.31, 0.47, 0.63] as const
+/** The air as a whole draws up, a second: the swirls ride a rising current, so the glyphs go up and away. */
+const UPDRAFT = 0.18
 /** Hot glyphs rise, a second², fading as they cool. */
-const LIFT = 0.55
+const LIFT = 0.3
+/** A glyph sits where it burnt at first, then eases into moving over this long, ms: the paper turns to glyphs before they go. */
+const SETTLE_MS = 260
 /** How long a glyph lives, ms. */
 export const LIFE_MS = [900, 1700] as const
 
@@ -57,7 +61,7 @@ export function air(scale: number, rand: () => number): Wave[] {
     const a = rand() * 2 * Math.PI
     const k = (2 * Math.PI) / (l * scale)
     // a stream function of amplitude A over wavenumber k flows at A * k: set A so each wave flows at its share of AIR
-    return { kx: Math.cos(a) * k, ky: Math.sin(a) * k, w: 0.8 + 1.6 * rand(), phase: rand() * 2 * Math.PI, a: (AIR * scale) / AIR_WAVES.length / k }
+    return { kx: Math.cos(a) * k, ky: Math.sin(a) * k, w: 0.5 + rand(), phase: rand() * 2 * Math.PI, a: (AIR * scale) / AIR_WAVES.length / k }
   })
 }
 
@@ -118,9 +122,11 @@ export function step(e: Embers, b: Blast, ms: number, dt: number) {
     e.vy[i] = e.vy[i] * drag + b.scale * LIFT * (1 - u) * s
     // the air takes over as the glyph's own speed dies
     const [ax, ay] = airAt(b.waves, e.x[i], e.y[i], t)
-    const carry = 0.35 + 0.65 * Math.min(1, u * 2)
-    e.x[i] += (e.vx[i] + ax * carry) * s
-    e.y[i] += (e.vy[i] + ay * carry) * s
+    const carry = 0.7 + 0.3 * Math.min(1, u * 3)
+    const go = Math.min(1, (ms - e.born[i]) / SETTLE_MS)
+    const ease = go * go * (3 - 2 * go)
+    e.x[i] += (e.vx[i] + ax * carry) * s * ease
+    e.y[i] += (e.vy[i] + (ay + b.scale * UPDRAFT) * carry) * s * ease
   }
 }
 

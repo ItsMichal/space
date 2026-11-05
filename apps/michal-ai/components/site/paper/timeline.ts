@@ -3,7 +3,7 @@
 // and squishes into the floor, rebounds once a little way back and settles on the second landing without bouncing again. It takes
 // the flat page to the ball. The motion is a small physics run (gravity, a spring and damper floor), made once and read back by
 // time, so everything is a continuous curve, drawn every frame.
-// An ember catches late in the fall and has eaten the whole sheet as the impact ends; what burns turns to glyphs that rise, billow
+// An ember catches late in the fall and has eaten the whole sheet by the second landing; what burns turns to glyphs that rise, billow
 // outward and fade (drawn by the engine from `burn`).
 import { FRONT_MS, IGNITE_MS, LEAD_MS, PAPER_ASH, PAPER_MS } from './config'
 
@@ -167,7 +167,7 @@ export function frameAt(T: number, c: Crumple = STILL): Frame {
   // wrung back and forth from the landing, dying out with the bounce
   const since = ms - DROPS[0].at - FALL_MS
   const wring = since > 0 && T < 1 ? c.wring * WRING * Math.sin((2 * Math.PI * since) / WRING_MS) * Math.exp(-since / WRING_FADE) : 0
-  // the fire catches late in the fall and races across the sheet through the landing, so it is gone as the impact ends; then the
+  // the fire catches late in the fall and spreads across the sheet through the landing and the rebound, so it is gone by the second landing; then the
   // ash burns out slowly (eased out, so the extra time goes to the tail) and at the end the last of it has lived out its PAPER_ASH
   const q = clamp01((ms - FRONT_MS) / (PAPER_MS - FRONT_MS))
   const burn =
@@ -184,16 +184,16 @@ export function frameAt(T: number, c: Crumple = STILL): Frame {
 }
 
 /** One crumple back and forth of the waiting fringes, ms. */
-const WAIT_MS = 420
+const WAIT_MS = 900
 /** How far the fringes crumple in and out while waiting, in ball. */
-const WAIT_BALL = 0.05
+const WAIT_BALL = 0.025
 
 /** While the drop waits for the new route at the end of the lead-in, the fringes of the sheet keep crumpling in and back out a
  * little (only the edges gather at this little ball). `waited` is how long it has waited, ms; `fade` 1 while waiting, easing to 0
  * as the drop leaves, so the swing never jumps. */
 export function waitingAt(f: Frame, waited: number, fade: number): Frame {
   const k = (WAIT_BALL * fade * (1 - Math.cos((2 * Math.PI * waited) / WAIT_MS))) / 2
-  return { ...f, ball: f.ball + k, fold: f.fold + k, spin: [f.spin[0], f.spin[1], f.spin[2] + 0.3 * k] }
+  return { ...f, ball: f.ball + k, fold: f.fold + k, spin: [f.spin[0], f.spin[1], f.spin[2] + 0.15 * k] }
 }
 
 /** The flicker of the burning glyphs steps on twos (12 a second, as hand-drawn fire does) while the sheet moves every frame. */

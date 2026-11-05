@@ -8,10 +8,10 @@ export const LEAD_MS = 150
 export const CRUMPLE_MS = 480
 /** When the fire catches, in ms from the start: late in the fall, so the crumple reads first, unlit. */
 export const IGNITE_MS = LEAD_MS + 120
-/** When the fire front has crossed the whole sheet, in ms from the start: as the impact ends, the ball coming off the floor after its
- * first squish (the drop lands 180ms after it leaves and is in the floor 125ms, timeline FALL_MS and CONTACT_MS). The ash rises and
- * fades through the rest of FIRE_MS. */
-export const FRONT_MS = LEAD_MS + 305
+/** When the fire front has crossed the whole sheet, in ms from the start: as the ball comes down on its second landing (the drop lands
+ * 180ms after it leaves, rebounds and lands again at 431ms), so the paper turns to glyphs through the whole impact, not in a snap. The
+ * embers drift and go out through the rest of FIRE_MS. */
+export const FRONT_MS = LEAD_MS + 430
 /** The fire, from catching to the last ash fading, in ms. */
 export const FIRE_MS = 2000
 /** The whole animation, in ms: the fire overlaps the end of the crumple. The page capture comes on top, see ./engine.ts. */
