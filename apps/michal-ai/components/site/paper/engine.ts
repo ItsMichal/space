@@ -3,7 +3,7 @@
 // 1. The visible viewport of the old page is captured (html2canvas-pro, the capture the glass lens already uses) over the
 //    backdrop, and laid on a coarse sheet in a fixed canvas over the page, at exactly the page's pixels.
 // 2. The router renders the new page underneath at once; it is shown, live, as soon as it has committed.
-// 3. The sheet crumples in three springy squeezes into a ball (drawn as unshaded line art: ink along the creases, a hard shadow
+// 3. The sheet crumples in two drops into a ball, each landing like a bouncy ball, (drawn as unshaded line art: ink along the creases, a hard shadow
 //    under it) while a fire eats it from the face. What burns turns to glyphs in the site's monospace, in the page's colour and then the fire's,
 //    that rise and go out. The sheet moves every frame; the glyphs flicker on twos.
 // The capture takes real time (about 100 to 400ms on a laptop) and comes on top of PAPER_MS: the page just waits for the click.
@@ -22,7 +22,9 @@ const RAMP = '.:-=+*#%@'
 /** How deep the burning edge of glyphs runs ahead of the fire, in burn units. */
 const EDGE = 0.05
 /** How far a spot rises over its life, in glyph cells. */
-const RISE = 11
+const RISE = 13
+/** How far a spot billows out sideways over its life, as a share of its distance from the middle of the ball. */
+const SPREAD = 0.9
 /** Nothing may hold the overlay longer than this. */
 const WATCHDOG_MS = 8000
 const FOV = (32 * Math.PI) / 180
@@ -345,6 +347,7 @@ function createStage(w: number, h: number, dpr: number) {
       gl.uniform2i(ash.u.u_cellPx, cw, ch)
       gl.uniform1i(ash.u.u_count, RAMP.length)
       gl.uniform1f(ash.u.u_rise, RISE)
+      gl.uniform1f(ash.u.u_spread, SPREAD)
       gl.uniform1f(ash.u.u_drawing, drawing)
       gl.uniform3fv(ash.u.u_paper, paper)
       gl.uniform3fv(ash.u.u_hot, fire.hot)

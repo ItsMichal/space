@@ -1,9 +1,10 @@
 // Pure timing for the paper transition: what the sheet looks like at a moment. No DOM, no GL.
-// The crumple is three squeezes on springs, one running into the next: each pulls the sheet further toward the ball on a damped
-// spring that departs softly and lands with only a breath of overshoot, and each kicks a squash into it, the ball squished flat by the
-// squeeze and springing back a little past round before it settles. Everything is a continuous curve, drawn every frame.
-// The fire catches during the second squeeze, on the face of the sheet, and opens it up; what burns turns to glyphs that rise and
-// fade (drawn by the engine from `burn`).
+// The crumple is two drops, each moving like a bouncy ball dropped on a slightly soft floor: it leaves gently and gathers speed,
+// lands and squishes into the floor, rebounds a little way back and settles after a smaller bounce. The first drop takes the flat
+// page to a loose crumple, the second to the ball. The motion is a small physics run (gravity, a spring and damper floor), made
+// once and read back by time, so everything is a continuous curve, drawn every frame.
+// The fire catches between the drops, on the face of the sheet, and opens it up; what burns turns to glyphs that rise, billow
+// outward and fade (drawn by the engine from `burn`).
 import { PAPER_ASH, PAPER_MS } from './config'
 
 export type Frame = {
@@ -21,41 +22,65 @@ export type Frame = {
 
 const clamp01 = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x)
 
-/** The squeezes: when each starts (ms), how far it takes the ball and its folds, its twist, and how hard it squishes. */
-export const SQUEEZES = [
-  { at: 0, ball: 0.4, fold: 0.6, twist: 0.22, squish: 0.16 },
-  { at: 230, ball: 0.72, fold: 0.88, twist: -0.16, squish: 0.13 },
-  { at: 460, ball: 1, fold: 1, twist: 0.12, squish: 0.11 },
+/** The drops: when each is let go (ms), how far it takes the ball and its folds, its twist, and how hard it squishes on landing. */
+export const DROPS = [
+  { at: 0, ball: 0.55, fold: 0.8, twist: 0.2, squish: 0.17 },
+  { at: 300, ball: 1, fold: 1, twist: -0.1, squish: 0.13 },
 ] as const
 
-/** The spring carrying each squeeze: its frequency (Hz) and damping. Damped enough that it overshoots by only a few percent. */
-const MOVE = { hz: 2.6, zeta: 0.72 }
-/** The spring of the squash: looser, so the ball springs back a little past round once before it settles. */
-const SQUISH = { hz: 3.4, zeta: 0.42 }
-/** The squish lands as its squeeze bites, a little after the squeeze starts (ms). */
-const SQUISH_LAG = 80
+/** How long a drop falls before it first lands, ms. */
+export const FALL_MS = 140
+/** How long the ball is in contact with the soft floor on a landing, ms: the squish. */
+const CONTACT_MS = 75
+/** How much of its speed the ball keeps off the floor; the first rebound rises BOUNCE² of the drop. */
+const BOUNCE = 0.5
+/** How much the ball stretches along its fall at full speed, against its squish. */
+const STRETCH = 0.15
 
-/** Step response of a damped spring, 0 to 1, `t` in ms since it was let go. */
-function springStep(t: number, { hz, zeta }: { hz: number; zeta: number }) {
-  if (t <= 0) return 0
-  const w = 2 * Math.PI * hz
-  const wd = w * Math.sqrt(1 - zeta * zeta)
-  const s = t / 1000
-  return 1 - Math.exp(-zeta * w * s) * (Math.cos(wd * s) + ((zeta * w) / wd) * Math.sin(wd * s))
+/** One drop, run once at 1ms: height above the floor (1 at the start, 0 on the floor, below 0 pressed in) and squish, 0 to 1. */
+const DROP = (() => {
+  const g = 2 / FALL_MS ** 2
+  const lnE = Math.log(BOUNCE)
+  const zeta = -lnE / Math.sqrt(Math.PI ** 2 + lnE ** 2)
+  const w = Math.PI / CONTACT_MS / Math.sqrt(1 - zeta ** 2)
+  const k = w * w
+  const c = 2 * zeta * w
+  const v0 = g * FALL_MS
+  const rest = g / k
+  const dt = 0.25
+  const n = 1000
+  const height = new Float32Array(n + 1)
+  const speed = new Float32Array(n + 1)
+  let x = 1
+  let v = 0
+  for (let i = 0; i <= n * 4; i++) {
+    if (i % 4 === 0) {
+      height[i / 4] = x
+      speed[i / 4] = v
+    }
+    const a = -g + (x < 0 ? -k * x - c * v : 0)
+    v += a * dt
+    x += v * dt
+  }
+  let deepest = 0
+  for (const h of height) deepest = Math.min(deepest, h)
+  // squished by how far it is pressed in past where it rests, stretched by its speed while it flies
+  const squish = height.map((h, i) => Math.max(0, -h - rest) / (-deepest - rest) - (STRETCH * Math.abs(speed[i])) / v0)
+  return { height, squish, n }
+})()
+
+function dropAt(t: number) {
+  if (t <= 0) return { p: 0, squish: 0 }
+  const i = Math.min(t, DROP.n)
+  const a = Math.floor(i)
+  const b = Math.min(a + 1, DROP.n)
+  const f = i - a
+  const h = DROP.height[a] + (DROP.height[b] - DROP.height[a]) * f
+  return { p: 1 - Math.max(0, h), squish: DROP.squish[a] + (DROP.squish[b] - DROP.squish[a]) * f }
 }
 
-/** Impulse response of a damped spring, peaking at 1: the kick in, then the smaller swing back past rest. */
-function springKick(t: number, { hz, zeta }: { hz: number; zeta: number }) {
-  if (t <= 0) return 0
-  const w = 2 * Math.PI * hz
-  const wd = w * Math.sqrt(1 - zeta * zeta)
-  const peak = Math.atan(wd / (zeta * w)) / wd
-  const f = (s: number) => Math.exp(-zeta * w * s) * Math.sin(wd * s)
-  return f(t / 1000) / f(peak)
-}
-
-/** When the fire catches, in ms: during the second squeeze. */
-export const IGNITE_MS = 330
+/** When the fire catches, in ms: between the drops. */
+export const IGNITE_MS = 220
 /** The front starts short of the sheet, its burning edge of glyphs too (engine EDGE), so the first drawings are untouched. */
 const BURN_FROM = -0.1
 
@@ -69,15 +94,14 @@ export function frameAt(T: number): Frame {
   let squash = 0
   let prevBall = 0
   let prevFold = 0
-  for (const s of SQUEEZES) {
-    const t = ms - s.at
-    const e = springStep(t, MOVE)
-    ball += (s.ball - prevBall) * e
-    fold += (s.fold - prevFold) * e
-    twist += s.twist * e
-    squash += s.squish * springKick(t - SQUISH_LAG, SQUISH)
-    prevBall = s.ball
-    prevFold = s.fold
+  for (const d of DROPS) {
+    const { p, squish } = dropAt(ms - d.at)
+    ball += (d.ball - prevBall) * p
+    fold += (d.fold - prevFold) * p
+    twist += d.twist * p
+    squash += d.squish * squish
+    prevBall = d.ball
+    prevFold = d.fold
   }
   // a flat page has nothing to squish: it comes in as the sheet gathers into a ball
   squash *= Math.min(1, ball / 0.35)

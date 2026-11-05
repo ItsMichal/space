@@ -212,7 +212,7 @@ precision highp float;
 uniform sampler2D u_cells, u_glyphs;
 uniform ivec2 u_cellPx;
 uniform int u_count;
-uniform float u_rise, u_drawing;
+uniform float u_rise, u_spread, u_drawing;
 uniform vec3 u_paper, u_hot, u_flame, u_rose, u_cool, u_char;
 out vec4 o;
 float h1(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
@@ -224,7 +224,9 @@ vec3 ember(float u) {
   c = mix(c, u_rose, smoothstep(0.3, 0.65, u));
   return mix(c, u_cool, smoothstep(0.65, 0.95, u));
 }
-const int REACH = 14;
+const int REACH = 17;
+// the most columns a row of sources can span once billowed out
+const int WIDE = 6;
 void main() {
   ivec2 px = ivec2(gl_FragCoord.xy);
   ivec2 cell = px / u_cellPx;
@@ -242,25 +244,42 @@ void main() {
     o = vec4(ink * c, c);
     return;
   }
-  float speed = u_rise * (0.65 + 0.7 * h1(vec2(float(cell.x), 3.1)));
+  // each spot rises in its column and billows out sideways from the middle, where the ball is; so look back down for the spots
+  // that would land here, among the few columns that could reach it at each height
+  float mid = float(textureSize(u_cells, 0).x) * 0.5;
+  float out_x = float(cell.x) + 0.5 - mid;
   vec4 s = vec4(0.0);
   float u = 0.0;
   bool hit = false;
-  for (int k = 0; k <= REACH; k++) {
-    ivec2 src = cell - ivec2(0, k);
-    if (src.y < 0) break;
-    vec4 t = texelFetch(u_cells, src, 0);
-    if (t.a * 255.0 < 63.5) continue;
-    float a = (t.a * 255.0 - 64.0) / 191.0;
-    // held in place for the first part of its life, then rising
-    float rise = max(0.0, a - 0.14) / 0.86 * speed;
-    if (abs(rise - float(k)) > 0.5) continue;
-    // fewer, sparser embers as they rise
-    if (h1(vec2(src) + 0.37) < a * a * 0.6) continue;
-    s = t;
-    u = a;
-    hit = true;
-    break;
+  for (int k = 0; k <= REACH && !hit; k++) {
+    if (cell.y - k < 0) break;
+    // how far along its rise a spot k cells up is, at the slowest and the fastest speeds, and the columns those come from
+    float slow = min(1.0, float(k) / (u_rise * 0.65));
+    float fast = float(k) / (u_rise * 1.35);
+    float a0 = mid + out_x / (1.0 + u_spread * fast);
+    float a1 = mid + out_x / (1.0 + u_spread * slow);
+    int lo = int(floor(min(a0, a1) - 0.5));
+    int hi = int(floor(max(a0, a1) + 0.5));
+    hi = min(hi, lo + WIDE);
+    for (int x = lo; x <= hi; x++) {
+      ivec2 src = ivec2(x, cell.y - k);
+      if (x < 0) continue;
+      vec4 t = texelFetch(u_cells, src, 0);
+      if (t.a * 255.0 < 63.5) continue;
+      float a = (t.a * 255.0 - 64.0) / 191.0;
+      float speed = u_rise * (0.65 + 0.7 * h1(vec2(float(x), 3.1)));
+      // held in place for the first part of its life, then rising and spreading
+      float along = max(0.0, a - 0.14) / 0.86;
+      if (abs(along * speed - float(k)) > 0.5) continue;
+      float lands = mid + (float(x) + 0.5 - mid) * (1.0 + u_spread * along);
+      if (abs(lands - (float(cell.x) + 0.5)) > 0.5) continue;
+      // fewer, sparser embers as they rise
+      if (h1(vec2(src) + 0.37) < a * a * 0.6) continue;
+      s = t;
+      u = a;
+      hit = true;
+      break;
+    }
   }
   if (!hit || u >= 1.0) discard;
   int g = clamp(int(round((1.0 - u) * (1.0 - u) * float(u_count - 1) + flick)), 0, u_count - 1);
@@ -268,7 +287,7 @@ void main() {
   // where it burnt through text (anything well off the paper colour) it starts in that colour
   float ink = smoothstep(0.15, 0.4, distance(s.rgb, u_paper));
   vec3 col = mix(ember(u), s.rgb, ink * (1.0 - smoothstep(0.04, 0.16, u)));
-  float alpha = cov * (1.0 - smoothstep(0.7, 1.0, u));
+  float alpha = cov * (1.0 - smoothstep(0.75, 1.0, u));
   o = vec4(col * alpha, alpha);
 }
 `
