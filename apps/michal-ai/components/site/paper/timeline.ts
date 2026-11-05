@@ -18,6 +18,8 @@ export type Frame = {
   squash: number
   /** Euler angles of the sheet, radians. */
   spin: [number, number, number]
+  /** How far the sheet is lifted toward the camera, 0 to 1: picked up in the lead-in, it falls back down with the drop. */
+  lift: number
   /** The fire front in the sheet's burn field (0 to 1 across the sheet); a spot burns once it is behind it. Below 0 not lit. */
   burn: number
 }
@@ -65,7 +67,7 @@ export const DROPS = [{ at: LEAD_MS, ball: 1, fold: 1, twist: 0.1, squish: 0.17 
 const LEAD_BALL = 0.08
 
 /** How long a drop falls before it first lands, ms. */
-export const FALL_MS = 180
+export const FALL_MS = 295
 /** How long the ball is in contact with the soft floor on a landing, ms: the squish. */
 const CONTACT_MS = 105
 /** How much of its speed the ball keeps off the floor; the one rebound rises BOUNCE² of the drop, the next landing stays down. */
@@ -147,8 +149,10 @@ export function frameAt(T: number, c: Crumple = STILL): Frame {
   fold += s
   let prevBall = LEAD_BALL
   let prevFold = LEAD_BALL
+  let fallen = 0
   for (const d of DROPS) {
     const { p, squish } = dropAt(ms - d.at)
+    if (d === DROPS[0]) fallen = Math.min(1, p)
     ball += (d.ball - prevBall) * p
     fold += (d.fold - prevFold) * p
     twist += d.twist * c.twist * p
@@ -174,10 +178,13 @@ export function frameAt(T: number, c: Crumple = STILL): Frame {
     ms < FRONT_MS
       ? BURN_FROM + FRONT_SPEED * Math.max(0, ms - IGNITE_MS)
       : 1 + PAPER_ASH * (1 - (1 - q) ** ASH_EASE)
+  // the page is lifted off the desk as the lead-in gathers it, eased in and out, and falls back down with the drop
+  const lift = T >= 1 ? 0 : lead * lead * (3 - 2 * lead) * (1 - fallen)
   return {
     ball,
     fold,
     squash,
+    lift,
     spin: [c.spin[0] * ball + 0.3 * wring, c.spin[1] * ball - 0.5 * wring, c.spin[2] * ball + twist + wring],
     burn,
   }

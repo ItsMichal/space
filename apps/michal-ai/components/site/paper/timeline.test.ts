@@ -7,14 +7,14 @@ const ms = (m: number) => m / PAPER_MS
 const each = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, i) => at(ms(from + i)))
 
 describe('paper transition timeline', () => {
-  it('crumples in 480ms and burns for two seconds, overlapping', () => {
-    expect(CRUMPLE_MS).toBe(480)
+  it('crumples in 780ms and burns for two seconds, overlapping', () => {
+    expect(CRUMPLE_MS).toBe(780)
     expect(FIRE_MS).toBe(2000)
     expect(PAPER_MS).toBeLessThan(LEAD_MS + CRUMPLE_MS + FIRE_MS)
   })
 
   it('starts on the flat page exactly where it is, not yet lit', () => {
-    expect(at(0)).toMatchObject({ ball: 0, fold: 0, squash: 0, spin: [0, 0, 0] })
+    expect(at(0)).toMatchObject({ ball: 0, fold: 0, squash: 0, lift: 0, spin: [0, 0, 0] })
     expect(at(0).burn).toBeLessThan(0)
   })
 
@@ -23,6 +23,13 @@ describe('paper transition timeline', () => {
     expect(at(ms(LEAD_MS / 2)).ball).toBeGreaterThan(0.01)
     expect(at(ms(LEAD_MS)).ball).toBeLessThan(0.2)
     expect(at(ms(LEAD_MS)).burn).toBeLessThan(0)
+  })
+
+  it('lifts the page toward the camera in the lead-in, and drops it back down with the ball', () => {
+    expect(at(ms(LEAD_MS)).lift).toBeCloseTo(1, 5)
+    expect(at(ms(LEAD_MS / 2)).lift).toBeGreaterThan(0.3)
+    expect(at(ms(LEAD_MS + FALL_MS)).lift).toBeLessThan(0.01)
+    expect(at(1).lift).toBe(0)
   })
 
   it('moves smoothly: no jump between frames at 60 fps', () => {

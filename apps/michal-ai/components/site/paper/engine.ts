@@ -42,6 +42,9 @@ const SWING_OUT_MS = 120
 /** The longest the drop waits for the new page's images on screen, ms. */
 const IMAGES_MS = 1500
 const FOV = (32 * Math.PI) / 180
+/** How far the page is lifted toward the camera before it crumples, as a share of the camera's distance: a little, about 5% larger,
+ * so while the new route loads the old page overhangs every edge and still covers it all. */
+const LIFT = 0.05
 
 const mono = () => getComputedStyle(document.documentElement).getPropertyValue('--font-mono').trim() || 'ui-monospace, monospace'
 
@@ -316,7 +319,7 @@ function createStage(w: number, h: number, dpr: number) {
     const sy = 1 - s.squash
     const sxz = 1 / Math.sqrt(sy)
     gl.uniformMatrix3fv(u.u_rot, false, rotation(...s.spin).map((v, i) => v * (i % 3 === 1 ? sy : sxz)))
-    gl.uniform3f(u.u_center, 0, 0, R * 0.5 * s.ball)
+    gl.uniform3f(u.u_center, 0, 0, R * 0.5 * s.ball + LIFT * D * s.lift)
     gl.uniformMatrix4fv(u.u_vp, false, vp)
     gl.uniform1i(u.u_a, 0)
     gl.uniform1f(u.u_burn, s.burn)
@@ -326,7 +329,8 @@ function createStage(w: number, h: number, dpr: number) {
     gl.uniform1f(u.u_shadow, state === 2 ? 1 : 0)
     // the floor the shadow falls on, behind the ball; it comes in as the sheet lifts off the page
     gl.uniform1f(u.u_floor, -0.55 * R * s.ball)
-    gl.uniform1f(u.u_shadowA, 0.22 * Math.min(1, s.ball / 0.3))
+    // it comes in as the sheet lifts off the page, or gathers
+    gl.uniform1f(u.u_shadowA, Math.max(0.22 * Math.min(1, s.ball / 0.3), 0.1 * s.lift))
     gl.uniform3fv(u.u_back, back)
     gl.uniform3fv(u.u_char, fire.char)
     gl.activeTexture(gl.TEXTURE0)
@@ -417,7 +421,7 @@ function createStage(w: number, h: number, dpr: number) {
     gl.viewport(0, 0, canvas.width, canvas.height)
     gl.clearColor(0, 0, 0, 0)
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
-    if (s.ball > 0) {
+    if (s.ball > 0 || s.lift > 0) {
       // the shadow first, under the sheet: one flat tone, each pixel darkened once however many folds land on it
       gl.disable(gl.DEPTH_TEST)
       gl.enable(gl.BLEND)

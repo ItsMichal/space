@@ -25,7 +25,7 @@ const UPDRAFT = 0.18
 /** Hot glyphs rise, a second², fading as they cool. */
 const LIFT = 0.3
 /** A glyph sits where it burnt at first, then eases into moving over this long, ms: the paper turns to glyphs before they go. */
-const SETTLE_MS = 260
+const SETTLE_MS = 320
 /** How long a glyph lives, ms. */
 export const LIFE_MS = [900, 1700] as const
 

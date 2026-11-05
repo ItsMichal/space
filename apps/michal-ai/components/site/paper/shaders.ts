@@ -139,11 +139,11 @@ vec3 base(vec2 uv, out vec3 dir, out float h) {
   vec3 sn = vec3(sin(ph) * cos(th), sin(ph) * sin(th), cos(ph));
   vec3 pos = mix(vec3(p0, 0.0), sn * u_R, bl);
   dir = normalize(mix(vec3(0.0, 0.0, 1.0), sn, bl));
-  h = u_fold * mix(0.07 * minDim, 0.22 * u_R, bl);
+  h = u_fold * mix(0.05 * minDim, 0.16 * u_R, bl);
   // the outer part of the sheet does not tuck in smoothly behind the ball: it stands off it in pointed flaps and corners, so the
   // silhouette is jagged
   float flap = smoothstep(0.35, 1.0, r) * spikes(q * 5.0 + u_seed);
-  return pos + sn * u_R * 0.65 * flap * bl;
+  return pos + sn * u_R * 0.45 * flap * bl;
 }
 // With u_shadow set the point is laid on a floor behind the ball, pushed a little down and right with its height, for a close drop
 // shadow (thrown along the real light it would fall far off the ball).
