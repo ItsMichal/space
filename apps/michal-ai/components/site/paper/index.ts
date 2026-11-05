@@ -1,11 +1,10 @@
 // Paper transition, the entry the Link imports. It is small on purpose: it decides whether a click gets the effect and loads
 // the WebGL engine (./engine.ts, plus html2canvas-pro) only when one is about to run, or on idle after the page is up.
 //
-// What runs: the visible part of the current page is captured to a texture and laid on a WebGL sheet over the page, the sheet
-// crumples into a ball while React Router loads and renders the destination underneath (hidden), the new page is captured the
-// same way, and the ball unfolds into it, lands creased, and the creases are pressed out until it is flat; then the overlay
-// goes and the live page is back. Only plain left clicks on in-app links to another path; no hash or same-page links, never the
-// first load, never with reduced motion, and any failure falls back to the plain navigation.
+// What runs: the visible part of the current page is captured to a texture and laid on a WebGL sheet over the page; React Router
+// renders the destination underneath, shown as soon as it has committed; the sheet crumples into a ball, which is wound back and
+// tossed off screen, and the overlay goes. Only plain left clicks on in-app links to another path; no hash or same-page links,
+// never the first load, never with reduced motion, and any failure falls back to the plain navigation.
 import { PAPER_TRANSITION } from './config'
 import './paper.css'
 

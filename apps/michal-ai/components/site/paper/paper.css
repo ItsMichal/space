@@ -1,5 +1,6 @@
-/* Paper transition (./index.ts). While it runs the WebGL sheet stands in for the page: the live page is hidden under it, the
-   backdrop stays as the desk the sheet lies on, and the nav stays on top, crisp, as in every other route change. */
+/* Paper transition (./index.ts). The WebGL sheet stands in for the old page: the live page is hidden under it until the new route
+   has committed (data-paper="hide"), then the new page is there behind the ball as it is tossed. The backdrop stays as the desk
+   the sheet lies on, and the nav stays on top, crisp, as in every other route change. */
 .paper-overlay {
   position: fixed;
   inset: 0;
@@ -11,8 +12,8 @@
   transition: opacity 140ms linear;
 }
 
-html[data-paper] body > :not(.nav-glass):not(.nav-scrim):not(.paper-overlay):not(#main),
-html[data-paper] #main > :not(.paper-grid) {
+html[data-paper='hide'] body > :not(.nav-glass):not(.nav-scrim):not(.paper-overlay):not(#main),
+html[data-paper='hide'] #main > :not(.paper-grid) {
   visibility: hidden;
 }
 

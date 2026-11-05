@@ -2,21 +2,17 @@
 //
 // 1. The visible viewport of the old page is captured (html2canvas-pro, the capture the glass lens already uses) over the
 //    backdrop, and laid on a finely subdivided sheet in a fixed canvas over the page, at exactly the page's pixels.
-// 2. The sheet crumples into a ball (noise folds plus a pull onto a sphere, a real crumpled paper height and normal map for
-//    the fine creases), while the router renders the new page underneath, hidden.
-// 3. The new page is captured the same way, the ball unfolds into it (the textures cross-fade while the ball opens), lands
-//    creased, and the creases are pressed out from the centre until the sheet is flat. Then the live page is shown again.
-// Captures take real time (about 100 to 400ms each on a laptop); they come on top of PAPER_MS, the first before the crumple
-// (the page just waits for the click), the second while the ball rests.
-import { PAPER_MS, PAPER_PHASES } from './config'
+// 2. The router renders the new page underneath at once; it is shown, live, as soon as it has committed.
+// 3. The sheet draws in, crumples into a ball (noise folds plus a pull onto a sphere, a real crumpled paper height and normal
+//    map for the fine creases), is picked up, wound back and tossed off screen. Drawn on twos, cel shaded, inked.
+// The capture takes real time (about 100 to 400ms on a laptop) and comes on top of PAPER_MS: the page just waits for the click.
+import { PAPER_MS } from './config'
 import { SHADOW_FS, SHADOW_VS, SHEET_FS, SHEET_VS } from './shaders'
-import { crumpleAt, smoothAt, unfoldAt, type SheetState } from './timeline'
+import { frameAt, onTwos, type Dims, type Frame } from './timeline'
 
 const MAX_DPR = 2
 /** Cells along the sheet's long side. */
 const CELLS = 128
-/** The new page gets this long to settle (fonts, images in view) before it is captured anyway. */
-const SETTLE_MS = 600
 /** Nothing may hold the overlay longer than this. */
 const WATCHDOG_MS = 8000
 const FOV = (32 * Math.PI) / 180
@@ -39,7 +35,6 @@ export function preloadMaps(): Promise<Maps> {
 }
 
 const frame = () => new Promise<number>((r) => requestAnimationFrame(r))
-const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 
 function rgb(css: string): [number, number, number] {
   const c = document.createElement('canvas').getContext('2d')!
@@ -106,22 +101,25 @@ async function capture(w: number, h: number, scale: number): Promise<HTMLCanvasE
   return out
 }
 
-/** The new page has committed: give it a moment for fonts and the images in view, bounded. */
-async function settle(h: number) {
-  await frame()
-  await frame()
-  const imgs = Array.from(document.querySelectorAll<HTMLImageElement>('#main img')).filter((img) => {
-    if (img.complete) return false
-    const r = img.getBoundingClientRect()
-    return r.bottom > 0 && r.top < h
-  })
-  await Promise.race([Promise.all([document.fonts?.ready, ...imgs.map((i) => i.decode().catch(() => {}))]), wait(SETTLE_MS)])
-}
-
 function perspective(fov: number, aspect: number, near: number, far: number) {
   const f = 1 / Math.tan(fov / 2)
   const nf = 1 / (near - far)
   return [f / aspect, 0, 0, 0, 0, f, 0, 0, 0, 0, (far + near) * nf, -1, 0, 0, 2 * far * near * nf, 0]
+}
+
+/** 3x3 column-major product a * b. */
+function mul3(a: number[], b: number[]) {
+  const o = new Array<number>(9)
+  for (let c = 0; c < 3; c++) for (let r = 0; r < 3; r++) o[c * 3 + r] = a[r] * b[c * 3] + a[3 + r] * b[c * 3 + 1] + a[6 + r] * b[c * 3 + 2]
+  return o
+}
+
+/** Squash and stretch: `s` along the screen direction `dir`, the inverse root across it (and in depth), so the volume holds. */
+function stretch(dir: number, s: number) {
+  const [c, n] = [Math.cos(dir), Math.sin(dir)]
+  const q = 1 / Math.sqrt(s)
+  // q * I + (s - q) * v v^T, v = (c, n, 0)
+  return [q + (s - q) * c * c, (s - q) * c * n, 0, (s - q) * c * n, q + (s - q) * n * n, 0, 0, 0, q]
 }
 
 function rotation(x: number, y: number, z: number) {
@@ -219,14 +217,10 @@ function createStage(w: number, h: number, dpr: number, m: Maps) {
   }
   texture(2, m.normal, true)
   texture(3, m.height, true)
-  const pages: (WebGLTexture | null)[] = [null, null]
-  const setPage = (i: 0 | 1, src: HTMLCanvasElement) => {
-    if (pages[i]) gl.deleteTexture(pages[i])
-    pages[i] = texture(i, src, false)
-    if (i === 0) {
-      gl.activeTexture(gl.TEXTURE1)
-      gl.bindTexture(gl.TEXTURE_2D, pages[0])
-    }
+  let page: WebGLTexture | null = null
+  const setPage = (src: HTMLCanvasElement) => {
+    if (page) gl.deleteTexture(page)
+    page = texture(0, src, false)
   }
 
   const minDim = Math.min(w, h)
@@ -243,23 +237,33 @@ function createStage(w: number, h: number, dpr: number, m: Maps) {
   const ink = rgb(getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#1c2420')
   const tile = Math.min(560, Math.max(300, minDim * 0.7))
 
-  const draw = (s: SheetState) => {
+  const dims: Dims = { w, h, R }
+  let drawing = 0
+
+  const draw = (s: Frame) => {
     gl.viewport(0, 0, canvas.width, canvas.height)
     gl.clearColor(0, 0, 0, 0)
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
     const b = s.ball
-    // contact shadow, from the sheet's outline down to the ball's
-    const shadowAlpha = 0.2 * Math.min(1, b * 3) * (1 - 0.3 * b)
+    // on screen at (x, y) and `lift` times its size: perspective does the sizing, so the ball sits nearer the eye
+    const z = D * (1 - 1 / s.lift)
+    const cx = s.x / s.lift
+    const cy = s.y / s.lift
+    // a flat cartoon shadow on the desk under the ball, left behind as the ball is picked up
+    const up = s.lift - 1
+    // only under the formed ball: a hard-edged shadow under the half-crumpled sheet reads as a grey box
+    const shadowAlpha = 0.2 * Math.max(0, Math.min(1, (b - 0.55) / 0.35)) * s.shadow
     if (shadowAlpha > 0.001) {
       gl.disable(gl.DEPTH_TEST)
       gl.enable(gl.BLEND)
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
       gl.useProgram(shadow.p)
-      const half = [w / 2 + (R * 0.8 - w / 2) * b, h / 2 + (R * 0.8 - h / 2) * b]
-      gl.uniform2f(shadow.u.u_c, w / 2 + R * 0.22 * b, h / 2 - R * 0.3 * b)
+      const r = R * 0.8 * (1 - 0.5 * up)
+      const half = [w / 2 + (r - w / 2) * b, h / 2 + (r - h / 2) * b]
+      gl.uniform2f(shadow.u.u_c, w / 2 + cx + R * (0.22 + 2.5 * up) * b, h / 2 + cy - R * (0.3 + 3 * up) * b)
       gl.uniform2f(shadow.u.u_half, half[0], half[1])
-      gl.uniform1f(shadow.u.u_r, R * 0.8 * b)
-      gl.uniform1f(shadow.u.u_blur, 6 + R * 0.5 * b)
+      gl.uniform1f(shadow.u.u_r, r * b)
+      gl.uniform1f(shadow.u.u_blur, 1.5)
       gl.uniform1f(shadow.u.u_alpha, shadowAlpha)
       gl.uniform1f(shadow.u.u_dpr, dpr)
       gl.uniform3f(shadow.u.u_ink, ink[0], ink[1], ink[2])
@@ -275,47 +279,57 @@ function createStage(w: number, h: number, dpr: number, m: Maps) {
     gl.uniform1f(u.u_ball, b)
     gl.uniform1f(u.u_fold, s.fold)
     gl.uniform1f(u.u_wrinkle, s.wrinkle)
-    gl.uniform1f(u.u_smooth, s.smooth)
     gl.uniform1f(u.u_R, R)
     gl.uniform1f(u.u_tile, tile)
-    gl.uniformMatrix3fv(u.u_rot, false, rotation(-0.35 * b, 0.55 * b, 0.5 * b))
-    gl.uniform3f(u.u_center, 0, 0, R * 0.5 * b)
+    const m = mul3(stretch(s.dir, s.stretch), rotation(...s.spin)).map((v) => v * s.scale)
+    gl.uniformMatrix3fv(u.u_rot, false, m)
+    gl.uniform3f(u.u_center, cx, cy, z + R * 0.5 * b)
     gl.uniformMatrix4fv(u.u_vp, false, vp)
     gl.uniform1i(u.u_a, 0)
-    gl.uniform1i(u.u_b, 1)
     gl.uniform1i(u.u_normal, 2)
     gl.uniform1i(u.u_height, 3)
-    gl.uniform1f(u.u_mix, pages[1] ? s.mix : 0)
     gl.uniform3f(u.u_back, back[0], back[1], back[2])
+    gl.uniform3f(u.u_ink, ink[0], ink[1], ink[2])
     gl.uniform3f(u.u_light, -0.45, 0.55, 0.7)
-    gl.uniform3f(u.u_eye, 0, 0, D)
     gl.activeTexture(gl.TEXTURE0)
-    gl.bindTexture(gl.TEXTURE_2D, pages[0])
-    gl.activeTexture(gl.TEXTURE1)
-    gl.bindTexture(gl.TEXTURE_2D, pages[1] ?? pages[0])
+    gl.bindTexture(gl.TEXTURE_2D, page)
     gl.bindVertexArray(sheetVao)
+    // the ink line first: the far side of the sheet pushed out, a little thicker or thinner per drawing, as a hand-inked line boils
+    const boil = 1 + 0.18 * Math.sin(drawing * 2.7)
+    const line = 3.4 * boil * Math.min(1, b * 3) / s.lift
+    if (line > 0.05) {
+      gl.enable(gl.CULL_FACE)
+      gl.cullFace(gl.FRONT)
+      gl.uniform1f(u.u_outline, line)
+      gl.uniform1f(u.u_inkPass, 1)
+      gl.drawElements(gl.TRIANGLES, idx.length, gl.UNSIGNED_SHORT, 0)
+      gl.disable(gl.CULL_FACE)
+    }
+    gl.uniform1f(u.u_outline, 0)
+    gl.uniform1f(u.u_inkPass, 0)
     gl.drawElements(gl.TRIANGLES, idx.length, gl.UNSIGNED_SHORT, 0)
     gl.bindVertexArray(null)
   }
 
-  /** Plays one phase over `ms`. In development `window.__paperHold = '<phase>:<t>'` stops it at that moment, for screenshots. */
-  const play = async (at: (t: number) => SheetState, ms: number, name: string) => {
-    const [hp, ht] = (process.env.NODE_ENV !== 'production' && (window as { __paperHold?: string }).__paperHold?.split(':')) || []
+  /** Plays the whole animation, a new drawing every 1 / PAPER_FPS s. In development `window.__paperHold = <0 to 1>` stops it there,
+   * for screenshots. */
+  const play = async () => {
+    const hold = process.env.NODE_ENV !== 'production' ? (window as { __paperHold?: number }).__paperHold : undefined
     const t0 = performance.now()
+    let last = -1
     for (;;) {
-      const t = Math.min(1, ((await frame()) - t0) / ms)
-      if (hp === name && t >= Number(ht)) {
-        draw(at(Number(ht)))
+      const ms = onTwos((await frame()) - t0)
+      if (ms === last) continue
+      last = ms
+      drawing++
+      const T = ms / PAPER_MS
+      if (hold != null && T >= hold) {
+        draw(frameAt(hold, dims))
         await new Promise(() => {}) // held for inspection until the page is reloaded
       }
-      draw(at(t))
-      if (t >= 1) return
+      draw(frameAt(T, dims))
+      if (T >= 1) return
     }
-  }
-
-  const fadeOut = async () => {
-    canvas.style.opacity = '0'
-    await wait(160)
   }
 
   const destroy = () => {
@@ -323,7 +337,7 @@ function createStage(w: number, h: number, dpr: number, m: Maps) {
     gl.getExtension('WEBGL_lose_context')?.loseContext()
   }
 
-  return { canvas, setPage, draw, play, fadeOut, destroy }
+  return { canvas, setPage, draw, play, destroy, dims }
 }
 
 /** Runs the whole transition; `go` performs the navigation and resolves once the new route has committed. */
@@ -336,7 +350,7 @@ export async function runPaper(go: () => Promise<void> | void): Promise<void> {
   const [m, old] = await Promise.all([preloadMaps(), capture(w, h, dpr)])
   const t1 = performance.now()
   const stage = createStage(w, h, dpr, m)
-  const held = process.env.NODE_ENV !== 'production' && !!(window as { __paperHold?: string }).__paperHold
+  const held = process.env.NODE_ENV !== 'production' && (window as { __paperHold?: number }).__paperHold != null
   const watchdog = held ? 0 : window.setTimeout(() => finish(), WATCHDOG_MS)
   let done = false
   function finish() {
@@ -347,33 +361,19 @@ export async function runPaper(go: () => Promise<void> | void): Promise<void> {
     stage.destroy()
   }
   try {
-    stage.setPage(0, old)
-    stage.draw(crumpleAt(0))
+    stage.setPage(old)
+    stage.draw(frameAt(0, stage.dims))
     document.body.appendChild(stage.canvas)
-    root.setAttribute('data-paper', '')
+    // the old page goes under the sheet at once; the new one shows behind the ball as soon as it has committed
+    root.setAttribute('data-paper', 'hide')
     const nav = Promise.resolve(go()).then(() => {
-      // the new route set the fade-up that a navigation without a view transition gets; the sheet is that transition here
+      // the new route set the fade-up that a navigation without a view transition gets; the toss is that transition here
       root.removeAttribute('data-fade')
-      return settle(h)
+      if (!done) root.setAttribute('data-paper', '')
     })
-    await stage.play(crumpleAt, PAPER_MS * PAPER_PHASES.crumple, 'crumple')
+    if (process.env.NODE_ENV !== 'production') console.info(`[paper] capture ${(t1 - t0).toFixed(0)}ms`)
+    await stage.play()
     await nav
-    root.removeAttribute('data-fade')
-    if (done) return
-    const t2 = performance.now()
-    const fresh = await capture(w, h, dpr).catch(() => null)
-    if (process.env.NODE_ENV !== 'production') console.info(`[paper] captures ${(t1 - t0).toFixed(0)}ms + ${(performance.now() - t2).toFixed(0)}ms`)
-    if (done) return
-    if (!fresh) {
-      root.removeAttribute('data-paper')
-      await stage.fadeOut()
-      return
-    }
-    stage.setPage(1, fresh)
-    await stage.play(unfoldAt, PAPER_MS * PAPER_PHASES.unfold, 'unfold')
-    await stage.play(smoothAt, PAPER_MS * PAPER_PHASES.smooth, 'smooth')
-    root.removeAttribute('data-paper')
-    await stage.fadeOut()
   } finally {
     finish()
   }

@@ -1,37 +1,49 @@
 import { describe, expect, it } from 'vitest'
-import { PAPER_MS, PAPER_PHASES } from './config'
-import { crumpleAt, smoothAt, unfoldAt, wrinkleLeft } from './timeline'
+import { PAPER_FPS, PAPER_MS, PAPER_PHASES } from './config'
+import { crumpleAt, frameAt, onTwos, tossAt, windupAt, type Dims } from './timeline'
+
+const dims: Dims = { w: 1280, h: 800, R: 160 }
 
 describe('paper transition timeline', () => {
-  it('runs one to two seconds in all, split over the three phases', () => {
-    expect(PAPER_MS).toBeGreaterThanOrEqual(1000)
+  it('runs about a second in all, split over the three phases', () => {
+    expect(PAPER_MS).toBeGreaterThanOrEqual(800)
     expect(PAPER_MS).toBeLessThanOrEqual(2000)
-    expect(PAPER_PHASES.crumple + PAPER_PHASES.unfold + PAPER_PHASES.smooth).toBeCloseTo(1)
+    expect(PAPER_PHASES.crumple + PAPER_PHASES.windup + PAPER_PHASES.toss).toBeCloseTo(1)
   })
 
-  it('starts on the flat old page and ends on the clean new page', () => {
-    expect(crumpleAt(0)).toEqual({ ball: 0, fold: 0, wrinkle: 0, smooth: 0, mix: 0 })
-    const end = smoothAt(1)
-    expect(end).toMatchObject({ ball: 0, fold: 0, smooth: 1, mix: 1 })
-    // fully smoothed, no crease is left anywhere on the sheet
-    for (const d of [0, 0.5, 1]) expect(wrinkleLeft(end.smooth, d)).toBe(0)
+  it('starts on the flat page exactly where it is', () => {
+    expect(frameAt(0, dims)).toMatchObject({ ball: 0, fold: 0, wrinkle: 0, x: 0, y: 0, lift: 1, scale: 1, stretch: 1 })
   })
 
-  it('meets at the ball and at the wrinkled landing without a jump', () => {
-    const ball = crumpleAt(1)
-    const opening = unfoldAt(0)
-    expect(ball.ball).toBeCloseTo(1)
-    expect(opening.ball).toBeCloseTo(ball.ball)
-    expect(opening.fold).toBeCloseTo(ball.fold)
-    const landed = unfoldAt(1)
-    const smoothing = smoothAt(0)
-    expect(landed).toMatchObject({ ball: 0, fold: 0, mix: 1 })
-    expect(smoothing.ball).toBe(landed.ball)
-    expect(smoothing.wrinkle).toBe(landed.wrinkle)
-    expect(smoothing.smooth).toBe(0)
+  it('draws in before it crumples, and overshoots once the ball has formed', () => {
+    expect(crumpleAt(0.07).scale).toBeLessThan(1)
+    expect(crumpleAt(0.07).ball).toBe(0)
+    expect(Math.max(...[0.88, 0.9, 0.92].map((t) => crumpleAt(t).scale))).toBeGreaterThan(1)
+    expect(crumpleAt(1).scale).toBeCloseTo(1, 1)
   })
 
-  it('presses the creases out from the centre first', () => {
-    expect(wrinkleLeft(0.4, 0)).toBeLessThan(wrinkleLeft(0.4, 1))
+  it('hands the ball from one phase to the next without a jump, bar the release', () => {
+    const [c, w0, w1, t0] = [crumpleAt(1), windupAt(0, dims), windupAt(1, dims), tossAt(0, dims)]
+    expect(w0.ball).toBeCloseTo(c.ball)
+    expect(w0.spin).toEqual(c.spin)
+    expect([t0.x, t0.y, t0.lift]).toEqual([w1.x, w1.y, w1.lift])
+    expect(t0.spin[2]).toBeCloseTo(w1.spin[2])
+    // squashed on the wind-up, stretched on the release
+    expect(w1.stretch).toBeLessThan(1)
+    expect(t0.stretch).toBeGreaterThan(1.3)
+  })
+
+  it('ends with the ball off screen', () => {
+    const end = frameAt(1, dims)
+    expect(end.x - dims.R * 1.5 * end.lift * end.stretch).toBeGreaterThan(dims.w / 2)
+    expect(end.shadow).toBe(0)
+  })
+
+  it('holds each drawing for two frames at 24 fps, and lands on the end', () => {
+    expect(PAPER_FPS).toBe(12)
+    expect(onTwos(0)).toBe(0)
+    expect(onTwos(80)).toBe(0)
+    expect(onTwos(90)).toBeCloseTo(1000 / 12)
+    expect(onTwos(PAPER_MS + 5)).toBe(PAPER_MS)
   })
 })
