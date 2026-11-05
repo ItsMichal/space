@@ -49,6 +49,8 @@ export type CareerEntry = {
   org: string
   role: string
   orgUrl?: string
+  /** The employer's mark, one colour, on the /about timeline's node (the same file as `experience`). */
+  logo?: string
   /** Display dates and ISO months (for <time>). `end` omitted means current. */
   dates: string
   start: string
@@ -162,6 +164,7 @@ export const profile = {
       org: 'SpaceX',
       role: 'Software Engineer',
       orgUrl: 'https://www.spacex.com',
+      logo: '/media/about/logos/spacex.svg',
       dates: 'Apr 2024 to 2026',
       start: '2024-04',
       end: '2026',
@@ -184,6 +187,7 @@ export const profile = {
       org: 'CU Boulder, Institute of Cognitive Science',
       role: 'Software Engineer',
       orgUrl: 'https://www.colorado.edu/research/ai-institute/',
+      logo: '/media/about/logos/cu-boulder.svg',
       dates: 'Aug 2020 to Apr 2024',
       start: '2020-08',
       end: '2024-04',
@@ -203,6 +207,7 @@ export const profile = {
       company: 'AmedicaRx',
       org: 'AmedicaRx',
       role: 'Full Stack Developer (contract)',
+      logo: '/media/about/logos/amedicarx.webp',
       dates: 'Aug 2022 to Feb 2023',
       start: '2022-08',
       end: '2023-02',
@@ -218,6 +223,7 @@ export const profile = {
       company: 'Windward Studios',
       org: 'Windward Studios',
       role: 'Software Development Intern',
+      logo: '/media/about/logos/windward.webp',
       dates: 'Sep 2019 to Feb 2020',
       start: '2019-09',
       end: '2020-02',
@@ -229,6 +235,7 @@ export const profile = {
       company: 'Panther Industries, Inc.',
       org: 'Panther Industries',
       role: 'Marketing and Augmented Reality Intern',
+      logo: '/media/about/logos/panther.webp',
       dates: 'Jun to Aug 2018',
       start: '2018-06',
       end: '2018-08',

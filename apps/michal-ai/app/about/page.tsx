@@ -1,7 +1,10 @@
 import Link from '@/lib/nav'
 import type { ReactNode } from 'react'
+import { Award, Landmark, Newspaper, Trophy } from 'lucide-react'
 import { JsonLd } from '@/components/seo/JsonLd'
-import { MoreLink, ProjectCard } from '@/components/work/Showcase'
+import { CardGrid } from '@/components/work/Showcase'
+import { ExperienceList } from '@/components/ui/ExperienceList'
+import { getProjectIndex } from '@/lib/content'
 import { IndexSection } from '@/components/ui/IndexSection'
 import { profile } from '@/content/profile'
 import { hackathonPostHref, featuredProjects, hrefById, pressItems, NEWSLETTER_LABEL, hackathonList } from '@/lib/about'
@@ -15,6 +18,7 @@ import { paperMentions } from '@/content/mentions'
 import { Picture } from '@/components/media/Picture'
 import { Accolade } from '@/components/accolade/Accolade'
 import { ExternalLink } from '@/components/ui/ExternalLink'
+import '@/components/site/about.css'
 import '@/components/about/about-page.css'
 
 export const metadata = aboutMetadata()
@@ -26,6 +30,9 @@ const CONTACT = [
   { label: 'GitHub', detail: 'ItsMichal', href: siteConfig.github, external: true },
   { label: 'Resume', detail: 'Web and PDF', href: '/resume', external: false },
 ]
+
+// Each kind of award by its icon in the timeline's node, as on the home page.
+const AWARD_ICONS = { honor: Landmark, award: Award, hackathon: Trophy, press: Newspaper } as const
 
 /** One section of the page: the shared IndexSection, set as a card on wide screens (about-page.css). */
 const Card = ({ id, title, className = '', children }: { id: string; title: string; className?: string; children: ReactNode }) => (
@@ -103,26 +110,22 @@ export default function AboutPage() {
           </ul>
         </Card>
 
-        {/* Experience: one row per role, meta on the left, detail on the right */}
+        {/* Experience: the home page's timeline (each role on the rail by its employer's mark), each role's detail under it */}
         <Card id="experience" title="Experience" className="ab-xp">
-          <ol className="ab-list ab-roles">
-            {profile.career.map((r) => {
+          <ExperienceList
+            label="Experience"
+            timeline
+            items={profile.career.map((r) => {
               const links = (r.postIds ?? []).map((id) => postById(id))
-              return (
-                <li key={r.id} className="ab-role">
-                  <div className="ab-role__meta">
-                    <h3 className="t-ui">{r.orgUrl ? <ExternalLink href={r.orgUrl}>{r.org}</ExternalLink> : r.org}</h3>
-                    <p className="t-meta">{r.role}</p>
-                    <p className="t-meta ab-dates">
-                      <time dateTime={r.start}>{r.dates.split(' to ')[0]}</time>
-                      {r.dates.includes(' to ') ? (
-                        <>
-                          {' to '}
-                          {r.end ? <time dateTime={r.end}>{r.dates.split(' to ')[1]}</time> : r.dates.split(' to ')[1]}
-                        </>
-                      ) : null}
-                    </p>
-                  </div>
+              return {
+                id: r.id,
+                org: r.org,
+                role: r.role,
+                years: r.dates,
+                href: r.orgUrl,
+                external: true,
+                logo: r.logo,
+                extra: (
                   <div className="ab-role__body">
                     {r.summary ? <p className="t-text">{r.summary}</p> : null}
                     <ul className="ab-bullets t-text">
@@ -145,10 +148,10 @@ export default function AboutPage() {
                       </p>
                     ) : null}
                   </div>
-                </li>
-              )
+                ),
+              }
             })}
-          </ol>
+          />
         </Card>
 
         <Card id="education" title="Education" className="ab-edu">
@@ -261,18 +264,13 @@ export default function AboutPage() {
 
         <div className="ab-side">
         <Card id="awards" title="Awards and recognition" className="ab-awards">
-          <ul className="ab-plain t-text">
-            {profile.awards.filter((a) => a.kind !== 'press').map((a) => (
-              <li key={a.id}>
-                <span className="t-ui">
-                  {a.postId ? <Link href={hrefById(a.postId)} className="link">{a.title}</Link> : a.url ? <ExternalLink href={a.url}>{a.title}</ExternalLink> : a.title}
-                </span>
-                <span className="t-meta">
-                  {a.context}, <time dateTime={a.year}>{a.year}</time>
-                </span>
-              </li>
-            ))}
-          </ul>
+          <ExperienceList
+            label="Awards and recognition"
+            timeline
+            items={profile.awards
+              .filter((a) => a.kind !== 'press')
+              .map((a) => ({ id: a.id, org: a.title, role: a.context, years: a.year, href: a.postId ? hrefById(a.postId) : a.url, external: !a.postId && !!a.url, icon: AWARD_ICONS[a.kind] }))}
+          />
         </Card>
         <Card id="skills" title="Skills and stack" className="ab-skills">
           <dl className="ab-skilllist">
@@ -371,16 +369,13 @@ export default function AboutPage() {
         ) : null}
       </div>
 
-      <Card id="projects" title="Selected projects" className="ab-projects">
-        <ul className="ix-list">
-          {projects.map((p) => (
-            <li key={p.slug}>
-              <ProjectCard post={p} href={postPath(p)} />
-            </li>
-          ))}
-        </ul>
-        <MoreLink href="/projects">All projects</MoreLink>
-      </Card>
+      {/* As the home page's cards: picture (or its preview loop) above the text, two across from 640px */}
+      <section id="projects" aria-labelledby="projects-h" className="ab-projects">
+        <h2 id="projects-h" className="mb-space-6 font-display text-title">
+          Selected projects
+        </h2>
+        <CardGrid posts={projects} total={getProjectIndex().length} limit={projects.length} more="/projects" noun="project" />
+      </section>
     </div>
   )
 }
