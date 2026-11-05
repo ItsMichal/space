@@ -101,8 +101,6 @@ uniform mat3 u_rot;
 uniform vec3 u_center;
 uniform mat4 u_vp;
 out vec2 v_uv;
-out vec3 v_pos, v_tu, v_tv, v_dir;
-out float v_h;
 ${NOISE}
 ${FOLDS}
 // Spikes: a cone on some cells of a Voronoi grid, 1 at its point and 0 a little way out, so what it raises comes to a point.
@@ -144,18 +142,11 @@ vec3 base(vec2 uv, out vec3 dir, out float h) {
 // shadow (thrown along the real light it would fall far off the ball). With u_outline set it is pushed out from the ball's centre on
 // screen by that many pixels, for the ink line drawn behind the sheet around its silhouette.
 void main() {
-  vec3 dir, d;
-  float h, k;
+  vec3 dir;
+  float h;
   vec3 pos = base(a_uv, dir, h);
   v_uv = a_uv;
-  v_pos = u_rot * (pos + dir * h * folds(a_uv, u_size)) + u_center;
-  // the smooth surface's slopes across half a mesh cell; the shading adds the relief's own slope to them per pixel
-  vec2 e = 0.5 * u_cell;
-  v_tu = u_rot * (base(a_uv + vec2(e.x, 0.0), d, k) - base(a_uv - vec2(e.x, 0.0), d, k)) / (2.0 * e.x);
-  v_tv = u_rot * (base(a_uv + vec2(0.0, e.y), d, k) - base(a_uv - vec2(0.0, e.y), d, k)) / (2.0 * e.y);
-  v_dir = u_rot * dir;
-  v_h = h;
-  vec3 wp = v_pos;
+  vec3 wp = u_rot * (pos + dir * h * folds(a_uv, u_size)) + u_center;
   if (u_shadow > 0.5) {
     wp.xy += vec2(0.14, -0.18) * (wp.z - u_floor);
     wp.z = u_floor;
@@ -168,8 +159,7 @@ void main() {
 }
 `
 
-// Drawn flat, as a cel: the paper's normal (with the crease relief's slope taken per pixel, never the mesh's triangles) only picks
-// one of three tones, the paper, a shadow and a deeper one, both toward the theme's dark ink; ink lines run along the main creases,
+// Drawn as line art, unshaded: the paper keeps the page's own colours and only ink lines along the main creases show its folds,
 // breaking off here and there as a drawn line does. The flat sheet is exactly the page.
 // Behind the fire front the sheet is gone; the ash pass draws the glyphs there and on the burning edge ahead of it.
 // u_state 1 writes, at one texel per glyph cell, what the ash pass needs: for a burnt cell the page colour under it and how long
@@ -178,12 +168,10 @@ void main() {
 export const SHEET_FS = /* glsl */ `#version 300 es
 precision highp float;
 in vec2 v_uv;
-in vec3 v_pos, v_tu, v_tv, v_dir;
-in float v_h;
 uniform sampler2D u_a;
 uniform float u_burn, u_ash, u_edge, u_state, u_shadowA, u_fold;
 uniform vec2 u_size;
-uniform vec3 u_back, u_light, u_eye, u_char;
+uniform vec3 u_back, u_char;
 out vec4 o;
 ${NOISE}
 ${BURN}
@@ -208,19 +196,7 @@ void main() {
     o = vec4(u_char * u_shadowA, u_shadowA);
     return;
   }
-  // the surface normal with the relief's slope taken here, a pixel apart, so a crease is as sharp as the screen
-  vec2 px = 1.0 / u_size;
-  float f0 = folds(v_uv, u_size);
-  float fu = (folds(v_uv + vec2(px.x, 0.0), u_size) - f0) / px.x;
-  float fv = (folds(v_uv + vec2(0.0, px.y), u_size) - f0) / px.y;
-  vec3 N = normalize(cross(v_tu + v_dir * v_h * fu, v_tv + v_dir * v_h * fv));
-  if (dot(N, u_eye - v_pos) < 0.0) N = -N;
-  vec3 L = normalize(u_light);
-  // 1 on the flat sheet, lower as the paper turns from the light; it only picks the tone, with a pixel of softening at the step
-  float lit = dot(N, L) / L.z;
-  float aa = min(fwidth(lit), 0.08);
-  float dark = mix(0.6, mix(0.3, 0.0, smoothstep(0.5 - aa, 0.5 + aa, lit)), smoothstep(-aa, aa, lit));
-  vec3 col = mix(mix(base, u_char, dark), u_char, ink * 0.85);
+  vec3 col = mix(base, u_char, ink * 0.85);
   if (u_state > 0.5) {
     if (age > 0.0) o = vec4(base, (64.0 + 191.0 * clamp(age / u_ash, 0.0, 1.0)) / 255.0);
     else if (age > -u_edge) o = vec4(col, (1.0 + 62.0 * (1.0 + age / u_edge)) / 255.0);

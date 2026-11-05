@@ -3,7 +3,7 @@
 // 1. The visible viewport of the old page is captured (html2canvas-pro, the capture the glass lens already uses) over the
 //    backdrop, and laid on a coarse sheet in a fixed canvas over the page, at exactly the page's pixels.
 // 2. The router renders the new page underneath at once; it is shown, live, as soon as it has committed.
-// 3. The sheet crumples in three squeezes into a ball (drawn flat as a cel: three tones, ink along the creases and round the
+// 3. The sheet crumples in three squeezes into a ball (drawn as unshaded line art: ink along the creases and round the
 //    silhouette, a hard shadow under it) while a fire eats it from the face. What burns turns to glyphs in the site's monospace, in the page's colour and then the fire's,
 //    that rise and go out. Drawn on twos.
 // The capture takes real time (about 100 to 400ms on a laptop) and comes on top of PAPER_MS: the page just waits for the click.
@@ -281,7 +281,6 @@ function createStage(w: number, h: number, dpr: number) {
     gl.useProgram(sheet.p)
     const u = sheet.u
     gl.uniform2f(u.u_size, w, h)
-    gl.uniform2f(u.u_cell, 1 / cols, 1 / rows)
     gl.uniform1f(u.u_ball, s.ball)
     gl.uniform1f(u.u_fold, s.fold)
     // the outline comes in as the sheet lifts off the page, OUTLINE css px wide
@@ -302,8 +301,6 @@ function createStage(w: number, h: number, dpr: number) {
     gl.uniform1f(u.u_shadowA, 0.16 * Math.min(1, s.ball / 0.3))
     gl.uniform3fv(u.u_back, back)
     gl.uniform3fv(u.u_char, fire.char)
-    gl.uniform3f(u.u_light, -0.6, 0.6, 0.5)
-    gl.uniform3f(u.u_eye, 0, 0, D)
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, page)
     gl.bindVertexArray(sheetVao)
