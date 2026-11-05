@@ -7,9 +7,10 @@
 //    under it) while a fire eats it from the face. What burns turns to glyphs in the site's monospace, in the page's colour and then the fire's,
 //    that rise and go out. The sheet moves every frame; the glyphs flicker on twos.
 // The capture takes real time (about 100 to 400ms on a laptop) and comes on top of PAPER_MS: the page just waits for the click.
-import { PAPER_ASH, PAPER_FPS, PAPER_MS } from './config'
+import { BACKDROP_DRAW } from '../backdrop/config'
+import { LEAD_MS, PAPER_ASH, PAPER_FPS, PAPER_MS } from './config'
 import { ASH_FS, QUAD_VS, SHEET_FS, SHEET_VS } from './shaders'
-import { flickerAt, frameAt, type Frame } from './timeline'
+import { flickerAt, frameAt, type Frame, waitingAt } from './timeline'
 
 const MAX_DPR = 2
 /** Cells along the sheet's long side: fine enough that the creases are lines and the paper between them curves. */
@@ -27,6 +28,10 @@ const RISE = 13
 const SPREAD = 0.9
 /** Nothing may hold the overlay longer than this. */
 const WATCHDOG_MS = 8000
+/** How long the waiting fringes take to settle once the drop leaves, ms. */
+const SWING_OUT_MS = 120
+/** The longest the drop waits for the new page's images on screen, ms. */
+const IMAGES_MS = 1500
 const FOV = (32 * Math.PI) / 180
 
 const mono = () => getComputedStyle(document.documentElement).getPropertyValue('--font-mono').trim() || 'ui-monospace, monospace'
@@ -106,6 +111,8 @@ async function capture(w: number, h: number, scale: number): Promise<HTMLCanvasE
   if (gl) {
     const r = gl.getBoundingClientRect()
     try {
+      // drawn now, in this task: between its own draws its bitmap is the cleared one, opaque black
+      gl.dispatchEvent(new Event(BACKDROP_DRAW))
       ctx.globalAlpha = Number(getComputedStyle(gl).opacity) || 1
       ctx.drawImage(gl, r.left * scale, r.top * scale, r.width * scale, r.height * scale)
     } catch {
@@ -367,12 +374,27 @@ function createStage(w: number, h: number, dpr: number) {
   }
 
   /** Plays the whole animation, drawn every frame. In development `window.__paperHold = <0 to 1>` stops it there, for screenshots,
-   * and `window.__paperScrub(T)` then draws any other point of it. */
-  const play = async () => {
+   * and `window.__paperScrub(T)` then draws any other point of it. The drop waits at the end of the lead-in until `ready` resolves
+   * (the new route has committed under the sheet). */
+  const play = async (ready: Promise<unknown>) => {
     const hold = process.env.NODE_ENV !== 'production' ? (window as { __paperHold?: number }).__paperHold : undefined
-    const t0 = performance.now()
+    let loaded = false
+    void ready.then(() => (loaded = true))
+    let t0 = performance.now()
+    // how long the drop has waited for the route, and how far into the drop the waiting swing has eased out
+    let waited = 0
+    let leftAt = 0
     for (;;) {
-      const ms = Math.min((await frame()) - t0, PAPER_MS)
+      const now = await frame()
+      // still loading: the clock stops at the end of the lead-in, the sheet held just short of the drop, its fringes working
+      if (!loaded && now - t0 > LEAD_MS) {
+        waited += now - t0 - LEAD_MS
+        t0 = now - LEAD_MS
+        leftAt = now
+      }
+      const ms = Math.min(now - t0, PAPER_MS)
+      const fade = waited > 0 ? Math.max(0, 1 - (now - leftAt) / SWING_OUT_MS) : 0
+      const at = (T: number) => (fade > 0 ? waitingAt(frameAt(T), waited + (now - leftAt), fade * fade * (3 - 2 * fade)) : frameAt(T))
       const T = ms / PAPER_MS
       if (hold != null && T >= hold) {
         drawing = flickerAt(hold * PAPER_MS, PAPER_FPS)
@@ -384,7 +406,7 @@ function createStage(w: number, h: number, dpr: number) {
         await new Promise(() => {}) // held for inspection until the page is reloaded
       }
       drawing = flickerAt(ms, PAPER_FPS)
-      draw(frameAt(T))
+      draw(at(T))
       if (T >= 1) return
     }
   }
@@ -395,6 +417,16 @@ function createStage(w: number, h: number, dpr: number) {
   }
 
   return { canvas, setPage, draw, play, destroy }
+}
+
+/** Resolves once the images on screen in the new page have loaded and decoded, or after IMAGES_MS at most. */
+function imagesOnScreen(): Promise<void> {
+  const shown = [...document.images].filter((img) => {
+    const r = img.getBoundingClientRect()
+    return r.bottom > 0 && r.top < innerHeight && r.width > 0 && !img.complete
+  })
+  const all = Promise.all(shown.map((img) => img.decode().catch(() => undefined)))
+  return Promise.race([all.then(() => undefined), new Promise<void>((r) => setTimeout(r, IMAGES_MS))])
 }
 
 /** Runs the whole transition; `go` performs the navigation and resolves once the new route has committed. */
@@ -430,8 +462,10 @@ export async function runPaper(go: () => Promise<void> | void): Promise<void> {
     const nav = Promise.resolve(go()).then(() => {
       if (!done) root.setAttribute('data-paper', '')
     })
+    // the drop leaves once the new route has committed (its data loaded) and the images it shows have come in
+    const loaded = nav.then(() => new Promise(requestAnimationFrame)).then(imagesOnScreen)
     if (process.env.NODE_ENV !== 'production') console.info(`[paper] capture ${(t1 - t0).toFixed(0)}ms`)
-    await stage.play()
+    await stage.play(loaded)
     await nav
   } finally {
     finish()

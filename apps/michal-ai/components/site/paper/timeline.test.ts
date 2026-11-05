@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { PAPER_ASH, PAPER_FPS, PAPER_MS } from './config'
+import { CRUMPLE_MS, FIRE_MS, LEAD_MS, PAPER_ASH, PAPER_FPS, PAPER_MS } from './config'
 import { FALL_MS, IGNITE_MS, flickerAt, frameAt } from './timeline'
 
 const at = (T: number) => frameAt(T)
@@ -7,14 +7,22 @@ const ms = (m: number) => m / PAPER_MS
 const each = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, i) => at(ms(from + i)))
 
 describe('paper transition timeline', () => {
-  it('runs in about a second', () => {
-    expect(PAPER_MS).toBeGreaterThanOrEqual(800)
-    expect(PAPER_MS).toBeLessThanOrEqual(1400)
+  it('crumples in 400ms and burns for two seconds, overlapping', () => {
+    expect(CRUMPLE_MS).toBe(400)
+    expect(FIRE_MS).toBe(2000)
+    expect(PAPER_MS).toBeLessThan(LEAD_MS + CRUMPLE_MS + FIRE_MS)
   })
 
   it('starts on the flat page exactly where it is, not yet lit', () => {
-    expect(at(0)).toMatchObject({ ball: 0, fold: 0, squash: 0, spin: [-0, 0, 0] })
+    expect(at(0)).toMatchObject({ ball: 0, fold: 0, squash: 0, spin: [0, 0, 0] })
     expect(at(0).burn).toBeLessThan(0)
+  })
+
+  it('slowly starts to crumple through the lead-in, before the drop', () => {
+    expect(LEAD_MS).toBe(150)
+    expect(at(ms(LEAD_MS / 2)).ball).toBeGreaterThan(0.01)
+    expect(at(ms(LEAD_MS)).ball).toBeLessThan(0.1)
+    expect(at(ms(LEAD_MS)).burn).toBeLessThan(0)
   })
 
   it('moves smoothly: no jump between frames at 60 fps', () => {
@@ -28,27 +36,37 @@ describe('paper transition timeline', () => {
   })
 
   it('leaves gently and gathers speed, like a dropped ball', () => {
-    const early = at(ms(FALL_MS * 0.25)).ball
-    const late = at(ms(FALL_MS * 0.9)).ball
-    expect(early).toBeLessThan(0.1)
+    const early = at(ms(LEAD_MS + FALL_MS * 0.25)).ball
+    const late = at(ms(LEAD_MS + FALL_MS * 0.9)).ball
+    expect(early).toBeLessThan(0.15)
     expect(late).toBeGreaterThan(0.7)
   })
 
   it('lands, springs back once and settles without a second bounce, never past the ball', () => {
-    const after = each(FALL_MS + 30, 600).map((f) => f.ball)
+    const after = each(LEAD_MS + FALL_MS + 30, PAPER_MS).map((f) => f.ball)
     const low = after.indexOf(Math.min(...after))
-    expect(1 - after[low]).toBeGreaterThan(0.15)
-    expect(1 - after[low]).toBeLessThan(0.4)
+    expect(1 - after[low]).toBeGreaterThan(0.08)
+    expect(1 - after[low]).toBeLessThan(0.25)
     // once it is back down it stays down
     const down = after.findIndex((b, i) => i > low && b > 0.999)
     for (const b of after.slice(down)) expect(b).toBeGreaterThan(0.999)
     for (const f of each(0, PAPER_MS)) expect(f.ball).toBeLessThanOrEqual(1)
-    expect(at(ms(400)).ball).toBeCloseTo(1, 2)
+    expect(at(ms(LEAD_MS + CRUMPLE_MS)).ball).toBeCloseTo(1, 2)
+    expect(Math.abs(at(ms(LEAD_MS + CRUMPLE_MS)).squash)).toBeLessThan(0.01)
     expect(at(1).ball).toBe(1)
   })
 
+  it('is wrung back and forth from the landing, still by the end of the crumple', () => {
+    const turns = each(LEAD_MS + FALL_MS, LEAD_MS + CRUMPLE_MS).map((f) => f.spin[2] - 0.5 * f.ball - 0.1)
+    let flips = 0
+    for (let i = 1; i < turns.length; i++) if (Math.sign(turns[i]) !== Math.sign(turns[i - 1]) && turns[i] !== 0) flips++
+    expect(flips).toBeGreaterThanOrEqual(2)
+    expect(Math.max(...turns.map(Math.abs))).toBeGreaterThan(0.05)
+    expect(Math.abs(turns[turns.length - 1])).toBeLessThan(0.01)
+  })
+
   it('squishes on landing and stretches a little in the air', () => {
-    const most = Math.max(...each(FALL_MS - 10, FALL_MS + 80).map((f) => f.squash))
+    const most = Math.max(...each(LEAD_MS + FALL_MS - 10, LEAD_MS + FALL_MS + 60).map((f) => f.squash))
     expect(most).toBeGreaterThan(0.08)
     expect(most).toBeLessThan(0.2)
     const stretch = Math.min(...each(0, PAPER_MS).map((f) => f.squash))
@@ -58,9 +76,9 @@ describe('paper transition timeline', () => {
   })
 
   it('is burning before it is fully crumpled, and burns until the last ash is gone', () => {
-    expect(IGNITE_MS).toBeLessThan(FALL_MS)
+    expect(IGNITE_MS).toBeLessThan(LEAD_MS + FALL_MS)
     expect(at(ms(IGNITE_MS)).burn).toBeLessThan(0)
-    expect(at(ms(FALL_MS)).burn).toBeGreaterThan(0)
+    expect(at(ms(LEAD_MS + FALL_MS)).burn).toBeGreaterThan(0)
     const burns = each(0, PAPER_MS).map((f) => f.burn)
     for (let i = 1; i < burns.length; i++) expect(burns[i]).toBeGreaterThanOrEqual(burns[i - 1])
     expect(at(1).burn).toBeCloseTo(1 + PAPER_ASH)

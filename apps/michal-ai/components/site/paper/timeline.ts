@@ -3,9 +3,11 @@
 // and squishes into the floor, rebounds once a little way back and settles on the second landing without bouncing again. It takes
 // the flat page to the ball. The motion is a small physics run (gravity, a spring and damper floor), made once and read back by
 // time, so everything is a continuous curve, drawn every frame.
-// The fire catches while the sheet is still falling, before it is fully crumpled, on its face, and opens it up; what burns turns to glyphs that rise, billow
+// An ember catches late in the fall, before the sheet is fully crumpled, and spreads once the ball has sprung back; what burns turns to glyphs that rise, billow
 // outward and fade (drawn by the engine from `burn`).
-import { PAPER_ASH, PAPER_MS } from './config'
+import { IGNITE_MS, LEAD_MS, PAPER_ASH, PAPER_MS } from './config'
+
+export { IGNITE_MS }
 
 export type Frame = {
   /** 0 flat sheet, 1 paper ball. */
@@ -23,16 +25,23 @@ export type Frame = {
 const clamp01 = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x)
 
 /** The drops: when each is let go (ms), how far it takes the ball and its folds, its twist, and how hard it squishes on landing. */
-export const DROPS = [{ at: 0, ball: 1, fold: 1, twist: 0.1, squish: 0.17 }] as const
+export const DROPS = [{ at: LEAD_MS, ball: 1, fold: 1, twist: 0.1, squish: 0.17 }] as const
+/** How far the slow crumple of the lead-in gathers the sheet before the drop. */
+const LEAD_BALL = 0.08
 
 /** How long a drop falls before it first lands, ms. */
-export const FALL_MS = 105
+export const FALL_MS = 150
 /** How long the ball is in contact with the soft floor on a landing, ms: the squish. */
-const CONTACT_MS = 60
+const CONTACT_MS = 88
 /** How much of its speed the ball keeps off the floor; the one rebound rises BOUNCE² of the drop, the next landing stays down. */
-const BOUNCE = 0.7
+const BOUNCE = 0.5
 /** How much the ball stretches along its fall at full speed, against its squish. */
 const STRETCH = 0.15
+
+/** On landing the ball is wrung, turned back and forth by the hands crumpling it: how far (radians), one swing (ms), its fade (ms). */
+const WRING = 0.16
+const WRING_MS = 170
+const WRING_FADE = 110
 
 /** One drop, run once at 1ms: height above the floor (1 at the start, 0 on the floor, below 0 pressed in) and squish, 0 to 1. */
 const DROP = (() => {
@@ -80,8 +89,6 @@ function dropAt(t: number) {
   return { p: 1 - Math.max(0, h), squish: DROP.squish[a] + (DROP.squish[b] - DROP.squish[a]) * f }
 }
 
-/** When the fire catches, in ms: early in the fall, so the sheet is burning before it is a ball. */
-export const IGNITE_MS = 10
 /** The front starts short of the sheet, its burning edge of glyphs too (engine EDGE), so the first drawings are untouched. */
 const BURN_FROM = -0.02
 
@@ -93,8 +100,13 @@ export function frameAt(T: number): Frame {
   let fold = 0
   let twist = 0
   let squash = 0
-  let prevBall = 0
-  let prevFold = 0
+  // the lead-in: the page slowly starts to give, easing in and out so the drop leaves from rest
+  const lead = clamp01(ms / LEAD_MS)
+  const s = LEAD_BALL * lead * lead * (3 - 2 * lead)
+  ball += s
+  fold += s
+  let prevBall = LEAD_BALL
+  let prevFold = LEAD_BALL
   for (const d of DROPS) {
     const { p, squish } = dropAt(ms - d.at)
     ball += (d.ball - prevBall) * p
@@ -112,16 +124,33 @@ export function frameAt(T: number): Frame {
     fold = 1
     squash = 0
   }
+  // wrung back and forth from the landing, dying out with the bounce
+  const since = ms - DROPS[0].at - FALL_MS
+  const wring = since > 0 && T < 1 ? WRING * Math.sin((2 * Math.PI * since) / WRING_MS) * Math.exp(-since / WRING_FADE) : 0
   const p = clamp01((ms - IGNITE_MS) / (PAPER_MS - IGNITE_MS))
-  // the fire takes hold fast, while the sheet is still falling, then burns on steadily so the last ash lingers out its PAPER_ASH
-  const burn = BURN_FROM + (1 + PAPER_ASH - BURN_FROM) * (p + 0.6 * p * (1 - p) ** 3)
+  // the ember is small while the ball lands and springs back, then the fire quickens, and the last of it burns out slowly (eased
+  // out, so the start keeps the pace of a quick fire and the extra time goes to the tail); at the end the last ash has lived out its PAPER_ASH
+  const burn = BURN_FROM + (1 + PAPER_ASH - BURN_FROM) * (1 - (1 - p) ** 2) ** 1.3
   return {
     ball,
     fold,
     squash,
-    spin: [-0.35 * ball, 0.55 * ball, 0.5 * ball + twist],
+    spin: [-0.35 * ball + 0.3 * wring, 0.55 * ball - 0.5 * wring, 0.5 * ball + twist + wring],
     burn,
   }
+}
+
+/** One crumple back and forth of the waiting fringes, ms. */
+const WAIT_MS = 420
+/** How far the fringes crumple in and out while waiting, in ball. */
+const WAIT_BALL = 0.05
+
+/** While the drop waits for the new route at the end of the lead-in, the fringes of the sheet keep crumpling in and back out a
+ * little (only the edges gather at this little ball). `waited` is how long it has waited, ms; `fade` 1 while waiting, easing to 0
+ * as the drop leaves, so the swing never jumps. */
+export function waitingAt(f: Frame, waited: number, fade: number): Frame {
+  const k = (WAIT_BALL * fade * (1 - Math.cos((2 * Math.PI * waited) / WAIT_MS))) / 2
+  return { ...f, ball: f.ball + k, fold: f.fold + k, spin: [f.spin[0], f.spin[1], f.spin[2] + 0.3 * k] }
 }
 
 /** The flicker of the burning glyphs steps on twos (12 a second, as hand-drawn fire does) while the sheet moves every frame. */
