@@ -22,7 +22,9 @@ describe('paper transition timeline', () => {
     expect(LEAD_MS).toBe(150)
     expect(at(ms(LEAD_MS / 2)).ball).toBeGreaterThan(0.01)
     expect(at(ms(LEAD_MS)).ball).toBeLessThan(0.1)
-    expect(at(ms(LEAD_MS)).burn).toBeLessThan(0)
+    // the fire catches just before the drop: unlit until then, a spark where a slow route holds the lead-in's end
+    expect(at(ms(IGNITE_MS - 1)).burn).toBeLessThan(0)
+    expect(at(ms(LEAD_MS)).burn).toBeLessThan(0.05)
   })
 
   it('moves smoothly: no jump between frames at 60 fps', () => {

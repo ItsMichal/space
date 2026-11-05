@@ -6,8 +6,8 @@ export const PAPER_TRANSITION = true
 export const LEAD_MS = 150
 /** The crumple after the lead-in: the drop into the ball, its one bounce and settling, in ms. */
 export const CRUMPLE_MS = 400
-/** When the fire catches, in ms from the start: as the drop leaves, so it is burning through the fall. */
-export const IGNITE_MS = LEAD_MS + 20
+/** When the fire catches, in ms from the start: just before the drop leaves, so it is burning through the fall (a slow route holds it at a spark). */
+export const IGNITE_MS = LEAD_MS - 30
 /** The fire, from catching to the last ash fading, in ms. */
 export const FIRE_MS = 2000
 /** The whole animation, in ms: the fire overlaps the end of the crumple. The page capture comes on top, see ./engine.ts. */
