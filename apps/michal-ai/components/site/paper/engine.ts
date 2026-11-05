@@ -1,37 +1,44 @@
 // The paper transition itself, loaded on demand by ./index.ts. Raw WebGL2, no scene library.
 //
 // 1. The visible viewport of the old page is captured (html2canvas-pro, the capture the glass lens already uses) over the
-//    backdrop, and laid on a finely subdivided sheet in a fixed canvas over the page, at exactly the page's pixels.
+//    backdrop, and laid on a coarse sheet in a fixed canvas over the page, at exactly the page's pixels.
 // 2. The router renders the new page underneath at once; it is shown, live, as soon as it has committed.
-// 3. The sheet draws in, crumples into a ball (noise folds plus a pull onto a sphere, a real crumpled paper height and normal
-//    map for the fine creases), is picked up, wound back and tossed off screen. Drawn on twos, cel shaded, inked.
+// 3. The sheet crumples in three squeezes into a faceted ball (noise folds on a low poly mesh, flat shaded per facet) while a
+//    fire eats it from a corner. What burns turns to glyphs in the site's monospace, in the page's colour and then the fire's,
+//    that rise and go out. Drawn on twos.
 // The capture takes real time (about 100 to 400ms on a laptop) and comes on top of PAPER_MS: the page just waits for the click.
-import { PAPER_MS } from './config'
-import { SHADOW_FS, SHADOW_VS, SHEET_FS, SHEET_VS } from './shaders'
-import { frameAt, onTwos, type Dims, type Frame } from './timeline'
+import { PAPER_ASH, PAPER_MS } from './config'
+import { ASH_FS, QUAD_VS, SHEET_FS, SHEET_VS } from './shaders'
+import { frameAt, onTwos, type Frame } from './timeline'
 
 const MAX_DPR = 2
-/** Cells along the sheet's long side. */
-const CELLS = 128
+/** Cells along the sheet's long side: coarse on purpose, the facets are the look. */
+const CELLS = 26
+/** A glyph cell, CSS px (the hero globe's cell). */
+const GLYPH_W = 8
+const GLYPH_H = 13
+/** The glyphs, sparse to dense. */
+const RAMP = '.:-=+*#%@'
+/** How far a spot rises over its life, in glyph cells. */
+const RISE = 11
 /** Nothing may hold the overlay longer than this. */
 const WATCHDOG_MS = 8000
 const FOV = (32 * Math.PI) / 180
 
-type Maps = { normal: HTMLImageElement; height: HTMLImageElement }
-let maps: Promise<Maps> | null = null
+const mono = () => getComputedStyle(document.documentElement).getPropertyValue('--font-mono').trim() || 'ui-monospace, monospace'
 
-function loadImage(src: string) {
-  const img = new Image()
-  img.decoding = 'async'
-  img.src = src
-  return img.decode().then(() => img)
-}
-
-/** The crumpled paper maps (ambientCG Paper003, CC0, see public/media/CREDITS.md). */
-export function preloadMaps(): Promise<Maps> {
-  maps ??= Promise.all([loadImage('/textures/paper-crumple-normal.webp'), loadImage('/textures/paper-crumple-height.webp')]).then(([normal, height]) => ({ normal, height }))
-  maps.catch(() => (maps = null))
-  return maps
+/** The glyph strip, one cell per glyph, white on clear, in device px. */
+function glyphAtlas(cw: number, ch: number) {
+  const c = document.createElement('canvas')
+  c.width = cw * RAMP.length
+  c.height = ch
+  const g = c.getContext('2d')!
+  g.fillStyle = '#fff'
+  g.font = `500 ${Math.round(ch * 0.86)}px ${mono()}`
+  g.textAlign = 'center'
+  g.textBaseline = 'middle'
+  for (let i = 0; i < RAMP.length; i++) g.fillText(RAMP[i], (i + 0.5) * cw, ch * 0.54)
+  return c
 }
 
 const frame = () => new Promise<number>((r) => requestAnimationFrame(r))
@@ -107,21 +114,6 @@ function perspective(fov: number, aspect: number, near: number, far: number) {
   return [f / aspect, 0, 0, 0, 0, f, 0, 0, 0, 0, (far + near) * nf, -1, 0, 0, 2 * far * near * nf, 0]
 }
 
-/** 3x3 column-major product a * b. */
-function mul3(a: number[], b: number[]) {
-  const o = new Array<number>(9)
-  for (let c = 0; c < 3; c++) for (let r = 0; r < 3; r++) o[c * 3 + r] = a[r] * b[c * 3] + a[3 + r] * b[c * 3 + 1] + a[6 + r] * b[c * 3 + 2]
-  return o
-}
-
-/** Squash and stretch: `s` along the screen direction `dir`, the inverse root across it (and in depth), so the volume holds. */
-function stretch(dir: number, s: number) {
-  const [c, n] = [Math.cos(dir), Math.sin(dir)]
-  const q = 1 / Math.sqrt(s)
-  // q * I + (s - q) * v v^T, v = (c, n, 0)
-  return [q + (s - q) * c * c, (s - q) * c * n, 0, (s - q) * c * n, q + (s - q) * n * n, 0, 0, 0, q]
-}
-
 function rotation(x: number, y: number, z: number) {
   const [cx, sx, cy, sy, cz, sz] = [Math.cos(x), Math.sin(x), Math.cos(y), Math.sin(y), Math.cos(z), Math.sin(z)]
   // R = Rz * Ry * Rx, column-major
@@ -145,8 +137,13 @@ function program(gl: WebGL2RenderingContext, vs: string, fs: string) {
   const u = new Proxy({} as Record<string, WebGLUniformLocation | null>, { get: (c, k: string) => (k in c ? c[k] : (c[k] = gl.getUniformLocation(p, k))) })
   return { p, u }
 }
+/** A fixed jitter for a mesh vertex, -0.5 to 0.5. */
+const jit = (i: number, j: number, k: number) => {
+  const s = Math.sin(i * 127.1 + j * 311.7 + k * 74.7) * 43758.5453
+  return s - Math.floor(s) - 0.5
+}
 
-function createStage(w: number, h: number, dpr: number, m: Maps) {
+function createStage(w: number, h: number, dpr: number) {
   const canvas = document.createElement('canvas')
   canvas.className = 'paper-overlay'
   canvas.setAttribute('aria-hidden', 'true')
@@ -159,17 +156,17 @@ function createStage(w: number, h: number, dpr: number, m: Maps) {
   canvas.addEventListener('touchmove', block, { passive: false })
 
   const sheet = program(gl, SHEET_VS, SHEET_FS)
-  const shadow = program(gl, SHADOW_VS, SHADOW_FS)
-  const aniso = gl.getExtension('EXT_texture_filter_anisotropic')
+  const ash = program(gl, QUAD_VS, ASH_FS)
 
-  // sheet mesh: a grid of uv, square cells
+  // sheet mesh: a coarse grid of uv, the inner vertices nudged off the grid so the facets are uneven, the edges kept straight
   const cols = w >= h ? CELLS : Math.max(8, Math.round((CELLS * w) / h))
   const rows = w >= h ? Math.max(8, Math.round((CELLS * h) / w)) : CELLS
   const uv = new Float32Array((cols + 1) * (rows + 1) * 2)
   for (let j = 0, k = 0; j <= rows; j++) {
     for (let i = 0; i <= cols; i++, k += 2) {
-      uv[k] = i / cols
-      uv[k + 1] = j / rows
+      const inner = i > 0 && i < cols && j > 0 && j < rows
+      uv[k] = (i + (inner ? 0.6 * jit(i, j, 0) : 0)) / cols
+      uv[k + 1] = (j + (inner ? 0.6 * jit(i, j, 1) : 0)) / rows
     }
   }
   const idx = new Uint16Array(cols * rows * 6)
@@ -179,7 +176,8 @@ function createStage(w: number, h: number, dpr: number, m: Maps) {
       const b = a + 1
       const c = a + cols + 1
       const d = c + 1
-      idx.set([a, c, b, b, c, d], k)
+      // the diagonal alternates, so the triangles do not all lean one way
+      idx.set((i + j) % 2 ? [a, c, b, b, c, d] : [a, c, d, a, d, b], k)
       k += 6
     }
   const sheetVao = gl.createVertexArray()
@@ -195,33 +193,51 @@ function createStage(w: number, h: number, dpr: number, m: Maps) {
   gl.bindVertexArray(quadVao)
   gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW)
-  const aP = gl.getAttribLocation(shadow.p, 'a_p')
-  gl.enableVertexAttribArray(aP)
-  gl.vertexAttribPointer(aP, 2, gl.FLOAT, false, 0, 0)
+  // read at location 0 (QUAD_VS)
+  gl.enableVertexAttribArray(0)
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0)
   gl.bindVertexArray(null)
 
-  const texture = (unit: number, src: TexImageSource, repeat: boolean) => {
+  const texture = (unit: number, src: TexImageSource, smooth: boolean) => {
     const t = gl.createTexture()
     gl.activeTexture(gl.TEXTURE0 + unit)
     gl.bindTexture(gl.TEXTURE_2D, t)
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src)
-    gl.generateMipmap(gl.TEXTURE_2D)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-    const wrap = repeat ? gl.REPEAT : gl.CLAMP_TO_EDGE
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap)
-    if (aniso) gl.texParameterf(gl.TEXTURE_2D, aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, gl.getParameter(aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT)))
+    if (smooth) gl.generateMipmap(gl.TEXTURE_2D)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, smooth ? gl.LINEAR_MIPMAP_LINEAR : gl.NEAREST)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, smooth ? gl.LINEAR : gl.NEAREST)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
     return t
   }
-  texture(2, m.normal, true)
-  texture(3, m.height, true)
   let page: WebGLTexture | null = null
   const setPage = (src: HTMLCanvasElement) => {
     if (page) gl.deleteTexture(page)
-    page = texture(0, src, false)
+    page = texture(0, src, true)
   }
+
+  // the glyphs, and one texel per glyph cell for what burnt under it (page colour, age); the cells get a depth buffer of their
+  // own so the front of the ball wins over its back
+  const cw = Math.max(4, Math.round(GLYPH_W * dpr))
+  const ch = Math.max(6, Math.round(GLYPH_H * dpr))
+  const glyphs = texture(2, glyphAtlas(cw, ch), false)
+  const gridW = Math.ceil(canvas.width / cw)
+  const gridH = Math.ceil(canvas.height / ch)
+  const cells = gl.createTexture()
+  gl.activeTexture(gl.TEXTURE3)
+  gl.bindTexture(gl.TEXTURE_2D, cells)
+  gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, gridW, gridH)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+  const cellsFb = gl.createFramebuffer()
+  gl.bindFramebuffer(gl.FRAMEBUFFER, cellsFb)
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, cells, 0)
+  const cellsDepth = gl.createRenderbuffer()
+  gl.bindRenderbuffer(gl.RENDERBUFFER, cellsDepth)
+  gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, gridW, gridH)
+  gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, cellsDepth)
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null)
 
   const minDim = Math.min(w, h)
   // the ball keeps the sheet area in mind, so a tall phone page still makes a fist-sized ball
@@ -234,80 +250,68 @@ function createStage(w: number, h: number, dpr: number, m: Maps) {
   vp[14] += vp[10] * -D
   vp[15] += vp[11] * -D
   const back = rgb(getComputedStyle(document.documentElement).getPropertyValue('--paper').trim() || '#f4f1e8').map((c) => c * 0.97)
-  const ink = rgb(getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#1c2420')
-  const tile = Math.min(560, Math.max(300, minDim * 0.7))
 
-  const dims: Dims = { w, h, R }
   let drawing = 0
 
-  const draw = (s: Frame) => {
-    gl.viewport(0, 0, canvas.width, canvas.height)
-    gl.clearColor(0, 0, 0, 0)
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-    const b = s.ball
-    // on screen at (x, y) and `lift` times its size: perspective does the sizing, so the ball sits nearer the eye
-    const z = D * (1 - 1 / s.lift)
-    const cx = s.x / s.lift
-    const cy = s.y / s.lift
-    // a flat cartoon shadow on the desk under the ball, left behind as the ball is picked up
-    const up = s.lift - 1
-    // only under the formed ball: a hard-edged shadow under the half-crumpled sheet reads as a grey box
-    const shadowAlpha = 0.2 * Math.max(0, Math.min(1, (b - 0.55) / 0.35)) * s.shadow
-    if (shadowAlpha > 0.001) {
-      gl.disable(gl.DEPTH_TEST)
-      gl.enable(gl.BLEND)
-      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
-      gl.useProgram(shadow.p)
-      const r = R * 0.8 * (1 - 0.5 * up)
-      const half = [w / 2 + (r - w / 2) * b, h / 2 + (r - h / 2) * b]
-      gl.uniform2f(shadow.u.u_c, w / 2 + cx + R * (0.22 + 2.5 * up) * b, h / 2 + cy - R * (0.3 + 3 * up) * b)
-      gl.uniform2f(shadow.u.u_half, half[0], half[1])
-      gl.uniform1f(shadow.u.u_r, r * b)
-      gl.uniform1f(shadow.u.u_blur, 1.5)
-      gl.uniform1f(shadow.u.u_alpha, shadowAlpha)
-      gl.uniform1f(shadow.u.u_dpr, dpr)
-      gl.uniform3f(shadow.u.u_ink, ink[0], ink[1], ink[2])
-      gl.bindVertexArray(quadVao)
-      gl.drawArrays(gl.TRIANGLES, 0, 3)
-    }
-    gl.disable(gl.BLEND)
-    gl.enable(gl.DEPTH_TEST)
+  const drawSheet = (s: Frame, state: boolean) => {
     gl.useProgram(sheet.p)
     const u = sheet.u
     gl.uniform2f(u.u_size, w, h)
-    gl.uniform2f(u.u_cell, 1 / cols, 1 / rows)
-    gl.uniform1f(u.u_ball, b)
+    gl.uniform1f(u.u_ball, s.ball)
     gl.uniform1f(u.u_fold, s.fold)
-    gl.uniform1f(u.u_wrinkle, s.wrinkle)
     gl.uniform1f(u.u_R, R)
-    gl.uniform1f(u.u_tile, tile)
-    const m = mul3(stretch(s.dir, s.stretch), rotation(...s.spin)).map((v) => v * s.scale)
-    gl.uniformMatrix3fv(u.u_rot, false, m)
-    gl.uniform3f(u.u_center, cx, cy, z + R * 0.5 * b)
+    gl.uniformMatrix3fv(u.u_rot, false, rotation(...s.spin).map((v) => v * s.scale))
+    gl.uniform3f(u.u_center, 0, 0, R * 0.5 * s.ball)
     gl.uniformMatrix4fv(u.u_vp, false, vp)
     gl.uniform1i(u.u_a, 0)
-    gl.uniform1i(u.u_normal, 2)
-    gl.uniform1i(u.u_height, 3)
+    gl.uniform1f(u.u_burn, s.burn)
+    gl.uniform1f(u.u_ash, PAPER_ASH)
+    gl.uniform1f(u.u_state, state ? 1 : 0)
     gl.uniform3f(u.u_back, back[0], back[1], back[2])
-    gl.uniform3f(u.u_ink, ink[0], ink[1], ink[2])
     gl.uniform3f(u.u_light, -0.45, 0.55, 0.7)
+    gl.uniform3f(u.u_eye, 0, 0, D)
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, page)
     gl.bindVertexArray(sheetVao)
-    // the ink line first: the far side of the sheet pushed out, a little thicker or thinner per drawing, as a hand-inked line boils
-    const boil = 1 + 0.18 * Math.sin(drawing * 2.7)
-    const line = 3.4 * boil * Math.min(1, b * 3) / s.lift
-    if (line > 0.05) {
-      gl.enable(gl.CULL_FACE)
-      gl.cullFace(gl.FRONT)
-      gl.uniform1f(u.u_outline, line)
-      gl.uniform1f(u.u_inkPass, 1)
-      gl.drawElements(gl.TRIANGLES, idx.length, gl.UNSIGNED_SHORT, 0)
-      gl.disable(gl.CULL_FACE)
-    }
-    gl.uniform1f(u.u_outline, 0)
-    gl.uniform1f(u.u_inkPass, 0)
     gl.drawElements(gl.TRIANGLES, idx.length, gl.UNSIGNED_SHORT, 0)
+  }
+
+  const draw = (s: Frame) => {
+    const lit = s.burn > 0
+    gl.disable(gl.BLEND)
+    gl.enable(gl.DEPTH_TEST)
+    if (lit) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, cellsFb)
+      gl.viewport(0, 0, gridW, gridH)
+      gl.clearColor(0, 0, 0, 0)
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+      drawSheet(s, true)
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    }
+    gl.viewport(0, 0, canvas.width, canvas.height)
+    gl.clearColor(0, 0, 0, 0)
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+    drawSheet(s, false)
+    if (lit) {
+      // the glyphs over everything, embers rising in front of what is left of the sheet
+      gl.disable(gl.DEPTH_TEST)
+      gl.enable(gl.BLEND)
+      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
+      gl.useProgram(ash.p)
+      gl.uniform1i(ash.u.u_cells, 3)
+      gl.uniform1i(ash.u.u_glyphs, 2)
+      gl.uniform2i(ash.u.u_cellPx, cw, ch)
+      gl.uniform1i(ash.u.u_count, RAMP.length)
+      gl.uniform1f(ash.u.u_rise, RISE)
+      gl.uniform1f(ash.u.u_drawing, drawing)
+      gl.activeTexture(gl.TEXTURE2)
+      gl.bindTexture(gl.TEXTURE_2D, glyphs)
+      gl.activeTexture(gl.TEXTURE3)
+      gl.bindTexture(gl.TEXTURE_2D, cells)
+      gl.bindVertexArray(quadVao)
+      gl.drawArrays(gl.TRIANGLES, 0, 3)
+      gl.disable(gl.BLEND)
+    }
     gl.bindVertexArray(null)
   }
 
@@ -324,10 +328,10 @@ function createStage(w: number, h: number, dpr: number, m: Maps) {
       drawing++
       const T = ms / PAPER_MS
       if (hold != null && T >= hold) {
-        draw(frameAt(hold, dims))
+        draw(frameAt(hold))
         await new Promise(() => {}) // held for inspection until the page is reloaded
       }
-      draw(frameAt(T, dims))
+      draw(frameAt(T))
       if (T >= 1) return
     }
   }
@@ -337,7 +341,7 @@ function createStage(w: number, h: number, dpr: number, m: Maps) {
     gl.getExtension('WEBGL_lose_context')?.loseContext()
   }
 
-  return { canvas, setPage, draw, play, destroy, dims }
+  return { canvas, setPage, draw, play, destroy }
 }
 
 /** Runs the whole transition; `go` performs the navigation and resolves once the new route has committed. */
@@ -347,9 +351,10 @@ export async function runPaper(go: () => Promise<void> | void): Promise<void> {
   const h = innerHeight
   const dpr = Math.min(devicePixelRatio || 1, MAX_DPR)
   const t0 = performance.now()
-  const [m, old] = await Promise.all([preloadMaps(), capture(w, h, dpr)])
+  // the glyphs need the monospace loaded; a page without code on it may not have fetched it yet
+  const [old] = await Promise.all([capture(w, h, dpr), document.fonts?.load(`500 13px ${mono()}`).catch(() => undefined)])
   const t1 = performance.now()
-  const stage = createStage(w, h, dpr, m)
+  const stage = createStage(w, h, dpr)
   const held = process.env.NODE_ENV !== 'production' && (window as { __paperHold?: number }).__paperHold != null
   const watchdog = held ? 0 : window.setTimeout(() => finish(), WATCHDOG_MS)
   let done = false
@@ -362,12 +367,12 @@ export async function runPaper(go: () => Promise<void> | void): Promise<void> {
   }
   try {
     stage.setPage(old)
-    stage.draw(frameAt(0, stage.dims))
+    stage.draw(frameAt(0))
     document.body.appendChild(stage.canvas)
-    // the old page goes under the sheet at once; the new one shows behind the ball as soon as it has committed
+    // the old page goes under the sheet at once; the new one shows through as soon as it has committed
     root.setAttribute('data-paper', 'hide')
     const nav = Promise.resolve(go()).then(() => {
-      // the new route set the fade-up that a navigation without a view transition gets; the toss is that transition here
+      // the new route set the fade-up that a navigation without a view transition gets; the burn is that transition here
       root.removeAttribute('data-fade')
       if (!done) root.setAttribute('data-paper', '')
     })

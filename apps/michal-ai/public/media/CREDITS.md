@@ -8,7 +8,6 @@
 - `../play/airplane-game/airplane.html` (not an image): the single-file game from the airplane-game repository (ItsMichal/airplane-game), copied byte for byte. His code. It loads one font from a third-party host (static.tumblr.com) and stores a hi-score cookie.
 - `about/portrait.webp`, `about/portrait-4x5.jpg`: the site owner's own photograph, web-sized from the original he supplied (EXIF, XMP, IPTC and ICC profile stripped; see `scripts/make-about-portrait.mjs`).
 - `about/congressional-record-e1105.webp`: crop of Congressional Record, Vol. 160, p. E1105 (July 3, 2014), rendered from the GPO PDF at govinfo.gov. A work of the US government, public domain.
-- `../textures/paper-crumple-normal.webp`, `../textures/paper-crumple-height.webp` (crumpled paper maps for the trial page transition, `components/site/paper`): ambientCG Paper003 (https://ambientcg.com/a/Paper003), the 1K OpenGL normal and displacement maps, CC0. Resized to 512 px and converted to WebP, otherwise unchanged.
 
 # Data credits
 

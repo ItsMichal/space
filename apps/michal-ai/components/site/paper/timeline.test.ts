@@ -1,42 +1,53 @@
 import { describe, expect, it } from 'vitest'
-import { PAPER_FPS, PAPER_MS, PAPER_PHASES } from './config'
-import { crumpleAt, frameAt, onTwos, tossAt, windupAt, type Dims } from './timeline'
+import { PAPER_ASH, PAPER_FPS, PAPER_MS } from './config'
+import { IGNITE, SQUEEZES, frameAt, onTwos } from './timeline'
 
-const dims: Dims = { w: 1280, h: 800, R: 160 }
+const at = (T: number) => frameAt(T)
+const ts = Array.from({ length: 201 }, (_, i) => i / 200)
 
 describe('paper transition timeline', () => {
-  it('runs about a second in all, split over the three phases', () => {
+  it('runs under two seconds in all', () => {
     expect(PAPER_MS).toBeGreaterThanOrEqual(800)
     expect(PAPER_MS).toBeLessThanOrEqual(2000)
-    expect(PAPER_PHASES.crumple + PAPER_PHASES.windup + PAPER_PHASES.toss).toBeCloseTo(1)
   })
 
-  it('starts on the flat page exactly where it is', () => {
-    expect(frameAt(0, dims)).toMatchObject({ ball: 0, fold: 0, wrinkle: 0, x: 0, y: 0, lift: 1, scale: 1, stretch: 1 })
+  it('starts on the flat page exactly where it is, not yet lit', () => {
+    expect(at(0)).toMatchObject({ ball: 0, fold: 0, scale: 1, spin: [-0, 0, 0] })
+    expect(at(0).burn).toBeLessThan(0)
   })
 
-  it('draws in before it crumples, and overshoots once the ball has formed', () => {
-    expect(crumpleAt(0.07).scale).toBeLessThan(1)
-    expect(crumpleAt(0.07).ball).toBe(0)
-    expect(Math.max(...[0.88, 0.9, 0.92].map((t) => crumpleAt(t).scale))).toBeGreaterThan(1)
-    expect(crumpleAt(1).scale).toBeCloseTo(1, 1)
+  it('crumples in three squeezes, held in between, never undoing one', () => {
+    for (let i = 1; i < ts.length; i++) expect(at(ts[i]).ball).toBeGreaterThanOrEqual(at(ts[i - 1]).ball - 1e-9)
+    // the holds between squeezes sit on each squeeze's target
+    expect(at(SQUEEZES[1].at).ball).toBeCloseTo(SQUEEZES[0].ball)
+    expect(at(SQUEEZES[2].at).ball).toBeCloseTo(SQUEEZES[1].ball)
+    expect(at(SQUEEZES[2].at + SQUEEZES[2].len).ball).toBeCloseTo(1)
+    // three separate bursts of movement: count the drawings on twos in which the ball moves
+    const step = 1000 / PAPER_FPS / PAPER_MS
+    let bursts = 0
+    let moving = false
+    for (let T = 0; T < 1; T += step) {
+      const m = at(T + step).ball - at(T).ball > 0.01
+      if (m && !moving) bursts++
+      moving = m
+    }
+    expect(bursts).toBe(3)
   })
 
-  it('hands the ball from one phase to the next without a jump, bar the release', () => {
-    const [c, w0, w1, t0] = [crumpleAt(1), windupAt(0, dims), windupAt(1, dims), tossAt(0, dims)]
-    expect(w0.ball).toBeCloseTo(c.ball)
-    expect(w0.spin).toEqual(c.spin)
-    expect([t0.x, t0.y, t0.lift]).toEqual([w1.x, w1.y, w1.lift])
-    expect(t0.spin[2]).toBeCloseTo(w1.spin[2])
-    // squashed on the wind-up, stretched on the release
-    expect(w1.stretch).toBeLessThan(1)
-    expect(t0.stretch).toBeGreaterThan(1.3)
+  it('draws in before each squeeze and overshoots after it, then rests at 1', () => {
+    for (const s of SQUEEZES) {
+      expect(at(s.at + s.len * 0.12).scale).toBeLessThan(1)
+      expect(Math.max(...[0.7, 0.75, 0.8].map((u) => at(s.at + s.len * u).scale))).toBeGreaterThan(1)
+      expect(at(s.at + s.len).scale).toBeCloseTo(1, 6)
+    }
   })
 
-  it('ends with the ball off screen', () => {
-    const end = frameAt(1, dims)
-    expect(end.x - dims.R * 1.5 * end.lift * end.stretch).toBeGreaterThan(dims.w / 2)
-    expect(end.shadow).toBe(0)
+  it('lights during the second squeeze and burns until the last ash is gone', () => {
+    expect(IGNITE).toBeGreaterThan(SQUEEZES[1].at)
+    expect(IGNITE).toBeLessThan(SQUEEZES[1].at + SQUEEZES[1].len)
+    expect(at(IGNITE).burn).toBeLessThan(0)
+    for (let i = 1; i < ts.length; i++) expect(at(ts[i]).burn).toBeGreaterThanOrEqual(at(ts[i - 1]).burn)
+    expect(at(1).burn).toBeCloseTo(1 + PAPER_ASH)
   })
 
   it('holds each drawing for two frames at 24 fps, and lands on the end', () => {

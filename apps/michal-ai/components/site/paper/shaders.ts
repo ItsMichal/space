@@ -1,5 +1,5 @@
-// GLSL for the paper sheet (WebGL2). World units are CSS pixels; the flat sheet is the viewport at z = 0, so the first and last
-// frames sample the page captures one to one, unshaded.
+// GLSL for the paper sheet (WebGL2). World units are CSS pixels; the flat sheet is the viewport at z = 0, so the first frame
+// samples the page capture one to one, unshaded.
 
 const NOISE = /* glsl */ `
 vec2 hash2(vec2 p) {
@@ -15,6 +15,33 @@ float gnoise(vec2 p) {
 vec2 hash22(vec2 p) {
   return fract(sin(vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)))) * 43758.5453);
 }
+`
+
+// The burn field over the sheet: 0 where the fire catches, a little below and left of the centre (the face of the ball, the
+// sheet's centre being in front once it is crumpled) to 1 at the farthest corner (behind the ball), ragged with noise, so the
+// front is a torn line rather than a circle. The ball burns open from the front and then hollows out.
+const BURN = /* glsl */ `
+float burnField(vec2 uv, vec2 size) {
+  vec2 a = size / length(size);
+  vec2 ign = vec2(0.42, 0.6);
+  float d = length((uv - ign) * a) / length(max(ign, 1.0 - ign) * a);
+  vec2 p = uv * a * 4.0;
+  float n = gnoise(p) * 0.6 + gnoise(p * 2.7 + 5.1) * 0.3 + gnoise(p * 9.0 + 1.7) * 0.1;
+  return clamp(d * 0.85 + 0.08 + n * 0.22, 0.0, 1.0);
+}
+`
+
+export const SHEET_VS = /* glsl */ `#version 300 es
+precision highp float;
+in vec2 a_uv;
+uniform vec2 u_size;
+uniform float u_ball, u_fold, u_R;
+uniform mat3 u_rot;
+uniform vec3 u_center;
+uniform mat4 u_vp;
+out vec2 v_uv;
+out vec3 v_pos;
+${NOISE}
 // Paper facets: the distance to the nearest Voronoi edge, raised or sunk per cell, so neighbouring cells meet in straight creases
 // and each cell is a flat-sided tent, as a crushed sheet is.
 float facets(vec2 p) {
@@ -32,143 +59,124 @@ float facets(vec2 p) {
   float e = sqrt(d2) - sqrt(d1);
   return hash22(c1 + 7.31).x > 0.45 ? e : -e;
 }
-// Crumple folds: two sizes of facets over a little soft noise, about -1 to 1.
-float folds(vec2 p) {
-  return facets(p) * 1.5 + facets(p * 2.3 + 11.7) * 0.6 + gnoise(p * 0.7) * 0.5;
-}
-`
-
-export const SHEET_VS = /* glsl */ `#version 300 es
-precision highp float;
-in vec2 a_uv;
-uniform vec2 u_size, u_cell;
-uniform float u_ball, u_fold, u_wrinkle, u_R, u_tile, u_outline;
-uniform mat3 u_rot;
-uniform vec3 u_center;
-uniform mat4 u_vp;
-uniform sampler2D u_height;
-out vec2 v_uv;
-out vec2 v_st;
-out vec3 v_pos;
-out vec3 v_n;
-out vec3 v_t;
-out vec3 v_b;
-out float v_cav;
-${NOISE}
 // The sheet point for a uv. The ball: the sheet wraps around a sphere, its centre in front and its corners meeting behind,
-// the edges pulled in first; the folds push along the surface normal.
-vec3 sheet(vec2 uv, out float F, out float h, out float bl) {
-  vec2 p0 = (uv - 0.5) * vec2(1.0, -1.0) * u_size;
+// the edges pulled in first; the folds push along the surface normal. The mesh is coarse, so all of it reads as flat facets.
+void main() {
+  vec2 p0 = (a_uv - 0.5) * vec2(1.0, -1.0) * u_size;
   float minDim = min(u_size.x, u_size.y);
-  h = texture(u_height, p0 / u_tile).r - 0.5;
-  F = folds(p0 / (0.3 * minDim));
+  vec2 fp = p0 / (0.3 * minDim);
+  float F = facets(fp) * 1.5 + facets(fp * 2.3 + 11.7) * 0.6;
   float diag = 0.5 * length(u_size);
   vec2 q = p0 / diag;
   float r = min(length(q), 1.0);
-  bl = clamp(u_ball * 1.3 - (1.0 - r) * 0.3, 0.0, 1.0);
+  float bl = clamp(u_ball * 1.3 - (1.0 - r) * 0.3, 0.0, 1.0);
   // atan(0, 0) is undefined (NaN on some GPUs) and would tear a hole at the centre vertex
   float th = (r > 1e-4 ? atan(q.y, q.x) : 0.0) + 1.1 * bl * r;
   float ph = r * 3.0;
   vec3 sn = vec3(sin(ph) * cos(th), sin(ph) * sin(th), cos(ph));
   vec3 pos = mix(vec3(p0, 0.0), sn * u_R, bl);
   vec3 dir = normalize(mix(vec3(0.0, 0.0, 1.0), sn, bl));
-  float foldAmp = u_fold * mix(0.07 * minDim, 0.26 * u_R, bl);
-  float wrAmp = u_wrinkle * mix(6.0, 0.05 * u_R, bl);
-  return pos + dir * (foldAmp * F + wrAmp * h * 2.0);
-}
-void main() {
-  float F, h, bl, F1, h1, b1;
-  vec3 p = sheet(a_uv, F, h, bl);
-  vec3 px = sheet(a_uv + vec2(u_cell.x, 0.0), F1, h1, b1);
-  vec3 py = sheet(a_uv - vec2(0.0, u_cell.y), F1, h1, b1);
-  vec3 T = px - p, B = py - p;
-  vec2 p0 = (a_uv - 0.5) * vec2(1.0, -1.0) * u_size;
-  v_cav = clamp(-F, 0.0, 1.0) * u_fold * (0.3 + 0.7 * bl) + clamp(-h * 2.0, 0.0, 1.0) * 0.2 * u_wrinkle;
+  pos += dir * u_fold * mix(0.07 * minDim, 0.26 * u_R, bl) * F;
   v_uv = a_uv;
-  v_st = p0 / u_tile;
-  v_t = u_rot * T;
-  v_b = u_rot * B;
-  v_n = u_rot * cross(T, B);
-  vec3 pos = u_rot * p + u_center;
-  // the ink pass: the same sheet pushed out along its normal, of which only the far side is drawn (an inverted hull), so it
-  // shows as a line round the silhouette
-  pos += normalize(v_n) * u_outline;
-  v_pos = pos;
-  gl_Position = u_vp * vec4(pos, 1.0);
+  v_pos = u_rot * pos + u_center;
+  gl_Position = u_vp * vec4(v_pos, 1.0);
 }
 `
 
-// Drawn like a cartoon: the light falls in three flat bands (the flat, smooth sheet is the top band, exactly the captured page),
-// the deep folds take a darker band, and the sheet's edge and silhouette are inked.
+// Flat shaded per facet (the normal from the screen derivatives of the position), so the flat sheet is exactly the page and a
+// crumpled one is a set of planes. Ahead of the fire the paper scorches, at the front it chars and glows, and behind it the sheet
+// is gone (the ash pass draws the glyphs there). With u_state set it writes, at one texel per glyph cell, the page colour under
+// the cell and how long ago it burnt, for the ash pass.
 export const SHEET_FS = /* glsl */ `#version 300 es
 precision highp float;
 in vec2 v_uv;
-in vec2 v_st;
 in vec3 v_pos;
-in vec3 v_n;
-in vec3 v_t;
-in vec3 v_b;
-in float v_cav;
-uniform sampler2D u_a, u_normal;
-uniform float u_ball, u_wrinkle, u_inkPass;
+uniform sampler2D u_a;
+uniform float u_burn, u_ash, u_state;
 uniform vec2 u_size;
-uniform vec3 u_back, u_ink, u_light;
+uniform vec3 u_back, u_light, u_eye;
 out vec4 o;
-float band(float x, float edge) {
-  float w = max(fwidth(x), 1e-3);
-  return smoothstep(edge - w, edge + w, x);
-}
+${NOISE}
+${BURN}
 void main() {
-  if (u_inkPass > 0.5) {
-    o = vec4(u_ink, 1.0);
+  vec3 base = gl_FrontFacing ? texture(u_a, v_uv).rgb : u_back;
+  float age = u_burn - burnField(v_uv, u_size);
+  if (u_state > 0.5) {
+    o = age > 0.0 ? vec4(base, (1.0 + 254.0 * clamp(age / u_ash, 0.0, 1.0)) / 255.0) : vec4(0.0);
     return;
   }
-  vec3 N = normalize(v_n);
-  vec3 T = normalize(v_t - N * dot(v_t, N));
-  vec3 B = cross(N, T);
-  if (!gl_FrontFacing) N = -N;
-  // the crumpled paper normal map, softened: banded, its full strength reads as noise
-  vec3 nm = texture(u_normal, v_st * vec2(1.0, -1.0)).xyz * 2.0 - 1.0;
-  float s = 0.22 * u_wrinkle;
-  vec3 n = normalize(T * (nm.x * s) + B * (nm.y * s) + N * mix(1.0, nm.z, s));
-
+  // the facet normal before the discard, while the neighbouring fragments are all still running
+  vec3 N = normalize(cross(dFdx(v_pos), dFdy(v_pos)));
+  if (dot(N, u_eye - v_pos) < 0.0) N = -N;
+  if (age > 0.0) discard;
   vec3 L = normalize(u_light);
-  // 1 on the flat sheet, below in the shade, above where a fold faces the light
-  float r = max(dot(n, L), 0.0) / L.z;
-  float shade = mix(0.6, 0.8, band(r, 0.5));
-  shade = mix(shade, 1.0, band(r, 0.86));
-  shade = mix(shade, 1.07, band(r, 1.22) * u_ball);
-  shade *= mix(1.0, 0.78, band(v_cav, 0.55));
-
-  vec3 base = gl_FrontFacing ? texture(u_a, v_uv).rgb : u_back;
+  // 1 on the flat sheet, below for a facet turned from the light, a little above for one turned to it
+  float shade = min(0.52 + 0.48 * max(dot(N, L), 0.0) / L.z, 1.12);
   vec3 col = base * shade;
-  // the paper's edge, inked once it starts to move
-  vec2 e = min(v_uv, 1.0 - v_uv) * u_size;
-  float edge = 1.0 - band(min(e.x, e.y), 2.2);
-  col = mix(col, u_ink, edge * smoothstep(0.0, 0.04, u_ball));
+
+  // scorch ahead of the front, char at it, a thin glowing line on the edge
+  col *= mix(vec3(1.0), vec3(0.86, 0.68, 0.45), smoothstep(-0.12, -0.035, age) * 0.6);
+  col = mix(col, vec3(0.12, 0.06, 0.03), smoothstep(-0.035, -0.012, age));
+  col = mix(col, vec3(1.0, 0.56, 0.16), smoothstep(-0.012, -0.004, age));
+  col = mix(col, vec3(1.0, 0.92, 0.62), smoothstep(-0.004, 0.0, age));
   o = vec4(col, 1.0);
 }
 `
 
-export const SHADOW_VS = /* glsl */ `#version 300 es
-in vec2 a_p;
+export const QUAD_VS = /* glsl */ `#version 300 es
+layout(location = 0) in vec2 a_p;
 void main() { gl_Position = vec4(a_p, 0.0, 1.0); }
 `
 
-// Soft contact shadow of the sheet on the page backdrop: a blurred rounded box that shrinks from the sheet to the ball.
-export const SHADOW_FS = /* glsl */ `#version 300 es
+// The ash: every glyph cell looks down its column for the burnt spot that has risen to it. A spot sits where it burnt as a dense
+// glyph (in the page's ink where it burnt through text), then rises (each column at its own speed), thins to sparser glyphs,
+// cools and goes.
+export const ASH_FS = /* glsl */ `#version 300 es
 precision highp float;
-uniform vec2 u_c, u_half;
-uniform float u_r, u_blur, u_alpha, u_dpr;
-uniform vec3 u_ink;
+uniform sampler2D u_cells, u_glyphs;
+uniform ivec2 u_cellPx;
+uniform int u_count;
+uniform float u_rise, u_drawing;
 out vec4 o;
-float sdBox(vec2 p, vec2 b, float r) {
-  vec2 q = abs(p) - b + r;
-  return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+float h1(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+// hot to cold, dark enough at every step to read on the paper colour as well as on the dark theme
+vec3 ember(float u) {
+  vec3 c = mix(vec3(1.0, 0.72, 0.22), vec3(1.0, 0.42, 0.06), smoothstep(0.05, 0.3, u));
+  c = mix(c, vec3(0.78, 0.14, 0.04), smoothstep(0.3, 0.65, u));
+  return mix(c, vec3(0.32, 0.08, 0.03), smoothstep(0.65, 0.95, u));
 }
+const int REACH = 14;
 void main() {
-  vec2 p = gl_FragCoord.xy / u_dpr - u_c;
-  float a = (1.0 - smoothstep(-u_blur, u_blur, sdBox(p, u_half, u_r))) * u_alpha;
-  o = vec4(u_ink * a, a);
+  ivec2 px = ivec2(gl_FragCoord.xy);
+  ivec2 cell = px / u_cellPx;
+  float speed = u_rise * (0.65 + 0.7 * h1(vec2(float(cell.x), 3.1)));
+  vec4 s = vec4(0.0);
+  float u = 0.0;
+  bool hit = false;
+  for (int k = 0; k <= REACH; k++) {
+    ivec2 src = cell - ivec2(0, k);
+    if (src.y < 0) break;
+    vec4 t = texelFetch(u_cells, src, 0);
+    if (t.a == 0.0) continue;
+    float a = (t.a * 255.0 - 1.0) / 254.0;
+    // held in place for the first part of its life, then rising
+    float rise = max(0.0, a - 0.14) / 0.86 * speed;
+    if (abs(rise - float(k)) > 0.5) continue;
+    // fewer, sparser embers as they rise
+    if (h1(vec2(src) + 0.37) < a * a * 0.6) continue;
+    s = t;
+    u = a;
+    hit = true;
+    break;
+  }
+  if (!hit || u >= 1.0) discard;
+  float flick = (h1(vec2(cell) + u_drawing * 1.31) - 0.5) * 1.6;
+  int g = clamp(int(round((1.0 - u) * (1.0 - u) * float(u_count - 1) + flick)), 0, u_count - 1);
+  ivec2 in_cell = px - cell * u_cellPx;
+  float cov = texelFetch(u_glyphs, ivec2(g * u_cellPx.x + in_cell.x, u_cellPx.y - 1 - in_cell.y), 0).a;
+  float ink = 1.0 - smoothstep(0.25, 0.6, dot(s.rgb, vec3(0.299, 0.587, 0.114)));
+  vec3 col = mix(ember(u), s.rgb, ink * (1.0 - smoothstep(0.04, 0.16, u)));
+  float alpha = cov * (1.0 - smoothstep(0.7, 1.0, u));
+  o = vec4(col * alpha, alpha);
 }
 `
