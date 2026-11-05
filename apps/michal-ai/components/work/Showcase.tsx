@@ -67,7 +67,7 @@ export function ProjectCard({
   /** No picture, even on the feature entry. */
   textOnly?: boolean
   /** Every entry shows its picture as part of the row (left of the text from 840px, above the title on phones), not as a
-   *  separate card block, and no year unless `dated`. */
+   *  separate card block, and no year or date unless `dated` (with or without a picture). */
   thumb?: boolean
   /** With `thumb`, still show the year (or the date) under the description. */
   dated?: boolean
@@ -94,7 +94,7 @@ export function ProjectCard({
       <p id={`${id}-d`} className="ix__desc">
         {post.description}
       </p>
-      {thumb && src && !dated ? null : (
+      {thumb && !dated ? null : (
         <p className="ix__meta">
           <MetaParts parts={metaParts} />
         </p>

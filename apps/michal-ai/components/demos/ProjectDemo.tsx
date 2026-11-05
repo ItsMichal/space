@@ -4,7 +4,7 @@ import { CaptionOverlay, useCaptionsPref, useCues } from '@/components/mdx/Capti
 import './demos.css'
 
 /**
- * A project's preview, and only ever real material: a short silent loop cut from the project's own footage (its demo
+ * A project's (or a home page post's) preview, and only ever real material: a short silent loop cut from the project's own footage (its demo
  * videos, a recording of the live site or game, its own screenshots), or its own source code written out line by line
  * (Stageshow kit, components/stageshow). Nothing here shows a made-up result. Projects with neither keep their cover.
  *
@@ -16,13 +16,17 @@ import './demos.css'
 const CLIPS = [
   'ai-crofty', // AI Croft Funny Moment (YouTube Qt-6oOMb4NQ), 0:02
   'airplane-game', // the game itself (public/play/airplane-game), played
+  'analog-experiments-screaming-robot', // the post's LED demo (YouTube 1_BN7k59j90), 0:02
+  'beer-in-space', // the post's coverage reel (media/beer-in-space/beer-in-space-highlights.mp4), 1:32
   'creatle', // creatle.vercel.app, live
   'frogchamp', // the real dashboard (ItsMichal/frogchamp) replaying a chat, recorded
   'grocerybot', // Robo-Shopper 3000 demo (YouTube YaHhRhEKA_I), 0:40
   'intro-to-web-dev', // the workshop's checkpoint pages 1 to 4 (ItsMichal/IntroToWebDev/examples)
   'jia-webapp', // the post's own screenshots
+  'medpuck-pcb-prototype', // the post's own build photos
   'office-wizards', // Barcode Game playthrough (YouTube hSZSht_D7hM), 1:13
   'ohisee', // the bot's SGDQ 2019 notes page with its real notes (ItsMichal/ohisee sgdq19.html)
+  'p5-js-punching-bag-game', // Lane Defense punching bag demo (YouTube hdnndI1rcKc), 0:02
   'pilsudski', // the kAIser pitch (YouTube a09E8_-fFIc), 0:25
   'playsafe', // the post's own screenshots
   'project-mountaintop', // ATLAS Expo 2023 demo video (YouTube Gv-xMeMM8m4), 0:31
