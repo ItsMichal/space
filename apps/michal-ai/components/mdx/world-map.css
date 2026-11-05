@@ -1,0 +1,130 @@
+/* World map (components/mdx/WorldMap.tsx). The paper surface and hairline of the accolade card; land is the sunk paper,
+   lit countries the accent, both themes from the tokens. Unlayered, so it also wins over `.prose` inside a post. */
+.wmap {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: var(--space-6);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+  font-family: var(--font-sans);
+}
+.prose .wmap {
+  margin: var(--space-8) auto;
+}
+.wmap p,
+.wmap ul,
+.wmap h3 {
+  margin: 0;
+}
+.wmap__head {
+  display: grid;
+  gap: var(--space-1);
+}
+.prose .wmap .wmap__title {
+  margin: 0;
+  font-family: var(--font-sans);
+}
+
+/* the frame keeps the map's shape before the drawing arrives (editor preview), so nothing shifts */
+.wmap__frame {
+  aspect-ratio: 1000 / 487;
+  width: 100%;
+}
+.wmap__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.wmap__land {
+  fill: var(--paper-sunk);
+  stroke: var(--hairline);
+  stroke-width: 0.6px;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+.wmap__lit {
+  fill: var(--accent);
+  stroke: var(--paper-raised);
+  stroke-width: 0.6px;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+.wmap__dot {
+  fill: var(--accent);
+  stroke: var(--paper-raised);
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+/* on a phone the map is a third the width, so the markers grow to stay findable */
+@media (max-width: 639px) {
+  .wmap__dot {
+    r: 8px;
+  }
+}
+
+.wmap__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-4);
+}
+.prose .wmap .wmap__foot {
+  margin: 0;
+  text-align: start;
+}
+.wmap__legend {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--ink);
+}
+.wmap__swatch {
+  width: 0.9em;
+  height: 0.9em;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.wmap__list {
+  flex-basis: 100%;
+  order: 2;
+}
+.wmap__list summary {
+  cursor: pointer;
+  width: max-content;
+  color: var(--ink);
+}
+.wmap__list summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.wmap .wmap__list ul {
+  margin-top: var(--space-2);
+  padding: 0;
+  list-style: none;
+  columns: 2 11rem;
+  column-gap: var(--space-6);
+}
+.wmap .wmap__list li {
+  margin: 0;
+  padding: 0;
+  break-inside: avoid;
+}
+.wmap .wmap__list li::before,
+.wmap .wmap__list li::marker {
+  content: none;
+}
+.wmap__src {
+  flex: 1 1 16rem;
+}
+/* the source links draw their own "(opens in a new tab)"; no prose "↗" after them (class doubled to outweigh globals.css) */
+.prose .wmap.wmap a[href]::after {
+  content: none;
+}
+
+@media (max-width: 639px) {
+  .wmap {
+    padding: var(--space-4);
+  }
+}

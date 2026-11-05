@@ -113,6 +113,8 @@ export const DIRECTIVES = {
   callout: ['type'],
   // ::accolade{id=ssep-2014}: a recognition card from content/accolades.ts (quote, the document, the coverage row)
   accolade: ['id'],
+  // ::map{id=starlink-markets}: a world map with the countries of one entry of content/maps.ts lit
+  map: ['id'],
   handwriting: ['src', 'alt', 'duration', 'blur', 'chroma', 'stagger', 'focus', 'ease', 'color'],
   // ::video{src poster title}: a self-hosted clip (mp4 or webm under /media/), played only when the reader presses play
   video: ['src', 'poster', 'title', 'captions'],
@@ -167,7 +169,7 @@ export function directiveAttrs(name, attrs) {
     if (!embedUrlOk(out.url)) return null
     if (out.ratio && !RATIO_RE.test(out.ratio)) delete out.ratio
   }
-  if (name === 'accolade' && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(out.id ?? '')) return null
+  if ((name === 'accolade' || name === 'map') && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(out.id ?? '')) return null
   if (name === 'callout' && out.type && !CALLOUT_TYPES.includes(out.type)) out.type = 'note'
   if (name === 'term' && !TERM_COLOURS.includes(out.c)) out.c = TERM_COLOURS[0]
   if (name === 'fig' && !/^[1-9]\d?$/.test(out.n ?? '')) return null
@@ -330,7 +332,7 @@ function directiveOf(line) {
   return { name: d[1], attrs }
 }
 
-const MISSING = { embed: 'url (https on an allowed host)', handwriting: 'src (/media/<slug>/<name>.ink.json) or alt text', youtube: 'id', video: 'src (/media/<slug>/<name>.mp4 or .webm)' }
+const MISSING = { embed: 'url (https on an allowed host)', handwriting: 'src (/media/<slug>/<name>.ink.json) or alt text', youtube: 'id', map: 'id (a map from content/maps.ts)', video: 'src (/media/<slug>/<name>.mp4 or .webm)' }
 
 /**
  * Problems in a markdown body that the renderer would silently drop: unknown or broken directives and unsafe link or image targets.
