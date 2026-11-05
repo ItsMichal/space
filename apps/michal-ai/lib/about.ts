@@ -37,6 +37,7 @@ export const pressItems = () => ({
   newsletters: ['isat-snapshot-summer-2022', 'isat-snapshot-winter-2023', 'isat-snapshot-summer-2025'].map(byId),
   shine: byId('shine-lab-staff-profile'),
   early: byId('denver-post-2017-kaiser'),
+  earlyRadio: byId('cpr-2017-kaiser'),
 })
 export const NEWSLETTER_LABEL: Record<string, string> = {
   'isat-snapshot-summer-2022': 'Summer 2022',

@@ -63,7 +63,8 @@ export type CareerEntry = {
 export type Skill = { group: string; items: readonly string[] }
 
 export type VolunteerEntry = { org: string; role: string; dates: string; start: string; end: string; note?: string }
-export type Award = { id: string; title: string; context: string; year: string; postId?: string; hackathonId?: string; url?: string }
+/** `press` marks coverage rather than a prize: it sits with the awards on the home page and the resume, and in Press on /about. */
+export type Award = { id: string; title: string; context: string; year: string; postId?: string; hackathonId?: string; url?: string; kind?: 'press' }
 
 export const profile = {
   /** Displayed name (Polish ł). */
@@ -285,9 +286,19 @@ export const profile = {
       context: 'by Rep. Mike Coffman of Colorado, Extensions of Remarks, Vol. 160, p. E1105, for winning the Student Spaceflight Experiments Program',
       year: '2014',
       url: 'https://www.govinfo.gov/link/crec/160/e/1105',
+      postId: 'beer-in-space-ssep-2014',
     },
     { id: 'aied-2022', title: 'Best Interactive Event', context: 'AI in Education Conference (AIED), for the iSAT dashboard display', year: '2022', postId: 'isat-dashboard' },
     { id: 'hackcu-8', title: 'HackCU 8: 2nd place overall, and Best Games, Music, and Entertainment Hack', context: 'for Creatle, a solo project', year: '2022', hackathonId: 'hackcu-8-creatle' },
+    // content/press.ts, denver-post-2017-kaiser and cpr-2017-kaiser; his own README (ItsMichal/pilsudski) links the Post article.
+    {
+      id: 'denver-post-2017',
+      kind: 'press',
+      title: 'Featured in The Denver Post and on Colorado Public Radio',
+      context: 'for the kAIser, a talking Kaiser Wilhelm II for a high school history class, and Pilsudski, its API.AI webhook',
+      year: '2017',
+      postId: 'pilsudski',
+    },
   ] satisfies Award[],
   /** Skills grouped as his LinkedIn, resume and project pages list them. No ratings. */
   skills: [

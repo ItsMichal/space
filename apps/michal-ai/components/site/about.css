@@ -76,3 +76,8 @@ a.about__more:focus-visible .about__more-go {
   color: currentColor;
   transform: translateX(3px);
 }
+
+/* The coverage clip under the award row it belongs to (app/page.tsx): the row's own inset, a breath above and below. */
+.xp-reel {
+  margin: var(--space-2) 0 var(--space-4);
+}

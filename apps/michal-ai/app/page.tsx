@@ -34,27 +34,34 @@ const experience: ExperienceItem[] = profile.experience.map((e) => ({
   href: ROLE_LINKS[e.company],
 }))
 
-// The Congressional Record tribute leads (profile.awards order). A row links to its post, or to the record itself. Built at
-// render, not at module load: posts are only available once the route's data is in (module scope throws on the client).
-const awardItems = (): ExperienceItem[] =>
+// Awards and press as one list (profile.awards order), the Congressional Record tribute first. A row links to its post, or to
+// the record itself. The post's clip of the coverage plays under the row for the story it belongs to, not as a section of its
+// own. Built at render, not at module load: posts are only available once the route's data is in (module scope throws on the client).
+const awardItems = (reel?: HomeReel | null): ExperienceItem[] =>
   profile.awards.map((a) => ({
     id: a.id,
     org: a.title,
     role: a.context,
     years: a.year,
     href: a.postId ? hrefById(a.postId) : a.url,
+    extra:
+      reel && a.postId && hrefById(a.postId) === reel.href ? (
+        <div className="home-reel xp-reel">
+          <Video src={reel.src} poster={reel.poster} title={reel.caption} />
+        </div>
+      ) : undefined,
   }))
 
 const h2 = 'mb-space-6 font-display text-title'
 
-/** A clip from a post, shown on its own under the writing: where it plays, its caption, and the way to the post. */
+/** A clip from a post, played under the award row that links to the same post: where it plays, its caption, and the post. */
 export type HomeReel = { src: string; poster?: string; caption?: string; href: string; post: string }
 
 export default function Home({ reel }: { reel?: HomeReel | null }) {
   const projects = getMainProjects()
   const articles = getBlogPosts()
   const latest = homeWriting(articles)
-  const awards = awardItems()
+  const awards = awardItems(reel)
   // Rotating hero line: every post that sets `hook`, the layout file's `hooks` first, then the site's own order (priority, then newest).
   const hookPosts = heroHooks(getAllPosts().filter((p) => p.hook))
   const hooks = hookPosts.map((p) => ({ text: p.hook!, href: postPath(p) }))
@@ -95,45 +102,6 @@ export default function Home({ reel }: { reel?: HomeReel | null }) {
         </section>
       ) : null}
 
-      {reel ? (
-        <section id="reel" aria-labelledby="reel-h" className="home-sec home-reel">
-          <h2 id="reel-h" className={h2}>
-            In the news
-          </h2>
-          <Video src={reel.src} poster={reel.poster} title={reel.caption} />
-          <Link href={reel.href} className="ix-more link">
-            Read {reel.post} <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
-          </Link>
-        </section>
-      ) : null}
-
-      {profile.publications.length ? (
-        <section id="publications" aria-labelledby="pubs-h" className="home-sec">
-          <h2 id="pubs-h" className={h2}>
-            Publications
-          </h2>
-          <ul className="ix-list">
-            {profile.publications.map((p) => (
-              <li key={p.id}>
-                <a href={doiUrl(p)} className="ix" target="_blank" rel="noopener noreferrer">
-                  <span className="ix__title">{p.title}</span>
-                  <span className="ix__desc t-text">
-                    {p.shortAuthors ? `${p.shortAuthors} ` : ''}
-                    {venueLine(p)}
-                    {p.shortAuthors ? '.' : ''}
-                    {p.authorCount ? ` ${p.authorCount.toLocaleString('en-US')} authors.` : ''}
-                    {citationLabel(p.doi) ? <span title={citationsSource}>{`${p.shortAuthors || p.authorCount ? ' ' : '. '}${citationLabel(p.doi)}.`}</span> : null}
-                  </span>
-                  <time className="ix__meta t-meta" dateTime={p.published}>
-                    {p.year}
-                  </time>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
       <section id="about" aria-labelledby="about-h" className="home-sec">
         <h2 id="about-h" className={h2}>
           About
@@ -158,12 +126,40 @@ export default function Home({ reel }: { reel?: HomeReel | null }) {
           </section>
           <section aria-labelledby="awards-h" className="ix-sec">
             <h3 id="awards-h" className="t-heading">
-              Awards
+              Recognition
             </h3>
             <div className="ix-sec__body">
-              <ExperienceList items={awards} label="Awards" />
+              <ExperienceList items={awards} label="Recognition" />
             </div>
           </section>
+          {profile.publications.length ? (
+            <section id="publications" aria-labelledby="pubs-h" className="ix-sec">
+              <h3 id="pubs-h" className="t-heading">
+                Publications
+              </h3>
+              <div className="ix-sec__body">
+                <ul className="ix-list">
+                  {profile.publications.map((p) => (
+                    <li key={p.id}>
+                      <a href={doiUrl(p)} className="ix" target="_blank" rel="noopener noreferrer">
+                        <span className="ix__title">{p.title}</span>
+                        <span className="ix__desc t-text">
+                          {p.shortAuthors ? `${p.shortAuthors} ` : ''}
+                          {venueLine(p)}
+                          {p.shortAuthors ? '.' : ''}
+                          {p.authorCount ? ` ${p.authorCount.toLocaleString('en-US')} authors.` : ''}
+                          {citationLabel(p.doi) ? <span title={citationsSource}>{`${p.shortAuthors || p.authorCount ? ' ' : '. '}${citationLabel(p.doi)}.`}</span> : null}
+                        </span>
+                        <time className="ix__meta t-meta" dateTime={p.published}>
+                          {p.year}
+                        </time>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </section>
+          ) : null}
           <Link href="/about" className="about__more ix" aria-labelledby="about-more-h" aria-describedby="about-more-d">
             <span id="about-more-h" className="ix__title">
               More about me

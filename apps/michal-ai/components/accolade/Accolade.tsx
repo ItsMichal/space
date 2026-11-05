@@ -25,120 +25,117 @@ function when(iso: string) {
   )
 }
 
+/** How many coverage rows show before "Show all": the most prominent first, the rest one press away. */
+const LEAD = 6
+
+/** "nbcnews.com" from a link, so a row says where it goes (the TV segments open on archive.org). */
+function host(url: string) {
+  return new URL(url).hostname.replace(/^www\./, '')
+}
+
+function Source({ s }: { s: AccoladeSource }) {
+  return (
+    <li>
+      <a className="acc__src" href={s.url} target="_blank" rel="noopener noreferrer">
+        <span className="acc__thumb" aria-hidden>
+          {s.image ? <img src={s.image} alt="" width={320} height={180} loading="lazy" decoding="async" /> : null}
+        </span>
+        <span className="acc__outlet t-ui">{s.outlet}</span>
+        <span className="acc__headline" lang={s.titleEn ? 'en' : s.lang}>
+          {s.titleEn ?? s.title}
+        </span>
+        <span className="acc__srcmeta t-meta">
+          {KIND_LABEL[s.kind]}
+          {s.lang === 'pl' ? ', in Polish' : null} <span aria-hidden>·</span> <time dateTime={s.date}>{when(s.date)}</time>
+        </span>
+        <span className="acc__host t-meta">
+          {host(s.url)}
+          <ArrowUpRight size={13} strokeWidth={1.5} aria-hidden className="acc__arrow" />
+          <span className="sr-only"> (opens in a new tab)</span>
+        </span>
+      </a>
+    </li>
+  )
+}
+
 /**
- * An accolade card (content/accolades.ts): the quote from the record beside a picture of the document, then the coverage as
- * a scrolling row of link previews, most prominent outlet first. `story` links the post that tells the story (off inside
- * that post). An unknown id renders nothing.
+ * An accolade card (content/accolades.ts): what it was (the eyebrow and title), then the document in its own column with,
+ * beside it, the quote from it, one line of what happened and the coverage as a tidy list, the most prominent outlets
+ * first and the rest behind "Show all". The scan is a tall page, so the text column runs its length rather than leaving
+ * it alone; on phones it is cropped to its masthead. Inside a post the card takes the wide track. `story` links the post that tells the story (off inside that post).
+ * An unknown id renders nothing.
  */
-export function Accolade({
-  id,
-  story = true,
-}: {
-  id: string
-  story?: boolean
-}) {
+export function Accolade({ id, story = true }: { id: string; story?: boolean }) {
   const a = accoladeById(id)
   if (!a) return null
   const headingId = `acc-${a.id}`
+  const lead = a.sources.slice(0, LEAD)
+  const rest = a.sources.slice(LEAD)
   return (
     <section className="acc" aria-labelledby={headingId}>
+      <header className="acc__head">
+        <p className="acc__eyebrow t-meta">{a.eyebrow}</p>
+        <h3 id={headingId} className="acc__title">
+          {a.title}, <time dateTime={a.year}>{a.year}</time>
+        </h3>
+      </header>
+
       <div className="acc__main">
         {a.document ? (
-          <a
-            className="acc__doc"
-            href={a.quote.url}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Picture
-              src={a.document.src}
-              alt={a.document.alt}
-              sizes="(min-width: 840px) 200px, 40vw"
-              className="acc__docimg"
-            />
-            <span className="acc__doccap t-meta">{a.document.caption}</span>
-            <span className="sr-only"> (opens in a new tab)</span>
-          </a>
+          <figure className="acc__docfig">
+            <a className="acc__doc" href={a.quote.url} target="_blank" rel="noopener noreferrer">
+              <Picture src={a.document.src} alt={a.document.alt} sizes="(min-width: 840px) 280px, 60vw" className="acc__docimg" />
+              <span className="sr-only"> (opens in a new tab)</span>
+            </a>
+            <figcaption className="acc__doccap t-meta">{a.document.caption}</figcaption>
+          </figure>
         ) : null}
         <div className="acc__body">
-          <p className="acc__eyebrow t-meta">{a.eyebrow}</p>
-          <h3 id={headingId} className="acc__title t-ui">
-            {a.title}, <time dateTime={a.year}>{a.year}</time>
-          </h3>
           <figure className="acc__quote">
             <blockquote cite={a.quote.url}>
               <p>&ldquo;{a.quote.text}&rdquo;</p>
             </blockquote>
             <figcaption className="t-meta">
               <span className="acc__by">{a.quote.by}</span>, {a.quote.role}.{' '}
-              <a
-                href={a.quote.url}
-                className="link"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <a href={a.quote.url} className="link" target="_blank" rel="noopener noreferrer">
                 {a.quote.cite}
-                <ArrowUpRight
-                  size={13}
-                  strokeWidth={1.5}
-                  aria-hidden
-                  className="acc__arrow"
-                />
+                <ArrowUpRight size={13} strokeWidth={1.5} aria-hidden className="acc__arrow" />
                 <span className="sr-only"> (opens in a new tab)</span>
               </a>
             </figcaption>
           </figure>
           <p className="acc__summary t-text">{a.summary}</p>
           {story && a.postSlug ? (
-            <Link
-              href={`/writing/${a.postSlug}`}
-              className="acc__story t-ui link"
-            >
+            <Link href={`/writing/${a.postSlug}`} className="acc__story t-ui link">
               Read the story
             </Link>
           ) : null}
         </div>
-      </div>
-
-      <div className="acc__press">
-        <p className="acc__presshead t-meta">
-          In the news <span aria-hidden>·</span> {a.sources.length} items
-        </p>
-        <ul className="acc__row" aria-label={`Coverage of ${a.title}`}>
-          {a.sources.map((s) => (
-            <li key={s.id}>
-              <a
-                className="acc__src"
-                href={s.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                lang={s.lang}
-              >
-                <span className="acc__srctop t-meta">
-                  <span className="acc__chip" data-kind={s.kind}>
-                    {KIND_LABEL[s.kind]}
-                  </span>
-                  {s.lang === 'pl' ? (
-                    <span className="acc__chip" lang="en">
-                      Polish
-                    </span>
-                  ) : null}
-                  <time dateTime={s.date}>{when(s.date)}</time>
-                </span>
-                <span className="acc__outlet t-ui">{s.outlet}</span>
-                <span className="acc__headline">{s.title}</span>
-                {s.titleEn ? (
-                  <span className="acc__gloss t-meta" lang="en">
-                    {s.titleEn}
-                  </span>
-                ) : s.note ? (
-                  <span className="acc__gloss t-meta">{s.note}</span>
-                ) : null}
-                <span className="sr-only"> (opens in a new tab)</span>
-              </a>
-            </li>
-          ))}
-        </ul>
+        {a.sources.length ? (
+          <div className="acc__press">
+            <h4 className="acc__presshead t-meta">
+              Coverage <span aria-hidden>·</span> {a.sources.length} {a.sources.length === 1 ? 'item' : 'items'}
+            </h4>
+            <ul className="acc__list" aria-label={`Coverage of ${a.title}`}>
+              {lead.map((s) => (
+                <Source key={s.id} s={s} />
+              ))}
+            </ul>
+            {rest.length ? (
+              <details className="acc__more">
+                <summary className="t-ui">
+                  <span className="acc__more-open">Show all {a.sources.length}</span>
+                  <span className="acc__more-close">Show fewer</span>
+                </summary>
+                <ul className="acc__list" aria-label={`More coverage of ${a.title}`}>
+                  {rest.map((s) => (
+                    <Source key={s.id} s={s} />
+                  ))}
+                </ul>
+              </details>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </section>
   )
