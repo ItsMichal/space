@@ -2,6 +2,7 @@
 import { forwardRef, useSyncExternalStore, type AnchorHTMLAttributes, type ReactNode } from 'react'
 import legacy from '@/content/redirects.json'
 import { Link as RRLink, useInRouterContext, useLocation, useNavigate } from 'react-router'
+import { paperNavigate, paperWants } from '@/components/site/paper'
 
 type LinkProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
   href: string
@@ -57,7 +58,14 @@ const InRouterLink = forwardRef<HTMLAnchorElement, LinkProps>(function InRouterL
         onClick?.(e)
         // A plain left click becomes a view-transition navigation that commits synchronously (`flushSync`; the Link prop of that name
         // is not in the types, the navigate option is). Anything else (new tab, modifier keys, download) stays React Router's.
-        if (!vt || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || (target && target !== '_self') || rest.download != null) return
+        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || (target && target !== '_self') || rest.download != null) return
+        // Trial: the paper crumple transition takes the click instead (components/site/paper).
+        if (paperWants(to)) {
+          e.preventDefault()
+          void paperNavigate(() => navigate(to, { replace, preventScrollReset: scroll === false }))
+          return
+        }
+        if (!vt) return
         e.preventDefault()
         void navigate(to, { replace, preventScrollReset: scroll === false, viewTransition: true, flushSync: true })
       }}
