@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { getAllPosts } from '@/lib/content'
-import { homeMetadata, listMetadata, postMetadata, profilePageJsonLd, websiteJsonLd, SITE_URL } from '../seo'
+import { homeMetadata, homePageJsonLd, listMetadata, postMetadata, profilePageJsonLd, websiteJsonLd, SITE_URL } from '../seo'
 
 const appDir = join(__dirname, '../../app')
 
@@ -51,5 +51,10 @@ describe('home JSON-LD', () => {
     expect(profilePageJsonLd.mainEntity['@type']).toBe('Person')
     expect(profilePageJsonLd.mainEntity.alternateName).toBe('Michal Bodzianowski')
     expect(websiteJsonLd.alternateName).toBe('Michal Bodzianowski')
+  })
+
+  it('names the portrait as the home page image, so search thumbnails show the person', () => {
+    expect(homePageJsonLd.mainEntity['@id']).toBe(`${SITE_URL}/#person`)
+    expect(homePageJsonLd.primaryImageOfPage.url).toBe(`${SITE_URL}/media/about/portrait-4x5.jpg`)
   })
 })
