@@ -178,6 +178,7 @@ const TILES = {
   ...Object.fromEntries(edits.map((v) => [`video:${v.id}`, (cls) => vtile(v, cls)])),
   // a clip is inserted before the Twitch tile (app.js); the built stand-ins are what shows until /api/clips answers
   ...Object.fromEntries(clips.map(([title, game], i) => [`clip:${i}`, () => clipFallback(title, game, i)])),
+  'trades:lead': (cls) => tradesTile(cls),
   'mt:lead': (cls) => mtTile(cls),
   'mt:year': (cls) => yearTile({ year: mtYear, title: `${mt.title}, capstone and expo demo`, tone: 'tpaper', cls }),
   ...Object.fromEntries(gl.map((g) => [`game:${g.slug}`, (cls) => gtile(g, cls)])),
@@ -192,7 +193,6 @@ const FLEX = {
   'films:year': (fx) => yearTile({ year: Math.min(...films.map((f) => yr(f.published))), title: `${filmGroup} starts`, cap: `${cap1(WORDS[films.length])} short films, ${S.filmMinutes} minutes`, tone: 'tink', cls: fx, attrs: ' data-flex data-stat="film-minutes"' }),
   'edits:youtube': (fx) => ytTile(fx, 'All videos on YouTube', 'https://www.youtube.com/@halmic', ' data-flex'),
   twitch: (fx) => twitchTile(fx),
-  'trades:lead': (fx) => tradesTile(fx, ' data-flex'),
   'sports:lead': (fx) => sportsTile(fx, ' data-flex'),
   'mt:logs': (fx) => stat({ href: `${mtBase}#logs`, num: fmt(S.logWords), unit: 'words', title: `in ${WORDS[S.logCount]} dev logs`, cap: 'Written during the build', tone: 'tblue', cls: fx, attrs: ' data-flex data-stat="log-words"' }),
   itch: (fx) => itchTile(fx, ' data-flex'),

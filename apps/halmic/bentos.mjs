@@ -32,8 +32,8 @@ export function model(content) {
   const { films, episodes, edits, gl, posts, vc } = d;
   const lead4 = posts.length >= 4;
   const clusters = {
-    trades: { name: 'Swipe Trades', tiles: [], flex: t('trades:lead', null, 'Swipe Trades') },
-    sports: { name: 'MemeSports', tiles: [], flex: t('sports:lead', null, 'MemeSports') },
+    // the two newest projects side by side: Swipe Trades is one cell wide at 3 and 2 columns, MemeSports fills the rest of the row
+    new: { name: 'New projects', tiles: [t('trades:lead', 'x4', 'Swipe Trades')], flex: t('sports:lead', null, 'MemeSports') },
     films: { name: films[0]?.group ?? 'Short films', tiles: [t(`film:${films[0].id}`, 'lead', films[0].name ?? films[0].title), t(`film:${films[1].id}`, 'x4', films[1].name ?? films[1].title)], flex: t('films:year', null, 'Year and runtime') },
     fifa: { name: vc.series.title, tiles: [t('fifa:year', 'x4', 'First episode year'), ...episodes.slice().reverse().map((v) => t(`ep:${v.id}`, 'one', `Episode ${v.ep}`)), t('fifa:minutes', 'x4', 'Minutes of bad shots')], flex: null },
     edits: { name: 'More from the channel', tiles: edits.map((v) => t(`video:${v.id}`, 'one', v.title)), flex: t('edits:youtube', null, 'All videos on YouTube') },
@@ -46,7 +46,7 @@ export function model(content) {
     elsewhere: { name: 'Elsewhere', tiles: [t('hi', 'w2', 'Say hi on X', { required: true })], flex: t('medium', null, 'Posts on Medium') },
   };
   const sections = [
-    { id: 'new', title: 'New', clusters: ['trades', 'sports'] },
+    { id: 'new', title: 'New', clusters: ['new'] },
     { id: 'stream', title: 'Watch', anchor: true, clusters: ['films', 'fifa', 'edits', 'clips'] },
     { id: 'games', title: 'Play', anchor: true, clusters: ['mountaintop', 'tiny'] },
     { id: 'work', title: 'Work', anchor: true, clusters: ['phoenix', 'dental'] },

@@ -31,9 +31,9 @@ the denylists. The rules read those from this repo so an edit can only point at 
 - `sections` pins sections to the top in that order (the rest follow in the default order), renames them, hides them, or moves clusters into them.
 - `clusters.<id>` pins tiles first (`order`), resizes them (`sizes`: `one`, `w2`, `x4`, `lead`), hides tiles (`hidden`; the flex tile's id hides the
   flex tile) or hides the whole cluster (`hide`; `/games/` and `/videos/` still show it).
-- Ids are in `bentos.mjs`. Sections: `stream`, `games`, `work`, `posts`, `elsewhere`. Clusters: `films`, `fifa`, `edits`, `clips`, `mountaintop`, `tiny`,
+- Ids are in `bentos.mjs`. Sections: `new`, `stream`, `games`, `work`, `posts`, `elsewhere`. Clusters: `new`, `films`, `fifa`, `edits`, `clips`, `mountaintop`, `tiny`,
   `phoenix`, `dental`, `posts`, `elsewhere`. Tiles: `film:<video id>`, `ep:<video id>`, `video:<video id>`, `game:<slug>`, `post:<id>`, and the named
-  ones (`fifa:year`, `fifa:minutes`, `mt:lead`, `mt:year`, `games:engines`, `pr:lead`, `pr:channel`, `sedd`, `hi`).
+  ones (`trades:lead`, `sports:lead`, `fifa:year`, `fifa:minutes`, `mt:lead`, `mt:year`, `games:engines`, `pr:lead`, `pr:channel`, `sedd`, `hi`).
 - Refused (by the build, `npm run content:check` and the editor): unknown ids, hiding `stream`, `games` or `work` (other pages link to them), hiding the
   Twitch or hi tiles or anything holding them, arranging the clip placeholders one by one, sizing a flex tile, and a cluster without a flex tile that
   leaves a gap in its last row at 4, 3 or 2 columns.
