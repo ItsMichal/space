@@ -177,15 +177,15 @@ void main() {
   vec2 fp = foldSpace(v_uv, u_size);
   float e1 = cellEdge(fp * 0.5), e2 = cellEdge(fp + 3.3);
   float w1 = fwidth(e1), w2 = fwidth(e2);
-  float big = (1.0 - smoothstep(0.7 * w1, 1.7 * w1, e1)) * smoothstep(-0.25, 0.1, gnoise(fp * 0.7 + 8.1));
-  float small = (1.0 - smoothstep(0.4 * w2, 1.2 * w2, e2)) * smoothstep(0.05, 0.3, gnoise(fp * 0.9 + 2.0));
+  float big = (1.0 - smoothstep(0.3 * w1, 1.1 * w1, e1)) * smoothstep(-0.25, 0.1, gnoise(fp * 0.7 + 8.1));
+  float small = (1.0 - smoothstep(0.2 * w2, 0.9 * w2, e2)) * smoothstep(0.05, 0.3, gnoise(fp * 0.9 + 2.0));
   float ink = max(big, small * 0.8) * smoothstep(0.15, 0.6, u_fold);
   if (u_state > 1.5) {
     if (age > 0.0) discard;
     o = vec4(u_char * u_shadowA, u_shadowA);
     return;
   }
-  vec3 col = mix(base, u_char, ink * 0.85);
+  vec3 col = mix(base, u_char, ink * 0.5);
   if (u_state > 0.5) {
     if (age > 0.0) o = vec4(base, (64.0 + 191.0 * clamp(age / u_ash, 0.0, 1.0)) / 255.0);
     else if (age > -u_edge) o = vec4(col, (1.0 + 62.0 * (1.0 + age / u_edge)) / 255.0);

@@ -293,7 +293,7 @@ function createStage(w: number, h: number, dpr: number) {
     gl.uniform1f(u.u_shadow, state === 2 ? 1 : 0)
     // the floor the shadow falls on, behind the ball; it comes in as the sheet lifts off the page
     gl.uniform1f(u.u_floor, -0.55 * R * s.ball)
-    gl.uniform1f(u.u_shadowA, 0.16 * Math.min(1, s.ball / 0.3))
+    gl.uniform1f(u.u_shadowA, 0.22 * Math.min(1, s.ball / 0.3))
     gl.uniform3fv(u.u_back, back)
     gl.uniform3fv(u.u_char, fire.char)
     gl.activeTexture(gl.TEXTURE0)
