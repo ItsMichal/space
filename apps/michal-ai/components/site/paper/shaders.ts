@@ -62,6 +62,24 @@ float creases(vec2 p) {
   }
   return s;
 }
+// Where a uv falls in the relief's own space (a unit is 0.3 of the viewport's short side).
+vec2 foldSpace(vec2 uv, vec2 size) {
+  return (uv - 0.5) * vec2(1.0, -1.0) * size / (0.3 * min(size.x, size.y));
+}
+// How far a point is from a crease of facets(p): small along the crease lines between the Voronoi cells.
+float cellEdge(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  float d1 = 8.0, d2 = 8.0;
+  for (int y = -1; y <= 1; y++) {
+    for (int x = -1; x <= 1; x++) {
+      vec2 g = vec2(float(x), float(y));
+      vec2 r = g + hash22(i + g) * 0.85 + 0.075 - f;
+      float d = dot(r, r);
+      if (d < d1) { d2 = d1; d1 = d; } else if (d < d2) { d2 = d; }
+    }
+  }
+  return sqrt(d2) - sqrt(d1);
+}
 // The relief at a uv: broad facets in some regions of the sheet and finer in others, so it does not crush evenly, crossed by
 // crease lines.
 float folds(vec2 uv, vec2 size) {
@@ -77,7 +95,8 @@ export const SHEET_VS = /* glsl */ `#version 300 es
 precision highp float;
 in vec2 a_uv;
 uniform vec2 u_size, u_cell;
-uniform float u_ball, u_fold, u_R, u_shadow, u_floor;
+uniform float u_ball, u_fold, u_R, u_shadow, u_floor, u_outline;
+uniform vec2 u_viewport;
 uniform mat3 u_rot;
 uniform vec3 u_center;
 uniform mat4 u_vp;
@@ -122,7 +141,8 @@ vec3 base(vec2 uv, out vec3 dir, out float h) {
   return pos + sn * u_R * 1.4 * flap * bl;
 }
 // With u_shadow set the point is laid on a floor behind the ball, pushed a little down and right with its height, for a close drop
-// shadow (thrown along the real light it would fall far off the ball).
+// shadow (thrown along the real light it would fall far off the ball). With u_outline set it is pushed out from the ball's centre on
+// screen by that many pixels, for the ink line drawn behind the sheet around its silhouette.
 void main() {
   vec3 dir, d;
   float h, k;
@@ -141,23 +161,27 @@ void main() {
     wp.z = u_floor;
   }
   gl_Position = u_vp * vec4(wp, 1.0);
+  if (u_outline > 0.0) {
+    vec2 d = gl_Position.xy / gl_Position.w * u_viewport;
+    gl_Position.xy += (length(d) > 1e-3 ? normalize(d) : vec2(0.0)) / u_viewport * u_outline * 2.0 * gl_Position.w;
+  }
 }
 `
 
-// Shaded by the paper's own normal (never the mesh's triangles), so the flat sheet is exactly the page and a crumpled one
-// curves between sharp creases: a hard key light, the paper turned from it going to the theme's dark
-// ink rather than grey.
+// Drawn flat, as a cel: the paper's normal (with the crease relief's slope taken per pixel, never the mesh's triangles) only picks
+// one of three tones, the paper, a shadow and a deeper one, both toward the theme's dark ink; ink lines run along the main creases,
+// breaking off here and there as a drawn line does. The flat sheet is exactly the page.
 // Behind the fire front the sheet is gone; the ash pass draws the glyphs there and on the burning edge ahead of it.
 // u_state 1 writes, at one texel per glyph cell, what the ash pass needs: for a burnt cell the page colour under it and how long
 // ago it burnt (alpha 64 to 255), for a cell on the burning edge the paper as shaded and how near the front it is (1 to 63).
-// u_state 2 is the cast shadow, one flat hard-edged tone.
+// u_state 2 is the cast shadow, one flat hard-edged tone; u_state 3 the ink outline, solid.
 export const SHEET_FS = /* glsl */ `#version 300 es
 precision highp float;
 in vec2 v_uv;
 in vec3 v_pos, v_tu, v_tv, v_dir;
 in float v_h;
 uniform sampler2D u_a;
-uniform float u_burn, u_ash, u_edge, u_state, u_shadowA;
+uniform float u_burn, u_ash, u_edge, u_state, u_shadowA, u_fold;
 uniform vec2 u_size;
 uniform vec3 u_back, u_light, u_eye, u_char;
 out vec4 o;
@@ -167,6 +191,18 @@ ${FOLDS}
 void main() {
   vec3 base = gl_FrontFacing ? texture(u_a, v_uv).rgb : u_back;
   float age = u_burn - burnField(v_uv, u_size);
+  // the crease lines, before any discard, while the neighbouring fragments are all still running
+  vec2 fp = foldSpace(v_uv, u_size);
+  float e1 = cellEdge(fp * 0.5), e2 = cellEdge(fp + 3.3);
+  float w1 = fwidth(e1), w2 = fwidth(e2);
+  float big = (1.0 - smoothstep(0.7 * w1, 1.7 * w1, e1)) * smoothstep(-0.25, 0.1, gnoise(fp * 0.7 + 8.1));
+  float small = (1.0 - smoothstep(0.4 * w2, 1.2 * w2, e2)) * smoothstep(0.05, 0.3, gnoise(fp * 0.9 + 2.0));
+  float ink = max(big, small * 0.8) * smoothstep(0.15, 0.6, u_fold);
+  if (u_state > 2.5) {
+    if (age > 0.0) discard;
+    o = vec4(u_char, 1.0);
+    return;
+  }
   if (u_state > 1.5) {
     if (age > 0.0) discard;
     o = vec4(u_char * u_shadowA, u_shadowA);
@@ -180,9 +216,11 @@ void main() {
   vec3 N = normalize(cross(v_tu + v_dir * v_h * fu, v_tv + v_dir * v_h * fv));
   if (dot(N, u_eye - v_pos) < 0.0) N = -N;
   vec3 L = normalize(u_light);
-  // 1 on the flat sheet, well below for a facet turned from the light, above for one turned to it
-  float shade = min(0.28 + 0.72 * max(dot(N, L), 0.0) / L.z, 1.2);
-  vec3 col = mix(base, u_char, (1.0 - min(shade, 1.0)) * 0.8) * max(shade, 1.0);
+  // 1 on the flat sheet, lower as the paper turns from the light; it only picks the tone, with a pixel of softening at the step
+  float lit = dot(N, L) / L.z;
+  float aa = min(fwidth(lit), 0.08);
+  float dark = mix(0.6, mix(0.3, 0.0, smoothstep(0.5 - aa, 0.5 + aa, lit)), smoothstep(-aa, aa, lit));
+  vec3 col = mix(mix(base, u_char, dark), u_char, ink * 0.85);
   if (u_state > 0.5) {
     if (age > 0.0) o = vec4(base, (64.0 + 191.0 * clamp(age / u_ash, 0.0, 1.0)) / 255.0);
     else if (age > -u_edge) o = vec4(col, (1.0 + 62.0 * (1.0 + age / u_edge)) / 255.0);
