@@ -277,7 +277,7 @@ export default function AboutPage() {
         <div className="ab-side">
         <Card id="awards" title="Awards and recognition" className="ab-awards">
           <ul className="ab-plain t-text">
-            {profile.awards.map((a) => (
+            {profile.awards.filter((a) => a.kind !== 'press').map((a) => (
               <li key={a.id}>
                 <span className="t-ui">
                   {a.postId ? <Link href={hrefById(a.postId)} className="link">{a.title}</Link> : a.url ? <Ext href={a.url}>{a.title}</Ext> : a.title}
@@ -358,7 +358,9 @@ export default function AboutPage() {
               <p className="t-meta">{press.shine.outlet}</p>
             </li>
             <li className="ab-pr">
-              <p className="t-ui"><Ext href={press.early.url}>The Denver Post: an early AI project</Ext></p>
+              <p className="t-ui">
+                An early AI project: <Ext href={press.early.url}>The Denver Post</Ext> and <Ext href={press.earlyRadio.url}>Colorado Public Radio</Ext>
+              </p>
               <p className="t-meta"><time dateTime={press.early.date ?? undefined}>2017</time></p>
             </li>
           </ul>

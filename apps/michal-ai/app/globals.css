@@ -1060,7 +1060,7 @@ html[data-fade] .page-enter {
   :is(.prose, .home-reel) figure.video {
     margin: var(--space-8) 0;
   }
-  /* on the home page the section heading already spaces it */
+  /* on the home page it sits under its award row, which spaces it */
   .home-reel figure.video {
     margin: 0;
   }
