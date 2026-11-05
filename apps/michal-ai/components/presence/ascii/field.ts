@@ -35,11 +35,20 @@ export function strokeGlyph(dx: number, dy: number): string {
 
 /** Downtown Los Angeles, where a small figure stands and waves. */
 export const WAVE_SITE_LL = { lat: 34.05, lon: -118.24 }
-/** Its two poses, rows top down, the head over the feet in the middle column; one pose under reduced motion. */
-export const WAVE_POSES = [['\\o ', ' | '], [' o/', ' | ']]
-export const WAVE_STEP_MS = 400
+/** Its two poses, rows top down, drawn in finer type than the globe's cells: the left forearm swings at the elbow between leaning
+ * out and straight up, the same hand every frame. The head, body and feet stay put, centred on column 2. One pose under reduced motion. */
+export const WAVE_POSES = [
+  ['\\ o ', ' \\|\\', '  | ', ' / \\'],
+  [' |o ', ' \\|\\', '  | ', ' / \\'],
+]
+export const WAVE_STEP_MS = 420
 export function wavePose(now: number, reduced: boolean): string[] {
-  return WAVE_POSES[reduced ? 1 : Math.floor(now / WAVE_STEP_MS) % 2]
+  return WAVE_POSES[reduced ? 0 : Math.floor(now / WAVE_STEP_MS) % 2]
+}
+/** What the figure says when greeted: in turn hello, cześć and a Japanese greeting for the viewer's local hour. */
+export function greeting(turn: number, hour: number): string {
+  const ja = hour >= 4 && hour < 11 ? 'ohayou!' : hour >= 17 || hour < 4 ? 'konbanwa!' : 'konnichiwa!'
+  return ['hello!', 'cześć!', ja][((turn % 3) + 3) % 3]
 }
 /** How much of the figure shows for a site at view depth z (1 facing the viewer, 0 on the limb): none near the limb. */
 export function waveFade(z: number): number {

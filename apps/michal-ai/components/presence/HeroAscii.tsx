@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 import { positionEcef } from '@/lib/starlink/orbit.mjs'
 import { loadLand, type Ring } from './globe/data'
 import { loadStarlinkWithIds, type Identities, type Packed } from './globe/starlink'
-import { BRAILLE_BIT, calloutLines, dither, GLYPHS, landDot, SAT, SAT_FRONT, SAT_LINKED, SAT_MARKED, satFacts, seaDot, strokeGlyph, TERMINAL, WAVE_SITE_LL, waveFade, wavePose } from './ascii/field'
+import { BRAILLE_BIT, calloutLines, dither, GLYPHS, landDot, SAT, SAT_FRONT, SAT_LINKED, SAT_MARKED, satFacts, seaDot, strokeGlyph, TERMINAL, greeting, WAVE_SITE_LL, waveFade, wavePose } from './ascii/field'
 import { drawHeroMarks } from './heroMarks'
 import './presence.css'
 import './ascii/ascii.css'
@@ -23,8 +23,10 @@ import './ascii/ascii.css'
  *   moves where a finger taps the globe; a counter shows how many satellites are above 25 degrees of elevation there.
  * - Every 6 to 10 s one visible satellite gets a callout (name, NORAD number, launch, height, speed, inclination). A tap or click
  *   near a satellite pins its callout.
- * - A small figure stands on Los Angeles and waves while it is on the visible face; it steps aside (fades) when the terminal,
- *   its counter or a callout comes over it, and callouts are placed off it.
+ * - A small figure stands on Los Angeles and waves while it is on the visible face, in finer type than the globe and in front of
+ *   it: it leans out with the globe's curve, its shadow stays on the ground while it shifts against the pointer, and hovered (or
+ *   tapped) it says hello in turn in English, Polish and Japanese. It steps aside (fades) when the terminal, its counter or a
+ *   callout comes over it, and callouts are placed off it.
  * Decorative: aria-hidden, the canvas takes no pointer events (window listeners, passive, never preventDefault), and cells behind
  * the hero text are thinned so the text keeps its contrast. Paused offscreen and in hidden tabs; one static frame under reduced
  * motion.
@@ -154,7 +156,7 @@ export function HeroAscii({ className = '' }: { className?: string }) {
     let lastDraw = 0
     let active = false
     const term = { u: REST.u, v: REST.v, tu: REST.u, tv: REST.v, lastSet: -1e9, userSet: false }
-    const ptr = { x: -1e4, y: -1e4, vx: 0, vy: 0, t: 0, inside: false, down: null as null | { x: number; y: number; t: number; id: number } }
+    const ptr = { x: -1e4, y: -1e4, vx: 0, vy: 0, t: 0, inside: false, hover: false, down: null as null | { x: number; y: number; t: number; id: number } }
     const strands: Strand[] = []
     let candidates: number[] = []
     let candStamp = 0
@@ -165,6 +167,10 @@ export function HeroAscii({ className = '' }: { className?: string }) {
     const termBox: Box = { on: false, l: 0, t: 0, r: 0, b: 0 }
     const labelBox: Box = { on: false, l: 0, t: 0, r: 0, b: 0 }
     let figA = 1
+    // the figure's greeting: shown while hovered or for a while after a tap, a new one each time
+    const hi = { on: false, until: 0, turn: Math.floor(Math.random() * 3), text: '', a: 0, spot: null as [number, number] | null }
+    // the pointer's parallax on the figure, eased, px
+    const par = { x: 0, y: 0 }
     // per-frame projection of the drawn satellites (screen x, y, visible flag), reused by hit tests and the callout picker
     let sx = new Float32Array(0)
     let sy = new Float32Array(0)
@@ -785,37 +791,148 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       ctx.globalAlpha = 1
     }
 
-    // ---- the figure waving from Los Angeles: feet on the site's cell, head above, turning with the globe ----
+    // ---- the figure waving from Los Angeles: feet on the site, standing up off the globe in front of it ----
     const w3 = new Float32Array(3)
+    const greet = (now: number, ms: number) => {
+      if (!hi.on || now > hi.until) {
+        hi.turn++
+        hi.text = greeting(hi.turn, new Date().getHours())
+        hi.spot = null
+      }
+      hi.on = true
+      hi.until = Math.max(hi.until, now + ms)
+    }
     const drawWave = (now: number, dt: number) => {
       toView(WAVE_SITE[0], WAVE_SITE[1], WAVE_SITE[2], w3)
       const face = waveFade(w3[2])
       fig.on = face > 0
-      if (!fig.on) return
-      const c0 = Math.floor((W / 2 + w3[0] * R) / cw) - 1
-      const r0 = Math.floor((W / 2 - w3[1] * R) / ch) - 1
-      Object.assign(fig, { l: c0 * cw, t: r0 * ch, r: (c0 + 3) * cw, b: (r0 + 2) * ch })
+      if (!fig.on) {
+        hi.on = false
+        return
+      }
+      // finer type than the globe's cells
+      const fs = ch * 0.88
+      const fw = fs * 0.6
+      const lh = fs * 0.92
+      const pose = wavePose(now, reduced)
+      const fh = pose.length * lh
+      const fx = W / 2 + w3[0] * R
+      const fy = W / 2 - w3[1] * R
+      // he stands up off the surface: upright on screen, leaning out with the globe's curve toward the limb
+      let ux = w3[0] * 0.55
+      let uy = -1 + w3[1] * 0.25
+      const ul = Math.hypot(ux, uy)
+      ux /= ul
+      uy /= ul
+      // and in front of it: against a hovering pointer he shifts a little, his shadow on the ground does not
+      const k = reduced ? 1 : Math.min(1, dt * 6)
+      const tx = ptr.inside && ptr.hover ? -((ptr.x - W / 2) / (W / 2)) * 3.5 : 0
+      const ty = ptr.inside && ptr.hover ? -((ptr.y - W / 2) / (W / 2)) * 2.5 : 0
+      par.x += (Math.max(-3.5, Math.min(3.5, tx)) - par.x) * k
+      par.y += (Math.max(-2.5, Math.min(2.5, ty)) - par.y) * k
+      const ox = fx + par.x
+      const oy = fy + par.y * 0.4
+      const hx = ox + ux * fh
+      const hy = oy + uy * fh
+      Object.assign(fig, { l: Math.min(ox, hx) - 2.2 * fw, t: hy - lh * 0.2, r: Math.max(ox, hx) + 2.2 * fw, b: oy + lh * 0.3 })
       const clear = !overlaps(fig, termBox) && !overlaps(fig, labelBox)
       figA = reduced ? (clear ? 1 : 0) : Math.max(0, Math.min(1, figA + (clear ? dt * 3 : -dt * 6)))
-      const a = A * 2.2 * face * figA
-      if (a < 0.02 || !atlas.ink) return
-      const pose = wavePose(now, reduced)
-      for (let i = 0; i < pose.length; i++) {
-        for (let k = 0; k < pose[i].length; k++) {
-          const g = pose[i][k]
-          if (g === ' ') continue
-          const x = (c0 + k + 0.5) * cw
-          const y = (r0 + i + 0.5) * ch
-          const d = dimAt(x, y)
-          // the figure stands in front: its cells are cleared of land and satellites first
-          ctx.globalCompositeOperation = 'destination-out'
-          ctx.globalAlpha = face * figA * d
-          ctx.fillRect(Math.round((x - cw / 2) * dpr), Math.round((y - ch / 2) * dpr), Math.ceil(cw * dpr), Math.ceil(ch * dpr))
-          ctx.globalCompositeOperation = 'source-over'
-          ctx.globalAlpha = Math.min(1, a * d)
-          glyph(ctx, atlas.ink, g, x, y)
-        }
+      const d = dimAt(fx, fy)
+      const a = Math.min(1, A * 2.4 * face * figA * d)
+      if (a < 0.02) {
+        hi.on = false
+        return
       }
+      // hovered by a mouse or pen, he says hello while it stays; a tap says it for a while (onUp)
+      const over = ptr.inside && ptr.hover && ptr.x > fig.l - 6 && ptr.x < fig.r + 6 && ptr.y > fig.t - 6 && ptr.y < fig.b + 6
+      if (over) greet(now, 900)
+      if (hi.on && now > hi.until) hi.on = false
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      // his shadow, a short smudge on the ground behind his feet
+      ctx.globalAlpha = a * 0.35
+      ctx.fillStyle = ink
+      ctx.beginPath()
+      ctx.ellipse(fx + fw * 0.3, fy + 1, fw * 1.6, Math.max(1, lh * 0.16), 0, 0, Math.PI * 2)
+      ctx.fill()
+      // the globe cleared from behind him, then the figure, sheared so his up is (ux, uy)
+      ctx.setTransform(dpr, 0, -ux * dpr, -uy * dpr, ox * dpr, oy * dpr)
+      ctx.globalCompositeOperation = 'destination-out'
+      ctx.globalAlpha = face * figA * d * 0.9
+      ctx.beginPath()
+      ctx.roundRect(-1.9 * fw, -fh - lh * 0.1, 3.8 * fw, fh + lh * 0.1, fw * 0.6)
+      ctx.fill()
+      ctx.globalCompositeOperation = 'source-over'
+      ctx.globalAlpha = a
+      ctx.fillStyle = ink
+      ctx.font = `600 ${fs}px ${font}`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      for (let i = 0; i < pose.length; i++)
+        for (let c = 0; c < pose[i].length; c++) if (pose[i][c] !== ' ') ctx.fillText(pose[i][c], (c - 2) * fw, -fh + (i + 0.5) * lh)
+      ctx.textAlign = 'start'
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      // the greeting, in a bubble beside his head, on whichever side is on screen and clear of the hero text
+      hi.a = reduced ? (hi.on ? 1 : 0) : Math.max(0, Math.min(1, hi.a + (hi.on ? dt * 8 : -dt * 5)))
+      if (hi.a > 0.01 && hi.text) {
+        const bs = Math.max(11, Math.min(12, ch))
+        ctx.font = `${bs}px ${font}`
+        ctx.textBaseline = 'middle'
+        const bw = ctx.measureText(hi.text).width + bs * 1.1
+        const bh = bs * 1.7
+        const vr = visibleRect()
+        // beside his head if that is clear, else the nearest clear place along his line, keeping it while it stays clear so it
+        // never hops as the globe turns
+        const clearAt = (x0: number, y0: number) => {
+          let m = x0 > vr.l + 6 && x0 + bw < vr.r - 6 && y0 > vr.t + 4 && y0 + bh < vr.b - 4 ? 1 : 0
+          for (let yy = y0 - ch / 2; yy <= y0 + bh + ch / 2 && m > 0; yy += ch / 2)
+            for (let xx = x0 - cw / 2; xx <= x0 + bw + cw / 2; xx += cw / 2) m = Math.min(m, dimTargetAt(xx, yy))
+          return m
+        }
+        const up = hy - bh - lh * 0.5
+        const near = [hx + fw * 1.6, hx - fw * 1.6 - bw]
+        // (kept relative to his head, so it rides along with him)
+        if (!hi.spot || clearAt(hx + hi.spot[0], hy + hi.spot[1]) < 0.8) {
+          let best: [number, number] = [near[0], up]
+          let bs2 = -1
+          for (const y0 of [up, hy + lh * 0.6, up - lh * 2]) {
+            for (let d = 0; d < W; d += cw) {
+              for (const x0 of [near[0] + d, near[1] - d]) {
+                const m = clearAt(x0, y0) - d / W - (y0 === up ? 0 : 0.1)
+                if (m > bs2) {
+                  bs2 = m
+                  best = [x0, y0]
+                }
+              }
+              if (bs2 > 0.8) break
+            }
+            if (bs2 > 0.8) break
+          }
+          hi.spot = [best[0] - hx, best[1] - hy]
+        }
+        const bx = hx + hi.spot[0]
+        const bestScore = clearAt(bx, hy + hi.spot[1])
+        const by = hy + hi.spot[1] - (1 - hi.a) * 3
+        // the bubble is solid paper, as sure as he is on the globe, so its words read
+        ctx.globalAlpha = face * figA * hi.a * Math.max(0.3, bestScore)
+        ctx.fillStyle = halo
+        ctx.strokeStyle = ink
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.roundRect(bx, by, bw, bh, bh / 2)
+        // the tail, from the edge nearest his head toward it
+        const below = by + bh < hy
+        const ex = Math.max(bx + bh * 0.5, Math.min(bx + bw - bh * 0.8, hx))
+        const ey = below ? by + bh - 0.5 : by + 0.5
+        const side = hx > ex ? 1 : -1
+        ctx.moveTo(ex, ey)
+        ctx.lineTo(hx - side * fw * 0.8, below ? hy - lh * 0.15 : hy + lh * 0.2)
+        ctx.lineTo(ex + bh * 0.35, ey)
+        ctx.fill()
+        ctx.stroke()
+        ctx.fillStyle = ink
+        ctx.fillText(hi.text, bx + bs * 0.55, by + bh / 2 + 0.5)
+      }
+      ctx.setTransform(1, 0, 0, 1, 0, 0)
       ctx.globalAlpha = 1
     }
 
@@ -1030,7 +1147,10 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       ptr.t = now
       ptr.inside = true
       const hovering = e.pointerType !== 'touch'
-      if (hovering || ptr.down) setTerminal(x, y, false)
+      ptr.hover = hovering
+      // over the figure the terminal stays put, so it never covers him while he says hello
+      const onFig = fig.on && figA > 0.5 && x > fig.l - 6 && x < fig.r + 6 && y > fig.t - 6 && y < fig.b + 6
+      if ((hovering || ptr.down) && !onFig) setTerminal(x, y, false)
       if (reduced) redrawOnce()
     }
     const onDown = (e: PointerEvent) => {
@@ -1046,7 +1166,14 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       if (target?.closest?.('a, button, input, textarea, select, label, [role="button"]')) return
       const [x, y] = toCanvas(e)
       if (Math.hypot(x - d.x, y - d.y) > 12 || performance.now() - d.t > 600) return
-      // a tap near a satellite pins its callout; elsewhere on the globe it moves the terminal there
+      // a tap on the figure has him say hello; near a satellite it pins its callout; elsewhere on the globe it moves the terminal
+      // there
+      if (fig.on && figA > 0.5 && x > fig.l - 8 && x < fig.r + 8 && y > fig.t - 8 && y < fig.b + 8) {
+        greet(performance.now(), 2600)
+        redrawOnce()
+        if (reduced) setTimeout(redrawOnce, 2700)
+        return
+      }
       const hit = (e.pointerType === 'mouse' ? 14 : 26) * (W / (cv.getBoundingClientRect().width || 1))
       let best = -1
       let bd = hit
