@@ -132,6 +132,32 @@ export const websiteJsonLd = {
 
 const HOME_TITLE = `${profile.name} · ${profile.titleTagline}`
 
+/**
+ * WebPage for the home page. Its primaryImageOfPage is the portrait, so the search result thumbnail is the person rather
+ * than the largest picture on the page (the first project photo); the hero globe is WebGL and never an indexable image.
+ * Google ignores og:image here because the share card is mostly text.
+ */
+export const homePageJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  '@id': `${SITE_URL}/#webpage`,
+  url: SITE_URL,
+  name: HOME_TITLE,
+  inLanguage: 'en-US',
+  isPartOf: { '@id': `${SITE_URL}/#website` },
+  about: { '@id': `${SITE_URL}/#person` },
+  mainEntity: { '@id': `${SITE_URL}/#person` },
+  primaryImageOfPage: {
+    '@type': 'ImageObject',
+    '@id': `${SITE_URL}/#portrait`,
+    url: absoluteUrl(profile.portrait.jsonLd),
+    contentUrl: absoluteUrl(profile.portrait.jsonLd),
+    width: 800,
+    height: 1000,
+    caption: `${profile.name}, ${profile.portrait.description}`,
+  },
+}
+
 /** Metadata fragment for the home page: canonical + profile OG. Spread into the page's `metadata`. */
 export function homeMetadata(): Metadata {
   return {

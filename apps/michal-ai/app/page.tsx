@@ -17,7 +17,7 @@ import { Picture } from '@/components/media/Picture'
 import { Video } from '@/components/mdx/Video'
 import { hrefById, portraitAlt } from '@/lib/about'
 import '@/components/site/about.css'
-import { homeMetadata, personJsonLd, websiteJsonLd } from '@/lib/seo'
+import { homeMetadata, homePageJsonLd, personJsonLd, websiteJsonLd } from '@/lib/seo'
 
 export const metadata = homeMetadata()
 
@@ -61,7 +61,7 @@ export default function Home({ reel }: { reel?: HomeReel | null }) {
 
   return (
     <div className="mx-auto max-w-content px-space-4 md:px-space-8">
-      <JsonLd data={[personJsonLd, websiteJsonLd]} />
+      <JsonLd data={[personJsonLd, websiteJsonLd, homePageJsonLd]} />
       {/* Hero background slot: a positioned layer behind the text and above the tint cross-fade, empty by default. A decorative
           component (aria-hidden, pointer-events none) can be dropped in here; the hero text keeps its own contrast. */}
       <div className="hero-slot" data-hero-slot="background" aria-hidden>
