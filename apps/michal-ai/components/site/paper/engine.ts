@@ -13,7 +13,8 @@ import { BACKDROP_DRAW } from '../backdrop/config'
 import { IGNITE_MS, LEAD_MS, PAPER_ASH, PAPER_FPS, PAPER_MS } from './config'
 import { type Blast, air, embers, seeded, spawn, STEP_MS, step } from './embers'
 import { ASH_FS, EMBER_FS, EMBER_VS, QUAD_VS, SHEET_FS, SHEET_VS } from './shaders'
-import { DROPS, FALL_MS, flickerAt, frameAt, type Frame, randomCrumple, waitingAt } from './timeline'
+import { type Fold, MAX_FOLDS, PATTERNS, type Piece, foldsAt, packet, pieces, place, turns } from './origami'
+import { flickerAt, frameAt, type Frame, randomCrumple, waitingAt } from './timeline'
 
 const MAX_DPR = 2
 /** Cells along the sheet's long side: fine enough that the creases are lines and the paper between them curves. */
@@ -42,6 +43,10 @@ const SWING_OUT_MS = 120
 /** The longest the drop waits for the new page's images on screen, ms. */
 const IMAGES_MS = 1500
 const FOV = (32 * Math.PI) / 180
+/** How much of the bloom the edge curl takes to let go, before the first fold starts. */
+const CURL_OUT = 0.06
+/** The most of the lead-in's and the wait's edge curl, in the timeline's ball (LEAD_BALL + WAIT_BALL); it lets go as the folding starts. */
+const FOLD_FROM = 0.105
 /** How far the page is lifted toward the camera before it crumples, as a share of the camera's distance: a little, about 5% larger,
  * so while the new route loads the old page overhangs every edge and still covers it all. */
 const LIFT = 0.05
@@ -284,11 +289,66 @@ function createStage(w: number, h: number, dpr: number) {
   let stopped = false
   // this run's own crumple: which way it turns, twirls and gathers, and where its folds fall
   const crumple = randomCrumple()
+  // and the flower it folds into: its creases, fixed for the run, and how far each is turned, set per frame
+  const fc = new Float32Array(MAX_FOLDS * 2)
+  const fn = new Float32Array(MAX_FOLDS * 2)
+  const ff = new Float32Array(MAX_FOLDS)
+  const fa = new Float32Array(MAX_FOLDS)
+  let flowerName = ''
+  let flower: Fold[] = []
+  let bloom: [number, number] = [0, 0]
+  let plates: Piece[] = []
+  let plateFlat = new Float32Array(0)
+  let plateOf = new Uint16Array(0)
+  let platePos = new Float32Array(0)
+  const plateUvBuffer = gl.createBuffer()
+  const platePosBuffer = gl.createBuffer()
+  const platesVao = gl.createVertexArray()
+  gl.bindVertexArray(platesVao)
+  gl.bindBuffer(gl.ARRAY_BUFFER, plateUvBuffer)
+  gl.enableVertexAttribArray(aUv)
+  gl.vertexAttribPointer(aUv, 2, gl.FLOAT, false, 0, 0)
+  const aPos = gl.getAttribLocation(sheet.p, 'a_pos')
+  gl.bindBuffer(gl.ARRAY_BUFFER, platePosBuffer)
+  gl.enableVertexAttribArray(aPos)
+  gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 0, 0)
+  gl.bindVertexArray(null)
+  const fold = (name: string) => {
+    flowerName = name
+    flower = PATTERNS[name](w, h)
+    bloom = packet(flower, w, h).center
+    flower.forEach((f, k) => {
+      fc.set(f.c, 2 * k)
+      fn.set(f.n, 2 * k)
+      ff[k] = f.angle >= 1 ? 1 : 0
+    })
+    // the folding sheet is drawn as its pieces, each a flat plate between creases (a fan of triangles each), placed every frame
+    plates = pieces(flower, w, h)
+    const n = plates.reduce((sum, p) => sum + 3 * (p.poly.length - 2), 0)
+    plateFlat = new Float32Array(n * 2)
+    plateOf = new Uint16Array(n)
+    platePos = new Float32Array(n * 3)
+    const plateUv = new Float32Array(n * 2)
+    let v = 0
+    plates.forEach((p, k) => {
+      for (let i = 1; i + 1 < p.poly.length; i++)
+        for (const [x, y] of [p.poly[0], p.poly[i], p.poly[i + 1]]) {
+          plateFlat.set([x, y], 2 * v)
+          plateUv.set([x / w + 0.5, 0.5 - y / h], 2 * v)
+          plateOf[v++] = k
+        }
+    })
+    gl.bindBuffer(gl.ARRAY_BUFFER, plateUvBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, plateUv, gl.STATIC_DRAW)
+    gl.bindBuffer(gl.ARRAY_BUFFER, platePosBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, platePos, gl.DYNAMIC_DRAW)
+  }
+  fold(crumple.flower)
 
   // the embers' sim: the blast from the middle of the ball as it lands, this run's air, and the burnt cells read back to spawn from
   const runSeed = Math.floor(Math.random() * 2 ** 31)
   const scale = Math.min(canvas.width, canvas.height)
-  const blast: Blast = { cx: canvas.width / 2, cy: canvas.height / 2, at: DROPS[0].at + FALL_MS, scale, waves: air(scale, seeded(runSeed)) }
+  const blast: Blast = { cx: canvas.width / 2, cy: canvas.height / 2, at: IGNITE_MS, scale, waves: air(scale, seeded(runSeed)) }
   const sparks = embers()
   const instances = new Float32Array(sparks.x.length * 7)
   const read = new Uint8Array(gridW * gridH * 4)
@@ -304,16 +364,37 @@ function createStage(w: number, h: number, dpr: number) {
   }
   resetSim()
 
+  let placedFor = ''
   /** state: 0 the sheet, 1 the burn state per glyph cell, 2 the cast shadow. */
   const drawSheet = (s: Frame, state: 0 | 1 | 2) => {
     gl.useProgram(sheet.p)
     const u = sheet.u
     gl.uniform2f(u.u_size, w, h)
-    gl.uniform1f(u.u_ball, s.ball)
+    // in development `window.__paperFlower = '<name>'` swaps the flower, for screenshots
+    if (process.env.NODE_ENV !== 'production') {
+      const want = (window as { __paperFlower?: string }).__paperFlower
+      if (want && want !== flowerName && want in PATTERNS) fold(want)
+    }
+    // the lead-in and the wait only curl the edges, as the crumple did; past that the folding takes over and the curl lets go
+    // the curl lets go over the first of the bloom, before any fold is made, so the flat sheet hands over to its plates unchanged
+    const t = s.bloom
+    const curl = Math.min(s.ball, FOLD_FROM) * (1 - Math.min(1, t / CURL_OUT))
+    const folding = Math.max(0, (t - CURL_OUT) / (1 - CURL_OUT))
+    gl.uniform1f(u.u_ball, curl)
     gl.uniform2f(u.u_seed, ...crumple.seed)
     gl.uniform1f(u.u_twirl, crumple.twirl)
     gl.uniform2f(u.u_lead, ...crumple.lead)
-    gl.uniform1f(u.u_fold, s.fold)
+    gl.uniform1f(u.u_fold, curl)
+    gl.uniform1f(u.u_lit, Math.min(1, folding * 4))
+    fa.set(turns(flower, foldsAt(folding, flower.length)))
+    gl.uniform1i(u.u_folds, flower.length)
+    gl.uniform2fv(u.u_fc, fc)
+    gl.uniform2fv(u.u_fn, fn)
+    gl.uniform1fv(u.u_ff, ff)
+    gl.uniform1fv(u.u_fa, fa)
+    // the flower drawn to the middle as it closes, so it finishes centred
+    const e = t * t * (3 - 2 * t)
+    gl.uniform2f(u.u_shift, bloom[0] * e, bloom[1] * e)
     gl.uniform1f(u.u_R, R)
     // squash and stretch on screen, volume kept: wider and shorter when squished (rows of the column-major matrix)
     const sy = 1 - s.squash
@@ -335,8 +416,23 @@ function createStage(w: number, h: number, dpr: number) {
     gl.uniform3fv(u.u_char, fire.char)
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, page)
-    gl.bindVertexArray(sheetVao)
-    gl.drawElements(gl.TRIANGLES, idx.length, gl.UNSIGNED_SHORT, 0)
+    gl.uniform1f(u.u_plates, curl > 0 ? 0 : 1)
+    if (curl > 0) {
+      gl.bindVertexArray(sheetVao)
+      gl.drawElements(gl.TRIANGLES, idx.length, gl.UNSIGNED_SHORT, 0)
+      return
+    }
+    // placed once a frame, not again for the burn cells and the shadow drawn from the same frame
+    if (placedFor !== flowerName + fa.join()) {
+      placedFor = flowerName + fa.join()
+      const turn = Array.from(fa.subarray(0, flower.length))
+      for (let v = 0; v < plateOf.length; v++)
+        platePos.set(place(flower, plates[plateOf[v]].moves, turn, plateFlat[2 * v], plateFlat[2 * v + 1]), 3 * v)
+      gl.bindBuffer(gl.ARRAY_BUFFER, platePosBuffer)
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, platePos)
+    }
+    gl.bindVertexArray(platesVao)
+    gl.drawArrays(gl.TRIANGLES, 0, plateOf.length)
   }
 
   /** The burn state per glyph cell, into `cells`; read back into `read` too when asked. */

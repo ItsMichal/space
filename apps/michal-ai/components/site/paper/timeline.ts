@@ -3,9 +3,10 @@
 // and squishes into the floor, rebounds once a little way back and settles on the second landing without bouncing again. It takes
 // the flat page to the ball. The motion is a small physics run (gravity, a spring and damper floor), made once and read back by
 // time, so everything is a continuous curve, drawn every frame.
-// An ember catches late in the fall and has eaten the whole sheet by the second landing; what burns turns to glyphs that rise, billow
+// The folded flower rests a moment, then an ember catches and eats the sheet; what burns turns to glyphs that rise, billow
 // outward and fade (drawn by the engine from `burn`).
-import { FRONT_MS, IGNITE_MS, LEAD_MS, PAPER_ASH, PAPER_MS } from './config'
+import { DROP_AT, FOLD_MS, FRONT_MS, IGNITE_MS, LEAD_MS, PAPER_ASH, PAPER_MS } from './config'
+import { PATTERNS } from './origami'
 
 export { IGNITE_MS }
 
@@ -18,6 +19,8 @@ export type Frame = {
   squash: number
   /** Euler angles of the sheet, radians. */
   spin: [number, number, number]
+  /** How far the folding has got, 0 flat to 1 the finished flower: it runs on its own clock through the lifted page, before the drop. */
+  bloom: number
   /** How far the sheet is lifted toward the camera, 0 to 1: picked up in the lead-in, it falls back down with the drop. */
   lift: number
   /** The fire front in the sheet's burn field (0 to 1 across the sheet); a spot burns once it is behind it. Below 0 not lit. */
@@ -39,13 +42,17 @@ export type Crumple = {
   twirl: number
   /** The side that gathers first (sheet units, y up); its length is how far ahead it runs. */
   lead: [number, number]
+  /** The origami flower the sheet folds into (./origami.ts PATTERNS). */
+  flower: string
 }
 
 /** The crumple as first designed, the same every time: what tests and the default read. */
-export const STILL: Crumple = { spin: [-0.35, 0.55, 0.5], twist: 1, wring: 1, seed: [0, 0], twirl: 1.1, lead: [0, 0] }
+export const STILL: Crumple = { spin: [-0.35, 0.55, 0.5], twist: 1, wring: 1, seed: [0, 0], twirl: 1.1, lead: [0, 0], flower: 'lotus' }
+
+const FLOWERS = Object.keys(PATTERNS)
 
 /** A crumple of its own, near the designed one: the turn on each axis a little more or less and either way round (the tilt mostly
- * away), the wring either way, the folds anywhere, the twirl either way, a side gathering first. */
+ * away), the wring either way, the folds anywhere, the twirl either way, a side gathering first, and one of the flowers. */
 export function randomCrumple(rand: () => number = Math.random): Crumple {
   const range = (a: number, b: number) => a + (b - a) * rand()
   const sign = () => (rand() < 0.5 ? -1 : 1)
@@ -58,11 +65,12 @@ export function randomCrumple(rand: () => number = Math.random): Crumple {
     seed: [range(0, 100), range(0, 100)],
     twirl: sign() * range(0.7, 1.5),
     lead: [Math.cos(a) * l, Math.sin(a) * l],
+    flower: FLOWERS[Math.floor(rand() * FLOWERS.length)],
   }
 }
 
 /** The drops: when each is let go (ms), how far it takes the ball and its folds, its twist, and how hard it squishes on landing. */
-export const DROPS = [{ at: LEAD_MS, ball: 1, fold: 1, twist: 0.1, squish: 0.17 }] as const
+export const DROPS = [{ at: DROP_AT, ball: 1, fold: 1, twist: 0.1, squish: 0.17 }] as const
 /** How far the slow crumple of the lead-in gathers the sheet before the drop. */
 const LEAD_BALL = 0.08
 
@@ -171,7 +179,7 @@ export function frameAt(T: number, c: Crumple = STILL): Frame {
   // wrung back and forth from the landing, dying out with the bounce
   const since = ms - DROPS[0].at - FALL_MS
   const wring = since > 0 && T < 1 ? c.wring * WRING * Math.sin((2 * Math.PI * since) / WRING_MS) * Math.exp(-since / WRING_FADE) : 0
-  // the fire catches late in the fall and spreads across the sheet through the landing and the rebound, so it is gone by the second landing; then the
+  // the fire catches once the flower has settled and spreads steadily across it; then the
   // ash burns out slowly (eased out, so the extra time goes to the tail) and at the end the last of it has lived out its PAPER_ASH
   const q = clamp01((ms - FRONT_MS) / (PAPER_MS - FRONT_MS))
   const burn =
@@ -180,7 +188,9 @@ export function frameAt(T: number, c: Crumple = STILL): Frame {
       : 1 + PAPER_ASH * (1 - (1 - q) ** ASH_EASE)
   // the page is lifted off the desk as the lead-in gathers it, eased in and out, and falls back down with the drop
   const lift = T >= 1 ? 0 : lead * lead * (3 - 2 * lead) * (1 - fallen)
+  const bloom = T >= 1 ? 1 : clamp01((ms - LEAD_MS) / FOLD_MS)
   return {
+    bloom,
     ball,
     fold,
     squash,

@@ -1,3 +1,5 @@
+import { MAX_FOLDS } from './origami'
+
 // GLSL for the paper sheet (WebGL2). World units are CSS pixels; the flat sheet is the viewport at z = 0, so the first frame
 // samples the page capture one to one, unshaded.
 
@@ -92,16 +94,30 @@ float folds(vec2 uv, vec2 size) {
 }
 `
 
+// The origami's creases (./origami.ts), for their ink lines; the plates themselves are placed on the CPU. u_fc and u_fn are the crease and the normal to the side that moves,
+// in the sheet as it lies after the folds before; u_fa how far it has turned (radians, up toward the camera above 0); u_ff 1 for a
+// fold made all the way, whose moving side then lies mirrored for the folds after it.
+const ORIGAMI = /* glsl */ `
+#define MAX_FOLDS ${MAX_FOLDS}
+uniform highp int u_folds;
+uniform highp vec2 u_fc[MAX_FOLDS], u_fn[MAX_FOLDS];
+uniform highp float u_fa[MAX_FOLDS], u_ff[MAX_FOLDS];
+`
+
 export const SHEET_VS = /* glsl */ `#version 300 es
 precision highp float;
 in vec2 a_uv;
+in vec3 a_pos;
 uniform vec2 u_size, u_cell;
 uniform float u_ball, u_fold, u_R, u_shadow, u_floor, u_twirl;
 uniform vec2 u_lead;
 uniform mat3 u_rot;
 uniform vec3 u_center;
 uniform mat4 u_vp;
+uniform vec2 u_shift;
+uniform float u_plates;
 out vec2 v_uv;
+out vec3 v_wp;
 ${NOISE}
 ${FOLDS}
 // Spikes: a cone on some cells of a Voronoi grid, 1 at its point and 0 a little way out, so what it raises comes to a point.
@@ -148,11 +164,20 @@ vec3 base(vec2 uv, out vec3 dir, out float h) {
 // With u_shadow set the point is laid on a floor behind the ball, pushed a little down and right with its height, for a close drop
 // shadow (thrown along the real light it would fall far off the ball).
 void main() {
-  vec3 dir;
-  float h;
-  vec3 pos = base(a_uv, dir, h);
   v_uv = a_uv;
-  vec3 wp = u_rot * (pos + dir * h * folds(a_uv, u_size)) + u_center;
+  vec3 fp;
+  if (u_plates > 0.5) {
+    // the folding sheet: its plates already placed (./origami.ts place)
+    fp = a_pos;
+  } else {
+    vec3 dir;
+    float h;
+    vec3 pos = base(a_uv, dir, h);
+    fp = pos + dir * h * folds(a_uv, u_size);
+  }
+  fp.xy -= u_shift;
+  vec3 wp = u_rot * fp + u_center;
+  v_wp = wp;
   if (u_shadow > 0.5) {
     // paper curled back past the floor casts nothing up and left of itself
     wp.xy += vec2(0.14, -0.18) * max(wp.z - u_floor, 0.0);
@@ -162,8 +187,9 @@ void main() {
 }
 `
 
-// Drawn as line art, unshaded: the paper keeps the page's own colours and only ink lines along the main creases show its folds,
-// breaking off here and there as a drawn line does. The flat sheet is exactly the page.
+// Drawn as line art: the paper keeps the page's own colours and ink lines along the main creases show its folds, breaking off
+// here and there as a drawn line does. As the origami folds (u_lit) each facet is lit from the upper left by how it faces, so
+// the petals turned toward the light are bright and those turned away dark; a facet lying flat stays exactly the page.
 // Behind the fire front the sheet is gone; the ash pass draws the glyphs there and on the burning edge ahead of it.
 // u_state 1 writes, at one texel per glyph cell, what the ash pass needs: for a burnt cell the page colour under it and how long
 // ago it burnt (alpha 64 to 255), for a cell on the burning edge the paper as shaded and how near the front it is (1 to 63).
@@ -171,14 +197,29 @@ void main() {
 export const SHEET_FS = /* glsl */ `#version 300 es
 precision highp float;
 in vec2 v_uv;
+in vec3 v_wp;
 uniform sampler2D u_a;
-uniform float u_burn, u_ash, u_edge, u_state, u_shadowA, u_fold;
+uniform float u_burn, u_ash, u_edge, u_state, u_shadowA, u_fold, u_lit;
 uniform vec2 u_size;
 uniform vec3 u_back, u_char;
 out vec4 o;
 ${NOISE}
 ${BURN}
 ${FOLDS}
+${ORIGAMI}
+// How near a pixel is to a crease being folded, 0 to 1, as a drawn line: each crease found in the sheet as it lay when it was made.
+float creaseInk(vec2 p0) {
+  vec2 q = p0;
+  float ink = 0.0;
+  for (int k = 0; k < MAX_FOLDS; k++) {
+    if (k >= u_folds) break;
+    float s = dot(q - u_fc[k], u_fn[k]);
+    float w = fwidth(s);
+    ink = max(ink, (1.0 - smoothstep(0.4 * w, 1.4 * w, abs(s))) * clamp(abs(u_fa[k]) * 3.0, 0.0, 1.0));
+    if (s > 0.0 && u_ff[k] > 0.5) q -= 2.0 * s * u_fn[k];
+  }
+  return ink;
+}
 void main() {
   vec3 base = gl_FrontFacing ? texture(u_a, v_uv).rgb : u_back;
   float age = u_burn - burnField(v_uv, u_size);
@@ -188,13 +229,17 @@ void main() {
   float w1 = fwidth(e1), w2 = fwidth(e2);
   float big = (1.0 - smoothstep(0.3 * w1, 1.1 * w1, e1)) * smoothstep(-0.25, 0.1, gnoise(fp * 0.7 + 8.1));
   float small = (1.0 - smoothstep(0.2 * w2, 0.9 * w2, e2)) * smoothstep(0.05, 0.3, gnoise(fp * 0.9 + 2.0));
-  float ink = max(big, small * 0.8) * smoothstep(0.15, 0.6, u_fold);
+  float ink = max(max(big, small * 0.8) * smoothstep(0.15, 0.6, u_fold), creaseInk((v_uv - 0.5) * vec2(1.0, -1.0) * u_size));
   if (u_state > 1.5) {
     if (age > 0.0) discard;
     o = vec4(u_char * u_shadowA, u_shadowA);
     return;
   }
-  vec3 col = mix(base, u_char, ink * 0.5);
+  // the facet's normal from the screen-space change of its position faces the camera whichever side is showing
+  vec3 nrm = normalize(cross(dFdx(v_wp), dFdy(v_wp)));
+  vec3 L = normalize(vec3(-0.5, 0.6, 1.0));
+  float shade = clamp(1.0 + 1.1 * (dot(nrm, L) - L.z), 0.5, 1.12);
+  vec3 col = mix(base, u_char, ink * 0.6) * mix(1.0, shade, u_lit);
   // the paper scorches just ahead of the fire, so it darkens into the burning edge instead of meeting it bare
   col = mix(col, u_char, 0.55 * smoothstep(-3.0 * u_edge, 0.0, age));
   if (u_state > 0.5) {
