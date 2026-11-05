@@ -107,14 +107,15 @@ export const RATIO_RE = /^\d{1,3}(?:\.\d{1,3})?\s*\/\s*\d{1,3}(?:\.\d{1,3})?$/
 
 /** The only directives a post may use, with the attributes each one keeps. */
 export const DIRECTIVES = {
-  youtube: ['id', 'title'],
+  // captions on ::youtube and ::video: a cue file (/media/<slug>/<name>.vtt, see parseCaptions) shown over the playing video
+  youtube: ['id', 'title', 'captions'],
   embed: ['url', 'title', 'ratio'],
   callout: ['type'],
   // ::accolade{id=ssep-2014}: a recognition card from content/accolades.ts (quote, the document, the coverage row)
   accolade: ['id'],
   handwriting: ['src', 'alt', 'duration', 'blur', 'chroma', 'stagger', 'focus', 'ease', 'color'],
   // ::video{src poster title}: a self-hosted clip (mp4 or webm under /media/), played only when the reader presses play
-  video: ['src', 'poster', 'title'],
+  video: ['src', 'poster', 'title', 'captions'],
   // inline, in running text: :term[bloom filter]{c=blue} colours a term the way a figure does; :fig[2] is a chip that points at the
   // post's second image (it lights the figure on hover and jumps to it)
   term: ['c'],
@@ -142,6 +143,7 @@ export const HANDWRITING = {
 }
 export const HANDWRITING_SRC_RE = /^\/media\/[a-z0-9]+(?:-[a-z0-9]+)*\/[A-Za-z0-9_][A-Za-z0-9_-]{0,100}\.ink\.json$/
 export const VIDEO_SRC_RE = /^\/media\/[a-z0-9]+(?:-[a-z0-9]+)*\/[A-Za-z0-9_][A-Za-z0-9_-]{0,100}\.(?:mp4|webm)$/
+export const CAPTIONS_SRC_RE = /^\/media\/[a-z0-9]+(?:-[a-z0-9]+)*\/[A-Za-z0-9_][A-Za-z0-9_-]{0,100}\.vtt$/
 export const POSTER_SRC_RE = /^\/media\/[a-z0-9]+(?:-[a-z0-9]+)*\/[A-Za-z0-9_][A-Za-z0-9_-]{0,100}\.(?:jpe?g|png|webp|avif)$/
 const DECIMAL_RE = /^\s*-?\d{1,6}(?:\.\d{1,6})?\s*$/
 
@@ -160,6 +162,7 @@ export function directiveAttrs(name, attrs) {
   const out = {}
   for (const k of keep) if (attrs && typeof attrs[k] === 'string') out[k] = attrs[k].slice(0, LIMITS.shortText)
   if (name === 'youtube' && !YOUTUBE_ID_RE.test(out.id ?? '')) return null
+  if ((name === 'youtube' || name === 'video') && out.captions !== undefined && !(CAPTIONS_SRC_RE.test(out.captions) && mediaPathOk(out.captions))) delete out.captions
   if (name === 'embed') {
     if (!embedUrlOk(out.url)) return null
     if (out.ratio && !RATIO_RE.test(out.ratio)) delete out.ratio
@@ -341,6 +344,7 @@ export function bodyProblems(body) {
     if (d) {
       if (!DIRECTIVES[d.name]) out.push(`${at}: unknown directive ::${d.name} (allowed: ${Object.keys(DIRECTIVES).join(', ')})`)
       else if (!directiveAttrs(d.name, d.attrs)) out.push(`${at}: ::${d.name} has a missing or disallowed ${MISSING[d.name] ?? 'attribute'}`)
+      else if (d.attrs.captions !== undefined && !directiveAttrs(d.name, d.attrs).captions) out.push(`${at}: ::${d.name} captions must be /media/<slug>/<name>.vtt`)
     }
     for (const m of line.matchAll(/(?<![:\w]):fig\[([^\]]*)\]/g)) if (!directiveAttrs('fig', { n: m[1].trim() })) out.push(`${at}: :fig[${m[1].slice(0, 20)}] needs a figure number (1 to 99)`)
     for (const m of line.matchAll(/(?<![:\w]):term\[[^\]]*\]\{[^}]*\bc=["']?([\w-]*)/g)) if (!TERM_COLOURS.includes(m[1])) out.push(`${at}: :term colour "${m[1]}" (allowed: ${TERM_COLOURS.join(', ')})`)
@@ -373,6 +377,98 @@ export function videoSources(body) {
     if (attrs) out.push(attrs)
   }
   return out
+}
+
+/** The cue files a body's ::youtube and ::video directives point at (valid ones only), with their line numbers. */
+export function captionsSources(body) {
+  const out = []
+  for (const { line, n } of proseLines(body)) {
+    const d = directiveOf(line)
+    const attrs = d?.name === 'youtube' || d?.name === 'video' ? directiveAttrs(d.name, d.attrs) : null
+    if (attrs?.captions) out.push({ line: n, src: attrs.captions })
+  }
+  return out
+}
+
+/* ---------------------------------------------------------------- captions */
+
+/**
+ * A cue file, media/<slug>/<name>.vtt: plain WebVTT, the subset a video's spoken lines need.
+ *   WEBVTT
+ *
+ *   00:01.500 --> 00:04.000
+ *   First line of what is said
+ * Blocks are separated by a blank line; a block is an optional cue id line, a timing line (mm:ss.ttt or hh:mm:ss.ttt, cue
+ * settings after it are ignored) and one to CAPTIONS.lines lines of text. NOTE blocks are skipped. Text is printable characters
+ * with no markup: no "<" (cue tags), no "-->" and no control characters (&amp; &lt; &gt; &nbsp; are read as the character). Cues
+ * start in order and end after they start.
+ */
+export const CAPTIONS = {
+  bytes: 256 * 1024,
+  cues: 4000,
+  lines: 3,
+  text: 200,
+  time: 24 * 3600,
+}
+export const CAPTIONS_NAME_RE = /^[A-Za-z0-9_][A-Za-z0-9_-]{0,100}\.vtt$/
+const VTT_TIME = String.raw`(?:(\d{1,2}):)?([0-5]\d):([0-5]\d)\.(\d{3})`
+const VTT_TIMING_RE = new RegExp(`^${VTT_TIME}[ \\t]+-->[ \\t]+${VTT_TIME}(?:[ \\t].*)?$`)
+const VTT_ENTITIES = { amp: '&', lt: '<', gt: '>', nbsp: '\u00a0' }
+const vttSeconds = (h, m, s, ms) => Number(h ?? 0) * 3600 + Number(m) * 60 + Number(s) + Number(ms) / 1000
+
+/** Parse and check a cue file. Returns { cues } (start and end in seconds, text lines joined by "\n") or { problem }. */
+export function parseCaptions(input) {
+  let text = input
+  if (input instanceof Uint8Array) {
+    if (input.length > CAPTIONS.bytes) return { problem: `larger than ${CAPTIONS.bytes / 1024} KB` }
+    try {
+      text = new TextDecoder('utf-8', { fatal: true }).decode(input)
+    } catch {
+      return { problem: 'not UTF-8 text' }
+    }
+  }
+  if (typeof text !== 'string') return { problem: 'not text' }
+  if (text.length > CAPTIONS.bytes) return { problem: `larger than ${CAPTIONS.bytes / 1024} KB` }
+  const blocks = text.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n').split(/\n[ \t]*\n+/)
+  if (!/^WEBVTT(?:[ \t][^\n]*)?(?:\n|$)/.test(blocks[0])) return { problem: 'must start with "WEBVTT"' }
+  const cues = []
+  let last = 0
+  for (const block of blocks.slice(1)) {
+    const lines = block.split('\n').filter((l, i, all) => !(i === all.length - 1 && l.trim() === ''))
+    if (!lines.length || lines.every((l) => l.trim() === '')) continue
+    if (/^NOTE(?:[ \t]|$)/.test(lines[0])) continue
+    if (/^(?:STYLE|REGION)(?:[ \t]|$)/.test(lines[0])) return { problem: `${lines[0].trim()} blocks are not accepted` }
+    const at = `cue ${cues.length + 1}`
+    let i = 0
+    if (!lines[0].includes('-->')) i = 1 // the cue id
+    const t = VTT_TIMING_RE.exec(lines[i] ?? '')
+    if (!t) return { problem: `${at}: needs a timing line like 00:01.500 --> 00:04.000` }
+    const start = vttSeconds(t[1], t[2], t[3], t[4])
+    const end = vttSeconds(t[5], t[6], t[7], t[8])
+    if (end <= start || end > CAPTIONS.time) return { problem: `${at}: must end after it starts, within ${CAPTIONS.time / 3600} hours` }
+    if (start < last) return { problem: `${at}: starts before the cue above it` }
+    last = start
+    const body = lines.slice(i + 1).map((l) => l.trim())
+    if (body.length < 1 || body.length > CAPTIONS.lines || body.some((l) => !l)) return { problem: `${at}: needs 1 to ${CAPTIONS.lines} lines of text` }
+    const joined = body.join('\n')
+    if (joined.length > CAPTIONS.text) return { problem: `${at}: longer than ${CAPTIONS.text} characters` }
+    if (/[\u0000-\u0009\u000b-\u001f\u007f-\u009f<]|-->/.test(joined)) return { problem: `${at}: text may not hold markup, "-->" or control characters` }
+    cues.push({ start, end, text: joined.replace(/&(amp|lt|gt|nbsp);/g, (_, e) => VTT_ENTITIES[e]) })
+    if (cues.length > CAPTIONS.cues) return { problem: `more than ${CAPTIONS.cues} cues` }
+  }
+  if (!cues.length) return { problem: 'no cues' }
+  return { cues }
+}
+
+/** Problem with a cue file's bytes or text, or null. */
+export function captionsProblem(input) {
+  return parseCaptions(input).problem ?? null
+}
+
+/** The cue showing at `time` seconds (the latest one to start, when cues overlap), or null. */
+export function cueAt(cues, time) {
+  for (let i = cues.length - 1; i >= 0; i--) if (cues[i].start <= time && time < cues[i].end) return cues[i]
+  return null
 }
 
 /* ------------------------------------------------------------------- media */
@@ -412,6 +508,11 @@ export function mediaProblem(dir, name, bytes) {
     if (!INK_NAME_RE.test(name)) return `handwriting file "${name}" must be named <name>.ink.json`
     const p = inkProblem(bytes)
     return p ? `handwriting file "${name}": ${p}` : null
+  }
+  if (/\.vtt$/i.test(name)) {
+    if (!CAPTIONS_NAME_RE.test(name)) return `captions file "${name}" must be named <name>.vtt`
+    const p = captionsProblem(bytes)
+    return p ? `captions file "${name}": ${p}` : null
   }
   const ext = name.split('.').pop().toLowerCase()
   if (!MEDIA_TYPES[ext]) return `media file "${name}": .${ext} is not an accepted type (${Object.keys(MEDIA_TYPES).join(', ')})`
