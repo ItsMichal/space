@@ -29,7 +29,12 @@ describe('cue file schema', () => {
     ['no header', '00:00.000 --> 00:01.000\nHi\n'],
     ['a header that is not WEBVTT', 'WEBVTTX\n\n00:00.000 --> 00:01.000\nHi\n'],
     ['no cues', 'WEBVTT\n'],
-    ['a cue tag', 'WEBVTT\n\n00:00.000 --> 00:01.000\n<v Michal>Hi\n'],
+    ['a cue tag', 'WEBVTT\n\n00:00.000 --> 00:01.000\n<c.red>Hi\n'],
+    ['a voice past the start', 'WEBVTT\n\n00:00.000 --> 00:01.000\nHi <v Michal>there\n'],
+    ['a voice with no name', 'WEBVTT\n\n00:00.000 --> 00:01.000\n<v >Hi\n'],
+    ['a voice with nothing said', 'WEBVTT\n\n00:00.000 --> 00:01.000\n<v Michal></v>\n'],
+    ['a voice name too long', `WEBVTT\n\n00:00.000 --> 00:01.000\n<v ${'a'.repeat(CAPTIONS.speaker + 1)}>Hi\n`],
+    ['a second tag after a voice', 'WEBVTT\n\n00:00.000 --> 00:01.000\n<v Michal><b>Hi</b>\n'],
     ['a script tag', 'WEBVTT\n\n00:00.000 --> 00:01.000\n<script>alert(1)</script>\n'],
     ['an arrow in the text', 'WEBVTT\n\n00:00.000 --> 00:01.000\nHi --> there\n'],
     ['a control character', 'WEBVTT\n\n00:00.000 --> 00:01.000\nHi\u0007\n'],
@@ -51,6 +56,14 @@ describe('cue file schema', () => {
     const many = Array.from({ length: CAPTIONS.cues + 1 }, (_, i) => `00:00:${String(i % 60).padStart(2, '0')}.000 --> 00:00:${String(i % 60).padStart(2, '0')}.500\nx`)
     expect(parseCaptions(`WEBVTT\n\n${many.sort().join('\n\n')}\n`).problem).toMatch(/cues/)
     expect(captionsProblem(new Uint8Array([0x57, 0x45, 0x42, 0x56, 0x54, 0x54, 0x0a, 0xff, 0xfe]))).toMatch(/UTF-8/)
+  })
+
+  it('reads a speaker from a voice tag at the start of a cue', () => {
+    const r = parseCaptions('WEBVTT\n\n00:00.000 --> 00:01.000\n<v AI Croft>Singapore,\nthe city-state.\n\n00:01.000 --> 00:02.000\n<v Milan>Loving it &amp; more</v>\n')
+    expect(r.cues).toEqual([
+      { start: 0, end: 1, text: 'Singapore,\nthe city-state.', speaker: 'AI Croft' },
+      { start: 1, end: 2, text: 'Loving it & more', speaker: 'Milan' },
+    ])
   })
 
   it('finds the cue at a time, between cues there is none', () => {

@@ -26,6 +26,14 @@
 .pdemo > .pdemo__clip[data-ready] {
   opacity: 1;
 }
+/* captions over a clip (ProjectDemo's CLIP_CAPTIONS): the same plate as over a post's player, lower, as a loop has no
+   control bar to clear; the box is their container, so a narrow hero takes the smaller size */
+.pdemo[data-captioned] {
+  container-type: inline-size;
+}
+.pdemo > .captions {
+  bottom: 7%;
+}
 /* a project's own app running in the hero (ProjectDemo's Live): laid out at its design width, scaled to the box,
    over the cover until it has painted, and not in the way of a click before then */
 .pdemo > .pdemo__live {

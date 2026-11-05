@@ -1,5 +1,6 @@
-import { lazy, Suspense, useEffect, useRef, useState, type ComponentType, type LazyExoticComponent, type ReactNode } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ComponentType, type LazyExoticComponent, type ReactNode } from 'react'
 import { useReducedMotion } from '@/components/stageshow/kit'
+import { CaptionOverlay, useCaptionsPref, useCues } from '@/components/mdx/Captions'
 import './demos.css'
 
 /**
@@ -26,6 +27,16 @@ const CLIPS = [
   'playsafe', // the post's own screenshots
   'project-mountaintop', // ATLAS Expo 2023 demo video (YouTube Gv-xMeMM8m4), 0:31
 ] as const
+
+/**
+ * What is said over a clip, from the post's own cue file (the one its ::youtube or ::video names, checked by
+ * lib/content/rules.mjs parseCaptions). `from` is where the clip starts in the footage the cues are timed to, so the
+ * loop shows the lines of its own seconds. Only in the project page's hero, and only while the reader has captions on
+ * (the toggle under the post's player).
+ */
+const CLIP_CAPTIONS: Partial<Record<Clip, { src: string; from: number }>> = {
+  'ai-crofty': { src: '/media/realtime-ai-f1-comentator/demo.vtt', from: 2 },
+}
 
 const CODE = {
   askawai: () => import('./askawai'),
@@ -59,10 +70,19 @@ function codeOf(slug: CodeSlug) {
   return d
 }
 
-function Loop({ slug, fallback }: { slug: Clip; fallback: ReactNode }) {
+function Loop({ slug, fallback, captions }: { slug: Clip; fallback: ReactNode; captions?: { src: string; from: number } }) {
   const still = useReducedMotion()
   const ref = useRef<HTMLVideoElement>(null)
   const [ready, setReady] = useState(false)
+  const all = useCues(captions?.src, undefined)
+  const [on] = useCaptionsPref()
+  const from = captions?.from ?? 0
+  // a line that starts in the loop's last second would only flash before it starts over
+  const cues = useMemo(() => {
+    const end = ready && ref.current ? from + ref.current.duration - 1 : Infinity
+    return all?.filter((c) => c.start < end) ?? null
+  }, [all, ready, from])
+  const time = useCallback(() => (ready && ref.current ? ref.current.currentTime + from : null), [ready, from])
   // the preference is read after mount, so the loop is started and stopped here rather than by the autoplay attribute
   useEffect(() => {
     const v = ref.current
@@ -87,6 +107,7 @@ function Loop({ slug, fallback }: { slug: Clip; fallback: ReactNode }) {
         data-ready={ready || undefined}
         onLoadedData={() => setReady(true)}
       />
+      {cues?.length && on ? <CaptionOverlay cues={cues} time={time} running={ready && !still} /> : null}
     </>
   )
 }
@@ -147,6 +168,7 @@ export function ProjectDemo({
   fallback,
   eager = false,
   live = false,
+  captions = false,
 }: {
   slug: string
   label: string
@@ -154,6 +176,8 @@ export function ProjectDemo({
   eager?: boolean
   /** run the project's own app here when it has one (LIVE), not its clip */
   live?: boolean
+  /** show what is said over the clip when it has a cue file (CLIP_CAPTIONS) */
+  captions?: boolean
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const [near, setNear] = useState(false)
@@ -171,7 +195,7 @@ export function ProjectDemo({
   let body = fallback
   if (near && running) body = <Live slug={slug as LiveSlug} fallback={fallback} />
   // the cover holds until the screen is known, so a wide screen never starts the clip it is about to replace
-  else if (near && isClip(slug) && !(canRun && wide === null)) body = <Loop slug={slug} fallback={fallback} />
+  else if (near && isClip(slug) && !(canRun && wide === null)) body = <Loop slug={slug} fallback={fallback} captions={captions ? CLIP_CAPTIONS[slug] : undefined} />
   else if (near && isCode(slug)) {
     const Demo = codeOf(slug)
     body = (
@@ -183,7 +207,7 @@ export function ProjectDemo({
     )
   }
   return (
-    <div ref={ref} className="pdemo" role={running ? undefined : 'img'} aria-label={running ? undefined : label} data-ss-fill>
+    <div ref={ref} className="pdemo" data-captioned={(captions && isClip(slug) && slug in CLIP_CAPTIONS) || undefined} role={running ? undefined : 'img'} aria-label={running ? undefined : label} data-ss-fill>
       {body}
     </div>
   )

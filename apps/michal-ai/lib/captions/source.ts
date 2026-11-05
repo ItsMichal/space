@@ -1,5 +1,6 @@
-// Where the caption overlay gets a cue file when the page did not inline it (the editor's preview and node views; the site
-// inlines every cue file at build time, lib/captions/inline.server.ts). Whatever arrives is checked with parseCaptions.
+// Where the caption overlay gets a cue file when the page did not inline it (the editor's preview and node views, and a
+// project hero's clip, components/demos/ProjectDemo.tsx; a post's players have theirs inlined at build time,
+// lib/captions/inline.server.ts). Whatever arrives is checked with parseCaptions.
 import { parseCaptions, type Cue } from '@/lib/content/rules.mjs'
 
 type Loader = (src: string) => Promise<Uint8Array>
