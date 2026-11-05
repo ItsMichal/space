@@ -1,7 +1,7 @@
 /* :::quote (components/mdx/Quote.tsx). The accolade card's surface and type (accolade.css): paper-raised, a hairline, the
    eyebrow, title and meta lines of its heading, and the quote set in the serif behind the accent rule. It stays in the text
-   column (reading.css keeps it off the wide track). "Read the full text" is the accolade's "Show all": a native disclosure
-   whose label flips, and which moves under the text once open. Unlayered, so it wins over `.prose` inside a post. */
+   column (reading.css keeps it off the wide track). "Read the full text" is the accolade's "Show all": the Stageshow kit's
+   Collapse opening the rest above the button, whose label swaps in place. Unlayered, so it wins over `.prose` inside a post. */
 .rq {
   display: grid;
   gap: var(--space-4);
@@ -56,44 +56,39 @@
   color: var(--ink);
   text-wrap: pretty;
 }
-.rq__rest {
+.prose .rq blockquote.rq__text:has(> .rq__rest),
+.rq__text:has(> .rq__rest) {
+  gap: 0;
+}
+/* the gap above the rest rides inside the opening height, so a closed card has no empty band under the lead */
+.rq__rest > .ss-collapse__inner {
   display: grid;
   gap: var(--space-4);
+  padding-top: var(--space-4);
 }
 
 .rq__more {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-.rq__more > summary {
-  display: inline-flex;
-  align-self: start;
+  justify-self: start;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
   font-family: var(--font-sans);
   color: var(--ink-muted);
   cursor: pointer;
-  list-style: none;
 }
-.rq__more > summary::-webkit-details-marker {
-  display: none;
-}
-.rq__more > summary:hover {
+.rq__more:hover {
   color: var(--ink);
 }
-.rq__more > summary:focus-visible {
+.rq__more:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
   border-radius: var(--radius-xs);
 }
-.rq__more[open] > summary {
-  order: 1;
-}
-.rq__more-close,
-.rq__more[open] .rq__more-open {
-  display: none;
-}
-.rq__more[open] .rq__more-close {
-  display: inline;
+@media (prefers-reduced-motion: reduce) {
+  .rq__rest {
+    transition: none;
+  }
 }
 
 .rq__src {

@@ -1,6 +1,6 @@
 // Accolades: one recognition shown as a card (a quote from the record, then the coverage as a list of link previews; a post
 // quotes the record in full with `:::quote`). Rendered by components/accolade/Accolade.tsx on the About page and by `::accolade{id=...}` in posts.
-// Headlines are copied as published; Polish ones carry an English gloss. Every link was opened on 2026-11-02; TV segments are
+// Headlines are copied as published; Polish ones carry an English gloss. Every link was opened on 2026-11-02 (HuffPost on 2026-11-04); TV segments are
 // Internet Archive TV News captures, timestamped to the segment (`#start/S/end/E`, seconds into the recording).
 
 export type AccoladeSourceKind = 'record' | 'tv' | 'news' | 'program'
@@ -73,7 +73,7 @@ export const accolades: readonly Accolade[] = [
         url: 'https://abcnews.go.com/blogs/headlines/2013/10/sixth-grader-wins-approval-to-brew-beer-in-space/',
         date: '2013-10',
         kind: 'news',
-        image: '/media/about/coverage/abc-news.webp',
+        // its share image is the same family photo as NBC's, so the row shows the outlet's name instead
       },
       {
         id: 'fox-news-tv',
@@ -137,6 +137,16 @@ export const accolades: readonly Accolade[] = [
         image: '/media/about/coverage/csmonitor.webp',
       },
       {
+        id: 'huffpost-live',
+        outlet: 'HuffPost',
+        title: 'Michal Bodzianowski, Sixth Grader, Makes A Great Case For Brewing Beer In Space (VIDEO)',
+        url: 'https://www.huffpost.com/entry/michal-bodzianowski-brewing-beer-in-space_n_4071843',
+        date: '2013-10-09',
+        kind: 'news',
+        note: 'The write-up of his HuffPost Live interview, "Kid Wins Approval To Test Microbrewing In Space".',
+        // no image: the HuffPost Live player is gone and the page's share image is HuffPost's default, so the row shows the name
+      },
+      {
         id: 'wyborcza-2013',
         outlet: 'Gazeta Wyborcza',
         title: '11-letni Michał pomoże astronautom warzyć piwo w kosmosie',
@@ -177,7 +187,7 @@ export const accolades: readonly Accolade[] = [
         url: 'https://www.ibtimes.com/michal-bodzianowski-11-year-old-colorado-boy-will-brew-beer-space-photo-1416866',
         date: '2013-10-08',
         kind: 'news',
-        image: '/media/about/coverage/ibtimes.webp',
+        // its share image is the KDVR frame Fox News uses, so the row shows the outlet's name instead
       },
       {
         id: 'the-register',

@@ -26,7 +26,8 @@ const components = {
   'mdx-video': (p: Props) => (
     <Video src={String(p.src)} poster={p.poster as string | undefined} title={p.title as string | undefined} captions={p.captions as string | undefined} vtt={p.vtt as string | undefined} />
   ),
-  'mdx-accolade': (p: Props) => <Accolade id={String(p.id)} story={false} />,
+  // inside a post the story and its words are already on the page (the passage in full is a :::quote), so the card is the record and the coverage
+  'mdx-accolade': (p: Props) => <Accolade id={String(p.id)} story={false} quote={false} />,
   'mdx-map': (p: Props) => <WorldMap id={String(p.id)} geo={p.geo as string | undefined} />,
   'mdx-callout': (p: Props & { children?: ReactNode }) => <Callout type={(p.type as string) ?? 'note'}>{p.children}</Callout>,
   'mdx-quote': (p: QuoteProps) => <Quote {...p} />,

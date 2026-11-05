@@ -210,41 +210,36 @@
   white-space: nowrap;
 }
 
-/* "Show all": a native disclosure, its label flipping when open; the extra rows continue the list's rules */
-.acc__more > summary {
-  display: inline-flex;
-  margin-top: var(--space-2);
+/* "Show all": the rest opens above the button (the Stageshow kit's Collapse) and continues the list's rules; the label swaps */
+.acc__toggle {
+  justify-self: start;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-sans);
   color: var(--ink-muted);
   cursor: pointer;
-  list-style: none;
 }
-.acc__more > summary::-webkit-details-marker {
-  display: none;
-}
-.acc__more > summary:hover {
+.acc__toggle:hover {
   color: var(--ink);
 }
-.acc__more > summary:focus-visible {
+.acc__toggle:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
   border-radius: var(--radius-xs);
 }
-.acc__more[open] > summary {
-  order: 1;
-}
-.acc__more {
-  display: flex;
-  flex-direction: column;
-}
-.acc__more > .acc__list {
+.acc .acc__more .acc__list {
   border-top: 1px solid var(--hairline);
 }
-.acc__more-close,
-.acc__more[open] .acc__more-open {
-  display: none;
+/* the press band's grid gap would sit under a closed list as an empty band */
+.acc__press > .acc__more {
+  margin-top: calc(var(--space-2) * -1);
 }
-.acc__more[open] .acc__more-close {
-  display: inline;
+@media (prefers-reduced-motion: reduce) {
+  .acc__more {
+    transition: none;
+  }
 }
 
 @media (max-width: 639px) {

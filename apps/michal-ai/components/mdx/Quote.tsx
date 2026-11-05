@@ -1,5 +1,8 @@
-import { Children, isValidElement, type ReactNode } from 'react'
+'use client'
+
+import { Children, isValidElement, useId, useState, type ReactNode } from 'react'
 import { ArrowUpRight } from 'lucide-react'
+import { Collapse, Swap } from '@/components/stageshow/kit'
 import './quote.css'
 
 export type QuoteProps = { title?: string; by?: string; role?: string; date?: string; cite?: string; url?: string; children?: ReactNode }
@@ -20,8 +23,9 @@ function host(url: string) {
 
 /**
  * :::quote{title by role date cite url} ... ::: a long passage quoted in full (a speech, a record, a letter). The heading says
- * what it is and who said it when; the first paragraph shows, the rest opens with "Read the full text" (a native disclosure, so
- * it works before the page hydrates and find-in-page reaches it). The cite is the eyebrow; a link to the original closes the card. Every attribute is optional.
+ * what it is and who said it when; the first paragraph shows, the rest opens under it with "Read the full text" (the Stageshow
+ * kit's Collapse, so the text below moves with the opening height and the label swaps in place; inert while closed). The cite is
+ * the eyebrow; a link to the original closes the card. Every attribute is optional.
  */
 export function Quote({ title, by, role, date, cite, url, children }: QuoteProps) {
   // the paragraphs, without the whitespace text between them
@@ -29,6 +33,8 @@ export function Quote({ title, by, role, date, cite, url, children }: QuoteProps
   const [lead, ...rest] = blocks
   const byline = [by, role].filter(Boolean).join(' ')
   const source = url ? host(url) : null
+  const [open, setOpen] = useState(false)
+  const restId = useId()
   return (
     <figure className="rq">
       {cite || title || byline || date ? (
@@ -47,13 +53,14 @@ export function Quote({ title, by, role, date, cite, url, children }: QuoteProps
       <blockquote className="rq__text" cite={url}>
         {lead}
         {rest.length ? (
-          <details className="rq__more">
-            <summary className="t-ui">
-              <span className="rq__more-open">Read the full text</span>
-              <span className="rq__more-close">Show less</span>
-            </summary>
-            <div className="rq__rest">{rest}</div>
-          </details>
+          <>
+            <Collapse open={open} id={restId} inert={!open} className="rq__rest">
+              {rest}
+            </Collapse>
+            <button type="button" className="rq__more t-ui" aria-expanded={open} aria-controls={restId} onClick={() => setOpen((o) => !o)}>
+              <Swap id={open ? 'less' : 'more'}>{open ? 'Show less' : 'Read the full text'}</Swap>
+            </button>
+          </>
         ) : null}
       </blockquote>
       {url && source ? (

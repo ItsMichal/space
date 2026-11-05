@@ -1,4 +1,8 @@
+'use client'
+
+import { useId, useState } from 'react'
 import { ArrowUpRight } from 'lucide-react'
+import { Collapse, Swap } from '@/components/stageshow/kit'
 import Link from '@/lib/nav'
 import { accoladeById, type AccoladeSource } from '@/content/accolades'
 import './accolade.css'
@@ -61,10 +65,14 @@ function Source({ s }: { s: AccoladeSource }) {
 /**
  * An accolade card (content/accolades.ts): what it was (the eyebrow and title), then the quote, one line of what happened and
  * the coverage as a tidy list, the most prominent outlets first and the rest behind "Show all". Inside a post the card takes
- * the wide track. `story` links the post that tells the story (off inside that post). An unknown id renders nothing.
+ * the wide track. `story` links the post that tells the story (off inside that post); `quote` off drops the quote where the
+ * page already gives the passage in full (the post's :::quote). "Show all" opens the rest with the Stageshow kit's Collapse, the
+ * label swapping in place. An unknown id renders nothing.
  */
-export function Accolade({ id, story = true }: { id: string; story?: boolean }) {
+export function Accolade({ id, story = true, quote = true }: { id: string; story?: boolean; quote?: boolean }) {
   const a = accoladeById(id)
+  const [open, setOpen] = useState(false)
+  const moreId = useId()
   if (!a) return null
   const headingId = `acc-${a.id}`
   const lead = a.sources.slice(0, LEAD)
@@ -80,19 +88,21 @@ export function Accolade({ id, story = true }: { id: string; story?: boolean }) 
 
       <div className="acc__main">
         <div className="acc__body">
-          <figure className="acc__quote">
-            <blockquote cite={a.quote.url}>
-              <p>&ldquo;{a.quote.text}&rdquo;</p>
-            </blockquote>
-            <figcaption className="t-meta">
-              <span className="acc__by">{a.quote.by}</span>, {a.quote.role}.{' '}
-              <a href={a.quote.url} className="link" target="_blank" rel="noopener noreferrer">
-                {a.quote.cite}
-                <ArrowUpRight size={13} strokeWidth={1.5} aria-hidden className="acc__arrow" />
-                <span className="sr-only"> (opens in a new tab)</span>
-              </a>
-            </figcaption>
-          </figure>
+          {quote ? (
+            <figure className="acc__quote">
+              <blockquote cite={a.quote.url}>
+                <p>&ldquo;{a.quote.text}&rdquo;</p>
+              </blockquote>
+              <figcaption className="t-meta">
+                <span className="acc__by">{a.quote.by}</span>, {a.quote.role}.{' '}
+                <a href={a.quote.url} className="link" target="_blank" rel="noopener noreferrer">
+                  {a.quote.cite}
+                  <ArrowUpRight size={13} strokeWidth={1.5} aria-hidden className="acc__arrow" />
+                  <span className="sr-only"> (opens in a new tab)</span>
+                </a>
+              </figcaption>
+            </figure>
+          ) : null}
           <p className="acc__summary t-text">{a.summary}</p>
           {story && a.postSlug ? (
             <Link href={`/writing/${a.postSlug}`} className="acc__story t-ui link">
@@ -111,17 +121,18 @@ export function Accolade({ id, story = true }: { id: string; story?: boolean }) 
               ))}
             </ul>
             {rest.length ? (
-              <details className="acc__more">
-                <summary className="t-ui">
-                  <span className="acc__more-open">Show all {a.sources.length}</span>
-                  <span className="acc__more-close">Show fewer</span>
-                </summary>
-                <ul className="acc__list" aria-label={`More coverage of ${a.title}`}>
-                  {rest.map((s) => (
-                    <Source key={s.id} s={s} />
-                  ))}
-                </ul>
-              </details>
+              <>
+                <Collapse open={open} id={moreId} inert={!open} className="acc__more">
+                  <ul className="acc__list" aria-label={`More coverage of ${a.title}`}>
+                    {rest.map((s) => (
+                      <Source key={s.id} s={s} />
+                    ))}
+                  </ul>
+                </Collapse>
+                <button type="button" className="acc__toggle t-ui" aria-expanded={open} aria-controls={moreId} onClick={() => setOpen((o) => !o)}>
+                  <Swap id={open ? 'fewer' : 'all'}>{open ? 'Show fewer' : `Show all ${a.sources.length}`}</Swap>
+                </button>
+              </>
             ) : null}
           </div>
         ) : null}
