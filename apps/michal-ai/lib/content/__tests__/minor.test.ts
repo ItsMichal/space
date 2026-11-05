@@ -4,6 +4,7 @@ import { parsePost, serializePost } from '@/lib/content/serialize'
 import { getMenuPreviews } from '@/lib/menu'
 import { hackathons } from '@/content/hackathons'
 import { press } from '@/content/press'
+import { siteLayout } from '@/lib/content/layout'
 
 const MINOR = [
   'airplane-game',
@@ -48,10 +49,11 @@ describe('minor projects (short write-ups for public repos)', () => {
     expect([...dates].sort().reverse()).toEqual(dates)
   })
 
-  it('are not in the home page selection or the menu previews', () => {
+  it('are not in the home page selection or the menu previews, unless the layout file pins them', () => {
     const main = getMainProjects().map((p) => p.slug)
     expect(main.length).toBeGreaterThan(0)
-    for (const s of MINOR) expect(main).not.toContain(s)
+    for (const s of MINOR) if (!siteLayout.work?.includes(s)) expect(main).not.toContain(s)
+    for (const s of siteLayout.work ?? []) if (MINOR.includes(s)) expect(main).toContain(s)
     const work = getMenuPreviews().work.map((w) => w.href)
     for (const s of MINOR) expect(work).not.toContain(`/projects/${s}`)
   })

@@ -5,6 +5,7 @@ import { positionEcef } from '@/lib/starlink/orbit.mjs'
 import { loadLand, type Ring } from './globe/data'
 import { loadStarlinkWithIds, type Identities, type Packed } from './globe/starlink'
 import { BRAILLE_BIT, calloutLines, dither, GLYPHS, landDot, SAT, SAT_FRONT, SAT_LINKED, SAT_MARKED, satFacts, seaDot, strokeGlyph, TERMINAL, WAVE_SITE_LL, waveFade, wavePose } from './ascii/field'
+import { drawHeroMarks } from './heroMarks'
 import './presence.css'
 import './ascii/ascii.css'
 
@@ -374,6 +375,7 @@ export function HeroAscii({ className = '' }: { className?: string }) {
         } else add(t)
       })
       add(document.getElementById('work-h'))
+      drawHeroMarks(g, cr.left, cr.top, k, () => measureText())
       const px = g.getImageData(0, 0, mc.width, mc.height).data
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {

@@ -16,6 +16,8 @@ export type Reading = {
   started: boolean
   /** "8 min left", "under a minute" or "done"; null when the body has nothing to estimate from. */
   eta: string | null
+  /** A page of sections (`[data-sections]`, the home page) rather than an article. */
+  sections: boolean
 }
 
 // Leaf text blocks of an article body; a block that contains another one is skipped so words are counted once.
@@ -37,15 +39,18 @@ function measureBlocks(body: HTMLElement, base: number): ReadBlock[] {
 }
 
 /**
- * Reading progress and the current section for an article (`[data-post]` with a `.prose` body). Passive scroll
- * listener, one rAF per frame at most, never touches scrolling. Returns null on pages that are not articles.
+ * Reading progress and the current section for an article (`[data-post]` with a `.prose` body), or for a page of sections
+ * (`[data-sections]`, the home page: its own h2s are the sections, progress runs from the first of them, and there
+ * is no time left to estimate). Passive scroll listener, one rAF per frame at most, never touches scrolling. Returns null on
+ * pages that are neither.
  */
 export function useReading(routeKey = '', restMs = 2200): Reading | null {
   const [state, setState] = useState<Reading | null>(null)
 
   useEffect(() => {
-    const article = document.querySelector<HTMLElement>('[data-post]')
-    const body = article?.querySelector<HTMLElement>('.prose')
+    const article = document.querySelector<HTMLElement>('[data-post]') ?? document.querySelector<HTMLElement>('[data-sections]')
+    const sections = !!article && 'sections' in article.dataset
+    const body = sections ? article : article?.querySelector<HTMLElement>('.prose')
     if (!article || !body) {
       setState(null)
       return
@@ -66,9 +71,9 @@ export function useReading(routeKey = '', restMs = 2200): Reading | null {
       if (!hs.length) hs = Array.from(body.querySelectorAll<HTMLElement>('h3'))
       tops = hs.map((h) => h.getBoundingClientRect().top + base - 140)
       const r = body.getBoundingClientRect()
-      start = r.top + base - 220
+      start = (sections && hs.length ? hs[0].getBoundingClientRect().top : r.top) + base - 220
       end = r.bottom + base
-      blocks = measureBlocks(body, base)
+      blocks = sections ? [] : measureBlocks(body, base)
     }
     const compute = () => {
       raf = 0
@@ -81,6 +86,7 @@ export function useReading(routeKey = '', restMs = 2200): Reading | null {
         scrolling,
         started: y > start + 40,
         eta: blocks.length ? leftLabel(progress >= 0.995 ? 0 : secondsLeft(blocks, readLine(y, window.innerHeight, progress), { anchorMinutes: anchor })) : null,
+        sections,
       }
       setState((prev) =>
         prev &&

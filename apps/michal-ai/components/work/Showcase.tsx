@@ -80,7 +80,7 @@ export function ProjectCard({
   const metaParts: ReactNode[] = article ? [<time key="d" dateTime={post.date}>{monthYear(post.date)}</time>] : [year(post)]
   const id = `pc-${post.slug}`
   // A project with a preview (real footage or its own code, see ProjectDemo) plays it in the picture's place; the picture stays as its fallback (prerender, no JS)
-  const withDemo = (picture: ReactNode) => (hasDemo(post.slug) ? <ProjectDemo slug={post.slug} label={alt || post.title} fallback={picture} /> : picture)
+  const withDemo = (picture: ReactNode) => (hasDemo(post.slug) ? <ProjectDemo slug={post.slug} label={alt || post.title} fallback={picture} captions /> : picture)
   return (
     <Link
       href={href}
@@ -188,9 +188,9 @@ const viewMore = (count: number, noun: string) => `View ${count} more ${count ==
 /**
  * The home page's Projects and Writing: the first `limit` posts as the same entry (ProjectCard with its picture above the
  * text, and a project's year under the description; a post shows no date), two across from 640px (`.ix-grid`,
- * app/styles/type.css), then a link to the full list.
+ * app/styles/type.css), then a link to the full list, counting what it holds beyond these (`total`, every post by default).
  */
-export function CardGrid({ posts, limit = 4, more, noun, priority = false }: { posts: Post[]; limit?: number; more: string; noun: string; priority?: boolean }) {
+export function CardGrid({ posts, total = posts.length, limit = 4, more, noun, priority = false }: { posts: Post[]; total?: number; limit?: number; more: string; noun: string; priority?: boolean }) {
   const shown = posts.slice(0, limit)
   return (
     <>
@@ -201,7 +201,7 @@ export function CardGrid({ posts, limit = 4, more, noun, priority = false }: { p
           </li>
         ))}
       </ul>
-      {posts.length > shown.length ? <MoreLink href={more}>{viewMore(posts.length - shown.length, noun)}</MoreLink> : null}
+      {total > shown.length ? <MoreLink href={more}>{viewMore(total - shown.length, noun)}</MoreLink> : null}
     </>
   )
 }

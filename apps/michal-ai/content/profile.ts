@@ -92,6 +92,17 @@ export const profile = {
   ],
   /** Current employer for JSON-LD `worksFor`. Empty: no current employer is stated (SpaceX ended in 2026); lib/seo omits the property then. */
   worksFor: [] as readonly { name: string; url: string }[],
+  /** The hero's affiliations beside the role: each place's own mark, a one-colour mask (public/media/about/logos/) drawn faint in
+   *  the ink colour. `aspect` is the mark's width over its height; `cap` and `mid` are where its capital letters sit, as a
+   *  fraction of its height (their height, and their centre from the top), measured from the SVG, so every mark's capitals are
+   *  drawn the same height on one line: SpaceX's under its swoosh, Starlink's the whole mark, CU's beside its shield. `trail` is how much
+   *  of the width, at the right, hangs over the gap after it: most of SpaceX's swoosh past the X's leg (0.178 of the width), so
+   *  that gap reads from the letters, a little wider than the others. */
+  alumOf: [
+    { name: 'SpaceX', logo: '/media/about/logos/spacex-wordmark.svg', aspect: 8, cap: 0.64, mid: 0.668, trail: 0.13 },
+    { name: 'Starlink', logo: '/media/about/logos/starlink-wordmark.svg', aspect: 8.15, cap: 0.976, mid: 0.5 },
+    { name: 'University of Colorado Boulder', logo: '/media/about/logos/cu-boulder-wordmark.svg', aspect: 10.9, cap: 0.509, mid: 0.506 },
+  ],
   /** Past schools and employers for JSON-LD `alumniOf`. */
   alumniOf: [
     { type: 'CollegeOrUniversity', name: 'University of Colorado Boulder', url: 'https://www.colorado.edu' },

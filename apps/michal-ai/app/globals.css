@@ -731,15 +731,18 @@ html[data-fade] .page-enter {
     outline-offset: 3px;
     border-radius: var(--radius-sm);
   }
-  /* Links that leave the site carry a small arrow (a glyph in the text face: no icon font, no layout shift). */
+  /* Links that leave the site carry a small arrow: Lucide's arrow-up-right (the set the site's other arrows come from) as a mask in
+     the muted ink, sized in em so it follows the text. Not the U+2197 glyph, which iOS and macOS draw as a colour emoji. */
   .prose :not(:is(h2, h3, h4)) > a[href^='http']:not([href*='michal.ai'])::after {
-    content: '\2197';
+    content: '';
     display: inline-block;
+    width: 0.7em;
+    height: 0.7em;
     margin-left: 0.15em;
-    font-size: inherit;
-    line-height: 1;
     vertical-align: 0.05em;
-    color: var(--ink-muted);
+    background: var(--ink-muted);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 7h10v10'/%3E%3Cpath d='M7 17 17 7'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 7h10v10'/%3E%3Cpath d='M7 17 17 7'/%3E%3C/svg%3E") center / contain no-repeat;
   }
   .prose strong {
     font-weight: 500;

@@ -6,7 +6,7 @@ import { useReading } from './useReading'
 import { makeStroke } from '@space/motion/handStroke'
 import './ui.css'
 
-type View = { key: string; title: string; sub?: string; progress: number; eta?: string | null }
+type View = { key: string; title: string; sub?: string; progress: number; eta?: string | null; bare?: boolean }
 
 const REST_MS = 2200
 const useIso = typeof window === 'undefined' ? useEffect : useLayoutEffect
@@ -22,6 +22,7 @@ const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-r
  * While reading it also says how long is left ("8 min left"). The text is set in place, never re-keyed, so the pill does not
  * swap or resize as the number changes: the ruler measures the longest form ("under a minute") once. The slot is aria-hidden
  * on purpose: a live region fed by scrolling would chatter, and the header already states the total ("N min read").
+ * On a page of sections (the home page) the slot stays shut and only the stem shows how far down the page you are.
  * Reduced motion: no growth, only a thin progress line at the top edge.
  */
 export function StatusSlot({ routeKey }: { routeKey: string }) {
@@ -32,6 +33,7 @@ export function StatusSlot({ routeKey }: { routeKey: string }) {
 
   const view: View | null = useMemo(() => {
     if (entry) return { key: `s:${entry.source}:${entry.title}`, title: entry.title, sub: entry.sub, progress: entry.progress ?? 0 }
+    if (reading && reading.sections && reading.started && reading.scrolling) return { key: 'r:line', title: '', progress: reading.progress, bare: true }
     if (reading && reading.started && reading.scrolling && reading.headings.length && reading.section >= 0) {
       const h = reading.headings[reading.section]
       return { key: `r:${h.id}`, title: h.text, sub: reading.headings.length > 1 ? `${reading.section + 1} of ${reading.headings.length}` : undefined, progress: reading.progress, eta: reading.eta }
@@ -86,6 +88,14 @@ export function StatusSlot({ routeKey }: { routeKey: string }) {
     return on || (reading && reading.started) ? <div aria-hidden className="st-line" style={{ transform: `scaleX(${reading?.progress ?? p})` }} /> : null
   }
   if (!cur) return null
+  const stem = (
+    <svg aria-hidden className="st-stem" data-on={on ? '' : undefined} viewBox="0 0 240 6" preserveAspectRatio="none">
+      <g transform="translate(0 3)">
+        <path d={stroke.d(0, Math.min(1, Math.max(0.05, p)), p > 0.02 && p < 0.99 ? 0.6 : 0)} />
+      </g>
+    </svg>
+  )
+  if (cur.bare) return stem
   // Room for the text plus its horizontal breathing; capped so a long heading cannot make the pill huge.
   const w = Math.min(natural + 20, 340)
   return (
@@ -116,11 +126,7 @@ export function StatusSlot({ routeKey }: { routeKey: string }) {
           {cur.eta ? <span className="st-sub st-eta"> · under a minute</span> : null}
         </span>
       </span>
-      <svg aria-hidden className="st-stem" data-on={on ? '' : undefined} viewBox="0 0 240 6" preserveAspectRatio="none">
-        <g transform="translate(0 3)">
-          <path d={stroke.d(0, Math.min(1, Math.max(0.05, p)), p > 0.02 && p < 0.99 ? 0.6 : 0)} />
-        </g>
-      </svg>
+      {stem}
     </>
   )
 }
