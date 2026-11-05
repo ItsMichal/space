@@ -80,7 +80,9 @@ a.about__more:focus-visible .about__more-go {
 /* A highlighted entry (ExperienceItem `highlight`, the Congressional Record tribute on the home page): the accolade card's surface
    (components/accolade/accolade.css, `.acc`): paper-raised, a hairline, the medium radius. It is drawn behind the row's text, out
    past its edges, so the row keeps the list's spacing and its text stays on the edge of the rows around it. It reaches out by
-   half the list's gap, so it clears the next row and, in a timeline, its own node on the rail. (`::after` is the rail.) */
+   half the list's gap, so it clears the next row and, in a timeline, its own node on the rail. (`::after` is the rail.) It
+   reads as a highlight rather than a card: there is no left edge, because the surface and its hairline fade in from
+   nothing over the first third of the width. */
 .xp > li.xp__card {
   --xp-card: var(--space-2);
   position: relative;
@@ -94,6 +96,8 @@ a.about__more:focus-visible .about__more-go {
   border: 1px solid var(--hairline);
   border-radius: var(--radius-md);
   background: var(--paper-raised);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 35%);
+  mask-image: linear-gradient(to right, transparent, #000 35%);
   pointer-events: none;
 }
 .xp--timeline > li.xp__card::before {
