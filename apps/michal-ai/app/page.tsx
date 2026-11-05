@@ -1,5 +1,5 @@
 import Link from '@/lib/nav'
-import { ArrowRight } from 'lucide-react'
+import { Award, ArrowRight, Landmark, Newspaper, Trophy } from 'lucide-react'
 import { getAllPosts, getBlogPosts, getMainProjects } from '@/lib/content'
 import { HeroBackdrop } from '@/components/presence/HeroBackdrop'
 import { HeroHook } from '@/components/site/HeroHook'
@@ -14,7 +14,6 @@ import { profile } from '@/content/profile'
 import { citationLabel, citationsSource, doiUrl, venueLine } from '@/lib/publications'
 import { ExperienceList, type ExperienceItem } from '@/components/ui/ExperienceList'
 import { Picture } from '@/components/media/Picture'
-import { Video } from '@/components/mdx/Video'
 import { careerYears, hrefById, portraitAlt } from '@/lib/about'
 import '@/components/site/about.css'
 import { homeMetadata, homePageJsonLd, personJsonLd, websiteJsonLd } from '@/lib/seo'
@@ -35,34 +34,30 @@ const experience: ExperienceItem[] = profile.experience.map((e) => ({
   logo: e.logo,
 }))
 
-// Awards and press as one list (profile.awards order), the Congressional Record tribute first. A row links to its post, or to
-// the record itself. The post's clip of the coverage plays under the row for the story it belongs to, not as a section of its
-// own. Built at render, not at module load: posts are only available once the route's data is in (module scope throws on the client).
-const awardItems = (reel?: HomeReel | null): ExperienceItem[] =>
-  profile.awards.map((a) => ({
+// Each kind of recognition by its icon in the list's node, as the experience above has its logos.
+const AWARD_ICONS = { honor: Landmark, award: Award, hackathon: Trophy, press: Newspaper } as const
+
+// Awards and press as one list (profile.awards order), the Congressional Record tribute first and set on a card. A row links to
+// its post, or to the record itself. Built at render, not at module load: posts are only available once the route's data is in
+// (module scope throws on the client).
+const awardItems = (): ExperienceItem[] =>
+  profile.awards.map((a, i) => ({
     id: a.id,
     org: a.title,
     role: a.context,
     years: a.year,
     href: a.postId ? hrefById(a.postId) : a.url,
-    extra:
-      reel && a.postId && hrefById(a.postId) === reel.href ? (
-        <div className="home-reel xp-reel">
-          <Video src={reel.src} poster={reel.poster} title={reel.caption} />
-        </div>
-      ) : undefined,
+    icon: AWARD_ICONS[a.kind],
+    highlight: i === 0,
   }))
 
 const h2 = 'mb-space-6 font-display text-title'
 
-/** A clip from a post, played under the award row that links to the same post: where it plays, its caption, and the post. */
-export type HomeReel = { src: string; poster?: string; caption?: string; href: string; post: string }
-
-export default function Home({ reel }: { reel?: HomeReel | null }) {
+export default function Home() {
   const projects = getMainProjects()
   const articles = getBlogPosts()
   const latest = homeWriting(articles)
-  const awards = awardItems(reel)
+  const awards = awardItems()
   // Rotating hero line: every post that sets `hook`, the layout file's `hooks` first, then the site's own order (priority, then newest).
   const hookPosts = heroHooks(getAllPosts().filter((p) => p.hook))
   const hooks = hookPosts.map((p) => ({ text: p.hook!, href: postPath(p) }))
@@ -133,7 +128,7 @@ export default function Home({ reel }: { reel?: HomeReel | null }) {
               Recognition
             </h3>
             <div className="ix-sec__body">
-              <ExperienceList items={awards} label="Recognition" />
+              <ExperienceList items={awards} label="Recognition" timeline />
             </div>
           </section>
           {profile.publications.length ? (
