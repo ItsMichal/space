@@ -37,6 +37,9 @@ the denylists. The rules read those from this repo so an edit can only point at 
 - Refused (by the build, `npm run content:check` and the editor): unknown ids, hiding `stream`, `games` or `work` (other pages link to them), hiding the
   Twitch or hi tiles or anything holding them, arranging the clip placeholders one by one, sizing a flex tile, and a cluster without a flex tile that
   leaves a gap in its last row at 4, 3 or 2 columns.
+- Preview: the build also writes `/bento-preview/` (noindex, not in the sitemap, linked from nowhere), every tile's real markup in a `<template>`.
+  The editor frames it and posts it the resolved arrangement; `public/bento-preview.js` draws it as the home page would and posts back its height and
+  the id of a clicked tile. It is the one page `_headers` lets another site frame. In the editor's mock mode it is the local dev server's (port 4310).
 
 ## Flow
 
