@@ -131,10 +131,10 @@ export default function Home() {
                 Publications
               </h3>
               <div className="ix-sec__body">
-                <ul className="ix-list">
+                <ul className="ix-list ix-list--tight">
                   {profile.publications.map((p) => (
                     <li key={p.id}>
-                      <a href={doiUrl(p)} className="ix" target="_blank" rel="noopener noreferrer">
+                      <a href={doiUrl(p)} className="ix ix--ui" target="_blank" rel="noopener noreferrer">
                         <span className="ix__title">{p.title}</span>
                         <span className="ix__desc t-text">
                           {p.shortAuthors ? `${p.shortAuthors} ` : ''}
