@@ -1,0 +1,21 @@
+/* Paper transition (./index.ts). While it runs the WebGL sheet stands in for the page: the live page is hidden under it, the
+   backdrop stays as the desk the sheet lies on, and the nav stays on top, crisp, as in every other route change. */
+.paper-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 40;
+  pointer-events: auto;
+  touch-action: none;
+  transition: opacity 140ms linear;
+}
+
+html[data-paper] body > :not(.nav-glass):not(.nav-scrim):not(.paper-overlay):not(#main),
+html[data-paper] #main > :not(.paper-grid) {
+  visibility: hidden;
+}
+
+html[data-paper] .page-enter {
+  animation: none !important;
+}
