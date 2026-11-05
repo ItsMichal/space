@@ -126,8 +126,12 @@ vec3 base(vec2 uv, out vec3 dir, out float h) {
   float diag = 0.5 * length(u_size);
   vec2 q = p0 / diag;
   float r = min(length(q), 1.0);
-  // the side u_lead points to gathers ahead of the rest, the lead gone again by the time the ball is made
-  float bl = clamp(u_ball * 1.3 - (1.0 - r) * 0.3 + dot(q, u_lead) * 4.0 * u_ball * (1.0 - u_ball), 0.0, 1.0);
+  // the sheet gathers from its edges in: a band of the same width all round (by the distance to the nearest edge, so the corners
+  // are no further along than the middle of a side), and the side u_lead points to ahead of the rest, the lead gone again by the
+  // time the ball is made
+  vec2 toEdge = 0.5 * u_size - abs(p0);
+  float edge = 1.0 - clamp(min(toEdge.x, toEdge.y) / (0.5 * minDim), 0.0, 1.0);
+  float bl = clamp(u_ball * 1.3 - (1.0 - edge) * 0.3 + dot(q, u_lead) * 4.0 * u_ball * (1.0 - u_ball), 0.0, 1.0);
   // atan(0, 0) is undefined (NaN on some GPUs) and would tear a hole at the centre vertex
   float th = (r > 1e-4 ? atan(q.y, q.x) : 0.0) + u_twirl * bl * r;
   // wrapped 2.3 radians round, not all the way: the corners stay apart behind, a loose wad rather than a tight ball
@@ -135,11 +139,11 @@ vec3 base(vec2 uv, out vec3 dir, out float h) {
   vec3 sn = vec3(sin(ph) * cos(th), sin(ph) * sin(th), cos(ph));
   vec3 pos = mix(vec3(p0, 0.0), sn * u_R, bl);
   dir = normalize(mix(vec3(0.0, 0.0, 1.0), sn, bl));
-  h = u_fold * mix(0.07 * minDim, 0.34 * u_R, bl);
+  h = u_fold * mix(0.07 * minDim, 0.22 * u_R, bl);
   // the outer part of the sheet does not tuck in smoothly behind the ball: it stands off it in pointed flaps and corners, so the
   // silhouette is jagged
   float flap = smoothstep(0.35, 1.0, r) * spikes(q * 5.0 + u_seed);
-  return pos + sn * u_R * 1.4 * flap * bl;
+  return pos + sn * u_R * 0.65 * flap * bl;
 }
 // With u_shadow set the point is laid on a floor behind the ball, pushed a little down and right with its height, for a close drop
 // shadow (thrown along the real light it would fall far off the ball).
