@@ -3,8 +3,8 @@
 // 1. The visible viewport of the old page is captured (html2canvas-pro, the capture the glass lens already uses) over the
 //    backdrop, and laid on a coarse sheet in a fixed canvas over the page, at exactly the page's pixels.
 // 2. The router renders the new page underneath at once; it is shown, live, as soon as it has committed.
-// 3. The sheet crumples in three squeezes into a faceted ball (creases of three sizes on a low poly mesh, flat shaded per facet,
-//    a hard shadow under it) while a fire eats it from the face. What burns turns to glyphs in the site's monospace, in the page's colour and then the fire's,
+// 3. The sheet crumples in three squeezes into a ball (broad facets, sharp crease lines and curved paper between them, shaded
+//    smooth with a little of each facet's flat tone kept, a hard shadow under it) while a fire eats it from the face. What burns turns to glyphs in the site's monospace, in the page's colour and then the fire's,
 //    that rise and go out. Drawn on twos.
 // The capture takes real time (about 100 to 400ms on a laptop) and comes on top of PAPER_MS: the page just waits for the click.
 import { PAPER_ASH, PAPER_MS } from './config'
@@ -12,8 +12,8 @@ import { ASH_FS, QUAD_VS, SHEET_FS, SHEET_VS } from './shaders'
 import { frameAt, onTwos, type Frame } from './timeline'
 
 const MAX_DPR = 2
-/** Cells along the sheet's long side: coarse on purpose, the facets are the look. */
-const CELLS = 32
+/** Cells along the sheet's long side: fine enough that the creases are lines and the paper between them curves. */
+const CELLS = 72
 /** A glyph cell, CSS px (the hero globe's cell). */
 const GLYPH_W = 8
 const GLYPH_H = 13
@@ -165,15 +165,15 @@ function createStage(w: number, h: number, dpr: number) {
   const sheet = program(gl, SHEET_VS, SHEET_FS)
   const ash = program(gl, QUAD_VS, ASH_FS)
 
-  // sheet mesh: a coarse grid of uv, the inner vertices nudged off the grid so the facets are uneven, the edges kept straight
+  // sheet mesh: a grid of uv, the inner vertices nudged off the grid so it does not read as one, the edges kept straight
   const cols = w >= h ? CELLS : Math.max(8, Math.round((CELLS * w) / h))
   const rows = w >= h ? Math.max(8, Math.round((CELLS * h) / w)) : CELLS
   const uv = new Float32Array((cols + 1) * (rows + 1) * 2)
   for (let j = 0, k = 0; j <= rows; j++) {
     for (let i = 0; i <= cols; i++, k += 2) {
       const inner = i > 0 && i < cols && j > 0 && j < rows
-      uv[k] = (i + (inner ? 0.6 * jit(i, j, 0) : 0)) / cols
-      uv[k + 1] = (j + (inner ? 0.6 * jit(i, j, 1) : 0)) / rows
+      uv[k] = (i + (inner ? 0.35 * jit(i, j, 0) : 0)) / cols
+      uv[k + 1] = (j + (inner ? 0.35 * jit(i, j, 1) : 0)) / rows
     }
   }
   const idx = new Uint16Array(cols * rows * 6)
@@ -279,6 +279,7 @@ function createStage(w: number, h: number, dpr: number) {
     gl.useProgram(sheet.p)
     const u = sheet.u
     gl.uniform2f(u.u_size, w, h)
+    gl.uniform2f(u.u_cell, 1 / cols, 1 / rows)
     gl.uniform1f(u.u_ball, s.ball)
     gl.uniform1f(u.u_fold, s.fold)
     gl.uniform1f(u.u_R, R)
@@ -296,7 +297,7 @@ function createStage(w: number, h: number, dpr: number) {
     gl.uniform1f(u.u_shadowA, 0.16 * Math.min(1, s.ball / 0.3))
     gl.uniform3fv(u.u_back, back)
     gl.uniform3fv(u.u_char, fire.char)
-    gl.uniform3f(u.u_light, -0.45, 0.55, 0.7)
+    gl.uniform3f(u.u_light, -0.6, 0.6, 0.5)
     gl.uniform3f(u.u_eye, 0, 0, D)
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, page)
