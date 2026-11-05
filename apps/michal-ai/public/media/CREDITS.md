@@ -13,3 +13,5 @@
 
 - Hero globe satellites (`public/globe/starlink.bin`, `/globe/starlink-live.bin`): orbit data from CelesTrak supplemental GP (celestrak.org), derived from SpaceX public ephemerides.
 - Hero globe land: Natural Earth 110m land (public domain), via world-atlas.
+- World map of the `::map` directive (`lib/maps/world.gen.ts`, baked by `scripts/build-world-map.mjs`): Natural Earth 110m and 10m admin 0 countries (public domain), via world-atlas.
+- Starlink markets map (`content/maps.ts`): Starlink's public availability file (starlink.com), as archived by the Wayback Machine on 15 April 2024 and 15 October 2026; the snapshot URLs are in the file.
