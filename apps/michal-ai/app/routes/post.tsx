@@ -19,8 +19,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
   const post = getAllPosts().find((p) => p.slug === slug && (p.parent ?? undefined) === parent)
   if (!post) throw new Response('Not found', { status: 404 })
   const parentPost = post.parent ? getPost(post.parent) : undefined
-  const { inlineMaps } = await import('@/lib/maps/inline.server')
-  const hast = inlineMaps(await (await import('@/lib/captions/inline.server')).inlineCaptions(await (await import('@/lib/ink/inline.server')).inlineHandwriting(await markdownToHast(post.body))))
+  const hast = await (await import('@/lib/captions/inline.server')).inlineCaptions(await (await import('@/lib/ink/inline.server')).inlineHandwriting(await markdownToHast(post.body)))
   const metadata = postMetadata(post.kind, post.slug, post.parent)
   const alt = post.parent ? 'Project update by Michał Bodzianowski' : post.kind === 'article' ? 'Article by Michał Bodzianowski' : 'Project by Michał Bodzianowski'
   // ::accolade cards read their document image from content/accolades.ts, not from the markdown, so register it here

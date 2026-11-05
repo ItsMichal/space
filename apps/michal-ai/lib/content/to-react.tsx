@@ -10,6 +10,7 @@ import { Video } from '@/components/mdx/Video'
 import { Callout } from '@/components/mdx/Callout'
 import { Accolade } from '@/components/accolade/Accolade'
 import { WorldMap } from '@/components/mdx/WorldMap'
+import { Stat } from '@/components/mdx/Stat'
 import { Handwriting, type HandwritingProps } from '@/components/mdx/Handwriting'
 import { FigRef, Term } from '@/components/mdx/FigRef'
 import { Picture } from '@/components/media/Picture'
@@ -26,7 +27,8 @@ const components = {
     <Video src={String(p.src)} poster={p.poster as string | undefined} title={p.title as string | undefined} captions={p.captions as string | undefined} vtt={p.vtt as string | undefined} />
   ),
   'mdx-accolade': (p: Props) => <Accolade id={String(p.id)} story={false} />,
-  'mdx-map': (p: Props) => <WorldMap id={String(p.id)} geo={p.geo as string | undefined} />,
+  'mdx-map': (p: Props) => <WorldMap id={String(p.id)} />,
+  'mdx-stat': (p: Props) => <Stat value={String(p.value)} label={String(p.label)} />,
   'mdx-callout': (p: Props & { children?: ReactNode }) => <Callout type={(p.type as string) ?? 'note'}>{p.children}</Callout>,
   'mdx-handwriting': (p: Props) => <Handwriting {...(p as HandwritingProps)} />,
   'mdx-term': (p: Props & { children?: ReactNode }) => <Term c={String(p.c)}>{p.children}</Term>,

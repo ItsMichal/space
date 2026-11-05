@@ -50,6 +50,8 @@ export declare const HANDWRITING_SRC_RE: RegExp
 export declare const VIDEO_SRC_RE: RegExp
 export declare const POSTER_SRC_RE: RegExp
 export declare const CAPTIONS_SRC_RE: RegExp
+/** the longest ::stat value, in characters */
+export declare const STAT_VALUE_MAX: number
 export declare function handwritingNumber(key: string, value: unknown): string | null
 export declare function handwritingSources(body: string): { line: number; src: string }[]
 export declare function videoSources(body: string): { src: string; poster?: string; title?: string; captions?: string }[]
