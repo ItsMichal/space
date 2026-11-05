@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BRAILLE_BIT, calloutLines, dither, strokeGlyph, type SatFacts } from '../field'
+import { BRAILLE_BIT, calloutLines, dither, GLYPHS, strokeGlyph, WAVE_POSES, WAVE_STEP_MS, waveFade, wavePose, type SatFacts } from '../field'
 
 const facts: SatFacts = { name: 'STARLINK-2343', norad: 47884, launch: '2021-021', altKm: 449.4, speedKms: 7.6412, incDeg: 53.21 }
 
@@ -33,5 +33,21 @@ describe('glyphs', () => {
     expect(strokeGlyph(0, 1)).toBe('|')
     expect(strokeGlyph(1, 1)).toBe('\\')
     expect(strokeGlyph(1, -1)).toBe('/')
+  })
+})
+
+describe('the Los Angeles wave', () => {
+  it('steps between two poses and holds one under reduced motion', () => {
+    expect(wavePose(0, false)).not.toEqual(wavePose(WAVE_STEP_MS, false))
+    expect(wavePose(0, false)).toEqual(wavePose(2 * WAVE_STEP_MS, false))
+    expect(wavePose(0, true)).toEqual(wavePose(WAVE_STEP_MS, true))
+  })
+  it('draws only glyphs the atlas has', () => {
+    for (const p of WAVE_POSES) for (const row of p) for (const c of row) if (c !== ' ') expect(GLYPHS).toContain(c)
+  })
+  it('hides near and past the limb', () => {
+    expect(waveFade(-0.5)).toBe(0)
+    expect(waveFade(0.2)).toBe(0)
+    expect(waveFade(0.9)).toBe(1)
   })
 })
