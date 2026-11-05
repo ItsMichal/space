@@ -3,8 +3,8 @@
 // 1. The visible viewport of the old page is captured (html2canvas-pro, the capture the glass lens already uses) over the
 //    backdrop, and laid on a coarse sheet in a fixed canvas over the page, at exactly the page's pixels.
 // 2. The router renders the new page underneath at once; it is shown, live, as soon as it has committed.
-// 3. The sheet crumples in three squeezes into a ball (drawn as unshaded line art: ink along the creases and round the
-//    silhouette, a hard shadow under it) while a fire eats it from the face. What burns turns to glyphs in the site's monospace, in the page's colour and then the fire's,
+// 3. The sheet crumples in three squeezes into a ball (drawn as unshaded line art: ink along the creases, a hard shadow
+//    under it) while a fire eats it from the face. What burns turns to glyphs in the site's monospace, in the page's colour and then the fire's,
 //    that rise and go out. Drawn on twos.
 // The capture takes real time (about 100 to 400ms on a laptop) and comes on top of PAPER_MS: the page just waits for the click.
 import { PAPER_ASH, PAPER_MS } from './config'
@@ -21,8 +21,6 @@ const GLYPH_H = 13
 const RAMP = '.:-=+*#%@'
 /** How deep the burning edge of glyphs runs ahead of the fire, in burn units. */
 const EDGE = 0.05
-/** The ink line around the ball, CSS px. */
-const OUTLINE = 2.5
 /** How far a spot rises over its life, in glyph cells. */
 const RISE = 11
 /** Nothing may hold the overlay longer than this. */
@@ -276,16 +274,13 @@ function createStage(w: number, h: number, dpr: number) {
 
   let drawing = 0
 
-  /** state: 0 the sheet, 1 the burn state per glyph cell, 2 the cast shadow, 3 the ink outline. */
-  const drawSheet = (s: Frame, state: 0 | 1 | 2 | 3) => {
+  /** state: 0 the sheet, 1 the burn state per glyph cell, 2 the cast shadow. */
+  const drawSheet = (s: Frame, state: 0 | 1 | 2) => {
     gl.useProgram(sheet.p)
     const u = sheet.u
     gl.uniform2f(u.u_size, w, h)
     gl.uniform1f(u.u_ball, s.ball)
     gl.uniform1f(u.u_fold, s.fold)
-    // the outline comes in as the sheet lifts off the page, OUTLINE css px wide
-    gl.uniform1f(u.u_outline, state === 3 ? OUTLINE * dpr * Math.min(1, s.ball / 0.25) : 0)
-    gl.uniform2f(u.u_viewport, canvas.width, canvas.height)
     gl.uniform1f(u.u_R, R)
     gl.uniformMatrix3fv(u.u_rot, false, rotation(...s.spin).map((v) => v * s.scale))
     gl.uniform3f(u.u_center, 0, 0, R * 0.5 * s.ball)
@@ -333,10 +328,6 @@ function createStage(w: number, h: number, dpr: number) {
       drawSheet(s, 2)
       gl.disable(gl.STENCIL_TEST)
       gl.disable(gl.BLEND)
-      // then the ink outline, behind the sheet: it writes no depth, so the sheet covers all of it but the rim
-      gl.depthMask(false)
-      drawSheet(s, 3)
-      gl.depthMask(true)
       gl.enable(gl.DEPTH_TEST)
     }
     drawSheet(s, 0)

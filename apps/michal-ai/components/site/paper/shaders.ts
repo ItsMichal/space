@@ -95,8 +95,7 @@ export const SHEET_VS = /* glsl */ `#version 300 es
 precision highp float;
 in vec2 a_uv;
 uniform vec2 u_size, u_cell;
-uniform float u_ball, u_fold, u_R, u_shadow, u_floor, u_outline;
-uniform vec2 u_viewport;
+uniform float u_ball, u_fold, u_R, u_shadow, u_floor;
 uniform mat3 u_rot;
 uniform vec3 u_center;
 uniform mat4 u_vp;
@@ -139,8 +138,7 @@ vec3 base(vec2 uv, out vec3 dir, out float h) {
   return pos + sn * u_R * 1.4 * flap * bl;
 }
 // With u_shadow set the point is laid on a floor behind the ball, pushed a little down and right with its height, for a close drop
-// shadow (thrown along the real light it would fall far off the ball). With u_outline set it is pushed out from the ball's centre on
-// screen by that many pixels, for the ink line drawn behind the sheet around its silhouette.
+// shadow (thrown along the real light it would fall far off the ball).
 void main() {
   vec3 dir;
   float h;
@@ -152,10 +150,6 @@ void main() {
     wp.z = u_floor;
   }
   gl_Position = u_vp * vec4(wp, 1.0);
-  if (u_outline > 0.0) {
-    vec2 d = gl_Position.xy / gl_Position.w * u_viewport;
-    gl_Position.xy += (length(d) > 1e-3 ? normalize(d) : vec2(0.0)) / u_viewport * u_outline * 2.0 * gl_Position.w;
-  }
 }
 `
 
@@ -164,7 +158,7 @@ void main() {
 // Behind the fire front the sheet is gone; the ash pass draws the glyphs there and on the burning edge ahead of it.
 // u_state 1 writes, at one texel per glyph cell, what the ash pass needs: for a burnt cell the page colour under it and how long
 // ago it burnt (alpha 64 to 255), for a cell on the burning edge the paper as shaded and how near the front it is (1 to 63).
-// u_state 2 is the cast shadow, one flat hard-edged tone; u_state 3 the ink outline, solid.
+// u_state 2 is the cast shadow, one flat hard-edged tone.
 export const SHEET_FS = /* glsl */ `#version 300 es
 precision highp float;
 in vec2 v_uv;
@@ -186,11 +180,6 @@ void main() {
   float big = (1.0 - smoothstep(0.7 * w1, 1.7 * w1, e1)) * smoothstep(-0.25, 0.1, gnoise(fp * 0.7 + 8.1));
   float small = (1.0 - smoothstep(0.4 * w2, 1.2 * w2, e2)) * smoothstep(0.05, 0.3, gnoise(fp * 0.9 + 2.0));
   float ink = max(big, small * 0.8) * smoothstep(0.15, 0.6, u_fold);
-  if (u_state > 2.5) {
-    if (age > 0.0) discard;
-    o = vec4(u_char, 1.0);
-    return;
-  }
   if (u_state > 1.5) {
     if (age > 0.0) discard;
     o = vec4(u_char * u_shadowA, u_shadowA);
