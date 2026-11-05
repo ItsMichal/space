@@ -361,7 +361,7 @@ function createStage(w: number, h: number, dpr: number) {
   }
 
   /** Plays the whole animation, a new drawing every 1 / PAPER_FPS s. In development `window.__paperHold = <0 to 1>` stops it there,
-   * for screenshots. */
+   * for screenshots, and `window.__paperScrub(T)` then draws any other point of it. */
   const play = async () => {
     const hold = process.env.NODE_ENV !== 'production' ? (window as { __paperHold?: number }).__paperHold : undefined
     const t0 = performance.now()
@@ -374,6 +374,10 @@ function createStage(w: number, h: number, dpr: number) {
       const T = ms / PAPER_MS
       if (hold != null && T >= hold) {
         draw(frameAt(hold))
+        ;(window as { __paperScrub?: (T: number) => void }).__paperScrub = (T) => {
+          drawing++
+          draw(frameAt(T))
+        }
         await new Promise(() => {}) // held for inspection until the page is reloaded
       }
       draw(frameAt(T))

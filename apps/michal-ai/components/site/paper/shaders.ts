@@ -146,7 +146,8 @@ void main() {
   v_uv = a_uv;
   vec3 wp = u_rot * (pos + dir * h * folds(a_uv, u_size)) + u_center;
   if (u_shadow > 0.5) {
-    wp.xy += vec2(0.14, -0.18) * (wp.z - u_floor);
+    // paper curled back past the floor casts nothing up and left of itself
+    wp.xy += vec2(0.14, -0.18) * max(wp.z - u_floor, 0.0);
     wp.z = u_floor;
   }
   gl_Position = u_vp * vec4(wp, 1.0);
@@ -236,7 +237,9 @@ void main() {
     int g = clamp(int(round(f * float(u_count - 1) + flick)), 0, u_count - 1);
     vec3 ink = mix(u_char, u_flame, smoothstep(0.45, 0.8, f));
     ink = mix(ink, u_hot, smoothstep(0.85, 1.0, f));
-    o = vec4(mix(here.rgb, ink, glyph(g, in_cell)), 1.0);
+    // only the glyph: a cell is square and the paper under it is not, so filling it would show as a block past the burn and the edge
+    float c = glyph(g, in_cell);
+    o = vec4(ink * c, c);
     return;
   }
   float speed = u_rise * (0.65 + 0.7 * h1(vec2(float(cell.x), 3.1)));
