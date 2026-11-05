@@ -96,8 +96,15 @@ a.about__more:focus-visible .about__more-go {
   background: var(--paper-raised);
   pointer-events: none;
 }
+/* In a timeline the card opens towards the rail: no left edge, and the surface and its hairline fade in from the left, so it
+   is three sided (top, right, bottom). */
 .xp--timeline > li.xp__card::before {
   left: calc(var(--xp-node) + var(--space-4) - var(--xp-card));
+  border-left: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 var(--space-12));
+  mask-image: linear-gradient(90deg, transparent, #000 var(--space-12));
 }
 @media (min-width: 640px) {
   .xp > li.xp__card::before {

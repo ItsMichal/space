@@ -3,7 +3,7 @@
 import { loadPosts } from './source'
 export { registerPosts } from './source'
 import type { Post, PostKind } from './types'
-import { homeWork, indexWork } from './layout'
+import { homeWork, indexWork, siteLayout } from './layout'
 
 export * from './types'
 
@@ -26,11 +26,12 @@ export function getTopLevel(kind: PostKind, opts: { includeDrafts?: boolean } = 
 }
 
 /**
- * Top-level projects without the `minor` flag, in the layout file's order and without the ones it keeps off the home page:
- * what the home page ("Projects") and the menu previews show. The sitemap, feeds and static params use
- * getTopLevel('project'), which lists minor projects last; /projects uses getProjectIndex.
+ * Top-level projects without the `minor` flag (a minor one the layout file pins still counts), in the layout file's order and
+ * without the ones it keeps off the home page: what the home page ("Projects") and the menu previews show. The sitemap, feeds
+ * and static params use getTopLevel('project'), which lists minor projects last; /projects uses getProjectIndex.
  */
-export const getMainProjects = (opts: { includeDrafts?: boolean } = {}) => homeWork(getTopLevel('project', opts).filter((p) => !p.minor))
+export const getMainProjects = (opts: { includeDrafts?: boolean } = {}) =>
+  homeWork(getTopLevel('project', opts).filter((p) => !p.minor || siteLayout.work?.includes(p.slug)))
 
 /** Every top-level project for /projects: the layout file's order first, minor projects still last among the rest. */
 export const getProjectIndex = (opts: { includeDrafts?: boolean } = {}) => indexWork(getTopLevel('project', opts))

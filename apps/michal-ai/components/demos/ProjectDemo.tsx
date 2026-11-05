@@ -32,7 +32,7 @@ const CLIPS = [
 /**
  * What is said over a clip, from the post's own cue file (the one its ::youtube or ::video names, checked by
  * lib/content/rules.mjs parseCaptions). `from` is where the clip starts in the footage the cues are timed to, so the
- * loop shows the lines of its own seconds. Only in the project page's hero, and only while the reader has captions on
+ * loop shows the lines of its own seconds. In the project page's hero and on its cards, only while the reader has captions on
  * (the toggle under the post's player).
  */
 const CLIP_CAPTIONS: Partial<Record<Clip, { src: string; from: number }>> = {

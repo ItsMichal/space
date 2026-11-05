@@ -1,0 +1,24 @@
+/* The hero's role line and, on its own row under it, each past workplace's and school's mark (NameHeader). The marks are one
+   row with their capitals the same height on one line (NameHeader sizes and moves each by where its letters sit), and the row
+   shrinks with a phone's width so it never wraps. */
+.name-role {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  row-gap: var(--space-3);
+}
+.name-alum {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  /* the row's unit: the small size (15px), less on a phone so the row fits; a length, not a font size, since nothing here is text */
+  --u: clamp(11px, calc((100vw - 2rem) / 26), 15px);
+  column-gap: calc(1.05 * var(--u));
+}
+.name-alum__mark {
+  display: block;
+  flex: none;
+  background: var(--ink-faint);
+  -webkit-mask: var(--logo) center / contain no-repeat;
+  mask: var(--logo) center / contain no-repeat;
+}

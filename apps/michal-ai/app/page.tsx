@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import Link from '@/lib/nav'
 import { Award, ArrowRight, Landmark, Newspaper, Trophy } from 'lucide-react'
-import { getAllPosts, getBlogPosts, getMainProjects } from '@/lib/content'
+import { getAllPosts, getBlogPosts, getMainProjects, getProjectIndex } from '@/lib/content'
 import { HeroBackdrop } from '@/components/presence/HeroBackdrop'
 import { HeroHook } from '@/components/site/HeroHook'
 import '@/components/site/hero.css'
@@ -73,7 +73,7 @@ export default function Home() {
   const hooks = hookPosts.map((p) => ({ text: p.hook!, href: postPath(p) }))
 
   return (
-    <div className="mx-auto max-w-content px-space-4 md:px-space-8">
+    <div data-sections className="mx-auto max-w-content px-space-4 md:px-space-8">
       <JsonLd data={[personJsonLd, websiteJsonLd, homePageJsonLd]} />
       {/* Hero background slot: a positioned layer behind the text and above the tint cross-fade, empty by default. A decorative
           component (aria-hidden, pointer-events none) can be dropped in here; the hero text keeps its own contrast. */}
@@ -84,11 +84,12 @@ export default function Home() {
         first={profile.firstName}
         last={profile.lastName}
         role={profile.role}
+        alum={profile.alumOf}
         intro={hooks.length ? <HeroHook stem={profile.hookStem} items={hooks} /> : undefined}
       />
 
       <HomeSection id="work" title="Projects" className="home-ground mt-space-16">
-        <CardGrid posts={projects} more="/projects" noun="project" priority />
+        <CardGrid posts={projects} total={getProjectIndex().length} limit={6} more="/projects" noun="project" priority />
       </HomeSection>
 
       {articles.length > 0 ? (
