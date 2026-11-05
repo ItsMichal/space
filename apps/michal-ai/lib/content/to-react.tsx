@@ -19,9 +19,11 @@ type Props = Record<string, unknown>
 
 const components = {
   a: (p: Props & { children?: ReactNode }) => <PostPreviewLink {...(p as { href?: string; children?: ReactNode })} />,
-  'mdx-youtube': (p: Props) => <YouTube id={String(p.id)} title={p.title as string | undefined} />,
+  'mdx-youtube': (p: Props) => <YouTube id={String(p.id)} title={p.title as string | undefined} captions={p.captions as string | undefined} vtt={p.vtt as string | undefined} />,
   'mdx-embed': (p: Props) => <Embed url={String(p.url)} title={p.title as string | undefined} ratio={p.ratio as string | undefined} />,
-  'mdx-video': (p: Props) => <Video src={String(p.src)} poster={p.poster as string | undefined} title={p.title as string | undefined} />,
+  'mdx-video': (p: Props) => (
+    <Video src={String(p.src)} poster={p.poster as string | undefined} title={p.title as string | undefined} captions={p.captions as string | undefined} vtt={p.vtt as string | undefined} />
+  ),
   'mdx-accolade': (p: Props) => <Accolade id={String(p.id)} story={false} />,
   'mdx-callout': (p: Props & { children?: ReactNode }) => <Callout type={(p.type as string) ?? 'note'}>{p.children}</Callout>,
   'mdx-handwriting': (p: Props) => <Handwriting {...(p as HandwritingProps)} />,
