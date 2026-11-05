@@ -1043,7 +1043,7 @@ html[data-fade] .page-enter {
   }
 
   /* Embeds (::youtube, ::embed): 16:9 from the element's inline aspect-ratio, plain rounded corners. */
-  :is(.prose, .home-reel) .embed {
+  .prose .embed {
     margin: var(--space-8) 0;
     border-radius: var(--radius-md);
     overflow: hidden;
@@ -1051,26 +1051,99 @@ html[data-fade] .page-enter {
     break-inside: avoid;
   }
   /* transparent, so a ::video poster's blurred placeholder on .embed shows until the poster arrives */
-  :is(.prose, .home-reel) .embed video {
+  .prose .embed video {
     display: block;
     width: 100%;
     height: 100%;
     background: transparent;
   }
-  :is(.prose, .home-reel) figure.video {
+  .prose figure.video {
     margin: var(--space-8) 0;
   }
-  /* on the home page the section heading already spaces it */
-  .home-reel figure.video {
+  .prose figure.video .embed {
     margin: 0;
   }
-  :is(.prose, .home-reel) figure.video .embed {
-    margin: 0;
-  }
-  :is(.prose, .home-reel) figure.video figcaption {
+  .prose figure.video figcaption {
     margin-top: var(--space-2);
     font: 400 var(--type-small-size) / var(--type-small-line) var(--font-serif);
     color: var(--ink-muted);
+  }
+  /* Captions (the `captions` cue file of ::youtube and ::video): the line being said in the body face on an ink plate, above
+     the player's control bar, a step down the type scale on a narrow player so a phone still reads it; the toggle under the video is a mono chip
+     like the :fig chips. The overlay never takes a click, so the player's own controls stay usable. */
+  .prose .captioned {
+    margin: var(--space-8) 0;
+  }
+  .prose .captioned .embed {
+    margin: 0;
+    container-type: inline-size;
+  }
+  .captions {
+    position: absolute;
+    inset: auto 0 clamp(36px, 15%, 72px);
+    display: flex;
+    justify-content: center;
+    padding: 0 6%;
+    pointer-events: none;
+  }
+  .captions__cue {
+    margin: 0;
+    max-width: 34em;
+    padding: 0.18em 0.55em 0.24em;
+    border-radius: var(--radius-sm);
+    /* the light theme's ink and paper in both themes: the plate sits on video, not on the page */
+    background: color-mix(in oklch, #18211b 82%, transparent);
+    color: #fbf9f3;
+    font: 400 var(--type-small-size) / 1.3 var(--font-serif);
+    text-align: center;
+    text-wrap: balance;
+    white-space: pre-line;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+  /* who is speaking (a cue's <v Name>): the line's size in the mono face, dimmed, ahead of what is said */
+  .captions__who {
+    margin-right: 0.5em;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    opacity: 0.72;
+  }
+  @container (min-width: 400px) {
+    .captions__cue {
+      font-size: var(--type-body-size);
+    }
+  }
+  .captions-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    margin: var(--space-2) 0 0 auto;
+    padding: 0.15em 0.55em;
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--ink-muted);
+    font: 500 var(--type-code-size) / 1.5 var(--font-mono);
+    cursor: pointer;
+  }
+  .captions-toggle > span {
+    padding: 0 0.3em;
+    border: 1px solid currentColor;
+    border-radius: 3px;
+    line-height: 1.3;
+  }
+  .captions-toggle[aria-pressed='true'] {
+    border-color: color-mix(in oklch, var(--accent) 35%, transparent);
+    background: color-mix(in oklch, var(--accent) 10%, transparent);
+    color: var(--ink);
+  }
+  .captions-toggle:hover {
+    background: color-mix(in oklch, var(--accent) 22%, transparent);
+    color: var(--ink);
+  }
+  .captions-toggle:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
   }
   .prose iframe {
     display: block;

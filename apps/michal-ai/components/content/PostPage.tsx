@@ -11,7 +11,6 @@ import { PostNav } from '@/components/content/PostNav'
 import type { PostKind } from '@/lib/content/types'
 import { ReadingTheme } from '@/components/site/ReadingTheme'
 import { JsonLd } from '@/components/seo/JsonLd'
-import { PostExtras } from '@/components/content/PostExtras'
 import { Publications } from '@/components/content/Publications'
 import { LIVE_REACTIONS_ENABLED } from '@/lib/presence/flag'
 import { LiveReactions } from '@/components/presence/LiveReactions'
@@ -92,6 +91,8 @@ export function PostPage({ kind, slug, parent, body, jsonLd }: { kind: PostKind;
               slug={post.slug}
               label={post.coverAlt ?? post.title}
               eager
+              live
+              captions
               fallback={post.cover ? <Picture src={post.cover} alt={post.coverAlt ?? ''} priority aspect="16 / 10" focus={post.coverFocus} sizes="(min-width: 1184px) 1120px, calc(100vw - 32px)" /> : null}
             />
           ) : undefined
@@ -107,7 +108,6 @@ export function PostPage({ kind, slug, parent, body, jsonLd }: { kind: PostKind;
             <Publications ids={post.publications} />
             <OriginalLink url={post.originalUrl} />
             {kind === 'article' ? <OtherSiteEnd postId={post.id ?? post.slug} /> : null}
-            <PostExtras slug={post.slug} />
             {/* A project's own list of entries is content: it comes before the reactions row. */}
             {!parentPost ? nav : null}
             {/* Reactions and views (flags in lib/presence/flag.ts, kill switch LIVE_KILL): the last thing of the

@@ -74,7 +74,7 @@ function Authors({ p }: { p: Publication }) {
 /**
  * The resume, generated from the same structured data as /about (content/profile.ts). On screen it is a document card; printed
  * (or through scripts/build-resume-pdf.mjs) it is one or two clean pages on US Letter or A4 with the site chrome hidden.
- * Order: header, Experience, Education, Leadership, Publications, Selected projects, Awards, Skills.
+ * Order: header, Experience, Education, Leadership, Publications, Selected projects, Awards and press, Skills.
  * Privacy bar: state only ("California"), no phone, no street address, no email, no birthday.
  */
 export default function ResumePage() {
@@ -210,7 +210,7 @@ export default function ResumePage() {
 
         <section className="rs-sec" aria-labelledby="rs-aw">
           <h2 id="rs-aw" className="rs-h">
-            Awards
+            Awards and press
           </h2>
           <ul className="rs-list rs-compact">
             {profile.awards.map((a) => (

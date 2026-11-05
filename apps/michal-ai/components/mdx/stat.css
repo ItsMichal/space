@@ -1,0 +1,22 @@
+/* ::stat (components/mdx/Stat.tsx). The figure is the display face at the hero name's size and its tight leading, in the accent;
+   the label is body text under it. Unlayered, so it also wins over `.prose` inside a post. */
+.stat {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+.prose .stat {
+  margin: var(--space-8) 0;
+}
+.stat__value {
+  font-family: var(--font-display);
+  font-size: var(--type-display-name-size);
+  line-height: var(--type-display-name-line);
+  font-weight: var(--type-display-name-weight);
+  letter-spacing: var(--type-display-name-tracking);
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--accent);
+}
+.stat__label {
+  max-width: 32ch;
+}

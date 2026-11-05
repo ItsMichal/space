@@ -7,7 +7,7 @@ import { md, inline, frontMatter } from './md.mjs';
 import { FOR_HALMIC as SIB, markSvg } from '@space/crosslinks';
 import { readSiblingPosts } from '@space/crosslinks/node';
 import { homeStats, fmt } from './stats.mjs';
-import { model, derive, SIZES, SIZE_CLS } from './bentos.mjs';
+import { model, derive, SIZES, SIZE_CLS, COVERS } from './bentos.mjs';
 import { parseLayout, resolve, arrange } from './layout.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -116,9 +116,12 @@ const CLIPS_URL = 'https://www.twitch.tv/halmictv/clips?range=all';
 const clipFallback = (t, g, i) => tile({ href: CLIPS_URL, cls: `tm tm-nopic${i === 0 ? ' w2' : ''}`, attrs: ' data-clipcard', inner: `<span class="tbg">${icon('scissors', 'ghost')}</span>${badge('tw')}${tcap({ title: t, sr: g ? `Game: ${g}` : '' })}` });
 const gtile = (g, cls = '') => tile({ href: `/games/${g.slug}/`, cls: `tm tg ${cls}`, attrs: ' data-vt="m t"', inner: `<span class="tbg"><img src="${g.coverLocal}" width="640" height="508" loading="lazy" decoding="async" alt=""></span>${tchip(g.madeWith, 'cpu')}${tcap({ title: g.title.replace(/ \(.*\)$/, ''), cap: cls.includes('lead') ? g.line.split(/(?<=\.) /)[0] : '' })}` });
 const seddTile = (cls = '') => tile({ href: '/design/southeast-denver-dental/', cls: `tm ${cls}`, attrs: ' data-vt="m t"', inner: `<span class="tbg">${seddVideo(' aria-hidden="true"')}</span>${kbadge('pen-nib', 'Logo design')}${tcap({ title: 'Southeast Denver Dental', cap: 'Logo design' })}` });
+// Swipe Trades lives on its own subdomain too
+const TRADES = 'https://trades.halmic.com/';
+const tradesTile = (cls = '', attrs = '') => tile({ href: TRADES, cls: `tm ${cls}`, attrs, inner: `<span class="tbg"><img src="${COVERS.trades}" width="960" height="504" loading="lazy" decoding="async" alt=""></span>${tchip('Fantasy football', 'football')}${tcap({ title: 'Swipe Trades', cap: 'Swipe on fair trades for your Sleeper, ESPN or Yahoo league. Match when the other manager likes it too' })}` });
 // MemeSports lives on its own subdomain: the title art links out, and so does the play tile
 const SPORTS = 'https://sports.halmic.com/';
-const sportsTile = (cls = '', attrs = '') => tile({ href: SPORTS, cls: `tm ${cls}`, attrs, inner: `<span class="tbg"><img src="/work/memesports/cover.jpg" width="960" height="504" loading="lazy" decoding="async" alt=""></span>${tchip('In the browser', 'game-controller')}${tcap({ title: 'MemeSports', cap: 'A silly native web port of remixed Wii Sports, multiplayer and portrait mode included with touch controls' })}` });
+const sportsTile = (cls = '', attrs = '') => tile({ href: SPORTS, cls: `tm ${cls}`, attrs, inner: `<span class="tbg"><img src="${COVERS.sports}" width="960" height="504" loading="lazy" decoding="async" alt=""></span>${tchip('In the browser', 'game-controller')}${tcap({ title: 'MemeSports', cap: 'A silly native web port of remixed Wii Sports, multiplayer and portrait mode included with touch controls' })}` });
 const mtTile = (cls = '') => tile({ href: mtBase, cls: `tm ${cls}`, attrs: ' data-vt="t"', inner: `<span class="tbg"><img src="/work/mountaintop/${mt.cover}" width="${mt.images[mt.cover].w}" height="${mt.images[mt.cover].h}" loading="lazy" decoding="async" alt=""></span>${tchip('Unity', 'cpu')}${tcap({ title: mt.title, cap: mt.hook })}` });
 // stat tile: a big word or number in the display face and one caption line. Numbers come from the content files, never typed in.
 // data-len (characters shown) sizes it to the tile's width; data-g (first glyph) lets the CSS pull the numeral's ink onto the caption's left edge
@@ -175,6 +178,7 @@ const TILES = {
   ...Object.fromEntries(edits.map((v) => [`video:${v.id}`, (cls) => vtile(v, cls)])),
   // a clip is inserted before the Twitch tile (app.js); the built stand-ins are what shows until /api/clips answers
   ...Object.fromEntries(clips.map(([title, game], i) => [`clip:${i}`, () => clipFallback(title, game, i)])),
+  'trades:lead': (cls) => tradesTile(cls),
   'mt:lead': (cls) => mtTile(cls),
   'mt:year': (cls) => yearTile({ year: mtYear, title: `${mt.title}, capstone and expo demo`, tone: 'tpaper', cls }),
   ...Object.fromEntries(gl.map((g) => [`game:${g.slug}`, (cls) => gtile(g, cls)])),
@@ -205,6 +209,7 @@ const renderCluster = (c, flex = FLEX[c.flex?.id]) => cluster({ name: c.name, it
 // inner pages show a cluster even when the home page hides it, with the same tile order and sizes
 const cl = (id, flex) => renderCluster(arrange(M, LAYOUT, id), flex);
 const SECTION = {
+  new: { cls: 'b-new' },
   stream: { alias: ['videos'], cls: 'b-watch', more: more('/videos/', 'All videos') },
   games: { cls: 'b-play', more: more('/games/', 'All games') },
   work: { alias: ['design'], cls: 'b-work', more: more('/work/pokemon-phoenix-rising/', 'Pokémon Phoenix Rising') },
@@ -327,14 +332,25 @@ for (const l of mtLogs) {
 // ---- 404 (served by the assets layer for unknown paths: not_found_handling "404-page"; noindex, not in the sitemap) ----
 write('404.html', inner({ title: 'Not here | halmic productions', desc: 'This page does not exist.', path: '/404.html', og: '/og/home.jpg', noindex: true, body: `<h1>Not here.</h1><p class="lede2">Nothing lives at this address.</p>${mrow({ href: '/', label: 'Back to halmic', ic: 'arrow-left' })}` }));
 
+// ---- bento preview (noindex, not in the sitemap, linked from nowhere): every tile's real markup as a <template>, drawn by bento-preview.js
+// in whatever arrangement the layout editor posts to it, so the editor previews the home page's own tiles at the real widths ----
+const tpl = (k, v, h) => `<template data-${k}="${esc(v)}">${h}</template>`;
+write('bento-preview/index.html', `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Bento preview | halmic productions</title><link rel="preload" href="/fonts/halmic-display.43848237.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/halmic-text-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="${V('base.css')}"><link rel="stylesheet" href="${V('bold.css')}"><script type="application/json" id="bp-data">${JSON.stringify({ sizes: SIZES, cls: SIZE_CLS, sections: Object.fromEntries(Object.entries(SECTION).map(([k, v]) => [k, v.cls ?? ''])) })}</script><script src="${V('bento-preview.js')}" defer></script></head><body class="home bp">
+<h1 class="sr">Bento preview</h1><main id="main"><section class="cards"><div class="wrap" id="bp"></div></section></main>
+${Object.entries(TILES).map(([id, f]) => tpl('tile', id, f(''))).join('')}${Object.entries(FLEX).map(([id, f]) => tpl('flex', id, f(''))).join('')}${Object.entries(SECTION).filter(([, v]) => v.more).map(([id, v]) => tpl('more', id, v.more)).join('')}
+</body></html>`);
+
 // ---- _headers (generated; Cloudflare static-assets headers file; /api/* responses get theirs from worker/index.js) ----
 // CSP matches the site as built: no inline script/style (JSON-LD is a data block), fonts and images are self-hosted, the only
 // third-party requests are the click-to-load youtube-nocookie and Twitch clip player iframes. connect-src 'self' covers /api/*.
 const CSP = "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://cloudflareinsights.com; frame-src https://www.youtube-nocookie.com https://clips.twitch.tv; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'";
-const rule = (p, h) => `${p}\n${Object.entries(h).map(([k, v]) => `  ${k}: ${v}`).join('\n')}\n`;
+const rule = (p, h) => `${p}\n${Object.entries(h).map(([k, v]) => (v === null ? `  ${k}` : `  ${k}: ${v}`)).join('\n')}\n`;
 write('_headers', [
   rule('/*', { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'X-Frame-Options': 'DENY', 'Permissions-Policy': 'camera=(), microphone=(), geolocation=()', 'Content-Security-Policy': CSP }),
   // fonts are not fingerprinted by name, so a month rather than immutable; HTML gets the assets layer's default (revalidate on every load, etag)
+  // the bento preview is the one page another site may frame (the layout editor); it holds nothing that is not already on the home page
+  // ("! Name" detaches what /* set, so the page gets this CSP alone rather than both)
+  rule('/bento-preview/', { '! X-Frame-Options': null, '! Content-Security-Policy': null, 'Content-Security-Policy': CSP.replace("frame-ancestors 'none'", 'frame-ancestors https: http://localhost:*') }),
   rule('/fonts/*', { 'Cache-Control': 'public, max-age=2592000' }),
   // hover previews and the hero reel keep their names when re-rendered, so a week; app.js asks for previews/index.json with cache: 'no-cache' (revalidates), so a new preview shows up at once
   rule('/previews/*', { 'Cache-Control': 'public, max-age=604800' }),

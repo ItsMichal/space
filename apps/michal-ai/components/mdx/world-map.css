@@ -1,0 +1,136 @@
+/* World map (components/mdx/WorldMap.tsx). The paper surface and hairline of the accolade card; the map is the hero globe's dot
+   matrix (ink land, accent lit countries), both themes from the tokens. Unlayered, so it also wins over `.prose` inside a post. */
+.wmap {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: var(--space-6);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+  font-family: var(--font-sans);
+}
+.prose .wmap {
+  margin: var(--space-8) auto;
+}
+.wmap p,
+.wmap ul,
+.wmap h3 {
+  margin: 0;
+}
+.wmap__head {
+  display: grid;
+  gap: var(--space-1);
+}
+.prose .wmap .wmap__title {
+  margin: 0;
+  font-family: var(--font-sans);
+}
+
+/* the frame keeps the map's shape (the raster is 720x350) before the world arrives, so nothing shifts; the canvas is drawn
+   at the frame's width (WorldMap.tsx). touch-action stays on so a finger on the map still scrolls the page. */
+.wmap__frame {
+  position: relative;
+  aspect-ratio: 720 / 350;
+  width: 100%;
+  cursor: default;
+  -webkit-tap-highlight-color: transparent;
+}
+.wmap__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* the hovered country's name, above the pointer (below it near the top edge): the raised paper and hairline of the card */
+.wmap__tip {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  transform: translate(-50%, calc(-100% - 12px));
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  background: var(--paper-raised);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.08);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  text-align: center;
+  pointer-events: none;
+}
+.wmap__tip--below {
+  transform: translate(-50%, 16px);
+}
+.wmap__tip-name {
+  color: var(--ink);
+}
+.wmap__tip-note {
+  color: var(--accent);
+}
+
+.wmap__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-4);
+}
+.prose .wmap .wmap__foot {
+  margin: 0;
+  text-align: start;
+}
+.wmap__legend {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--ink);
+}
+.wmap__swatch {
+  width: 0.9em;
+  height: 0.9em;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.wmap__list {
+  flex-basis: 100%;
+  order: 2;
+}
+.wmap__list summary {
+  cursor: pointer;
+  width: max-content;
+  color: var(--ink);
+}
+.wmap__list summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.wmap .wmap__list ul {
+  margin-top: var(--space-2);
+  padding: 0;
+  list-style: none;
+  columns: 2 11rem;
+  column-gap: var(--space-6);
+}
+.wmap .wmap__list li {
+  margin: 0;
+  padding: 0;
+  break-inside: avoid;
+}
+.wmap .wmap__list li[data-on] {
+  color: var(--accent);
+}
+.wmap .wmap__list li::before,
+.wmap .wmap__list li::marker {
+  content: none;
+}
+.wmap__src {
+  flex: 1 1 16rem;
+}
+/* the source links draw their own "(opens in a new tab)"; no prose "↗" after them (class doubled to outweigh globals.css) */
+.prose .wmap.wmap a[href]::after {
+  content: none;
+}
+
+@media (max-width: 639px) {
+  .wmap {
+    padding: var(--space-4);
+  }
+}

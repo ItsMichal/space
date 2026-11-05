@@ -147,6 +147,8 @@ export function ArticleLayout({
         </section>
       ) : null}
       <div className="prose">{children}</div>
+      {/* the end of the article's text: the reading list's End (components/ui/ReadingToc.tsx) */}
+      <div id="end" />
       {after}
       <ReadingToc />
       <Lightbox />
