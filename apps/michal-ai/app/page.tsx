@@ -15,7 +15,7 @@ import { citationLabel, citationsSource, doiUrl, venueLine } from '@/lib/publica
 import { ExperienceList, type ExperienceItem } from '@/components/ui/ExperienceList'
 import { Picture } from '@/components/media/Picture'
 import { Video } from '@/components/mdx/Video'
-import { hrefById, portraitAlt } from '@/lib/about'
+import { careerYears, hrefById, portraitAlt } from '@/lib/about'
 import '@/components/site/about.css'
 import { homeMetadata, personJsonLd, websiteJsonLd } from '@/lib/seo'
 
@@ -32,6 +32,7 @@ const experience: ExperienceItem[] = profile.experience.map((e) => ({
   role: e.role,
   years: e.years,
   href: ROLE_LINKS[e.company],
+  logo: e.logo,
 }))
 
 // Awards and press as one list (profile.awards order), the Congressional Record tribute first. A row links to its post, or to
@@ -117,11 +118,14 @@ export default function Home({ reel }: { reel?: HomeReel | null }) {
             </div>
           </div>
           <section aria-labelledby="xp-h" className="ix-sec">
-            <h3 id="xp-h" className="t-heading">
-              Experience
-            </h3>
+            <div className="xp-head">
+              <h3 id="xp-h" className="t-heading">
+                Experience
+              </h3>
+              <p className="t-meta">{careerYears()}+ years</p>
+            </div>
             <div className="ix-sec__body">
-              <ExperienceList items={experience} label="Experience" />
+              <ExperienceList items={experience} label="Experience" timeline />
             </div>
           </section>
           <section aria-labelledby="awards-h" className="ix-sec">

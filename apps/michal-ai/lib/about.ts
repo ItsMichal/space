@@ -57,3 +57,28 @@ export function mentionAuthors(m: { authors: readonly string[] }) {
   if (m.authors.length === 2) return `${family(m.authors[0])} and ${family(m.authors[1])}`
   return `${family(m.authors[0])} et al.`
 }
+
+/**
+ * Whole years of work across `profile.career`, overlapping roles counted once. Months are inclusive ("Jun to Aug 2018" is 3) and a
+ * year-only end counts from that January, so the figure never runs ahead of the dates; a role with no end runs to `now`. Shown
+ * as "6+ years" beside Experience.
+ */
+export function careerYears(career: readonly { start: string; end?: string }[] = profile.career, now = new Date()): number {
+  const month = (iso: string) => {
+    const [y, m = '01'] = iso.split('-')
+    return Number(y) * 12 + Number(m) - 1
+  }
+  const current = now.getUTCFullYear() * 12 + now.getUTCMonth()
+  const spans = career.map((r) => [month(r.start), r.end ? month(r.end) : current] as const).sort((a, b) => a[0] - b[0])
+  let total = 0
+  let [from, to] = spans[0] ?? [0, -1]
+  for (const [s, e] of spans.slice(1)) {
+    if (s <= to + 1) to = Math.max(to, e)
+    else {
+      total += to - from + 1
+      ;[from, to] = [s, e]
+    }
+  }
+  total += to - from + 1
+  return Math.floor(total / 12)
+}
