@@ -6,6 +6,7 @@ import { Picture } from '@/components/media/Picture'
 import { hasDemo, ProjectDemo } from '@/components/demos/ProjectDemo'
 import { cardOf, isFeature, siteLayout, type SiteLayout } from '@/lib/content/layout'
 import { matchesFilter, PROJECT_FILTERS } from '@/components/ui/segments'
+import { postPath } from '@/lib/seo'
 import './cards.css'
 
 /** Filter buckets a post belongs to, for the /projects segmented control (all items stay in the HTML). */
@@ -49,6 +50,8 @@ export function ProjectCard({
   focus,
   textOnly = false,
   thumb = false,
+  dated = false,
+  sizes = '(min-width: 840px) 240px, calc(100vw - 32px)',
 }: {
   post: Post
   href: string
@@ -65,8 +68,12 @@ export function ProjectCard({
   /** No picture, even on the feature entry. */
   textOnly?: boolean
   /** Every entry shows its picture as part of the row (left of the text from 840px, above the title on phones), not as a
-   *  separate card block, and no year (the home page). */
+   *  separate card block, and no year unless `dated`. */
   thumb?: boolean
+  /** With `thumb`, still show the year (or the date) under the description. */
+  dated?: boolean
+  /** The `thumb` picture's `sizes` (a grid column is wider than the row's thumb column). */
+  sizes?: string
 }) {
   const src = post.cardImage === 'none' ? undefined : (post.cardImage ?? post.cover)
   const alt = post.cardImage ? (post.cardImageAlt ?? '') : (post.coverAlt ?? '')
@@ -88,7 +95,7 @@ export function ProjectCard({
       <p id={`${id}-d`} className="ix__desc t-text">
         {post.description}
       </p>
-      {thumb && src ? null : (
+      {thumb && src && !dated ? null : (
         <p className="ix__meta t-meta">
           <MetaParts parts={metaParts} />
         </p>
@@ -99,7 +106,7 @@ export function ProjectCard({
             <Picture
               src={src}
               alt={alt}
-              sizes="(min-width: 840px) 240px, calc(100vw - 32px)"
+              sizes={sizes}
               priority={priority}
               aspect="16 / 10"
               focus={focus ?? (post.cardImage ? undefined : post.coverFocus)}
@@ -136,7 +143,6 @@ export function Showcase({
   limit,
   priority = false,
   textOnly = false,
-  thumbs = false,
   layout = siteLayout,
 }: {
   posts: Post[]
@@ -147,8 +153,6 @@ export function Showcase({
   glass?: boolean
   /** No pictures, even on the feature entry (see ProjectCard). */
   textOnly?: boolean
-  /** Every entry's picture inside its row (see ProjectCard `thumb`). */
-  thumbs?: boolean
   /** Card presentation (the site's layout file; the editor's Arrange preview passes its draft). */
   layout?: SiteLayout
 }) {
@@ -161,16 +165,43 @@ export function Showcase({
           const card = cardOf(p.slug, layout)
           return (
             <li key={p.slug} className={feature ? 'tiles__feature' : undefined} data-buckets={buckets(p)}>
-              <ProjectCard post={p} href={`${base}/${p.slug}`} feature={feature} priority={priority && (feature || thumbs)} variant={card.variant} focus={card.focus} textOnly={textOnly} thumb={thumbs} />
+              <ProjectCard post={p} href={`${base}/${p.slug}`} feature={feature} priority={priority && feature} variant={card.variant} focus={card.focus} textOnly={textOnly} />
             </li>
           )
         })}
       </ul>
-      {limit && posts.length > shown.length ? (
-        <Link href={base} className="ix-more link">
-          View {posts.length - shown.length} more {posts.length - shown.length === 1 ? 'project' : 'projects'} <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
-        </Link>
-      ) : null}
+      {limit ? <MoreLink href={base} count={posts.length - shown.length} noun="project" /> : null}
     </div>
+  )
+}
+
+/** "View 4 more projects" under a shortened list; nothing when nothing is left out. */
+export function MoreLink({ href, count, noun }: { href: string; count: number; noun: string }) {
+  if (count <= 0) return null
+  return (
+    <Link href={href} className="ix-more link">
+      View {count} more {count === 1 ? noun : `${noun}s`} <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
+    </Link>
+  )
+}
+
+/**
+ * The home page's Projects and Writing: the first `limit` posts as the same entry (ProjectCard with its picture above the
+ * text, and a project's year under the description; a post shows no date), two across from 640px (`.ix-grid`,
+ * app/styles/type.css), then a link to the full list.
+ */
+export function CardGrid({ posts, limit = 4, more, noun, priority = false }: { posts: Post[]; limit?: number; more: string; noun: string; priority?: boolean }) {
+  const shown = posts.slice(0, limit)
+  return (
+    <>
+      <ul className="ix-list ix-grid">
+        {shown.map((p) => (
+          <li key={p.slug}>
+            <ProjectCard post={p} href={postPath(p)} priority={priority} article={p.kind === 'article'} thumb dated={p.kind !== 'article'} sizes="(min-width: 1120px) 512px, (min-width: 640px) 50vw, calc(100vw - 32px)" />
+          </li>
+        ))}
+      </ul>
+      <MoreLink href={more} count={posts.length - shown.length} noun={noun} />
+    </>
   )
 }

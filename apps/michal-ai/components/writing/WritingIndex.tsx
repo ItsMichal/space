@@ -4,25 +4,17 @@ import type { SeriesGroup } from '@/lib/content'
 import { ProjectCard } from '@/components/work/Showcase'
 import { Disclosure } from '@/components/ui/Disclosure'
 import { postPath } from '@/lib/seo'
-import { Picture } from '@/components/media/Picture'
 import './writing.css'
 
 const month = (iso: string) =>
   new Date(iso + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
 
-/** One post as an index entry: title, one-line description, date, and with `thumb` its picture inside the row. */
-function Row({ post, thumb = false }: { post: Post; thumb?: boolean }) {
-  const src = thumb ? (post.cardImage === 'none' ? undefined : (post.cardImage ?? post.cover)) : undefined
-  const alt = post.cardImage ? (post.cardImageAlt ?? '') : (post.coverAlt ?? '')
+/** One post as an index entry: title, one-line description, date. */
+function Row({ post }: { post: Post }) {
   return (
-    <Link href={postPath(post)} className={`wrt ix ix--ui${src ? ' ix--thumb' : ''}`}>
-      {src ? (
-        <span className="ix__media ix__thumb">
-          <Picture src={src} alt={alt} sizes="(min-width: 840px) 240px, calc(100vw - 32px)" aspect="16 / 10" focus={post.cardImage ? undefined : post.coverFocus} />
-        </span>
-      ) : null}
-      <span className="ix__title wrt__title">{post.title}</span>
-      <span className="ix__desc wrt__desc">{post.description}</span>
+    <Link href={postPath(post)} className="ix ix--ui">
+      <span className="ix__title">{post.title}</span>
+      <span className="ix__desc">{post.description}</span>
       <time className="ix__meta" dateTime={post.date}>
         {month(post.date)}
       </time>
@@ -30,13 +22,13 @@ function Row({ post, thumb = false }: { post: Post; thumb?: boolean }) {
   )
 }
 
-/** Posts as index entries (the home page's Writing section uses the same rows, with `thumbs`). */
-export function WritingRows({ posts, className = '', thumbs = false }: { posts: Post[]; className?: string; thumbs?: boolean }) {
+/** Posts as index entries (the home page shows the newest as cards instead: CardGrid, components/work/Showcase.tsx). */
+export function WritingRows({ posts, className = '' }: { posts: Post[]; className?: string }) {
   return (
-    <ul className={`ix-list wlist ${className}`}>
+    <ul className={`ix-list ${className}`}>
       {posts.map((p) => (
         <li key={p.slug}>
-          <Row post={p} thumb={thumbs} />
+          <Row post={p} />
         </li>
       ))}
     </ul>

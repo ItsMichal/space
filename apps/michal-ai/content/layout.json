@@ -1,5 +1,5 @@
 {
   "version": 1,
-  "work": ["starlink"],
+  "work": ["starlink", "project-mountaintop", "jia-webapp", "office-wizards"],
   "hooks": ["order-flow"]
 }
