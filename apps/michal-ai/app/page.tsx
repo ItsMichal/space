@@ -7,8 +7,7 @@ import '@/components/site/hero.css'
 import { postPath } from '@/lib/seo'
 import { heroHooks, homeWriting } from '@/lib/content/layout'
 import { NameHeader } from '@/components/site/NameHeader'
-import { WritingRows } from '@/components/writing/WritingIndex'
-import { Showcase } from '@/components/work/Showcase'
+import { CardGrid } from '@/components/work/Showcase'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { profile } from '@/content/profile'
 import { citationLabel, citationsSource, doiUrl, venueLine } from '@/lib/publications'
@@ -81,7 +80,7 @@ export default function Home() {
         <h2 id="work-h" className={h2}>
           Projects
         </h2>
-        <Showcase posts={projects} base="/projects" limit={3} priority thumbs />
+        <CardGrid posts={projects} more="/projects" noun="project" priority />
       </section>
 
       {articles.length > 0 ? (
@@ -89,12 +88,7 @@ export default function Home() {
           <h2 id="writing-h" className={h2}>
             Writing
           </h2>
-          <WritingRows posts={latest.slice(0, 3)} thumbs />
-          {articles.length > 3 ? (
-            <Link href="/writing" className="ix-more link">
-              View {articles.length - 3} more {articles.length - 3 === 1 ? 'post' : 'posts'} <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
-            </Link>
-          ) : null}
+          <CardGrid posts={latest} more="/writing" noun="post" />
         </section>
       ) : null}
 
