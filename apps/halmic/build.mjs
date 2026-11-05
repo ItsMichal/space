@@ -7,7 +7,7 @@ import { md, inline, frontMatter } from './md.mjs';
 import { FOR_HALMIC as SIB, markSvg } from '@space/crosslinks';
 import { readSiblingPosts } from '@space/crosslinks/node';
 import { homeStats, fmt } from './stats.mjs';
-import { model, derive, SIZES, SIZE_CLS } from './bentos.mjs';
+import { model, derive, SIZES, SIZE_CLS, COVERS } from './bentos.mjs';
 import { parseLayout, resolve, arrange } from './layout.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -118,10 +118,10 @@ const gtile = (g, cls = '') => tile({ href: `/games/${g.slug}/`, cls: `tm tg ${c
 const seddTile = (cls = '') => tile({ href: '/design/southeast-denver-dental/', cls: `tm ${cls}`, attrs: ' data-vt="m t"', inner: `<span class="tbg">${seddVideo(' aria-hidden="true"')}</span>${kbadge('pen-nib', 'Logo design')}${tcap({ title: 'Southeast Denver Dental', cap: 'Logo design' })}` });
 // Swipe Trades lives on its own subdomain too
 const TRADES = 'https://trades.halmic.com/';
-const tradesTile = (cls = '', attrs = '') => tile({ href: TRADES, cls: `tm ${cls}`, attrs, inner: `<span class="tbg"><img src="/work/swipe-trades/cover.jpg" width="960" height="504" loading="lazy" decoding="async" alt=""></span>${tchip('Fantasy football', 'football')}${tcap({ title: 'Swipe Trades', cap: 'Swipe on fair trades for your Sleeper, ESPN or Yahoo league. Match when the other manager likes it too' })}` });
+const tradesTile = (cls = '', attrs = '') => tile({ href: TRADES, cls: `tm ${cls}`, attrs, inner: `<span class="tbg"><img src="${COVERS.trades}" width="960" height="504" loading="lazy" decoding="async" alt=""></span>${tchip('Fantasy football', 'football')}${tcap({ title: 'Swipe Trades', cap: 'Swipe on fair trades for your Sleeper, ESPN or Yahoo league. Match when the other manager likes it too' })}` });
 // MemeSports lives on its own subdomain: the title art links out, and so does the play tile
 const SPORTS = 'https://sports.halmic.com/';
-const sportsTile = (cls = '', attrs = '') => tile({ href: SPORTS, cls: `tm ${cls}`, attrs, inner: `<span class="tbg"><img src="/work/memesports/cover.jpg" width="960" height="504" loading="lazy" decoding="async" alt=""></span>${tchip('In the browser', 'game-controller')}${tcap({ title: 'MemeSports', cap: 'A silly native web port of remixed Wii Sports, multiplayer and portrait mode included with touch controls' })}` });
+const sportsTile = (cls = '', attrs = '') => tile({ href: SPORTS, cls: `tm ${cls}`, attrs, inner: `<span class="tbg"><img src="${COVERS.sports}" width="960" height="504" loading="lazy" decoding="async" alt=""></span>${tchip('In the browser', 'game-controller')}${tcap({ title: 'MemeSports', cap: 'A silly native web port of remixed Wii Sports, multiplayer and portrait mode included with touch controls' })}` });
 const mtTile = (cls = '') => tile({ href: mtBase, cls: `tm ${cls}`, attrs: ' data-vt="t"', inner: `<span class="tbg"><img src="/work/mountaintop/${mt.cover}" width="${mt.images[mt.cover].w}" height="${mt.images[mt.cover].h}" loading="lazy" decoding="async" alt=""></span>${tchip('Unity', 'cpu')}${tcap({ title: mt.title, cap: mt.hook })}` });
 // stat tile: a big word or number in the display face and one caption line. Numbers come from the content files, never typed in.
 // data-len (characters shown) sizes it to the tile's width; data-g (first glyph) lets the CSS pull the numeral's ink onto the caption's left edge
