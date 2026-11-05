@@ -8,10 +8,13 @@ import { StatusSlot } from '@/components/ui/StatusPill'
 import { OtherSiteRow, SiteSwitcher } from './SiteSwitcher'
 import type { MenuPreview } from '@/lib/menu'
 
+// The home page's own sections, named as it names them, then the resume: the one page a recruiter came for (rauno.me and
+// brittanychiang.com keep the resume in the bar too). LinkedIn and GitHub stay in the footer, so the bar is all on-site pages.
 const links = [
-  { label: 'Work', href: '/projects', match: '/projects' },
+  { label: 'Projects', href: '/projects', match: '/projects' },
   { label: 'Writing', href: '/writing', match: '/writing' },
   { label: 'About', href: '/about', match: '/about' },
+  { label: 'Resume', href: '/resume', match: '/resume' },
 ]
 
 function MenuIcon({ open }: { open: boolean }) {

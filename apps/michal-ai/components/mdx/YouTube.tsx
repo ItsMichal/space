@@ -2,7 +2,7 @@ import { LiteYouTube } from './LiteYouTube'
 import { youtubeStatus } from '@/lib/embeds'
 
 /** Renders nothing for a video the build-time check found private, deleted or embed-disabled (content/embed-status.json). */
-export function YouTube({ id, title }: { id: string; title?: string }) {
+export function YouTube({ id, title, captions, vtt }: { id: string; title?: string; captions?: string; vtt?: string }) {
   const known = youtubeStatus(id)
   if (known && !known.embeddable) return null
   return (
@@ -10,6 +10,8 @@ export function YouTube({ id, title }: { id: string; title?: string }) {
       id={id}
       title={title ?? known?.title ?? 'YouTube video'}
       thumbnail={known?.thumbnail ?? `https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`}
+      captions={captions}
+      vtt={vtt}
     />
   )
 }

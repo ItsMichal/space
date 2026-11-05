@@ -171,4 +171,20 @@ export const press: readonly PressItem[] = [
       'https://github.com/ItsMichal/pilsudski',
     ],
   },
+  {
+    id: 'cpr-2017-kaiser',
+    outlet: 'Colorado Public Radio',
+    title: 'History Isn’t Just Facts And Dates, At This DougCo STEM School It’s Talking Robots',
+    url: 'https://www.cpr.org/2017/03/07/history-isnt-just-facts-and-dates-at-this-dougco-stem-school-its-talking-robots/',
+    date: '2017-03-07',
+    author: 'Jenny Brundin',
+    mention: 'Quoted as the sophomore who led the design team for a talking Kaiser robot.',
+    presence: ['quoted'],
+    kind: 'news',
+    isCuBoulder: false,
+    identityEvidence:
+      'Names him as the sophomore at STEM School and Academy who led the design team for the Kaiser Wilhelm II head, the class project of the Denver Post item and his pilsudski repo.',
+    relatedPostSlug: 'pilsudski',
+    sources: ['https://www.cpr.org/2017/03/07/history-isnt-just-facts-and-dates-at-this-dougco-stem-school-its-talking-robots/', 'https://www.denverpost.com/2017/02/21/highlands-ranch-history-class-artificial-intelligence/'],
+  },
 ]

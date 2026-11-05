@@ -9,7 +9,7 @@ import { NextLinks, type NextLink } from './NextLinks'
  */
 export function PageEnd({ log }: { log?: { title: string; href: string } }) {
   const links: NextLink[] = [
-    { label: 'Work', href: '/projects' },
+    { label: 'Projects', href: '/projects' },
     { label: 'Writing', href: '/writing' },
     ...(log ? [{ label: log.title, href: log.href }] : []),
     { label: 'About', href: '/about' },

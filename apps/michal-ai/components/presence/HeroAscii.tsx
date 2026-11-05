@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 import { positionEcef } from '@/lib/starlink/orbit.mjs'
 import { loadLand, type Ring } from './globe/data'
 import { loadStarlinkWithIds, type Identities, type Packed } from './globe/starlink'
-import { BRAILLE_BIT, calloutLines, dither, GLYPHS, landDot, SAT, SAT_FRONT, SAT_LINKED, SAT_MARKED, satFacts, seaDot, strokeGlyph, TERMINAL } from './ascii/field'
+import { BRAILLE_BIT, calloutLines, dither, GLYPHS, landDot, SAT, SAT_FRONT, SAT_LINKED, SAT_MARKED, satFacts, seaDot, strokeGlyph, TERMINAL, WAVE_SITE_LL, waveFade, wavePose } from './ascii/field'
 import './presence.css'
 import './ascii/ascii.css'
 
@@ -22,6 +22,8 @@ import './ascii/ascii.css'
  *   moves where a finger taps the globe; a counter shows how many satellites are above 25 degrees of elevation there.
  * - Every 6 to 10 s one visible satellite gets a callout (name, NORAD number, launch, height, speed, inclination). A tap or click
  *   near a satellite pins its callout.
+ * - A small figure stands on Los Angeles and waves while it is on the visible face; it steps aside (fades) when the terminal,
+ *   its counter or a callout comes over it, and callouts are placed off it.
  * Decorative: aria-hidden, the canvas takes no pointer events (window listeners, passive, never preventDefault), and cells behind
  * the hero text are thinned so the text keeps its contrast. Paused offscreen and in hidden tabs; one static frame under reduced
  * motion.
@@ -49,6 +51,20 @@ const CALLOUT_MS = 5200
 const NAV_CLEAR = 72
 const POS_SLICE = 1600 // satellites re-propagated per frame
 const REST = { u: 0.12, v: -0.34 }
+const WAVE_SITE = (() => {
+  const la = (WAVE_SITE_LL.lat * Math.PI) / 180
+  const lo = (WAVE_SITE_LL.lon * Math.PI) / 180
+  return [Math.cos(la) * Math.cos(lo), Math.cos(la) * Math.sin(lo), Math.sin(la)]
+})()
+
+interface Box {
+  on: boolean
+  l: number
+  t: number
+  r: number
+  b: number
+}
+const overlaps = (a: Box, b: Box) => a.on && b.on && a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b
 
 interface Strand {
   sat: number
@@ -143,6 +159,11 @@ export function HeroAscii({ className = '' }: { className?: string }) {
     let candStamp = 0
     const callout = { sat: -1, t0: 0, pinned: false, next: 0, lines: [] as string[], dir: 1, up: true }
     let pinFirst = false
+    // the waving figure's cells, the counter's and the callout label's last boxes (canvas px), to keep them apart
+    const fig: Box = { on: false, l: 0, t: 0, r: 0, b: 0 }
+    const termBox: Box = { on: false, l: 0, t: 0, r: 0, b: 0 }
+    const labelBox: Box = { on: false, l: 0, t: 0, r: 0, b: 0 }
+    let figA = 1
     // per-frame projection of the drawn satellites (screen x, y, visible flag), reused by hit tests and the callout picker
     let sx = new Float32Array(0)
     let sy = new Float32Array(0)
@@ -639,7 +660,8 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       const ty = W / 2 - term.v * R
       for (let yy = ly - lh / 2; yy <= ly + th; yy += ch) {
         for (let xx = lx; xx <= lx + tw; xx += cw) {
-          cover += Math.abs(xx - tx) < 120 && yy > ty - 2 * ch && yy < ty + 3 * ch ? 1 : 1 - dimTargetAt(xx, yy)
+          const onFig = fig.on && xx > fig.l - cw && xx < fig.r + cw && yy > fig.t - ch && yy < fig.b + ch
+          cover += onFig || (Math.abs(xx - tx) < 120 && yy > ty - 2 * ch && yy < ty + 3 * ch) ? 1 : 1 - dimTargetAt(xx, yy)
           samples++
         }
       }
@@ -707,6 +729,7 @@ export function HeroAscii({ className = '' }: { className?: string }) {
     }
 
     const drawCallout = (now: number) => {
+      labelBox.on = false
       if (callout.sat < 0 || !sat) return
       const j = callout.sat / stride
       if (sv[j] === 0) {
@@ -729,6 +752,7 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       const th = lh * callout.lines.length
       const { dir, up } = callout
       const { side, ex, ey, hx, lx, ly } = place(x, y, dir, up, tw, th, lh, vr)
+      Object.assign(labelBox, { on: true, l: Math.min(lx, x) - 4, t: Math.min(ly - lh / 2, y) - 4, r: Math.max(lx + tw, x) + 4, b: Math.max(ly + th - lh / 2, y) + 4 })
       // highlighted satellite
       ctx.globalAlpha = a
       glyph(ctx, atlas.ink!, SAT_MARKED, snapX(x), snapY(y))
@@ -756,6 +780,40 @@ export function HeroAscii({ className = '' }: { className?: string }) {
         ctx.fillText(l, lx, yy)
       })
       ctx.setTransform(1, 0, 0, 1, 0, 0)
+      ctx.globalAlpha = 1
+    }
+
+    // ---- the figure waving from Los Angeles: feet on the site's cell, head above, turning with the globe ----
+    const w3 = new Float32Array(3)
+    const drawWave = (now: number, dt: number) => {
+      toView(WAVE_SITE[0], WAVE_SITE[1], WAVE_SITE[2], w3)
+      const face = waveFade(w3[2])
+      fig.on = face > 0
+      if (!fig.on) return
+      const c0 = Math.floor((W / 2 + w3[0] * R) / cw) - 1
+      const r0 = Math.floor((W / 2 - w3[1] * R) / ch) - 1
+      Object.assign(fig, { l: c0 * cw, t: r0 * ch, r: (c0 + 3) * cw, b: (r0 + 2) * ch })
+      const clear = !overlaps(fig, termBox) && !overlaps(fig, labelBox)
+      figA = reduced ? (clear ? 1 : 0) : Math.max(0, Math.min(1, figA + (clear ? dt * 3 : -dt * 6)))
+      const a = A * 2.2 * face * figA
+      if (a < 0.02 || !atlas.ink) return
+      const pose = wavePose(now, reduced)
+      for (let i = 0; i < pose.length; i++) {
+        for (let k = 0; k < pose[i].length; k++) {
+          const g = pose[i][k]
+          if (g === ' ') continue
+          const x = (c0 + k + 0.5) * cw
+          const y = (r0 + i + 0.5) * ch
+          const d = dimAt(x, y)
+          // the figure stands in front: its cells are cleared of land and satellites first
+          ctx.globalCompositeOperation = 'destination-out'
+          ctx.globalAlpha = face * figA * d
+          ctx.fillRect(Math.round((x - cw / 2) * dpr), Math.round((y - ch / 2) * dpr), Math.ceil(cw * dpr), Math.ceil(ch * dpr))
+          ctx.globalCompositeOperation = 'source-over'
+          ctx.globalAlpha = Math.min(1, a * d)
+          glyph(ctx, atlas.ink, g, x, y)
+        }
+      }
       ctx.globalAlpha = 1
     }
 
@@ -895,7 +953,12 @@ export function HeroAscii({ className = '' }: { className?: string }) {
         ctx.globalAlpha *= Math.max(right, left)
         ctx.fillText(label, lx, ly)
         ctx.setTransform(1, 0, 0, 1, 0, 0)
+        Object.assign(termBox, { on: true, l: Math.min(tx, lx) - cw, t: ty - ch, r: Math.max(tx, lx + lw) + cw, b: ly + ch * 0.7 })
+      }
 
+      drawWave(now, dt)
+
+      if (sat) {
         // callouts
         if (callout.sat < 0 && (reduced || now > callout.next)) pickCallout(now)
         drawCallout(now)
@@ -1101,7 +1164,7 @@ export function HeroAscii({ className = '' }: { className?: string }) {
     Object.defineProperty(window, '__asciiHero', {
       configurable: true,
       enumerable: false,
-      value: () => ({ ...stats, avgMs: stats.frames ? +(stats.totalMs / stats.frames).toFixed(3) : 0, box, W, dpr, cols, rows, satellites: sat?.count ?? 0, refEpoch: sat?.refEpoch ?? 0, callout: callout.sat >= 0 ? callout.lines : [], pinned: callout.sat >= 0 && callout.pinned }),
+      value: () => ({ ...stats, avgMs: stats.frames ? +(stats.totalMs / stats.frames).toFixed(3) : 0, box, W, dpr, cols, rows, satellites: sat?.count ?? 0, refEpoch: sat?.refEpoch ?? 0, callout: callout.sat >= 0 ? callout.lines : [], wave: fig.on ? { ...fig, alpha: figA } : null, pinned: callout.sat >= 0 && callout.pinned }),
     })
 
     return () => {

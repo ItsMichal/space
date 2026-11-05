@@ -8,7 +8,10 @@ import { YouTube } from '@/components/mdx/YouTube'
 import { Embed } from '@/components/mdx/Embed'
 import { Video } from '@/components/mdx/Video'
 import { Callout } from '@/components/mdx/Callout'
+import { Quote, type QuoteProps } from '@/components/mdx/Quote'
 import { Accolade } from '@/components/accolade/Accolade'
+import { WorldMap } from '@/components/mdx/WorldMap'
+import { Stat } from '@/components/mdx/Stat'
 import { Handwriting, type HandwritingProps } from '@/components/mdx/Handwriting'
 import { FigRef, Term } from '@/components/mdx/FigRef'
 import { Picture } from '@/components/media/Picture'
@@ -19,11 +22,17 @@ type Props = Record<string, unknown>
 
 const components = {
   a: (p: Props & { children?: ReactNode }) => <PostPreviewLink {...(p as { href?: string; children?: ReactNode })} />,
-  'mdx-youtube': (p: Props) => <YouTube id={String(p.id)} title={p.title as string | undefined} />,
+  'mdx-youtube': (p: Props) => <YouTube id={String(p.id)} title={p.title as string | undefined} captions={p.captions as string | undefined} vtt={p.vtt as string | undefined} />,
   'mdx-embed': (p: Props) => <Embed url={String(p.url)} title={p.title as string | undefined} ratio={p.ratio as string | undefined} />,
-  'mdx-video': (p: Props) => <Video src={String(p.src)} poster={p.poster as string | undefined} title={p.title as string | undefined} />,
-  'mdx-accolade': (p: Props) => <Accolade id={String(p.id)} story={false} />,
+  'mdx-video': (p: Props) => (
+    <Video src={String(p.src)} poster={p.poster as string | undefined} title={p.title as string | undefined} captions={p.captions as string | undefined} vtt={p.vtt as string | undefined} />
+  ),
+  // inside a post the story and its words are already on the page (the passage in full is a :::quote), so the card is the record and the coverage
+  'mdx-accolade': (p: Props) => <Accolade id={String(p.id)} story={false} quote={false} />,
+  'mdx-map': (p: Props) => <WorldMap id={String(p.id)} />,
+  'mdx-stat': (p: Props) => <Stat value={String(p.value)} label={String(p.label)} />,
   'mdx-callout': (p: Props & { children?: ReactNode }) => <Callout type={(p.type as string) ?? 'note'}>{p.children}</Callout>,
+  'mdx-quote': (p: QuoteProps) => <Quote {...p} />,
   'mdx-handwriting': (p: Props) => <Handwriting {...(p as HandwritingProps)} />,
   'mdx-term': (p: Props & { children?: ReactNode }) => <Term c={String(p.c)}>{p.children}</Term>,
   'mdx-fig': (p: Props) => <FigRef n={String(p.n)} />,

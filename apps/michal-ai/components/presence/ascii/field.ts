@@ -33,6 +33,20 @@ export function strokeGlyph(dx: number, dy: number): string {
   return '/'
 }
 
+/** Downtown Los Angeles, where a small figure stands and waves. */
+export const WAVE_SITE_LL = { lat: 34.05, lon: -118.24 }
+/** Its two poses, rows top down, the head over the feet in the middle column; one pose under reduced motion. */
+export const WAVE_POSES = [['\\o ', ' | '], [' o/', ' | ']]
+export const WAVE_STEP_MS = 400
+export function wavePose(now: number, reduced: boolean): string[] {
+  return WAVE_POSES[reduced ? 1 : Math.floor(now / WAVE_STEP_MS) % 2]
+}
+/** How much of the figure shows for a site at view depth z (1 facing the viewer, 0 on the limb): none near the limb. */
+export function waveFade(z: number): number {
+  const t = Math.max(0, Math.min(1, (z - 0.3) / 0.2))
+  return t * t * (3 - 2 * t)
+}
+
 export interface SatFacts {
   name: string | null
   norad: number

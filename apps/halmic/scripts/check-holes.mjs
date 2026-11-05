@@ -1,4 +1,4 @@
-// Layout check (needs Chrome and a running server: PORT=4563 node serve.mjs): every cluster of the Watch bento must be hole-free at 4 / 3 / 2 columns with 0..6 clips, and every project must stay one contiguous group; Play, Work, Posts (when present) and Elsewhere are checked at each width too.
+// Layout check (needs Chrome and a running server: PORT=4563 node serve.mjs): every cluster of the Watch bento must be hole-free at 4 / 3 / 2 columns with 0..6 clips, and every project must stay one contiguous group; New, Play, Work, Posts (when present) and Elsewhere are checked at each width too; New must be one row (its two tiles side by side).
 // usage: node scripts/check-holes.mjs [base-url]   (uses scripts/shot.mjs for the headless Chrome session)
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
@@ -13,18 +13,19 @@ for (const t of cl.children) { const r = t.getBoundingClientRect(); if (r.left <
 holes += cr * cols - occ.size; rows += cr; }
 return JSON.stringify({ cols, clusters: n, rows, holes, ok }); })()`.replace(/\s+/g, ' ');
 let fail = 0;
-const run = (sel, n, w, cols) => {
+const run = (sel, n, w, cols, rows) => {
   const url = `${base}/?motion=0&clips=${n ? 'demo&n=' + n : 'none'}`;   // motion=0: nothing animates, so boxes are the laid-out ones
   const r = spawnSync('node', [path.join(here, 'shot.mjs'), url, path.join(os.tmpdir(), 'holes.jpg'), String(w), '900', 'jpg', '700', `eval=${probe(sel)}`], { encoding: 'utf8' });
   const m = r.stdout.match(/eval: (".*")/);
   const res = m ? JSON.parse(JSON.parse(m[1])) : null;
   if (res?.skip) return console.log(`skip ${sel} (not on the page)`);
-  const good = res && res.cols === cols && res.holes === 0 && res.ok;
+  const good = res && res.cols === cols && res.holes === 0 && res.ok && (rows === undefined || res.rows === rows);
   if (!good) fail++;
   console.log(`${good ? 'ok  ' : 'FAIL'} ${sel} clips=${n} width=${w}`, res ? JSON.stringify(res) : r.stderr.slice(0, 200));
 };
 for (const [w, cols] of [[1440, 4], [800, 3], [390, 2]]) {
   for (const n of [0, 1, 2, 3, 4, 5, 6]) run('.b-watch', n, w, cols);
+  run('.b-new', 0, w, cols, 1);
   for (const sel of ['.b-play', '.b-work', '.b-posts', '.b-else']) run(sel, 0, w, cols);
 }
 process.exit(fail ? 1 : 0);
