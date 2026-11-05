@@ -1,8 +1,7 @@
 /* Accolade card (components/accolade/Accolade.tsx). The paper surface and hairline of the post callouts (globals.css
-   `.prose .callout`), in three bands split by hairlines: the heading, the record (the document beside the quote), and
-   the coverage as an index list (the home page's `.ix` rows in small) under the quote, so the tall scan has a column of
-   text beside it. Inside a post it takes the wide track
-   (reading.css). Unlayered, so it also wins over `.prose` inside a post. */
+   `.prose .callout`), in three bands split by hairlines: the heading, the quote, and the coverage as an index list (the
+   home page's `.ix` rows in small). Inside a post it takes the wide track (reading.css). Unlayered, so it also wins over
+   `.prose` inside a post. */
 .acc {
   display: grid;
   gap: 0;
@@ -21,7 +20,6 @@
 .prose .acc.acc a[href]::after {
   content: none;
 }
-.prose .acc a.acc__doc,
 .prose .acc a.acc__src,
 .prose .acc a.acc__src:hover {
   text-decoration: none;
@@ -51,58 +49,12 @@
   color: var(--ink);
 }
 
-/* the record: the document and what it says, side by side from 640 */
+/* the record: the quote and what happened, then the coverage */
 .acc__main {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-6);
   padding-top: var(--space-6);
   border-top: 1px solid var(--hairline);
-}
-@media (min-width: 640px) {
-  .acc__main {
-    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
-    column-gap: var(--space-8);
-    align-items: start;
-  }
-  /* the scan spans the quote and the coverage, and stays in view (below the floating bar) while "Show all" runs long */
-  .acc__docfig {
-    grid-row: 1 / span 2;
-    position: sticky;
-    top: var(--space-24);
-  }
-}
-
-/* the document: the printed page, cropped to the tribute, set like a scan on the desk */
-.acc__docfig {
-  display: grid;
-  gap: var(--space-2);
-  max-width: 15rem;
-}
-.acc__doc {
-  display: block;
-  color: inherit;
-}
-.acc__doc picture,
-.acc__docimg {
-  display: block;
-  width: 100%;
-  height: auto;
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-xs);
-  box-shadow:
-    0 1px 2px rgb(0 0 0 / 0.06),
-    0 6px 18px -8px rgb(0 0 0 / 0.18);
-  background: #fff;
-  transition: border-color var(--motion-fast, 120ms) ease;
-}
-.acc__doc:hover .acc__docimg,
-.acc__doc:focus-visible .acc__docimg {
-  border-color: var(--ink-faint);
-}
-.acc__doccap {
-  color: var(--ink-muted);
-  text-wrap: pretty;
 }
 
 .acc__body {
@@ -121,8 +73,10 @@
   color: var(--ink);
   text-wrap: pretty;
 }
+/* flush under the quote, not centred on the text column like a prose figure's caption */
 .acc__quote figcaption {
-  margin-top: var(--space-2);
+  max-width: none;
+  margin: var(--space-2) 0 0;
   padding-left: calc(var(--space-4) + 2px);
   color: var(--ink-muted);
 }
@@ -149,11 +103,6 @@
   min-width: 0;
   padding-top: var(--space-4);
   border-top: 1px solid var(--hairline);
-}
-@media (min-width: 640px) {
-  .acc__press {
-    grid-column: 2;
-  }
 }
 .acc .acc__presshead {
   font: inherit;
@@ -205,7 +154,7 @@
   outline: 2px solid var(--focus);
   outline-offset: 0;
 }
-/* the outlet's own share image or a frame of the segment, 16:9; an empty frame keeps the column when there is none */
+/* the outlet's own share image or a frame of the segment, 16:9 */
 .acc__thumb {
   grid-area: thumb;
   align-self: start;
@@ -214,6 +163,18 @@
   border: 1px solid var(--hairline);
   border-radius: calc(var(--radius-xs) / 2);
   background: var(--paper);
+}
+/* an item with no image of its own: its outlet's name, small and centred on the paper */
+.acc__thumb--name {
+  display: grid;
+  place-items: center;
+  padding: var(--space-2);
+  font-family: var(--font-serif);
+  font-size: var(--type-small-size);
+  line-height: 1.2;
+  text-align: center;
+  color: var(--ink-muted);
+  text-wrap: balance;
 }
 .acc__thumb img {
   display: block;
@@ -249,41 +210,36 @@
   white-space: nowrap;
 }
 
-/* "Show all": a native disclosure, its label flipping when open; the extra rows continue the list's rules */
-.acc__more > summary {
-  display: inline-flex;
-  margin-top: var(--space-2);
+/* "Show all": the rest opens above the button (the Stageshow kit's Collapse) and continues the list's rules; the label swaps */
+.acc__toggle {
+  justify-self: start;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-sans);
   color: var(--ink-muted);
   cursor: pointer;
-  list-style: none;
 }
-.acc__more > summary::-webkit-details-marker {
-  display: none;
-}
-.acc__more > summary:hover {
+.acc__toggle:hover {
   color: var(--ink);
 }
-.acc__more > summary:focus-visible {
+.acc__toggle:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
   border-radius: var(--radius-xs);
 }
-.acc__more[open] > summary {
-  order: 1;
-}
-.acc__more {
-  display: flex;
-  flex-direction: column;
-}
-.acc__more > .acc__list {
+.acc .acc__more .acc__list {
   border-top: 1px solid var(--hairline);
 }
-.acc__more-close,
-.acc__more[open] .acc__more-open {
-  display: none;
+/* the press band's grid gap would sit under a closed list as an empty band */
+.acc__press > .acc__more {
+  margin-top: calc(var(--space-2) * -1);
 }
-.acc__more[open] .acc__more-close {
-  display: inline;
+@media (prefers-reduced-motion: reduce) {
+  .acc__more {
+    transition: none;
+  }
 }
 
 @media (max-width: 639px) {
@@ -292,18 +248,6 @@
   }
   .acc__srcmeta {
     white-space: normal;
-  }
-  /* a full-width window on the masthead and the opening lines; the link opens the whole record */
-  .acc__docfig {
-    max-width: none;
-  }
-  .acc__docimg {
-    aspect-ratio: 3 / 2;
-    object-fit: cover;
-    object-position: top;
-    mask-image: linear-gradient(to bottom, #000 60%, transparent);
-    border-bottom: 0;
-    box-shadow: none;
   }
   .acc__headline {
     white-space: normal;

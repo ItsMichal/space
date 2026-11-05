@@ -65,8 +65,8 @@ export type CareerEntry = {
 export type Skill = { group: string; items: readonly string[] }
 
 export type VolunteerEntry = { org: string; role: string; dates: string; start: string; end: string; note?: string }
-/** `press` marks coverage rather than a prize: it sits with the awards on the home page and the resume, and in Press on /about. */
-export type Award = { id: string; title: string; context: string; year: string; postId?: string; hackathonId?: string; url?: string; kind?: 'press' }
+/** `kind` sets the entry's icon on the home page. `press` marks coverage rather than a prize: it sits with the awards on the home page and the resume, and in Press on /about. */
+export type Award = { id: string; title: string; context: string; year: string; postId?: string; hackathonId?: string; url?: string; kind: 'honor' | 'award' | 'hackathon' | 'press' }
 
 export const profile = {
   /** Displayed name (Polish ł). */
@@ -284,14 +284,15 @@ export const profile = {
     // The Congressional Record tribute leads (featured on the home page's About section too).
     {
       id: 'congressional-record-2014',
+      kind: 'honor',
       title: 'Tribute in the Congressional Record',
       context: 'by Rep. Mike Coffman of Colorado, Extensions of Remarks, Vol. 160, p. E1105, for winning the Student Spaceflight Experiments Program',
       year: '2014',
       url: 'https://www.govinfo.gov/link/crec/160/e/1105',
       postId: 'beer-in-space-ssep-2014',
     },
-    { id: 'aied-2022', title: 'Best Interactive Event', context: 'AI in Education Conference (AIED), for the iSAT dashboard display', year: '2022', postId: 'isat-dashboard' },
-    { id: 'hackcu-8', title: 'HackCU 8: 2nd place overall, and Best Games, Music, and Entertainment Hack', context: 'for Creatle, a solo project', year: '2022', hackathonId: 'hackcu-8-creatle' },
+    { id: 'aied-2022', kind: 'award', title: 'Best Interactive Event', context: 'AI in Education Conference (AIED), for the iSAT dashboard display', year: '2022', postId: 'isat-dashboard' },
+    { id: 'hackcu-8', kind: 'hackathon', title: 'HackCU 8: 2nd place overall, and Best Games, Music, and Entertainment Hack', context: 'for Creatle, a solo project', year: '2022', hackathonId: 'hackcu-8-creatle' },
     // content/press.ts, denver-post-2017-kaiser and cpr-2017-kaiser; his own README (ItsMichal/pilsudski) links the Post article.
     {
       id: 'denver-post-2017',

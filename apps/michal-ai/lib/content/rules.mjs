@@ -102,6 +102,8 @@ export function embedUrlOk(url) {
 }
 
 export const YOUTUBE_ID_RE = /^[A-Za-z0-9_-]{6,20}$/
+/** A ::stat value is a figure ("84", "1.2M", "99.9%"), not a sentence; the label carries the words. */
+export const STAT_VALUE_MAX = 12
 export const CALLOUT_TYPES = ['note', 'tip', 'warning']
 export const RATIO_RE = /^\d{1,3}(?:\.\d{1,3})?\s*\/\s*\d{1,3}(?:\.\d{1,3})?$/
 
@@ -111,10 +113,15 @@ export const DIRECTIVES = {
   youtube: ['id', 'title', 'captions'],
   embed: ['url', 'title', 'ratio'],
   callout: ['type'],
-  // ::accolade{id=ssep-2014}: a recognition card from content/accolades.ts (quote, the document, the coverage row)
+  // ::accolade{id=ssep-2014}: a recognition card from content/accolades.ts (the quote, the summary, the coverage list)
   accolade: ['id'],
+  // :::quote{title by role date cite url} ... ::: a long passage quoted in full (a speech, a record, a letter): the heading and
+  // the first paragraph show, the rest opens with "Read the full text". date is YYYY-MM-DD; url (http or https) is the source.
+  quote: ['title', 'by', 'role', 'date', 'cite', 'url'],
   // ::map{id=starlink-markets}: a world map with the countries of one entry of content/maps.ts lit
   map: ['id'],
+  // ::stat{value="84" label="countries ..."}: one big number with a line saying what it counts
+  stat: ['value', 'label'],
   handwriting: ['src', 'alt', 'duration', 'blur', 'chroma', 'stagger', 'focus', 'ease', 'color'],
   // ::video{src poster title}: a self-hosted clip (mp4 or webm under /media/), played only when the reader presses play
   video: ['src', 'poster', 'title', 'captions'],
@@ -147,6 +154,7 @@ export const HANDWRITING_SRC_RE = /^\/media\/[a-z0-9]+(?:-[a-z0-9]+)*\/[A-Za-z0-
 export const VIDEO_SRC_RE = /^\/media\/[a-z0-9]+(?:-[a-z0-9]+)*\/[A-Za-z0-9_][A-Za-z0-9_-]{0,100}\.(?:mp4|webm)$/
 export const CAPTIONS_SRC_RE = /^\/media\/[a-z0-9]+(?:-[a-z0-9]+)*\/[A-Za-z0-9_][A-Za-z0-9_-]{0,100}\.vtt$/
 export const POSTER_SRC_RE = /^\/media\/[a-z0-9]+(?:-[a-z0-9]+)*\/[A-Za-z0-9_][A-Za-z0-9_-]{0,100}\.(?:jpe?g|png|webp|avif)$/
+const ISO_DATE_RE = /^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])$/
 const DECIMAL_RE = /^\s*-?\d{1,6}(?:\.\d{1,6})?\s*$/
 
 /** A clamped handwriting number as a canonical string, or null when the value is not a plain decimal. */
@@ -170,6 +178,15 @@ export function directiveAttrs(name, attrs) {
     if (out.ratio && !RATIO_RE.test(out.ratio)) delete out.ratio
   }
   if ((name === 'accolade' || name === 'map') && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(out.id ?? '')) return null
+  if (name === 'quote') {
+    if (out.url !== undefined && !(schemeOf(out.url) === 'http' || schemeOf(out.url) === 'https')) delete out.url
+    if (out.date !== undefined && !ISO_DATE_RE.test(out.date)) delete out.date
+  }
+  if (name === 'stat') {
+    out.value = (out.value ?? '').trim()
+    out.label = (out.label ?? '').trim()
+    if (!out.value || out.value.length > STAT_VALUE_MAX || !out.label) return null
+  }
   if (name === 'callout' && out.type && !CALLOUT_TYPES.includes(out.type)) out.type = 'note'
   if (name === 'term' && !TERM_COLOURS.includes(out.c)) out.c = TERM_COLOURS[0]
   if (name === 'fig' && !/^[1-9]\d?$/.test(out.n ?? '')) return null
@@ -332,7 +349,7 @@ function directiveOf(line) {
   return { name: d[1], attrs }
 }
 
-const MISSING = { embed: 'url (https on an allowed host)', handwriting: 'src (/media/<slug>/<name>.ink.json) or alt text', youtube: 'id', map: 'id (a map from content/maps.ts)', video: 'src (/media/<slug>/<name>.mp4 or .webm)' }
+const MISSING = { embed: 'url (https on an allowed host)', handwriting: 'src (/media/<slug>/<name>.ink.json) or alt text', youtube: 'id', map: 'id (a map from content/maps.ts)', stat: 'value (up to 12 characters) or label', video: 'src (/media/<slug>/<name>.mp4 or .webm)' }
 
 /**
  * Problems in a markdown body that the renderer would silently drop: unknown or broken directives and unsafe link or image targets.
