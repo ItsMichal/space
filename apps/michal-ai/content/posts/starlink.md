@@ -31,4 +31,6 @@ Growing the Starlink.com platform for millions and then billions worldwide, thro
 - Improving analytics and reporting for better insight
 - Next.js/React focus, with work also in Angular and a C# .NET microservice architecture, all running in K8s and Argo hosted by GCP
 
+::stat{value="84" label="countries and territories where Starlink went live since I joined"}
+
 ::map{id=starlink-markets}

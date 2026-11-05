@@ -1,48 +1,67 @@
-// The drawing of one ::map: the baked world (lib/maps/world.gen.ts) split into the countries a map lights and the rest.
-// The site does this at build time (lib/maps/inline.server.ts) so a post carries only its own map; the editor's preview,
-// which skips that step, loads the world and does it in the browser (components/mdx/WorldMap.tsx).
-import type { WorldMapData } from '@/content/maps'
+// The baked world of the ::map directive (lib/maps/world.gen.ts, from scripts/build-world-map.mjs), decoded for drawing and
+// hit-testing: a country raster in an Equal Earth projection, read back at any point. Used by components/mdx/WorldMap.tsx.
 
-export type World = {
+/**
+ * Dot pitch in CSS px for a map this wide: the hero globe's 6 px grid (components/presence/globe/renderer.ts) on a wide map,
+ * tightening on a phone (down to 3.5 px) so the map keeps about 110 columns and small countries still catch dots.
+ */
+export const pitchFor = (width: number) => Math.min(6, Math.max(3.5, width / 110))
+
+export type WorldModule = {
   WORLD_W: number
   WORLD_H: number
-  WORLD_SHAPES: Record<string, string>
-  WORLD_DOTS: Record<string, [number, number]>
+  WORLD_IDS: string[]
+  WORLD_NAMES: Record<string, string>
+  WORLD_ROWS: number[][]
+  WORLD_POINTS: Record<string, [number, number]>
 }
 
-/** base: every unlit country as one path; lit: [alpha-2, path] per lit country with a shape; dots: [alpha-2, x, y] markers. */
-export type MapGeo = {
+export type World = {
   w: number
   h: number
-  base: string
-  lit: [string, string][]
-  dots: [string, number, number][]
+  /** palette: 0 off the map, 1 sea, then ISO 3166-1 numeric codes (XK for Kosovo) */
+  ids: string[]
+  names: Record<string, string>
+  points: Record<string, [number, number]>
+  /** the palette index at a raster point (fractional pixels; outside the raster is off the map) */
+  at(x: number, y: number): number
+  /** the palette index of a code, or -1 for a country the raster has no pixel of */
+  index(iso: string): number
 }
 
-export function mapGeometry(data: WorldMapData, world: World): MapGeo {
-  const lit = new Map(data.places.map(([code, iso]) => [iso, code]))
-  const base = Object.entries(world.WORLD_SHAPES)
-    .flatMap(([iso, d]) => (lit.has(iso) ? [] : [d]))
-    .join('')
+export function decodeWorld(m: WorldModule): World {
+  const w = m.WORLD_W
+  const h = m.WORLD_H
+  const grid = new Uint16Array(w * h)
+  m.WORLD_ROWS.forEach((runs, y) => {
+    let x = 0
+    for (let i = 0; i < runs.length; i += 2) {
+      grid.fill(runs[i], y * w + x, y * w + x + runs[i + 1])
+      x += runs[i + 1]
+    }
+  })
+  const byIso = new Map(m.WORLD_IDS.map((iso, i) => [iso, i]))
   return {
-    w: world.WORLD_W,
-    h: world.WORLD_H,
-    base,
-    lit: data.places.flatMap(([code, iso]) => (world.WORLD_SHAPES[iso] ? [[code, world.WORLD_SHAPES[iso]] as [string, string]] : [])),
-    dots: data.places.flatMap(([code, iso]) => {
-      const at = world.WORLD_DOTS[iso]
-      return at ? [[code, at[0], at[1]] as [string, number, number]] : []
-    }),
+    w,
+    h,
+    ids: m.WORLD_IDS,
+    names: m.WORLD_NAMES,
+    points: m.WORLD_POINTS,
+    at(x, y) {
+      const px = Math.floor(x)
+      const py = Math.floor(y)
+      return px < 0 || py < 0 || px >= w || py >= h ? 0 : grid[py * w + px]
+    },
+    index: (iso) => (iso === '' || iso === 'sea' ? -1 : (byIso.get(iso) ?? -1)),
   }
 }
 
-/** A geo prop as the page received it (a JSON string from the build), or null when it is absent or not the right shape. */
-export function parseGeo(raw: unknown): MapGeo | null {
-  if (typeof raw !== 'string' || !raw) return null
-  try {
-    const g = JSON.parse(raw) as MapGeo
-    return typeof g.base === 'string' && Array.isArray(g.lit) && Array.isArray(g.dots) && g.w > 0 && g.h > 0 ? g : null
-  } catch {
-    return null
-  }
+/**
+ * A dot's radius in CSS px, in the globe's proportions: a speck at sea (.06 of the pitch), land at .30, a lit country a little
+ * fuller (.34), the hovered country swollen (.46) so it reads at a glance.
+ */
+export function dotRadius(pitch: number, v: number, lit: boolean, hovered: boolean): number {
+  if (v === 1) return pitch * 0.06
+  if (hovered) return pitch * 0.46
+  return pitch * (lit ? 0.34 : 0.3)
 }
