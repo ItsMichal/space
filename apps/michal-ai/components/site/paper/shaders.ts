@@ -17,12 +17,12 @@ vec2 hash22(vec2 p) {
 }
 `
 
-// The burn field over the sheet: 0 where the fire catches, at the bottom middle of the page just inside its edge, as a sheet held
+// The burn field over the sheet: 0 where the fire catches, at the bottom middle of the page, far enough in that the gathered fringe does not hide it, as a sheet held
 // over a flame catches, to 1 at the farthest (top) corners, ragged with noise, so the front is a torn line rather than a circle.
 const BURN = /* glsl */ `
 float burnField(vec2 uv, vec2 size) {
   vec2 a = size / length(size);
-  vec2 ign = vec2(0.5, 0.94);
+  vec2 ign = vec2(0.5, 0.78);
   float d = length((uv - ign) * a) / length(max(ign, 1.0 - ign) * a);
   vec2 p = uv * a * 4.0;
   float n = gnoise(p) * 0.6 + gnoise(p * 2.7 + 5.1) * 0.3 + gnoise(p * 9.0 + 1.7) * 0.1;

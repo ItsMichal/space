@@ -1,5 +1,6 @@
 'use client'
 
+import { paperNavigate, paperReady } from '@/components/site/paper'
 import { usePathname } from '@/lib/nav'
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { CARD_KINDS, applyNames, cardPlan, isPostPath, pagePlan, transitionTarget, type CardKind } from './cardTransition'
@@ -7,6 +8,8 @@ import { CARD_KINDS, applyNames, cardPlan, isPostPath, pagePlan, transitionTarge
 const useIso = typeof window === 'undefined' ? useEffect : useLayoutEffect
 // How long a back/forward transition waits for the destination to commit before giving up (rendering is paused while it waits).
 const POP_WAIT = 700
+// The same for the paper transition, which does not pause rendering: the sheet just waits, its fringes working.
+const PAPER_POP_WAIT = 4000
 // A card is named at the click, before React Router has the destination's data; if no transition ever starts, the names go again.
 const STALE_NAMES = 4000
 
@@ -31,7 +34,8 @@ const cardSel = CARD_KINDS.map((k) => k.card).join(',')
  *   - the destination page's parts, or the card we came back to, in a layout effect on the pathname, which runs inside that
  *     synchronous commit (new side).
  * Back / forward is not a Link navigation, so a capture-phase popstate listener holds React Router's handler back, starts the
- * transition and replays the same popstate from inside its update callback.
+ * transition and replays the same popstate from inside its update callback. While the paper transition is on (paper/config.ts)
+ * back and forward burn the page the way link clicks do: the popstate is replayed once the old page has been captured.
  * view-transition-name must be unique in the document, so names are set just in time and every one is removed again when the
  * transition ends. `document.startViewTransition` is wrapped once to learn when that is (and to mark <html data-vt>).
  */
@@ -114,7 +118,6 @@ export function CardTransitions() {
       if (from === location.pathname || calm()) return
       e.stopImmediatePropagation()
       clearAll()
-      if (isPostPath(from)) clears.current.push(applyNames(pagePlan(document.getElementById('main') ?? document)))
       const replay = () => {
         replaying = true
         try {
@@ -123,6 +126,23 @@ export function CardTransitions() {
           replaying = false
         }
       }
+      if (paperReady()) {
+        void paperNavigate(
+          () =>
+            new Promise<void>((resolve) => {
+              const timer = setTimeout(done, PAPER_POP_WAIT)
+              function done() {
+                clearTimeout(timer)
+                if (arrive.current === done) arrive.current = null
+                resolve()
+              }
+              arrive.current = done
+              replay()
+            })
+        )
+        return
+      }
+      if (isPostPath(from)) clears.current.push(applyNames(pagePlan(document.getElementById('main') ?? document)))
       try {
         doc.startViewTransition!(
           () =>

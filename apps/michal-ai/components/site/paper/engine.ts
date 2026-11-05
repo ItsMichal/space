@@ -1,12 +1,13 @@
 // The paper transition itself, loaded on demand by ./index.ts. Raw WebGL2, no scene library.
 //
-// 1. The visible viewport of the old page is captured (html2canvas-pro, the capture the glass lens already uses) over the
-//    backdrop, and laid on a coarse sheet in a fixed canvas over the page, at exactly the page's pixels.
+// 1. The visible viewport of the old page is painted into a canvas (lib/paint, the site's own capture, the glass lens uses it too)
+//    over the backdrop, and laid on a coarse sheet in a fixed canvas over the page, at exactly the page's pixels.
 // 2. The router renders the new page underneath at once; it is shown, live, as soon as it has committed.
 // 3. The sheet crumples in one drop into a ball, landing like a bouncy ball, (drawn as unshaded line art: ink along the creases, a hard shadow
 //    under it) while a fire eats it from the face. What burns turns to glyphs in the site's monospace, in the page's colour and then the fire's,
 //    that rise and go out. The sheet moves every frame; the glyphs flicker on twos.
-// The capture takes real time (about 100 to 400ms on a laptop) and comes on top of PAPER_MS: the page just waits for the click.
+// The capture reads the page as laid out, a few tens of ms, and comes on top of PAPER_MS.
+import { paintPage } from '@/lib/paint/page'
 import { BACKDROP_DRAW } from '../backdrop/config'
 import { LEAD_MS, PAPER_ASH, PAPER_FPS, PAPER_MS } from './config'
 import { ASH_FS, QUAD_VS, SHEET_FS, SHEET_VS } from './shaders'
@@ -62,45 +63,14 @@ function rgb(css: string): [number, number, number] {
 }
 
 /** Elements that are not part of the sheet: the nav (stays live on top), the overlay, the backdrop (drawn under the shot). */
-function skip(el: Element, vh: number): boolean {
-  if (el.tagName === 'SCRIPT' || el.tagName === 'NOSCRIPT') return true
+function skip(el: Element, cs: CSSStyleDeclaration): boolean {
   if (el.classList.contains('nav-glass') || el.classList.contains('nav-scrim') || el.classList.contains('paper-overlay')) return true
   if (el.classList.contains('paper-grid__gl')) return true
-  const cs = getComputedStyle(el)
-  if (cs.position === 'fixed') return !el.classList.contains('paper-grid')
-  // far outside the viewport: not worth cloning (the capture time is mostly cloning and text layout)
-  const r = el.getBoundingClientRect()
-  return r.bottom < -200 || r.top > vh + 200
+  return cs.position === 'fixed' && !el.classList.contains('paper-grid')
 }
 
 /** The visible viewport as an opaque sheet: paper colour, the live backdrop frame, then the page. */
 async function capture(w: number, h: number, scale: number): Promise<HTMLCanvasElement> {
-  const { default: html2canvas } = await import('html2canvas-pro')
-  const shot = await html2canvas(document.body, {
-    backgroundColor: null,
-    scale,
-    logging: false,
-    useCORS: true,
-    x: scrollX,
-    y: scrollY,
-    width: w,
-    height: h,
-    windowWidth: w,
-    windowHeight: h,
-    ignoreElements: (el) => skip(el, h),
-    onclone: (doc) => {
-      doc.documentElement.removeAttribute('data-paper')
-      doc.documentElement.removeAttribute('data-fade')
-      const s = doc.createElement('style')
-      s.textContent = '*,*::before,*::after{animation:none!important;transition:none!important}'
-      doc.head.appendChild(s)
-      // html2canvas fades `transparent` as transparent black, so the home section's paper ground (home.css) came out as a grey
-      // band: the same fade from the paper colour at no alpha. The ::before is a real element in the clone by now, styled inline.
-      const p = rgb(getComputedStyle(document.documentElement).getPropertyValue('--paper').trim() || '#f4f1e8').map((c) => Math.round(c * 255)).join(',')
-      for (const el of doc.querySelectorAll<HTMLElement>('.home-ground > .___html2canvas___pseudoelement_before'))
-        el.style.backgroundImage = `linear-gradient(to bottom,rgba(${p},0),rgba(${p},.9) var(--space-24),rgba(${p},.9) calc(100% - var(--space-16)),rgba(${p},0))`
-    },
-  })
   const out = document.createElement('canvas')
   out.width = Math.round(w * scale)
   out.height = Math.round(h * scale)
@@ -120,8 +90,8 @@ async function capture(w: number, h: number, scale: number): Promise<HTMLCanvasE
     }
     ctx.globalAlpha = 1
   }
-  ctx.drawImage(shot, 0, 0, out.width, out.height)
-  return out
+  // the page as it is on screen now (lib/paint), pictures it has to fetch again given a moment at most
+  return paintPage({ x: 0, y: 0, width: w, height: h, scale, skip, canvas: out, wait: 300 })
 }
 
 function perspective(fov: number, aspect: number, near: number, far: number) {
@@ -167,9 +137,6 @@ function createStage(w: number, h: number, dpr: number) {
   canvas.height = Math.round(h * dpr)
   const gl = canvas.getContext('webgl2', { alpha: true, antialias: true, premultipliedAlpha: true, depth: true, stencil: true })
   if (!gl) throw new Error('[paper] no WebGL2')
-  const block = (e: Event) => e.preventDefault()
-  canvas.addEventListener('wheel', block, { passive: false })
-  canvas.addEventListener('touchmove', block, { passive: false })
 
   const sheet = program(gl, SHEET_VS, SHEET_FS)
   const ash = program(gl, QUAD_VS, ASH_FS)
@@ -282,6 +249,7 @@ function createStage(w: number, h: number, dpr: number) {
   }
 
   let drawing = 0
+  let stopped = false
 
   /** state: 0 the sheet, 1 the burn state per glyph cell, 2 the cast shadow. */
   const drawSheet = (s: Frame, state: 0 | 1 | 2) => {
@@ -386,6 +354,7 @@ function createStage(w: number, h: number, dpr: number) {
     let leftAt = 0
     for (;;) {
       const now = await frame()
+      if (stopped) return
       // still loading: the clock stops at the end of the lead-in, the sheet held just short of the drop, its fringes working
       if (!loaded && now - t0 > LEAD_MS) {
         waited += now - t0 - LEAD_MS
@@ -403,7 +372,9 @@ function createStage(w: number, h: number, dpr: number) {
           drawing = flickerAt(T * PAPER_MS, PAPER_FPS)
           draw(frameAt(T))
         }
-        await new Promise(() => {}) // held for inspection until the page is reloaded
+        // held for inspection until the page is reloaded, or the next navigation takes over
+        while (!stopped) await frame()
+        return
       }
       drawing = flickerAt(ms, PAPER_FPS)
       draw(at(T))
@@ -412,6 +383,7 @@ function createStage(w: number, h: number, dpr: number) {
   }
 
   const destroy = () => {
+    stopped = true
     canvas.remove()
     gl.getExtension('WEBGL_lose_context')?.loseContext()
   }
@@ -429,8 +401,16 @@ function imagesOnScreen(): Promise<void> {
   return Promise.race([all.then(() => undefined), new Promise<void>((r) => setTimeout(r, IMAGES_MS))])
 }
 
-/** Runs the whole transition; `go` performs the navigation and resolves once the new route has committed. */
+/** Ends the transition on screen, if any, at once: a newer navigation takes over from it. */
+let current: (() => void) | null = null
+
+/** Runs the whole transition; `go` performs the navigation and resolves once the new route has committed. A transition started
+ * while another is on screen ends that one first, and captures the page as it then is. */
 export async function runPaper(go: () => Promise<void> | void): Promise<void> {
+  current?.()
+  // superseded while it captures: the newer navigation is the one that happens, this one never goes
+  let superseded = false
+  current = () => (superseded = true)
   const root = document.documentElement
   const w = root.clientWidth
   const h = innerHeight
@@ -439,6 +419,7 @@ export async function runPaper(go: () => Promise<void> | void): Promise<void> {
   // the glyphs need the monospace loaded; a page without code on it may not have fetched it yet
   const [old] = await Promise.all([capture(w, h, dpr), document.fonts?.load(`500 13px ${mono()}`).catch(() => undefined)])
   const t1 = performance.now()
+  if (superseded) return
   const stage = createStage(w, h, dpr)
   const held = process.env.NODE_ENV !== 'production' && (window as { __paperHold?: number }).__paperHold != null
   const watchdog = held ? 0 : window.setTimeout(() => finish(), WATCHDOG_MS)
@@ -446,6 +427,7 @@ export async function runPaper(go: () => Promise<void> | void): Promise<void> {
   function finish() {
     if (done) return
     done = true
+    if (current === finish) current = null
     clearTimeout(watchdog)
     // the burn is this route change's transition: the fade-up a navigation without a view transition gets (data-fade, set by
     // CardTransitions in the commit, often after `go` resolves) must not start now that the page is up, or it pops out and in
@@ -453,6 +435,7 @@ export async function runPaper(go: () => Promise<void> | void): Promise<void> {
     root.removeAttribute('data-paper')
     stage.destroy()
   }
+  current = finish
   try {
     stage.setPage(old)
     stage.draw(frameAt(0))

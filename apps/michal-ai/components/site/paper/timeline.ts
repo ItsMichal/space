@@ -128,9 +128,9 @@ export function frameAt(T: number): Frame {
   const since = ms - DROPS[0].at - FALL_MS
   const wring = since > 0 && T < 1 ? WRING * Math.sin((2 * Math.PI * since) / WRING_MS) * Math.exp(-since / WRING_FADE) : 0
   const p = clamp01((ms - IGNITE_MS) / (PAPER_MS - IGNITE_MS))
-  // the ember is small while the ball lands and springs back, then the fire quickens, and the last of it burns out slowly (eased
-  // out, so the start keeps the pace of a quick fire and the extra time goes to the tail); at the end the last ash has lived out its PAPER_ASH
-  const burn = BURN_FROM + (1 + PAPER_ASH - BURN_FROM) * (1 - (1 - p) ** 2) ** 1.3
+  // the fire catches as the drop leaves and spreads at once, then the last of it burns out slowly (eased out, so the extra time
+  // goes to the tail); at the end the last ash has lived out its PAPER_ASH
+  const burn = BURN_FROM + (1 + PAPER_ASH - BURN_FROM) * (1 - (1 - p) ** 2)
   return {
     ball,
     fold,
