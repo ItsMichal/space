@@ -43,7 +43,9 @@ const r1 = (n) => Math.round(n * 10) / 10
 
 /** A ring that crosses the antimeridian (Fiji, Chukotka) is drawn twice, once unwrapped east and once west; the SVG clips it. */
 function unwrap(ring) {
-  if (!ring.some(([lon], i) => i && Math.abs(lon - ring[i - 1][0]) > 180)) return [ring]
+  // a step from +180 to -180 is Antarctica's edge along the bottom of the map, not a crossing
+  const crosses = ring.some(([lon], i) => i && Math.abs(lon - ring[i - 1][0]) > 180 && !(Math.abs(lon) === 180 && Math.abs(ring[i - 1][0]) === 180))
+  if (!crosses) return [ring]
   const east = ring.map(([lon, lat]) => [lon < 0 ? lon + 360 : lon, lat])
   return [east, east.map(([lon, lat]) => [lon - 360, lat])]
 }
