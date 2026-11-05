@@ -3,6 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { frontmatterProblem, rawPostProblem } from './rules.mjs'
 import { parsePost } from './serialize'
+import { ownPicture } from './picture'
 import type { Post } from './types'
 
 const POSTS_DIR = path.join(process.cwd(), 'content', 'posts')
@@ -23,12 +24,18 @@ function readPost(file: string): Post {
 
 export function loadPosts(includeDrafts: boolean): Post[] {
   if (!fs.existsSync(POSTS_DIR)) return []
-  return fs
+  const posts = fs
     .readdirSync(POSTS_DIR)
     .filter((f) => f.endsWith('.md'))
     .map(readPost)
     .filter((p) => includeDrafts || !p.draft)
     .sort((a, b) => Number(Boolean(a.minor)) - Number(Boolean(b.minor)) || (b.priority ?? 0) - (a.priority ?? 0) || b.date.localeCompare(a.date))
+  const bySlug = new Map(posts.map((p) => [p.slug, p]))
+  return posts.map((p) => {
+    const parent = p.parent && p.cardImage !== 'none' && !ownPicture(p) ? bySlug.get(p.parent) : undefined
+    const parentImage = parent && ownPicture(parent)
+    return parentImage ? { ...p, parentImage } : p
+  })
 }
 
 /** Browser-only hook (see source.client.ts); nothing to do where posts are read straight from disk. */

@@ -2,6 +2,7 @@ import Link from '@/lib/nav'
 import { ArrowRight } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { Post } from '@/lib/content/types'
+import { cardPicture } from '@/lib/content/picture'
 import { Picture } from '@/components/media/Picture'
 import { hasDemo, ProjectDemo } from '@/components/demos/ProjectDemo'
 import { cardOf, isFeature, siteLayout, type SiteLayout } from '@/lib/content/layout'
@@ -68,8 +69,9 @@ export function ProjectCard({
    *  separate card block, and no year (the home page). */
   thumb?: boolean
 }) {
-  const src = post.cardImage === 'none' ? undefined : (post.cardImage ?? post.cover)
-  const alt = post.cardImage ? (post.cardImageAlt ?? '') : (post.coverAlt ?? '')
+  const picture = cardPicture(post)
+  const src = picture?.src
+  const alt = picture?.alt ?? ''
   // dates only: no eyebrows (role, series, venue) over the title
   const metaParts: ReactNode[] = article ? [<time key="d" dateTime={post.date}>{monthYear(post.date)}</time>] : [year(post)]
   const id = `pc-${post.slug}`
@@ -102,7 +104,7 @@ export function ProjectCard({
               sizes="(min-width: 840px) 240px, calc(100vw - 32px)"
               priority={priority}
               aspect="16 / 10"
-              focus={focus ?? (post.cardImage ? undefined : post.coverFocus)}
+              focus={focus ?? picture?.focus}
             />,
           )}
         </div>
@@ -116,7 +118,7 @@ export function ProjectCard({
               priority={priority}
               className="tile__img"
               aspect={hasDemo(post.slug) ? '16 / 10' : '16 / 9'}
-              focus={focus ?? (post.cardImage ? undefined : post.coverFocus)}
+              focus={focus ?? picture?.focus}
             />,
           )}
         </div>

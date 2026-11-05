@@ -1,5 +1,6 @@
 import Link from '@/lib/nav'
 import type { Post } from '@/lib/content/types'
+import { cardPicture } from '@/lib/content/picture'
 import type { SeriesGroup } from '@/lib/content'
 import { ProjectCard } from '@/components/work/Showcase'
 import { Disclosure } from '@/components/ui/Disclosure'
@@ -12,13 +13,14 @@ const month = (iso: string) =>
 
 /** One post as an index entry: title, one-line description, date, and with `thumb` its picture inside the row. */
 function Row({ post, thumb = false }: { post: Post; thumb?: boolean }) {
-  const src = thumb ? (post.cardImage === 'none' ? undefined : (post.cardImage ?? post.cover)) : undefined
-  const alt = post.cardImage ? (post.cardImageAlt ?? '') : (post.coverAlt ?? '')
+  const picture = thumb ? cardPicture(post) : undefined
+  const src = picture?.src
+  const alt = picture?.alt ?? ''
   return (
     <Link href={postPath(post)} className={`wrt ix ix--ui${src ? ' ix--thumb' : ''}`}>
       {src ? (
         <span className="ix__media ix__thumb">
-          <Picture src={src} alt={alt} sizes="(min-width: 840px) 240px, calc(100vw - 32px)" aspect="16 / 10" focus={post.cardImage ? undefined : post.coverFocus} />
+          <Picture src={src} alt={alt} sizes="(min-width: 840px) 240px, calc(100vw - 32px)" aspect="16 / 10" focus={picture?.focus} />
         </span>
       ) : null}
       <span className="ix__title wrt__title">{post.title}</span>
