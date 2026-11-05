@@ -402,20 +402,23 @@ export function captionsSources(body) {
  *   First line of what is said
  * Blocks are separated by a blank line; a block is an optional cue id line, a timing line (mm:ss.ttt or hh:mm:ss.ttt, cue
  * settings after it are ignored) and one to CAPTIONS.lines lines of text. NOTE blocks are skipped. Text is printable characters
- * with no markup: no "<" (cue tags), no "-->" and no control characters (&amp; &lt; &gt; &nbsp; are read as the character). Cues
- * start in order and end after they start.
+ * with no markup: no "<" (cue tags), no "-->" and no control characters (&amp; &lt; &gt; &nbsp; are read as the character). The
+ * one tag kept is a voice at the very start of a cue, `<v AI Croft>Text` (a closing </v> at its end is allowed): the cue's
+ * speaker, a plain name of up to CAPTIONS.speaker characters, shown before the line. Cues start in order and end after they start.
  */
 export const CAPTIONS = {
   bytes: 256 * 1024,
   cues: 4000,
   lines: 3,
   text: 200,
+  speaker: 32,
   time: 24 * 3600,
 }
 export const CAPTIONS_NAME_RE = /^[A-Za-z0-9_][A-Za-z0-9_-]{0,100}\.vtt$/
 const VTT_TIME = String.raw`(?:(\d{1,2}):)?([0-5]\d):([0-5]\d)\.(\d{3})`
 const VTT_TIMING_RE = new RegExp(`^${VTT_TIME}[ \\t]+-->[ \\t]+${VTT_TIME}(?:[ \\t].*)?$`)
 const VTT_ENTITIES = { amp: '&', lt: '<', gt: '>', nbsp: '\u00a0' }
+const VTT_VOICE_RE = /^<v[ \t]+([^<>&\u0000-\u001f\u007f-\u009f]+)>([\s\S]*?)(?:<\/v>)?$/
 const vttSeconds = (h, m, s, ms) => Number(h ?? 0) * 3600 + Number(m) * 60 + Number(s) + Number(ms) / 1000
 
 /** Parse and check a cue file. Returns { cues } (start and end in seconds, text lines joined by "\n") or { problem }. */
@@ -452,10 +455,19 @@ export function parseCaptions(input) {
     last = start
     const body = lines.slice(i + 1).map((l) => l.trim())
     if (body.length < 1 || body.length > CAPTIONS.lines || body.some((l) => !l)) return { problem: `${at}: needs 1 to ${CAPTIONS.lines} lines of text` }
-    const joined = body.join('\n')
+    let joined = body.join('\n')
+    let speaker
+    const voice = VTT_VOICE_RE.exec(joined)
+    if (voice) {
+      speaker = voice[1].trim()
+      joined = voice[2].trim()
+      if (!speaker || speaker.length > CAPTIONS.speaker) return { problem: `${at}: a speaker is a name of 1 to ${CAPTIONS.speaker} characters` }
+      if (!joined) return { problem: `${at}: needs text after its speaker` }
+    }
     if (joined.length > CAPTIONS.text) return { problem: `${at}: longer than ${CAPTIONS.text} characters` }
     if (/[\u0000-\u0009\u000b-\u001f\u007f-\u009f<]|-->/.test(joined)) return { problem: `${at}: text may not hold markup, "-->" or control characters` }
-    cues.push({ start, end, text: joined.replace(/&(amp|lt|gt|nbsp);/g, (_, e) => VTT_ENTITIES[e]) })
+    const cue = { start, end, text: joined.replace(/&(amp|lt|gt|nbsp);/g, (_, e) => VTT_ENTITIES[e]) }
+    cues.push(speaker ? { ...cue, speaker } : cue)
     if (cues.length > CAPTIONS.cues) return { problem: `more than ${CAPTIONS.cues} cues` }
   }
   if (!cues.length) return { problem: 'no cues' }

@@ -1105,6 +1105,13 @@ html[data-fade] .page-enter {
     box-decoration-break: clone;
     -webkit-box-decoration-break: clone;
   }
+  /* who is speaking (a cue's <v Name>): the line's size in the mono face, dimmed, ahead of what is said */
+  .captions__who {
+    margin-right: 0.5em;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    opacity: 0.72;
+  }
   @container (min-width: 400px) {
     .captions__cue {
       font-size: var(--type-body-size);

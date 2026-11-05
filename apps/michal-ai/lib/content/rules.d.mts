@@ -54,8 +54,8 @@ export declare function handwritingNumber(key: string, value: unknown): string |
 export declare function handwritingSources(body: string): { line: number; src: string }[]
 export declare function videoSources(body: string): { src: string; poster?: string; title?: string; captions?: string }[]
 export declare function captionsSources(body: string): { line: number; src: string }[]
-export type Cue = { start: number; end: number; text: string }
-export declare const CAPTIONS: { bytes: number; cues: number; lines: number; text: number; time: number }
+export type Cue = { start: number; end: number; text: string; speaker?: string }
+export declare const CAPTIONS: { bytes: number; cues: number; lines: number; text: number; speaker: number; time: number }
 export declare const CAPTIONS_NAME_RE: RegExp
 export declare function parseCaptions(input: Uint8Array | string): { cues: Cue[]; problem?: undefined } | { cues?: undefined; problem: string }
 export declare function captionsProblem(input: Uint8Array | string): string | null
