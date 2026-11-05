@@ -1,10 +1,11 @@
 import Link from '@/lib/nav'
-import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { JsonLd } from '@/components/seo/JsonLd'
-import { ProjectCard } from '@/components/work/Showcase'
+import { MoreLink, ProjectCard } from '@/components/work/Showcase'
+import { IndexSection } from '@/components/ui/IndexSection'
 import { profile } from '@/content/profile'
-import { hackathonPostHref, featuredProjects, fullDate, hrefById, monthYear, pressItems, NEWSLETTER_LABEL, hackathonList } from '@/lib/about'
+import { hackathonPostHref, featuredProjects, hrefById, pressItems, NEWSLETTER_LABEL, hackathonList } from '@/lib/about'
+import { fullDate, monthYear } from '@/lib/dates'
 import { authorLine, citationLabel, citationsSource, doiUrl, venueLine } from '@/lib/publications'
 import { aboutMetadata, profilePageJsonLd, postPath, breadcrumbJsonLd } from '@/lib/seo'
 import { siteConfig } from '@/site.config'
@@ -13,29 +14,24 @@ import { postById, portraitAlt, mentionAuthors } from '@/lib/about'
 import { paperMentions } from '@/content/mentions'
 import { Picture } from '@/components/media/Picture'
 import { Accolade } from '@/components/accolade/Accolade'
+import { ExternalLink } from '@/components/ui/ExternalLink'
 import '@/components/about/about-page.css'
 
 export const metadata = aboutMetadata()
 
-/** An external link: opens in a new tab, says so to screen readers, carries the arrow. `me` marks the owner's own profiles (rel="me"). */
-function Ext({ href, children, me = false }: { href: string; children: ReactNode; me?: boolean }) {
-  return (
-    <a href={href} className="link" target="_blank" rel={me ? 'me noopener noreferrer' : 'noopener noreferrer'}>
-      {children}
-      <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden className="ab-arrow" />
-      <span className="sr-only"> (opens in a new tab)</span>
-    </a>
-  )
-}
+// Contact rows: name, then the handle in quiet text. The profiles are the owner's own (rel="me").
+const CONTACT = [
+  { label: 'LinkedIn', detail: 'in/mbodzianowski', href: siteConfig.linkedin, external: true },
+  { label: 'X', detail: '@ItsMichal', href: profile.contact.x, external: true },
+  { label: 'GitHub', detail: 'ItsMichal', href: siteConfig.github, external: true },
+  { label: 'Resume', detail: 'Web and PDF', href: '/resume', external: false },
+]
 
-/** One section of the page: its heading in the left column from 840px (the shared `.ix-sec`), the content beside it. */
+/** One section of the page: the shared IndexSection, set as a card on wide screens (about-page.css). */
 const Card = ({ id, title, className = '', children }: { id: string; title: string; className?: string; children: ReactNode }) => (
-  <section id={id} aria-labelledby={`${id}-h`} className={`ab-card ix-sec ${className}`}>
-    <h2 id={`${id}-h`} className="t-heading">
-      {title}
-    </h2>
-    <div className="ix-sec__body">{children}</div>
-  </section>
+  <IndexSection id={id} title={title} className={`ab-card ${className}`}>
+    {children}
+  </IndexSection>
 )
 
 export default function AboutPage() {
@@ -88,33 +84,22 @@ export default function AboutPage() {
 
         <Card id="contact" title="Contact" className="ab-contact">
           <ul className="ab-list">
-            <li>
-              <a className="ab-row t-ui" href={siteConfig.linkedin} target="_blank" rel="me noopener noreferrer">
-                <span>LinkedIn</span>
-                <span className="t-meta">in/mbodzianowski</span>
-                <span className="sr-only">(opens in a new tab)</span>
-              </a>
-            </li>
-            <li>
-              <a className="ab-row t-ui" href={profile.contact.x} target="_blank" rel="me noopener noreferrer">
-                <span>X</span>
-                <span className="t-meta">@ItsMichal</span>
-                <span className="sr-only">(opens in a new tab)</span>
-              </a>
-            </li>
-            <li>
-              <a className="ab-row t-ui" href={siteConfig.github} target="_blank" rel="me noopener noreferrer">
-                <span>GitHub</span>
-                <span className="t-meta">ItsMichal</span>
-                <span className="sr-only">(opens in a new tab)</span>
-              </a>
-            </li>
-            <li>
-              <Link className="ab-row t-ui" href="/resume">
-                <span>Resume</span>
-                <span className="t-meta">Web and PDF</span>
-              </Link>
-            </li>
+            {CONTACT.map((c) => (
+              <li key={c.label}>
+                {c.external ? (
+                  <a className="ab-row t-ui" href={c.href} target="_blank" rel="me noopener noreferrer">
+                    <span>{c.label}</span>
+                    <span className="t-meta">{c.detail}</span>
+                    <span className="sr-only">(opens in a new tab)</span>
+                  </a>
+                ) : (
+                  <Link className="ab-row t-ui" href={c.href}>
+                    <span>{c.label}</span>
+                    <span className="t-meta">{c.detail}</span>
+                  </Link>
+                )}
+              </li>
+            ))}
           </ul>
         </Card>
 
@@ -126,7 +111,7 @@ export default function AboutPage() {
               return (
                 <li key={r.id} className="ab-role">
                   <div className="ab-role__meta">
-                    <h3 className="t-ui">{r.orgUrl ? <Ext href={r.orgUrl}>{r.org}</Ext> : r.org}</h3>
+                    <h3 className="t-ui">{r.orgUrl ? <ExternalLink href={r.orgUrl}>{r.org}</ExternalLink> : r.org}</h3>
                     <p className="t-meta">{r.role}</p>
                     <p className="t-meta ab-dates">
                       <time dateTime={r.start}>{r.dates.split(' to ')[0]}</time>
@@ -186,7 +171,7 @@ export default function AboutPage() {
           <p className="t-text">
             {profile.blueprint.description}{' '}
             <span className="t-meta">
-              <Ext href={profile.blueprint.url}>blueprintboulder.org</Ext>
+              <ExternalLink href={profile.blueprint.url}>blueprintboulder.org</ExternalLink>
             </span>
           </p>
           <ul className="ab-plain t-text">
@@ -198,9 +183,9 @@ export default function AboutPage() {
             <li>
               {profile.blueprint.site.label}{' '}
               <span className="t-meta">
-                <Ext href={profile.blueprint.url}>site</Ext>
+                <ExternalLink href={profile.blueprint.url}>site</ExternalLink>
                 {', '}
-                <Ext href={profile.blueprint.site.repo}>code</Ext>
+                <ExternalLink href={profile.blueprint.site.repo}>code</ExternalLink>
               </span>
             </li>
           </ul>
@@ -209,7 +194,7 @@ export default function AboutPage() {
             {profile.blueprint.projects.map((p) => (
               <li key={p.org}>
                 <p className="t-ui">
-                  <Ext href={p.url}>{p.org}</Ext>
+                  <ExternalLink href={p.url}>{p.org}</ExternalLink>
                 </p>
                 <p className="t-meta">
                   {p.what}, {p.year}
@@ -224,7 +209,7 @@ export default function AboutPage() {
             {profile.publications.map((p) => (
               <li key={p.id} className="pub">
                 <p className="pub__title t-ui">
-                  <Ext href={doiUrl(p)}>{p.title}</Ext>
+                  <ExternalLink href={doiUrl(p)}>{p.title}</ExternalLink>
                 </p>
                 <p className="pub__year t-meta">
                   <time dateTime={p.published}>{p.year}</time>
@@ -245,7 +230,7 @@ export default function AboutPage() {
               <ul className="ab-list" aria-labelledby="acknowledged-h">
                 {paperMentions.map((m) => (
                   <li key={m.id} className="pub">
-                    <p className="pub__title t-ui">{m.doi ? <Ext href={`https://doi.org/${m.doi}`}>{m.title}</Ext> : <Ext href={m.url}>{m.title}</Ext>}</p>
+                    <p className="pub__title t-ui">{m.doi ? <ExternalLink href={`https://doi.org/${m.doi}`}>{m.title}</ExternalLink> : <ExternalLink href={m.url}>{m.title}</ExternalLink>}</p>
                     <p className="pub__year t-meta">
                       <time dateTime={m.year}>{m.year}</time>
                     </p>
@@ -262,7 +247,7 @@ export default function AboutPage() {
                         {m.openAccessUrl ? (
                           <>
                             {' · '}
-                            <Ext href={m.openAccessUrl}>Full text</Ext>
+                            <ExternalLink href={m.openAccessUrl}>Full text</ExternalLink>
                           </>
                         ) : null}
                       </footer>
@@ -280,7 +265,7 @@ export default function AboutPage() {
             {profile.awards.filter((a) => a.kind !== 'press').map((a) => (
               <li key={a.id}>
                 <span className="t-ui">
-                  {a.postId ? <Link href={hrefById(a.postId)} className="link">{a.title}</Link> : a.url ? <Ext href={a.url}>{a.title}</Ext> : a.title}
+                  {a.postId ? <Link href={hrefById(a.postId)} className="link">{a.title}</Link> : a.url ? <ExternalLink href={a.url}>{a.title}</ExternalLink> : a.title}
                 </span>
                 <span className="t-meta">
                   {a.context}, <time dateTime={a.year}>{a.year}</time>
@@ -308,7 +293,7 @@ export default function AboutPage() {
               return (
                 <li key={h.id} className="ab-hack">
                   <p className="ab-hack__t t-ui">
-                    {h.projectUrl ? <Ext href={h.projectUrl}>{h.project}</Ext> : h.project}
+                    {h.projectUrl ? <ExternalLink href={h.projectUrl}>{h.project}</ExternalLink> : h.project}
                     {post ? (
                       <>
                         {' '}
@@ -335,11 +320,11 @@ export default function AboutPage() {
         <Card id="press" title="Press and mentions" className="ab-press">
           <ul className="ab-list">
             <li className="ab-pr">
-              <p className="t-ui"><Ext href={press.atlas.url}>{press.atlas.title}</Ext></p>
+              <p className="t-ui"><ExternalLink href={press.atlas.url}>{press.atlas.title}</ExternalLink></p>
               <p className="t-meta">{press.atlas.outlet}, <time dateTime={press.atlas.date ?? undefined}>{fullDate(press.atlas.date!)}</time></p>
             </li>
             <li className="ab-pr">
-              <p className="t-ui"><Ext href={press.aied.url}>iSAT presents at EDM and AIED 2022</Ext></p>
+              <p className="t-ui"><ExternalLink href={press.aied.url}>iSAT presents at EDM and AIED 2022</ExternalLink></p>
               <p className="t-meta">{press.aied.outlet}, <time dateTime={press.aied.date ?? undefined}>{fullDate(press.aied.date!)}</time>. Listed as a co-author of the interactive event.</p>
             </li>
             <li className="ab-pr">
@@ -348,18 +333,18 @@ export default function AboutPage() {
                 {press.newsletters.map((n, i) => (
                   <span key={n.id}>
                     {i > 0 ? ', ' : ''}
-                    <Ext href={n.url}>{NEWSLETTER_LABEL[n.id]}</Ext>
+                    <ExternalLink href={n.url}>{NEWSLETTER_LABEL[n.id]}</ExternalLink>
                   </span>
                 ))}
               </p>
             </li>
             <li className="ab-pr">
-              <p className="t-ui"><Ext href={press.shine.url}>SHINE Laboratory staff profile</Ext></p>
+              <p className="t-ui"><ExternalLink href={press.shine.url}>SHINE Laboratory staff profile</ExternalLink></p>
               <p className="t-meta">{press.shine.outlet}</p>
             </li>
             <li className="ab-pr">
               <p className="t-ui">
-                An early AI project: <Ext href={press.early.url}>The Denver Post</Ext> and <Ext href={press.earlyRadio.url}>Colorado Public Radio</Ext>
+                An early AI project: <ExternalLink href={press.early.url}>The Denver Post</ExternalLink> and <ExternalLink href={press.earlyRadio.url}>Colorado Public Radio</ExternalLink>
               </p>
               <p className="t-meta"><time dateTime={press.early.date ?? undefined}>2017</time></p>
             </li>
@@ -374,35 +359,28 @@ export default function AboutPage() {
                   <blockquote className="t-text">{q.text}</blockquote>
                   <p className="t-meta">
                     <time dateTime={q.date}>{fullDate(q.date)}</time>
-                    {q.note ? ` · ${q.note}` : ''} · <Ext href={q.url} me>View on X</Ext>
+                    {q.note ? ` · ${q.note}` : ''} · <ExternalLink href={q.url} me>View on X</ExternalLink>
                   </p>
                 </li>
               ))}
             </ul>
             <p className="t-meta">
-              <Ext href={profile.contact.x} me>@ItsMichal on X</Ext>
+              <ExternalLink href={profile.contact.x} me>@ItsMichal on X</ExternalLink>
             </p>
           </Card>
         ) : null}
       </div>
 
-      <section id="projects" aria-labelledby="projects-h" className="ab-card ab-projects ix-sec">
-        <h2 id="projects-h" className="t-heading">
-          Selected projects
-        </h2>
-        <div className="ix-sec__body">
-          <ul className="ix-list">
-            {projects.map((p) => (
-              <li key={p.slug}>
-                <ProjectCard post={p} href={postPath(p)} />
-              </li>
-            ))}
-          </ul>
-          <Link href="/projects" className="ix-more link">
-            All projects <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
-          </Link>
-        </div>
-      </section>
+      <Card id="projects" title="Selected projects" className="ab-projects">
+        <ul className="ix-list">
+          {projects.map((p) => (
+            <li key={p.slug}>
+              <ProjectCard post={p} href={postPath(p)} />
+            </li>
+          ))}
+        </ul>
+        <MoreLink href="/projects">All projects</MoreLink>
+      </Card>
     </div>
   )
 }

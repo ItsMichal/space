@@ -95,12 +95,6 @@
   padding-left: calc(var(--space-4) + 2px);
   color: var(--ink-muted);
 }
-.rq__arrow {
-  display: inline;
-  margin-left: 0.15em;
-  vertical-align: -0.1em;
-}
-
 @media (max-width: 639px) {
   .rq {
     padding: var(--space-4);

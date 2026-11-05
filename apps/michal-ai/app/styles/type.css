@@ -165,8 +165,14 @@ a.ix:focus-visible {
   scroll-margin-top: 96px;
 }
 .ix-sec > h2,
-.ix-sec > h3 {
+.ix-sec > h3,
+.ix-sec__head > * {
   margin: 0;
+}
+/* a quiet line under the heading (IndexSection `aside`: the Experience total) */
+.ix-sec__head > .t-meta {
+  margin-top: var(--space-1);
+  font-variant-numeric: tabular-nums lining-nums;
 }
 .ix-sec__body {
   min-width: 0;
@@ -219,7 +225,8 @@ a.ix:focus-visible {
     column-gap: var(--ix-gap);
   }
   .ix-sec > h2,
-  .ix-sec > h3 {
+  .ix-sec > h3,
+  .ix-sec__head {
     padding-top: 0.1em;
   }
   /* entries inside a section already have the left column for the heading: they stack */

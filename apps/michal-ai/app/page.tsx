@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import Link from '@/lib/nav'
 import { Award, ArrowRight, Landmark, Newspaper, Trophy } from 'lucide-react'
 import { getAllPosts, getBlogPosts, getMainProjects } from '@/lib/content'
@@ -12,6 +13,8 @@ import { JsonLd } from '@/components/seo/JsonLd'
 import { profile } from '@/content/profile'
 import { citationLabel, citationsSource, doiUrl, venueLine } from '@/lib/publications'
 import { ExperienceList, type ExperienceItem } from '@/components/ui/ExperienceList'
+import { IndexEntry } from '@/components/ui/IndexEntry'
+import { IndexSection } from '@/components/ui/IndexSection'
 import { Picture } from '@/components/media/Picture'
 import { careerYears, hrefById, portraitAlt } from '@/lib/about'
 import '@/components/site/about.css'
@@ -50,7 +53,15 @@ const awardItems = (): ExperienceItem[] =>
     highlight: i === 0,
   }))
 
-const h2 = 'mb-space-6 font-display text-title'
+/** A top-level section of the home page: its title, then the content. The heading is named `${id}-h` (the hero's ink finds `work-h`). */
+const HomeSection = ({ id, title, className = '', children }: { id: string; title: string; className?: string; children: ReactNode }) => (
+  <section id={id} aria-labelledby={`${id}-h`} className={`home-sec ${className}`.trim()}>
+    <h2 id={`${id}-h`} className="mb-space-6 font-display text-title">
+      {title}
+    </h2>
+    {children}
+  </section>
+)
 
 export default function Home() {
   const projects = getMainProjects()
@@ -76,26 +87,17 @@ export default function Home() {
         intro={hooks.length ? <HeroHook stem={profile.hookStem} items={hooks} /> : undefined}
       />
 
-      <section id="work" aria-labelledby="work-h" className="home-sec home-ground mt-space-16">
-        <h2 id="work-h" className={h2}>
-          Projects
-        </h2>
+      <HomeSection id="work" title="Projects" className="home-ground mt-space-16">
         <CardGrid posts={projects} more="/projects" noun="project" priority />
-      </section>
+      </HomeSection>
 
       {articles.length > 0 ? (
-        <section id="writing" aria-labelledby="writing-h" className="home-sec">
-          <h2 id="writing-h" className={h2}>
-            Writing
-          </h2>
+        <HomeSection id="writing" title="Writing">
           <CardGrid posts={latest} more="/writing" noun="post" />
-        </section>
+        </HomeSection>
       ) : null}
 
-      <section id="about" aria-labelledby="about-h" className="home-sec">
-        <h2 id="about-h" className={h2}>
-          About
-        </h2>
+      <HomeSection id="about" title="About">
         <div className="about">
           <div className="about__intro">
             <div className="about__photo">
@@ -106,52 +108,38 @@ export default function Home() {
               <p className="t-text">{profile.about[1]}</p>
             </div>
           </div>
-          <section aria-labelledby="xp-h" className="ix-sec">
-            <div className="xp-head">
-              <h3 id="xp-h" className="t-heading">
-                Experience
-              </h3>
-              <p className="t-meta">{careerYears()}+ years</p>
-            </div>
-            <div className="ix-sec__body">
-              <ExperienceList items={experience} label="Experience" timeline />
-            </div>
-          </section>
-          <section aria-labelledby="awards-h" className="ix-sec">
-            <h3 id="awards-h" className="t-heading">
-              Recognition
-            </h3>
-            <div className="ix-sec__body">
-              <ExperienceList items={awards} label="Recognition" timeline />
-            </div>
-          </section>
+          <IndexSection id="experience" title="Experience" level={3} aside={`${careerYears()}+ years`}>
+            <ExperienceList items={experience} label="Experience" timeline />
+          </IndexSection>
+          <IndexSection id="recognition" title="Recognition" level={3}>
+            <ExperienceList items={awards} label="Recognition" timeline />
+          </IndexSection>
           {profile.publications.length ? (
-            <section id="publications" aria-labelledby="pubs-h" className="ix-sec">
-              <h3 id="pubs-h" className="t-heading">
-                Publications
-              </h3>
-              <div className="ix-sec__body">
-                <ul className="ix-list ix-list--tight">
-                  {profile.publications.map((p) => (
-                    <li key={p.id}>
-                      <a href={doiUrl(p)} className="ix ix--ui" target="_blank" rel="noopener noreferrer">
-                        <span className="ix__title">{p.title}</span>
-                        <span className="ix__desc t-text">
+            <IndexSection id="publications" title="Publications" level={3}>
+              <ul className="ix-list ix-list--tight">
+                {profile.publications.map((p) => (
+                  <li key={p.id}>
+                    <IndexEntry
+                      href={doiUrl(p)}
+                      external
+                      title={p.title}
+                      desc={
+                        <>
                           {p.shortAuthors ? `${p.shortAuthors} ` : ''}
                           {venueLine(p)}
                           {p.shortAuthors ? '.' : ''}
                           {p.authorCount ? ` ${p.authorCount.toLocaleString('en-US')} authors.` : ''}
                           {citationLabel(p.doi) ? <span title={citationsSource}>{`${p.shortAuthors || p.authorCount ? ' ' : '. '}${citationLabel(p.doi)}.`}</span> : null}
-                        </span>
-                        <time className="ix__meta t-meta" dateTime={p.published}>
-                          {p.year}
-                        </time>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </section>
+                        </>
+                      }
+                      meta={p.year}
+                      dateTime={p.published}
+                      ui
+                    />
+                  </li>
+                ))}
+              </ul>
+            </IndexSection>
           ) : null}
           <Link href="/about" className="about__more ix" aria-labelledby="about-more-h" aria-describedby="about-more-d">
             <span id="about-more-h" className="ix__title">
@@ -163,7 +151,7 @@ export default function Home() {
             </span>
           </Link>
         </div>
-      </section>
+      </HomeSection>
     </div>
   )
 }

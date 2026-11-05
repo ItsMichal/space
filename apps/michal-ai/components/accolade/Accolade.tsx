@@ -2,8 +2,10 @@
 
 import { useId, useState } from 'react'
 import { ArrowUpRight } from 'lucide-react'
+import { fullDate } from '@/lib/dates'
 import { Collapse, Swap } from '@/components/stageshow/kit'
 import Link from '@/lib/nav'
+import { ExternalLink } from '@/components/ui/ExternalLink'
 import { accoladeById, type AccoladeSource } from '@/content/accolades'
 import './accolade.css'
 
@@ -12,20 +14,6 @@ const KIND_LABEL: Record<AccoladeSource['kind'], string> = {
   tv: 'TV',
   news: 'Article',
   program: 'Programme',
-}
-
-/** "Oct 8, 2013" for a full date, "Oct 2013" when only the month is known. */
-function when(iso: string) {
-  const full = iso.length === 10
-  return new Date(`${full ? iso : `${iso}-01`}T00:00:00Z`).toLocaleDateString(
-    'en-US',
-    {
-      month: 'short',
-      ...(full ? { day: 'numeric' } : {}),
-      year: 'numeric',
-      timeZone: 'UTC',
-    }
-  )
 }
 
 /** How many coverage rows show before "Show all": the most prominent first, the rest one press away. */
@@ -50,7 +38,7 @@ function Source({ s }: { s: AccoladeSource }) {
         </span>
         <span className="acc__srcmeta t-meta">
           {KIND_LABEL[s.kind]}
-          {s.lang === 'pl' ? ', in Polish' : null} <span aria-hidden>·</span> <time dateTime={s.date}>{when(s.date)}</time>
+          {s.lang === 'pl' ? ', in Polish' : null} <span aria-hidden>·</span> <time dateTime={s.date}>{fullDate(s.date)}</time>
         </span>
         <span className="acc__host t-meta">
           {host(s.url)}
@@ -95,11 +83,7 @@ export function Accolade({ id, story = true, quote = true }: { id: string; story
               </blockquote>
               <figcaption className="t-meta">
                 <span className="acc__by">{a.quote.by}</span>, {a.quote.role}.{' '}
-                <a href={a.quote.url} className="link" target="_blank" rel="noopener noreferrer">
-                  {a.quote.cite}
-                  <ArrowUpRight size={13} strokeWidth={1.5} aria-hidden className="acc__arrow" />
-                  <span className="sr-only"> (opens in a new tab)</span>
-                </a>
+                <ExternalLink href={a.quote.url}>{a.quote.cite}</ExternalLink>
               </figcaption>
             </figure>
           ) : null}
