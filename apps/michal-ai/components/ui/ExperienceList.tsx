@@ -1,13 +1,16 @@
 import Link from '@/lib/nav'
 import type { CSSProperties, ReactNode } from 'react'
 
-/** `extra` sits under the entry, outside its link (a clip that belongs to the row, with its own controls). `logo` is a one-colour mask. */
-export type ExperienceItem = { id: string; org: ReactNode; role: string; years: string; href?: string; extra?: ReactNode; logo?: string }
+/**
+ * `extra` sits under the entry, outside its link (a clip that belongs to the row, with its own controls). `logo` is a one-colour
+ * mask, or two stacked in the node when the role belongs to two marks (SpaceX and Starlink).
+ */
+export type ExperienceItem = { id: string; org: ReactNode; role: string; years: string; href?: string; extra?: ReactNode; logo?: string | readonly string[] }
 
 /**
  * Experience as entries of the shared text index (app/styles/type.css, `.ix`), most recent first: the organisation, the role
  * beneath it, the years in quiet secondary text. An entry links to its project when there is one. With `timeline`, each entry
- * hangs off a vertical rail by a node holding the organisation's mark (components/site/about.css, `.xp--timeline`). Server
+ * hangs off a vertical rail by a node holding the organisation's marks (components/site/about.css, `.xp--timeline`). Server
  * component, a plain ordered list in the HTML.
  */
 export function ExperienceList({ items, label, timeline }: { items: readonly ExperienceItem[]; label: string; timeline?: boolean }) {
@@ -25,7 +28,9 @@ export function ExperienceList({ items, label, timeline }: { items: readonly Exp
           <li key={it.id}>
             {timeline ? (
               <span className="xp__node" aria-hidden>
-                {it.logo ? <span className="xp__logo" style={{ '--logo': `url("${it.logo}")` } as CSSProperties} /> : null}
+                {(typeof it.logo === 'string' ? [it.logo] : (it.logo ?? [])).map((src) => (
+                  <span key={src} className="xp__logo" style={{ '--logo': `url("${src}")` } as CSSProperties} />
+                ))}
               </span>
             ) : null}
             {it.href ? (

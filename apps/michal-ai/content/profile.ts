@@ -10,8 +10,11 @@ export type Role = {
   years?: string
   /** Short name for the timeline strip. */
   short?: string
-  /** The organisation's own mark as a one-colour mask (public/media/about/logos/), drawn in the ink colour. */
-  logo?: string
+  /**
+   * The organisation's own mark as a one-colour mask (public/media/about/logos/), drawn in the ink colour. Two marks stack in the
+   * node, for a role that belongs to both (SpaceX, working on Starlink).
+   */
+  logo?: string | readonly string[]
 }
 
 export type Publication = {
@@ -122,8 +125,8 @@ export const profile = {
   ],
   /** Compact home page Experience list, newest first. */
   experience: [
-    { company: 'SpaceX', role: 'Software Engineer', since: '2024', years: '2024 to 2026', logo: '/media/about/logos/spacex.svg' },
-    { company: 'Institute of Cognitive Science, CU Boulder (SHINE Lab, iSAT)', role: 'Software Engineer', short: 'CU Boulder', since: '2020', years: '2020 to 2024', logo: '/media/about/logos/cu-boulder.svg' },
+    { company: 'SpaceX', role: 'Software Engineer', since: '2024', years: '2024 to 2026', logo: ['/media/about/logos/spacex.svg', '/media/about/logos/starlink.webp'] },
+    { company: 'Institute of Cognitive Science, CU Boulder (SHINE Lab, iSAT)', role: 'Software Engineer', short: 'CU Boulder', since: '2020', years: '2020 to 2024', logo: '/media/about/logos/cu-boulder.webp' },
     { company: 'AmedicaRx', role: 'Full stack developer (contract)', since: '2022', years: '2022 to 2023', logo: '/media/about/logos/amedicarx.webp' },
     { company: 'Windward Studios', role: 'Software development intern', since: '2019', years: '2019 to 2020', logo: '/media/about/logos/windward.webp' },
     { company: 'Panther Industries', role: 'Augmented reality and marketing intern', since: '2018', years: '2018', logo: '/media/about/logos/panther.webp' },
