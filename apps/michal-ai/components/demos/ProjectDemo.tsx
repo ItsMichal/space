@@ -39,6 +39,16 @@ const CLIP_CAPTIONS: Partial<Record<Clip, { src: string; from: number }>> = {
   'ai-crofty': { src: '/media/realtime-ai-f1-comentator/demo.vtt', from: 2 },
 }
 
+/**
+ * How far a clip is zoomed into its box. The recordings of a live site (a Stageshow Window on its light stage) have the
+ * stage around the window and the window's own rounded corners at about 16px in; zooming 10% puts the window's edges
+ * outside the box, so the box's own rounded corners are the clip's.
+ */
+const CLIP_ZOOM: Partial<Record<Clip, number>> = {
+  'jia-webapp': 1.1,
+  starlink: 1.1,
+}
+
 const CODE = {
   askawai: () => import('./askawai'),
   'sea-of-thoughts': () => import('./sea-of-thoughts'),
@@ -105,6 +115,7 @@ function Loop({ slug, fallback, captions }: { slug: Clip; fallback: ReactNode; c
         playsInline
         preload="auto"
         aria-hidden
+        style={CLIP_ZOOM[slug] ? { scale: String(CLIP_ZOOM[slug]) } : undefined}
         data-ready={ready || undefined}
         onLoadedData={() => setReady(true)}
       />
