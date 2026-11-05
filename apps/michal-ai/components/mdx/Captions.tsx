@@ -69,7 +69,12 @@ export function CaptionOverlay({ cues, time, running, moved = 0 }: { cues: Cue[]
   }, [cues, time, running, moved])
   return (
     <div className="captions" aria-live="off">
-      {cue ? <p className="captions__cue">{cue.text}</p> : null}
+      {cue ? (
+        <p className="captions__cue">
+          {cue.speaker ? <span className="captions__who">{cue.speaker}</span> : null}
+          {cue.text}
+        </p>
+      ) : null}
     </div>
   )
 }

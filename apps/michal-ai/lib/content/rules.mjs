@@ -102,6 +102,8 @@ export function embedUrlOk(url) {
 }
 
 export const YOUTUBE_ID_RE = /^[A-Za-z0-9_-]{6,20}$/
+/** A ::stat value is a figure ("84", "1.2M", "99.9%"), not a sentence; the label carries the words. */
+export const STAT_VALUE_MAX = 12
 export const CALLOUT_TYPES = ['note', 'tip', 'warning']
 export const RATIO_RE = /^\d{1,3}(?:\.\d{1,3})?\s*\/\s*\d{1,3}(?:\.\d{1,3})?$/
 
@@ -118,6 +120,8 @@ export const DIRECTIVES = {
   quote: ['title', 'by', 'role', 'date', 'cite', 'url'],
   // ::map{id=starlink-markets}: a world map with the countries of one entry of content/maps.ts lit
   map: ['id'],
+  // ::stat{value="84" label="countries ..."}: one big number with a line saying what it counts
+  stat: ['value', 'label'],
   handwriting: ['src', 'alt', 'duration', 'blur', 'chroma', 'stagger', 'focus', 'ease', 'color'],
   // ::video{src poster title}: a self-hosted clip (mp4 or webm under /media/), played only when the reader presses play
   video: ['src', 'poster', 'title', 'captions'],
@@ -177,6 +181,11 @@ export function directiveAttrs(name, attrs) {
   if (name === 'quote') {
     if (out.url !== undefined && !(schemeOf(out.url) === 'http' || schemeOf(out.url) === 'https')) delete out.url
     if (out.date !== undefined && !ISO_DATE_RE.test(out.date)) delete out.date
+  }
+  if (name === 'stat') {
+    out.value = (out.value ?? '').trim()
+    out.label = (out.label ?? '').trim()
+    if (!out.value || out.value.length > STAT_VALUE_MAX || !out.label) return null
   }
   if (name === 'callout' && out.type && !CALLOUT_TYPES.includes(out.type)) out.type = 'note'
   if (name === 'term' && !TERM_COLOURS.includes(out.c)) out.c = TERM_COLOURS[0]
@@ -340,7 +349,7 @@ function directiveOf(line) {
   return { name: d[1], attrs }
 }
 
-const MISSING = { embed: 'url (https on an allowed host)', handwriting: 'src (/media/<slug>/<name>.ink.json) or alt text', youtube: 'id', map: 'id (a map from content/maps.ts)', video: 'src (/media/<slug>/<name>.mp4 or .webm)' }
+const MISSING = { embed: 'url (https on an allowed host)', handwriting: 'src (/media/<slug>/<name>.ink.json) or alt text', youtube: 'id', map: 'id (a map from content/maps.ts)', stat: 'value (up to 12 characters) or label', video: 'src (/media/<slug>/<name>.mp4 or .webm)' }
 
 /**
  * Problems in a markdown body that the renderer would silently drop: unknown or broken directives and unsafe link or image targets.
@@ -410,20 +419,23 @@ export function captionsSources(body) {
  *   First line of what is said
  * Blocks are separated by a blank line; a block is an optional cue id line, a timing line (mm:ss.ttt or hh:mm:ss.ttt, cue
  * settings after it are ignored) and one to CAPTIONS.lines lines of text. NOTE blocks are skipped. Text is printable characters
- * with no markup: no "<" (cue tags), no "-->" and no control characters (&amp; &lt; &gt; &nbsp; are read as the character). Cues
- * start in order and end after they start.
+ * with no markup: no "<" (cue tags), no "-->" and no control characters (&amp; &lt; &gt; &nbsp; are read as the character). The
+ * one tag kept is a voice at the very start of a cue, `<v AI Croft>Text` (a closing </v> at its end is allowed): the cue's
+ * speaker, a plain name of up to CAPTIONS.speaker characters, shown before the line. Cues start in order and end after they start.
  */
 export const CAPTIONS = {
   bytes: 256 * 1024,
   cues: 4000,
   lines: 3,
   text: 200,
+  speaker: 32,
   time: 24 * 3600,
 }
 export const CAPTIONS_NAME_RE = /^[A-Za-z0-9_][A-Za-z0-9_-]{0,100}\.vtt$/
 const VTT_TIME = String.raw`(?:(\d{1,2}):)?([0-5]\d):([0-5]\d)\.(\d{3})`
 const VTT_TIMING_RE = new RegExp(`^${VTT_TIME}[ \\t]+-->[ \\t]+${VTT_TIME}(?:[ \\t].*)?$`)
 const VTT_ENTITIES = { amp: '&', lt: '<', gt: '>', nbsp: '\u00a0' }
+const VTT_VOICE_RE = /^<v[ \t]+([^<>&\u0000-\u001f\u007f-\u009f]+)>([\s\S]*?)(?:<\/v>)?$/
 const vttSeconds = (h, m, s, ms) => Number(h ?? 0) * 3600 + Number(m) * 60 + Number(s) + Number(ms) / 1000
 
 /** Parse and check a cue file. Returns { cues } (start and end in seconds, text lines joined by "\n") or { problem }. */
@@ -460,10 +472,19 @@ export function parseCaptions(input) {
     last = start
     const body = lines.slice(i + 1).map((l) => l.trim())
     if (body.length < 1 || body.length > CAPTIONS.lines || body.some((l) => !l)) return { problem: `${at}: needs 1 to ${CAPTIONS.lines} lines of text` }
-    const joined = body.join('\n')
+    let joined = body.join('\n')
+    let speaker
+    const voice = VTT_VOICE_RE.exec(joined)
+    if (voice) {
+      speaker = voice[1].trim()
+      joined = voice[2].trim()
+      if (!speaker || speaker.length > CAPTIONS.speaker) return { problem: `${at}: a speaker is a name of 1 to ${CAPTIONS.speaker} characters` }
+      if (!joined) return { problem: `${at}: needs text after its speaker` }
+    }
     if (joined.length > CAPTIONS.text) return { problem: `${at}: longer than ${CAPTIONS.text} characters` }
     if (/[\u0000-\u0009\u000b-\u001f\u007f-\u009f<]|-->/.test(joined)) return { problem: `${at}: text may not hold markup, "-->" or control characters` }
-    cues.push({ start, end, text: joined.replace(/&(amp|lt|gt|nbsp);/g, (_, e) => VTT_ENTITIES[e]) })
+    const cue = { start, end, text: joined.replace(/&(amp|lt|gt|nbsp);/g, (_, e) => VTT_ENTITIES[e]) }
+    cues.push(speaker ? { ...cue, speaker } : cue)
     if (cues.length > CAPTIONS.cues) return { problem: `more than ${CAPTIONS.cues} cues` }
   }
   if (!cues.length) return { problem: 'no cues' }
