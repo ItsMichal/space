@@ -2,10 +2,14 @@
 // hit-testing: a country raster in an Equal Earth projection, read back at any point. Used by components/mdx/WorldMap.tsx.
 
 /**
- * Dot pitch in CSS px for a map this wide: the hero globe's 6 px grid (components/presence/globe/renderer.ts) on a wide map,
- * tightening on a phone (down to 3.5 px) so the map keeps about 110 columns and small countries still catch dots.
+ * The character cell of a map this wide, in CSS px: the character-cell hero's cell shape (components/presence/HeroAscii.tsx, 0.62
+ * as wide as tall) at a small type size, 8 to 10 px tall, which the map fills with braille "mixels", a 2 x 4 grid of dots per
+ * cell. So a dot every cw / 2 across and ch / 4 down: under 3 px on a wide map, 2.5 on a phone.
  */
-export const pitchFor = (width: number) => Math.min(6, Math.max(3.5, width / 110))
+export function cellFor(width: number): { cw: number; ch: number } {
+  const ch = Math.max(8, Math.min(10, Math.round(width / 90)))
+  return { cw: ch * 0.62, ch }
+}
 
 export type WorldModule = {
   WORLD_W: number
@@ -57,11 +61,9 @@ export function decodeWorld(m: WorldModule): World {
 }
 
 /**
- * A dot's radius in CSS px, in the globe's proportions: a speck at sea (.06 of the pitch), land at .30, a lit country a little
- * fuller (.34), the hovered country swollen (.46) so it reads at a glance.
+ * A mixel's radius in CSS px: the hero's braille dot (.4 of the smaller sub-cell edge) on land and at sea, a little fuller on
+ * the hovered country (.5) so it reads at a glance.
  */
-export function dotRadius(pitch: number, v: number, lit: boolean, hovered: boolean): number {
-  if (v === 1) return pitch * 0.06
-  if (hovered) return pitch * 0.46
-  return pitch * (lit ? 0.34 : 0.3)
+export function dotRadius(cw: number, ch: number, hovered: boolean): number {
+  return Math.min(cw / 2, ch / 4) * (hovered ? 0.5 : 0.4)
 }

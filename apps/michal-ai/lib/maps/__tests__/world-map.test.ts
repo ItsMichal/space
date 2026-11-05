@@ -10,7 +10,7 @@ import { hastToReact } from '@/lib/content/to-react'
 import { bodyProblems, directiveAttrs } from '@/lib/content/rules.mjs'
 import { mapById, maps } from '@/content/maps'
 import * as world from '../world.gen'
-import { decodeWorld, dotRadius, pitchFor } from '../geometry'
+import { cellFor, decodeWorld, dotRadius } from '../geometry'
 
 const starlink = maps['starlink-markets']
 
@@ -72,14 +72,14 @@ describe('world raster', () => {
     expect(w.index('sea')).toBe(-1)
   })
 
-  it('swells the hovered country and keeps the sea a speck', () => {
-    const p = pitchFor(672)
-    expect(p).toBe(6) // the globe's grid on a desktop post
-    expect(pitchFor(326)).toBe(3.5) // tighter on a phone
-    expect(dotRadius(p, 1, false, false)).toBeLessThan(dotRadius(p, 5, false, false))
-    expect(dotRadius(p, 5, false, false)).toBeLessThan(dotRadius(p, 5, true, false))
-    expect(dotRadius(p, 5, true, false)).toBeLessThan(dotRadius(p, 5, true, true))
-    expect(dotRadius(p, 5, true, true)).toBeLessThan(p / 2)
+  it('sets the mixels on the hero\'s character cell and swells the hovered country', () => {
+    expect(cellFor(672)).toEqual({ cw: 8 * 0.62, ch: 8 }) // a desktop post: a dot under every 3 px
+    expect(cellFor(850).ch).toBe(9)
+    expect(cellFor(326).ch).toBe(8) // the smallest cell on a phone
+    expect(cellFor(4000).ch).toBe(10)
+    const { cw, ch } = cellFor(850)
+    expect(dotRadius(cw, ch, false)).toBeLessThan(dotRadius(cw, ch, true))
+    expect(dotRadius(cw, ch, true)).toBeLessThanOrEqual(Math.min(cw / 2, ch / 4) / 2) // dots never touch
   })
 
   it('is what the bake script makes (run node scripts/build-world-map.mjs after changing it)', () => {
