@@ -13,7 +13,7 @@ import { BACKDROP_DRAW } from '../backdrop/config'
 import { IGNITE_MS, LEAD_MS, PAPER_ASH, PAPER_FPS, PAPER_MS } from './config'
 import { type Blast, air, embers, seeded, spawn, STEP_MS, step } from './embers'
 import { ASH_FS, EMBER_FS, EMBER_VS, QUAD_VS, SHADE_FS, SHEET_FS, SHEET_VS, SOFT_FS } from './shaders'
-import { type Design, PATTERNS, type Piece, foldsAt, mesh, packet, pieces, place, pose, reaches } from './origami'
+import { type Design, PATTERNS, type Piece, foldsMade, mesh, packet, pieces, place, pose, reaches } from './origami'
 import { flickerAt, frameAt, type Frame, randomCrumple, waitingAt } from './timeline'
 
 const MAX_DPR = 2
@@ -439,7 +439,7 @@ function createStage(w: number, h: number, dpr: number) {
     gl.uniform2f(u.u_lead, ...crumple.lead)
     gl.uniform1f(u.u_fold, curl)
     gl.uniform1f(u.u_lit, Math.min(1, folding * 4))
-    const made = foldsAt(folding, flower.folds.length)
+    const made = foldsMade(flower.folds, folding)
     // the flower drawn to the middle as it closes, so it finishes centred
     const e = t * t * (3 - 2 * t)
     gl.uniform2f(u.u_shift, bloom[0] * e, bloom[1] * e)

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { type Fold, MAX_FOLDS, PATTERNS, foldPoint, folded, foldsAt, mesh, packet, pieces, place, pose, reaches } from './origami'
+import { type Fold, MAX_FOLDS, PATTERNS, foldPoint, folded, foldsAt, foldsMade, mesh, packet, pieces, place, pose, reaches, sides } from './origami'
 
 const area = (poly: [number, number][]) => {
   let a = 0
@@ -21,14 +21,11 @@ describe('paper origami', () => {
         expect(folds.length).toBeLessThanOrEqual(MAX_FOLDS)
         folds.forEach((f, k) => {
           expect(Math.hypot(...f.n)).toBeCloseTo(1, 6)
-          // some of the sheet, as it lies after the folds before, is on the moving side
-          const before: Fold[] = folds.slice(0, k)
+          // some of the sheet is among what it moves
+          const upTo: Fold[] = folds.slice(0, k + 1)
           let moves = false
-          for (let j = 0; j <= 20 && !moves; j++)
-            for (let i = 0; i <= 20; i++) {
-              const [x, y] = folded(before, (i / 20 - 0.5) * w, (j / 20 - 0.5) * h)
-              if ((x - f.c[0]) * f.n[0] + (y - f.c[1]) * f.n[1] > 1) moves = true
-            }
+          for (let j = 0; j <= 40 && !moves; j++)
+            for (let i = 0; i <= 40; i++) if (sides(upTo, (i / 40 - 0.5) * w, (j / 40 - 0.5) * h)[k]) moves = true
           expect(moves, `${name} fold ${k}`).toBe(true)
         })
         // folded, the flower is much smaller than the sheet
@@ -106,5 +103,16 @@ describe('paper origami', () => {
       for (let k = 1; k < 4; k++) expect(now[k]).toBeLessThanOrEqual(now[k - 1])
       prev = now
     }
+  })
+
+  it('makes a fold marked with the one before it at the same moment, as a reverse fold is made', () => {
+    const { folds } = PATTERNS.swan(390, 844)
+    for (let t = 0; t <= 1; t += 0.05) {
+      const made = foldsMade(folds, t)
+      folds.forEach((f, k) => {
+        if (f.with) expect(made[k]).toBe(made[k - 1])
+      })
+    }
+    expect(foldsMade(folds, 1).every((m) => m === 1)).toBe(true)
   })
 })

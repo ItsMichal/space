@@ -3,11 +3,15 @@
 // each point is placed by bending it about the creases it lies beyond (place); the engine draws them.
 // A fold is a crease line in the sheet as it lies after the folds before it (px from the sheet's centre, y up), the side of it
 // that moves (its normal points there), which way it goes (a valley folds up toward the camera and lands on top, a mountain folds
-// back behind) and how far: all the way flat (1, half a turn) or only partway (below 1), so the petals stand open.
+// back behind) and how far: all the way flat (1, half a turn) or only partway (below 1), so the petals stand open. A fold can be
+// made of some of the layers only, a flap, as an origamist folds the top layer down: `only` names the folds before it whose moving
+// side the paper it moves must be on (or, false, must not be). Folds marked `with` are made at the same moment as the fold before
+// them, so a crease can take its layers different ways at once: a reverse fold turns a flap's front layers one way about it and
+// its back layers the other, as a neck or head is pulled out of the body.
 // Paper does not hinge: a flap being folded rolls over a soft bend that tightens into the crease as it is pressed down, and a petal
 // left standing keeps a little of that curl.
 
-export type Fold = { c: [number, number]; n: [number, number]; valley: boolean; angle: number }
+export type Fold = { c: [number, number]; n: [number, number]; valley: boolean; angle: number; only?: [number, boolean][]; with?: boolean }
 
 /** A model: its folds, and how far it is turned in the sheet's plane to stand the right way up once folded, radians. */
 export type Design = { folds: Fold[]; turn: number }
@@ -20,6 +24,11 @@ const unit = (x: number, y: number): [number, number] => {
   return [x / l, y / l]
 }
 const fold = (c: [number, number], n: [number, number], valley = true, angle = 1): Fold => ({ c, n, valley, angle })
+/** Whether paper that the folds before took the sides `moves` of is among the layers fold `f` folds. */
+const among = (f: Fold, moves: boolean[]) => !f.only || f.only.every(([j, side]) => moves[j] === side)
+/** The paper's stack grows with each full fold: it doubles where a fold goes through it all, but a fold only lays a few layers on
+ * the part it covers, so the growth is kept to that, and a flap wraps no more than a few sheets. */
+const grow = (stack: number) => Math.min(2 * stack + LAYER, stack + 4 * LAYER, 4 * LAYER)
 
 /** The page folded down to a square, face up, as an origamist squares a sheet: in half behind across its long side, then the strip
  * that leaves past the square behind too. The folds, and the square's middle and side. */
@@ -46,21 +55,28 @@ export function square(w: number, h: number): { folds: Fold[]; c: [number, numbe
   return { folds, c: [(x0 + x1) / 2, (y0 + y1) / 2], a: Math.min(W, H) }
 }
 
-/** The square folded corner to corner into a triangle (the top right corner behind), seen point down once the model is turned an
- * eighth: `at(p, q)` is a point `p` along its top edge (toward the right corner) and `q` up from it, both in shares of the
- * triangle's half width, and `dir` a direction the same way. */
-function triangle(w: number, h: number) {
+/** The square stood on a corner, unfolded: `at(p, q)` is a point `p` toward its right corner and `q` toward its top one from its
+ * middle, both in shares of its half diagonal (its corners at (+-1, 0) and (0, +-1)), once turned an eighth; `dir` a direction the
+ * same way. */
+function diamond(w: number, h: number) {
   const s = square(w, h)
   const H = s.a / Math.SQRT2
   const e = [Math.SQRT1_2, -Math.SQRT1_2]
   const up = [Math.SQRT1_2, Math.SQRT1_2]
   const at = (p: number, q: number): [number, number] => [s.c[0] + H * (p * e[0] + q * up[0]), s.c[1] + H * (p * e[1] + q * up[1])]
   const dir = (p: number, q: number) => unit(p * e[0] + q * up[0], p * e[1] + q * up[1])
-  return { folds: [...s.folds, fold(s.c, dir(0, 1), false)], at, dir, turn: Math.PI / 4 }
+  return { folds: s.folds, at, dir, turn: Math.PI / 4 }
+}
+
+/** The square folded corner to corner into a triangle (the top right corner behind), seen point down once the model is turned an
+ * eighth, in the diamond's shares: (0, -1) its point, (+-1, 0) its corners. */
+function triangle(w: number, h: number) {
+  const d = diamond(w, h)
+  return { ...d, folds: [...d.folds, fold(d.at(0, 0), d.dir(0, 1), false)] }
 }
 
 /** A fold along the crease through `a` and `b` (triangle shares), the side `toward` lies on moving. */
-function crease(t: ReturnType<typeof triangle>, a: [number, number], b: [number, number], toward: [number, number], valley = true, angle = 1): Fold {
+function crease(t: ReturnType<typeof diamond>, a: [number, number], b: [number, number], toward: [number, number], valley = true, angle = 1): Fold {
   const [dp, dq] = [b[0] - a[0], b[1] - a[1]]
   let [np, nq] = [dq, -dp]
   if ((toward[0] - a[0]) * np + (toward[1] - a[1]) * nq < 0) [np, nq] = [-np, -nq]
@@ -83,42 +99,60 @@ function bloom(w: number, h: number, tilt: number, angle: number): Design {
   return { turn: t.turn + Math.PI, folds: [...t.folds, petal(1), petal(-1)] }
 }
 
-/** The models for a sheet `w` by `h` px, one picked per run: mostly flowers, and a butterfly, a dog and a cup. */
+/** The models for a sheet `w` by `h` px, one picked per run: traditional models, the tulip, the swan and the dog's face. */
 export const PATTERNS: Record<string, (w: number, h: number) => Design> = {
   // the classic flat tulip: the triangle stood point up on its folded edge, and its two bottom corners folded up beside the point,
   // so three tips stand at the top (a petal each side of the middle one) over shoulders that narrow to the base; the side petals
   // are left a little open
+  // the traditional flat tulip, its corners folded up at an angle beside the point as the side petals
   tulip: (w, h) => bloom(w, h, 0.4, 0.96),
-  // the tulip still in bud, its side petals hugging the middle one
+  // the same tulip with its corners folded straight up to the point, as the simplest version has it, a bud
   bud: (w, h) => bloom(w, h, 0.12, 0.98),
-  // the lily, its side petals laid wide open
-  lily: (w, h) => bloom(w, h, 1.05, 0.9),
-  // the iris: the tulip's petals spread, and its middle petal folded down over them, hanging as an iris's falls do
-  iris: (w, h) => {
-    const f = bloom(w, h, 0.75, 0.94)
-    const t = triangle(w, h)
-    return { ...f, folds: [...f.folds, crease(t, [0, -0.75], [1, -0.75], [0, -1], true, 0.9)] }
+  // the traditional swan: the square on its corner folded into a kite (its lower edges behind to the middle line), the kite's new
+  // edges folded to the middle again in front, so it runs long and narrow to the neck's tip, then folded in half behind along the
+  // middle, the neck pulled up out of the body and the head pulled forward out of the neck, each by a reverse fold. In the
+  // diamond's shares the tail is at (0, 1), the neck's tip at (0, -1) and the middle line along p = 0, its fold the keel
+  swan: (w, h) => {
+    const t = diamond(w, h)
+    const folds = [...t.folds]
+    const add = (f: Fold) => folds.push(f) - 1
+    // the lower edges to the middle line, about creases a sixteenth and then a thirty-second of a turn off it
+    for (const [slope, valley] of [
+      [Math.tan(Math.PI / 8), false],
+      [Math.tan(Math.PI / 16), true],
+    ] as const)
+      for (const side of [1, -1]) add(crease(t, [0, -1], [side * slope, 0], [side, 0], valley))
+    const half = add(crease(t, [0, 0], [0, 1], [1, 0], false))
+    // a reverse fold about the crease through `a` along `d`, the end past it toward `tip` turned out: the front layers (`front`
+    // of the fold that made them) toward the camera and the back ones behind, at once
+    const reverse = (a: [number, number], d: [number, number], tip: [number, number], front: [number, boolean][], back: [number, boolean][]) => {
+      const b: [number, number] = [a[0] + d[0], a[1] + d[1]]
+      const k = add({ ...crease(t, a, b, tip, true), only: front })
+      add({ ...crease(t, a, b, tip, false), only: back, with: true })
+      return k
+    }
+    const flip = (pt: [number, number], a: [number, number], d: [number, number]): [number, number] => {
+      const [x, y] = [pt[0] - a[0], pt[1] - a[1]]
+      const l = x * d[0] + y * d[1]
+      return [a[0] + 2 * l * d[0] - x, a[1] + 2 * l * d[1] - y]
+    }
+    const norm = (x: number, y: number): [number, number] => {
+      const l = Math.hypot(x, y)
+      return [x / l, y / l]
+    }
+    // the neck up, standing a little back toward the tail (up is -p, the keel's side +p)
+    const base: [number, number] = [0, -0.2]
+    const rise = norm(-1, 0.12)
+    const neckD = norm(rise[0], rise[1] - 1)
+    const tip = flip([0, -1], base, neckD)
+    const neck = reverse(base, neckD, [0, -1], [[half, false]], [[half, true]])
+    // the head forward and a little down, out of the neck's last stretch
+    const head: [number, number] = [tip[0] - rise[0] * 0.17, tip[1] - rise[1] * 0.17]
+    const look = norm(0.3, -0.95)
+    reverse(head, norm(rise[0] + look[0], rise[1] + look[1]), tip, [[half, false], [neck, true]], [[half, true], [neck + 1, true]])
+    return { turn: t.turn - Math.PI / 2, folds }
   },
-  // the butterfly: the triangle point up, the point folded down past the base so its tip shows below as the body, then the whole
-  // folded a little along the middle so the wings lift
-  butterfly: (w, h) => {
-    const t = triangle(w, h)
-    const body = crease(t, [0, -0.4], [1, -0.4], [0, -1], true, 0.98)
-    const wings = crease(t, [0, -1], [0, 1], [1, 0], true, 0.3)
-    return { turn: t.turn + Math.PI, folds: [...t.folds, body, wings] }
-  },
-  // the paper cup: the triangle point up, each bottom corner folded across to touch the opposite side so its top edge lies level,
-  // then the point folded down in front over them, a tab on the cup's rim. Worked out with the point up, in the triangle's shares
-  // turned half round (x = -p, y = -q): a corner lands level on the far side when its crease leans 67.5 degrees, which puts it
-  // through (0.171, 0) and (0.414, 0.586)
-  cup: (w, h) => {
-    const t = triangle(w, h)
-    const up = (x: number, y: number): [number, number] => [-x, -y]
-    const corner = (side: 1 | -1) => crease(t, up(side * 0.171, 0), up(side * 0.414, 0.586), up(side, 0), true, 0.97)
-    const rim = crease(t, up(0, 0.586), up(1, 0.586), up(0, 1), true, 0.96)
-    return { turn: t.turn + Math.PI, folds: [...t.folds, corner(1), corner(-1), rim] }
-  },
-  // the dog's face: the triangle point down, its two top corners folded down beside the face as ears that hang a little past its
+  // the traditional dog's face: the triangle point down, its two top corners folded down beside the face as ears that hang a little past its
   // sides, and the point folded up a little for the nose. The ears' creases leave the top edge 35 degrees down, so each ear hangs
   // 70 degrees down; they are left a little open, floppy
   dog: (w, h) => {
@@ -132,15 +166,17 @@ export const PATTERNS: Record<string, (w: number, h: number) => Design> = {
 /** Where a point of the flat sheet ends up once every fold is made all the way (still flat, layers ignored); a fold made only
  * partway leaves it where it was. */
 export function folded(folds: Fold[], x: number, y: number): [number, number] {
-  const h = seams(folds)
-  for (const [k, f] of folds.entries()) {
-    const s = (x - f.c[0]) * f.n[0] + (y - f.c[1]) * f.n[1] - h[k]
-    if (s > -h[k] && f.angle >= 1) {
-      x -= 2 * s * f.n[0]
-      y -= 2 * s * f.n[1]
-    }
-  }
-  return [x, y]
+  return mirrored(folds, sides(folds, x, y), folds.length, x, y)
+}
+
+/** For a point of the flat sheet, whether each fold moves it. */
+export function sides(folds: Fold[], x: number, y: number): boolean[] {
+  const moves: boolean[] = []
+  folds.forEach((f, k) => {
+    const [qx, qy] = mirrored(folds, moves, k, x, y)
+    moves.push((qx - f.c[0]) * f.n[0] + (qy - f.c[1]) * f.n[1] > 0 && among(f, moves))
+  })
+  return moves
 }
 
 /** How far each of `count` folds is made, 0 to 1, at `t` (0 flat, 1 folded): one after another in order, each eased in and out,
@@ -152,6 +188,14 @@ export function foldsAt(t: number, count: number): number[] {
     const f = Math.min(1, Math.max(0, g - k * (1 - OVERLAP)))
     return f * f * (3 - 2 * f)
   })
+}
+
+/** How far each fold is made at `t`: a fold marked `with` goes with the one before it, the rest one after another (foldsAt). */
+export function foldsMade(folds: Fold[], t: number): number[] {
+  const step: number[] = []
+  folds.forEach((f, k) => step.push(k > 0 && f.with ? step[k - 1] : (step[k - 1] ?? -1) + 1))
+  const at = foldsAt(t, (step.at(-1) ?? -1) + 1)
+  return step.map((k) => at[k])
 }
 
 /** The paper's thickness, px: each full fold lands its layers on top of all those under them, so the stack doubles. */
@@ -197,6 +241,11 @@ export function pieces(folds: Fold[], w: number, h: number): Piece[] {
       const side = ([x, y]: [number, number]) => {
         const [qx, qy] = mirrored(folds, piece.moves, k, x, y)
         return (qx - f.c[0]) * f.n[0] + (qy - f.c[1]) * f.n[1]
+      }
+      // layers this fold leaves are not cut by it
+      if (!among(f, piece.moves)) {
+        next.push({ poly: piece.poly, moves: [...piece.moves, false] })
+        continue
       }
       for (const moves of [true, false]) {
         const poly = clip(piece.poly, (p) => (moves ? side(p) : -side(p)))
@@ -291,7 +340,7 @@ export function place(folds: Fold[], moves: boolean[], at: Pose, x: number, y: n
       py += (nu - u) * f.n[1]
       pz = nz
     }
-    if (f.angle >= 1) stack = 2 * stack + LAYER
+    if (f.angle >= 1) stack = grow(stack)
   })
   return [px, py, pz]
 }
@@ -322,12 +371,7 @@ export function packet(folds: Fold[], w: number, h: number, turn = 0): { center:
 
 /** Where a point of the flat sheet is in 3D in pose `at`, as `place` puts it on its own piece. */
 export function foldPoint(folds: Fold[], at: Pose, x: number, y: number): [number, number, number] {
-  const moves: boolean[] = []
-  folds.forEach((f, k) => {
-    const [qx, qy] = mirrored(folds, moves, k, x, y)
-    moves.push((qx - f.c[0]) * f.n[0] + (qy - f.c[1]) * f.n[1] > 0)
-  })
-  return place(folds, moves, at, x, y)
+  return place(folds, sides(folds, x, y), at, x, y)
 }
 
 /** Where each full fold lays its flap, px past its crease: the paper turning round the layers under it uses up half a turn of
@@ -340,7 +384,7 @@ function seams(folds: Fold[]): number[] {
     h = folds.map((f) => {
       if (f.angle < 1) return 0
       const r = (Math.PI * (2 * stack + LAYER)) / 4
-      stack = 2 * stack + LAYER
+      stack = grow(stack)
       return r
     })
     seamsOf.set(folds, h)
