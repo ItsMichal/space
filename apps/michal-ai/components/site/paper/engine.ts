@@ -52,6 +52,8 @@ const LEAN = 0.3
 /** How far the page is lifted toward the camera before it crumples, as a share of the camera's distance: a little, about 5% larger,
  * so while the new route loads the old page overhangs every edge and still covers it all. */
 const LIFT = 0.05
+/** The most of the screen's width or height the finished flower takes. */
+const FIT = 0.78
 
 const mono = () => getComputedStyle(document.documentElement).getPropertyValue('--font-mono').trim() || 'ui-monospace, monospace'
 
@@ -296,6 +298,7 @@ function createStage(w: number, h: number, dpr: number) {
   let flowerName = ''
   let flower: Design = { folds: [], turn: 0 }
   let bloom: [number, number] = [0, 0]
+  let fit = 1
   let plates: Piece[] = []
   let reach: number[] = []
   let plateFlat = new Float32Array(0)
@@ -327,7 +330,10 @@ function createStage(w: number, h: number, dpr: number) {
   const fold = (name: string) => {
     flowerName = name
     flower = PATTERNS[name](w, h)
-    bloom = packet(flower.folds, w, h).center
+    const box = packet(flower.folds, w, h, flower.turn)
+    bloom = box.center
+    // a flower wider or taller than the screen leaves room round it, so no petal is cut by the edge
+    fit = Math.min(1, (FIT * w) / box.size[0], (FIT * h) / box.size[1])
     // the folding sheet is drawn as its pieces cut fine, so the bends curve, placed every frame
     plates = pieces(flower.folds, w, h)
     reach = reaches(flower.folds, plates)
@@ -399,6 +405,7 @@ function createStage(w: number, h: number, dpr: number) {
     const e = t * t * (3 - 2 * t)
     gl.uniform2f(u.u_shift, bloom[0] * e, bloom[1] * e)
     gl.uniform1f(u.u_turn, flower.turn * e)
+    gl.uniform1f(u.u_fit, 1 + (fit - 1) * e)
     gl.uniform1f(u.u_R, R)
     // squash and stretch on screen, volume kept: wider and shorter when squished (rows of the column-major matrix)
     const sy = 1 - s.squash

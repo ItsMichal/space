@@ -69,18 +69,19 @@ function crease(t: ReturnType<typeof triangle>, a: [number, number], b: [number,
 
 /** The flowers for a sheet `w` by `h` px. */
 export const PATTERNS: Record<string, (w: number, h: number) => Design> = {
-  // the classic flat tulip: the triangle's two side corners folded up past its top edge as the outer petals, standing a little
-  // proud of the middle one, and their outer points tucked behind to round the bloom
+  // the classic flat tulip: the triangle stood point up on its folded edge, and its two bottom corners folded up beside the point,
+  // so three tips stand at the top (a petal each side of the middle one) over shoulders that narrow to the base; the side petals
+  // are left a little open
   tulip: (w, h) => {
     const t = triangle(w, h)
-    return {
-      turn: t.turn,
-      folds: [
-        ...t.folds,
-        crease(t, [0.1, -0.85], [0.55, 0], [1, 0], true, 0.96),
-        crease(t, [-0.1, -0.85], [-0.55, 0], [-1, 0], true, 0.96),
-      ],
+    // in the triangle's shares its point is (0, -1), here turned to the top; a corner (1, 0) goes to `to`, folded on the line
+    // halfway between them
+    const petal = (side: 1 | -1, to: [number, number]) => {
+      const m: [number, number] = [(side + to[0]) / 2, to[1] / 2]
+      const d: [number, number] = [-(to[1] - 0), to[0] - side]
+      return crease(t, m, [m[0] + d[0], m[1] + d[1]], [side, 0], true, 0.96)
     }
+    return { turn: t.turn + Math.PI, folds: [...t.folds, petal(1, [0.42, -1.08]), petal(-1, [-0.42, -1.08])] }
   },
 }
 
@@ -251,8 +252,10 @@ export function place(folds: Fold[], moves: boolean[], at: Pose, x: number, y: n
   return [px, py, pz]
 }
 
-/** The middle of the finished flower and its size, px, as seen from the front. */
-export function packet(folds: Fold[], w: number, h: number): { center: [number, number]; size: [number, number] } {
+/** The middle of the finished flower and its size, px, as seen from the front once it is turned `turn` to stand up; the middle is
+ * given back in the sheet, before the turn, so the flower moved there and then turned sits centred. */
+export function packet(folds: Fold[], w: number, h: number, turn = 0): { center: [number, number]; size: [number, number] } {
+  const [c, s] = [Math.cos(turn), Math.sin(turn)]
   const all = pieces(folds, w, h)
   const done = pose(
     folds,
@@ -262,13 +265,15 @@ export function packet(folds: Fold[], w: number, h: number): { center: [number, 
   let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity]
   for (const piece of all)
     for (const [px, py] of piece.poly) {
-      const [x, y] = place(folds, piece.moves, done, px, py)
+      const [fx, fy] = place(folds, piece.moves, done, px, py)
+      const [x, y] = [fx * c - fy * s, fx * s + fy * c]
       x0 = Math.min(x0, x)
       y0 = Math.min(y0, y)
       x1 = Math.max(x1, x)
       y1 = Math.max(y1, y)
     }
-  return { center: [(x0 + x1) / 2, (y0 + y1) / 2], size: [x1 - x0, y1 - y0] }
+  const [mx, my] = [(x0 + x1) / 2, (y0 + y1) / 2]
+  return { center: [mx * c + my * s, -mx * s + my * c], size: [x1 - x0, y1 - y0] }
 }
 
 /** Where a point of the flat sheet is in 3D in pose `at`, as `place` puts it on its own piece. */

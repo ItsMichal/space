@@ -103,7 +103,7 @@ uniform mat3 u_rot;
 uniform vec3 u_center;
 uniform mat4 u_vp;
 uniform vec2 u_shift;
-uniform float u_plates, u_turn;
+uniform float u_plates, u_turn, u_fit;
 out vec2 v_uv;
 out vec3 v_wp, v_n;
 ${NOISE}
@@ -170,6 +170,7 @@ void main() {
   mat2 turn = mat2(cos(u_turn), sin(u_turn), -sin(u_turn), cos(u_turn));
   fp.xy = turn * fp.xy;
   n.xy = turn * n.xy;
+  fp *= u_fit;
   vec3 wp = u_rot * fp + u_center;
   v_wp = wp;
   v_n = u_rot * n;
