@@ -67,23 +67,45 @@ function crease(t: ReturnType<typeof triangle>, a: [number, number], b: [number,
   return fold(t.at(...a), t.dir(np, nq), valley, angle)
 }
 
-/** The models for a sheet `w` by `h` px, one picked per run. */
+/** The tulip and its kin: the triangle stood point up on its folded edge, and its two bottom corners folded up beside the point,
+ * so three tips stand at the top (a petal each side of the middle one) over shoulders that narrow to the base. In the triangle's
+ * shares its point is (0, -1), here turned to the top. A corner (1, 0) swings up about a pivot on the base a little to its own side,
+ * so the two flaps never cross, and stands `tilt` off upright beside the point, its fold made to `angle`, a little open. */
+function bloom(w: number, h: number, tilt: number, angle: number): Design {
+  const t = triangle(w, h)
+  const petal = (side: 1 | -1) => {
+    const b = 0.06
+    const r = 1 - b
+    const to: [number, number] = [side * (b + r * Math.sin(tilt)), -r * Math.cos(tilt)]
+    const m: [number, number] = [(side + to[0]) / 2, to[1] / 2]
+    return crease(t, [side * b, 0], m, [side, 0], true, angle)
+  }
+  return { turn: t.turn + Math.PI, folds: [...t.folds, petal(1), petal(-1)] }
+}
+
+/** The models for a sheet `w` by `h` px, one picked per run: mostly flowers, and a butterfly, a dog and a cup. */
 export const PATTERNS: Record<string, (w: number, h: number) => Design> = {
   // the classic flat tulip: the triangle stood point up on its folded edge, and its two bottom corners folded up beside the point,
   // so three tips stand at the top (a petal each side of the middle one) over shoulders that narrow to the base; the side petals
   // are left a little open
-  tulip: (w, h) => {
+  tulip: (w, h) => bloom(w, h, 0.4, 0.96),
+  // the tulip still in bud, its side petals hugging the middle one
+  bud: (w, h) => bloom(w, h, 0.12, 0.98),
+  // the lily, its side petals laid wide open
+  lily: (w, h) => bloom(w, h, 1.05, 0.9),
+  // the iris: the tulip's petals spread, and its middle petal folded down over them, hanging as an iris's falls do
+  iris: (w, h) => {
+    const f = bloom(w, h, 0.75, 0.94)
     const t = triangle(w, h)
-    // in the triangle's shares its point is (0, -1), here turned to the top. A corner (1, 0) swings up about a pivot on the base
-    // a little to its own side, so the two flaps never cross, and stands `tilt` off upright beside the point
-    const petal = (side: 1 | -1) => {
-      const [b, tilt] = [0.06, 0.4]
-      const r = 1 - b
-      const to: [number, number] = [side * (b + r * Math.sin(tilt)), -r * Math.cos(tilt)]
-      const m: [number, number] = [(side + to[0]) / 2, to[1] / 2]
-      return crease(t, [side * b, 0], m, [side, 0], true, 0.96)
-    }
-    return { turn: t.turn + Math.PI, folds: [...t.folds, petal(1), petal(-1)] }
+    return { ...f, folds: [...f.folds, crease(t, [0, -0.75], [1, -0.75], [0, -1], true, 0.9)] }
+  },
+  // the butterfly: the triangle point up, the point folded down past the base so its tip shows below as the body, then the whole
+  // folded a little along the middle so the wings lift
+  butterfly: (w, h) => {
+    const t = triangle(w, h)
+    const body = crease(t, [0, -0.4], [1, -0.4], [0, -1], true, 0.98)
+    const wings = crease(t, [0, -1], [0, 1], [1, 0], true, 0.3)
+    return { turn: t.turn + Math.PI, folds: [...t.folds, body, wings] }
   },
   // the paper cup: the triangle point up, each bottom corner folded across to touch the opposite side so its top edge lies level,
   // then the point folded down in front over them, a tab on the cup's rim. Worked out with the point up, in the triangle's shares

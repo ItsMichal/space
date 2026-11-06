@@ -274,8 +274,6 @@ void main() {
   float fibre = gnoise(vec2(px.x * 0.06, px.y * 0.7) + 2.3) * 0.5 + gnoise(vec2(px.x * 0.6, px.y * 0.05) + 7.9) * 0.5;
   float tooth = gnoise(px * 1.6 + 3.3);
   col = mix(col, mix(col, vec3(1.0), 0.1) * (1.0 + 0.045 * fibre + 0.025 * tooth), u_paper);
-  // the paper scorches just ahead of the fire, so it darkens into the burning edge instead of meeting it bare
-  col = mix(col, u_char, 0.55 * smoothstep(-3.0 * u_edge, 0.0, age));
   if (u_state > 0.5) {
     if (age > 0.0) o = vec4(base, (64.0 + 191.0 * clamp(age / u_ash, 0.0, 1.0)) / 255.0);
     else if (age > -u_edge) o = vec4(col, (1.0 + 62.0 * (1.0 + age / u_edge)) / 255.0);
@@ -292,7 +290,7 @@ layout(location = 0) in vec2 a_p;
 void main() { gl_Position = vec4(a_p, 0.0, 1.0); }
 `
 
-// The burning edge: a cell on it is the paper turned to a glyph, sparse and dark where the fire is coming, dense and hot at its
+// The burning edge: a cell on it is the paper turned to a glyph, sparse where the fire is coming, dense and hot at its
 // front, so the edge steps along the glyph grid. What has burnt behind it has let go of its glyph as an ember (./embers.ts).
 export const ASH_FS = /* glsl */ `#version 300 es
 precision highp float;
@@ -300,7 +298,7 @@ uniform sampler2D u_cells, u_glyphs;
 uniform ivec2 u_cellPx;
 uniform int u_count;
 uniform float u_drawing;
-uniform vec3 u_hot, u_flame, u_char;
+uniform vec3 u_hot, u_flame;
 out vec4 o;
 float h1(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 float glyph(int g, ivec2 at) { return texelFetch(u_glyphs, ivec2(g * u_cellPx.x + at.x, u_cellPx.y - 1 - at.y), 0).a; }
@@ -312,8 +310,8 @@ void main() {
   float flick = (h1(vec2(cell) + u_drawing * 1.31) - 0.5) * 1.6;
   float f = (v - 1.0) / 62.0;
   int g = clamp(int(round(f * float(u_count - 1) + flick)), 0, u_count - 1);
-  vec3 ink = mix(u_char, u_flame, smoothstep(0.45, 0.8, f));
-  ink = mix(ink, u_hot, smoothstep(0.85, 1.0, f));
+  // no char: the paper goes straight to glyphs, in the fire's warm colours
+  vec3 ink = mix(u_flame, u_hot, smoothstep(0.6, 1.0, f));
   // only the glyph: a cell is square and the paper under it is not, so filling it would show as a block past the burn and the edge
   float c = glyph(g, px - cell * u_cellPx);
   o = vec4(ink * c, c);

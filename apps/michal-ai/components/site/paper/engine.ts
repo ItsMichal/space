@@ -641,7 +641,6 @@ function createStage(w: number, h: number, dpr: number) {
       gl.uniform1f(ash.u.u_drawing, drawing)
       gl.uniform3fv(ash.u.u_hot, fire.hot)
       gl.uniform3fv(ash.u.u_flame, fire.flame)
-      gl.uniform3fv(ash.u.u_char, fire.char)
       gl.activeTexture(gl.TEXTURE2)
       gl.bindTexture(gl.TEXTURE_2D, glyphs)
       gl.activeTexture(gl.TEXTURE3)
