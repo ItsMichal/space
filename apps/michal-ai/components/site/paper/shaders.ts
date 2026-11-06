@@ -92,12 +92,20 @@ float folds(vec2 uv, vec2 size) {
 }
 `
 
+// The shadow map's height, 0 to 1 of u_hmax over the floor, from its two bytes; 0 where no paper is.
+const MASK = /* glsl */ `
+float height(vec4 m) {
+  return m.g + m.b / 255.0;
+}
+`
+
 export const SHEET_VS = /* glsl */ `#version 300 es
 precision highp float;
 in vec2 a_uv;
 in vec3 a_pos, a_nrm;
 uniform vec2 u_size, u_cell;
-uniform float u_ball, u_fold, u_R, u_shadow, u_floor, u_twirl;
+uniform float u_ball, u_fold, u_R, u_shadow, u_floor, u_twirl, u_hmax;
+uniform vec2 u_light;
 uniform vec2 u_lead;
 uniform mat3 u_rot;
 uniform vec3 u_center;
@@ -149,8 +157,8 @@ vec3 base(vec2 uv, out vec3 dir, out float h) {
   float flap = smoothstep(0.35, 1.0, r) * spikes(q * 5.0 + u_seed);
   return pos + sn * u_R * 0.45 * flap * bl;
 }
-// With u_shadow set the point is laid on a floor behind the ball, pushed a little down and right with its height, for a close drop
-// shadow (thrown along the real light it would fall far off the ball).
+// With u_shadow set the point is laid on the floor along the light (u_light, the way it moves a unit of height), into the shadow
+// map: its depth is its height above the floor, so where layers overlap the highest paper is the one kept.
 void main() {
   v_uv = a_uv;
   vec3 fp;
@@ -176,8 +184,12 @@ void main() {
   v_n = u_rot * n;
   if (u_shadow > 0.5) {
     // paper curled back past the floor casts nothing up and left of itself
-    wp.xy += vec2(0.14, -0.18) * max(wp.z - u_floor, 0.0);
+    float h = max(wp.z - u_floor, 0.0);
+    wp.xy += u_light * h;
     wp.z = u_floor;
+    gl_Position = u_vp * vec4(wp, 1.0);
+    gl_Position.z = (1.0 - 2.0 * clamp(h / u_hmax, 0.0, 1.0)) * gl_Position.w;
+    return;
   }
   gl_Position = u_vp * vec4(wp, 1.0);
 }
@@ -188,19 +200,45 @@ void main() {
 // Behind the fire front the sheet is gone; the ash pass draws the glyphs there and on the burning edge ahead of it.
 // u_state 1 writes, at one texel per glyph cell, what the ash pass needs: for a burnt cell the page colour under it and how long
 // ago it burnt (alpha 64 to 255), for a cell on the burning edge the paper as shaded and how near the front it is (1 to 63).
-// u_state 2 is the cast shadow, one flat hard-edged tone.
+// u_state 2 is the shadow map: where the paper lies over the floor, seen along the light, and how high the highest of it is there
+// (in two bytes, green and blue). The floor shadow is blurred from it (SOFT_FS), and the paper looks it up to be shaded by the
+// paper above it, a flap darkening the sheet under it as it comes over.
 export const SHEET_FS = /* glsl */ `#version 300 es
 precision highp float;
 in vec2 v_uv;
 in vec3 v_wp, v_n;
 uniform sampler2D u_a;
-uniform float u_burn, u_ash, u_edge, u_state, u_shadowA, u_fold, u_lit;
-uniform vec2 u_size;
+uniform float u_burn, u_ash, u_edge, u_state, u_fold, u_lit, u_floor, u_hmax, u_selfA, u_texel;
+uniform vec2 u_size, u_light;
+uniform mat4 u_vp;
+uniform highp sampler2D u_mask;
 uniform vec3 u_back, u_char;
 out vec4 o;
 ${NOISE}
 ${BURN}
 ${FOLDS}
+${MASK}
+// How much of the key light the paper above this point takes, 0 to 1: the shadow map looked up where this point falls on the floor,
+// at five taps spread by how far above it the paper is, so a flap close over the sheet throws a crisp shadow and a high one a soft one.
+// Paper turned from the light falls across more height within one texel of the map, so it is let off by more, or it would shade itself
+float shadowed(float cosL) {
+  float me = max(v_wp.z - u_floor, 0.0);
+  vec4 c = u_vp * vec4(v_wp.xy + u_light * me, u_floor, 1.0);
+  vec2 uv = c.xy / c.w * 0.5 + 0.5;
+  vec2 texel = 1.0 / vec2(textureSize(u_mask, 0));
+  me /= u_hmax;
+  float over = max(height(texture(u_mask, uv)) - me, 0.0) * u_hmax;
+  float r = 0.75 + over * 0.04;
+  // the layers of a flat fold lie a few px apart: within that, paper does not shade the paper under it
+  float c2 = clamp(cosL, 0.1, 1.0);
+  float bias = (3.0 + u_texel * (1.5 + r) * sqrt(1.0 - c2 * c2) / c2) / u_hmax;
+  float s = step(me + bias, height(texture(u_mask, uv)));
+  s += step(me + bias, height(texture(u_mask, uv + vec2(r, 0.3 * r) * texel)));
+  s += step(me + bias, height(texture(u_mask, uv - vec2(r, 0.3 * r) * texel)));
+  s += step(me + bias, height(texture(u_mask, uv + vec2(-0.3 * r, r) * texel)));
+  s += step(me + bias, height(texture(u_mask, uv + vec2(0.3 * r, -r) * texel)));
+  return s / 5.0;
+}
 void main() {
   vec3 base = gl_FrontFacing ? texture(u_a, v_uv).rgb : u_back;
   float age = u_burn - burnField(v_uv, u_size);
@@ -213,16 +251,18 @@ void main() {
   float ink = max(big, small * 0.8) * smoothstep(0.15, 0.6, u_fold);
   if (u_state > 1.5) {
     if (age > 0.0) discard;
-    o = vec4(u_char * u_shadowA, u_shadowA);
+    float h = clamp((v_wp.z - u_floor) / u_hmax, 0.0, 1.0) * 255.0;
+    o = vec4(1.0, floor(h) / 255.0, fract(h), 1.0);
     return;
   }
-  // paper in a room: a soft key light from the upper left that wraps a little round the turn of a bend, and the room's light,
-  // more of it the more a side faces out; scaled so the sheet lying flat is exactly the page
+  // paper in a room: a soft key light from the upper left (the light the shadows are thrown along) that wraps a little round the
+  // turn of a bend, kept off by paper above, and the room's light, more of it the more a side faces out; scaled so the sheet
+  // lying flat and in the open is exactly the page
   vec3 N = normalize(v_n) * (gl_FrontFacing ? 1.0 : -1.0);
-  vec3 L = normalize(vec3(-0.45, 0.55, 0.7));
-  float key = max(0.0, (dot(N, L) + 0.25) / 1.25);
+  vec3 L = normalize(vec3(-u_light, 1.0));
+  float key = max(0.0, (dot(N, L) + 0.25) / 1.25) * (1.0 - u_selfA * shadowed(dot(N, L)));
   float room = 0.5 + 0.5 * N.z;
-  float light = (0.35 * room + 0.65 * key) / (0.35 + 0.65 * (L.z + 0.25) / 1.25);
+  float light = (0.3 * room + 0.7 * key) / (0.3 + 0.7 * (L.z + 0.25) / 1.25);
   // the paper's grain, and its cut edges a shade darker so a layer reads over the one under it
   vec2 px = v_uv * u_size;
   float grain = gnoise(px * 0.45) * 0.6 + gnoise(px * 0.11 + 4.0) * 0.4;
@@ -311,5 +351,57 @@ void main() {
   float c = texelFetch(u_glyphs, ivec2(v_glyph * u_cellPx.x + at.x, u_cellPx.y - 1 - at.y), 0).a;
   if (c <= 0.0) discard;
   o = v_col * c;
+}
+`
+
+// The floor shadow, at the shadow map's own low resolution: how high the paper is round here (the mean of what lies within a wide
+// ring) sets how far its shadow spreads, then the paper's cover is averaged over a disc that wide, so where the paper rests on the
+// floor its shadow is close and dark and where it stands off it the shadow is wide and faint. Out: the shadow's alpha, in red.
+export const SOFT_FS = /* glsl */ `#version 300 es
+precision highp float;
+uniform highp sampler2D u_mask;
+uniform float u_hmax, u_texel, u_shadowA;
+out vec4 o;
+${MASK}
+const vec2 DISC[12] = vec2[12](
+  vec2(-0.326, -0.406), vec2(-0.840, -0.074), vec2(-0.696, 0.457), vec2(-0.203, 0.621), vec2(0.962, -0.195), vec2(0.473, -0.480),
+  vec2(0.519, 0.767), vec2(0.185, -0.893), vec2(0.507, 0.064), vec2(0.896, 0.412), vec2(-0.322, -0.933), vec2(-0.792, -0.598));
+void main() {
+  vec2 size = vec2(textureSize(u_mask, 0));
+  vec2 uv = gl_FragCoord.xy / size;
+  float hs = 0.0, n = 0.0;
+  for (int i = 0; i < 12; i++) {
+    vec4 m = texture(u_mask, uv + DISC[i] * 14.0 / size);
+    hs += height(m) * m.r;
+    n += m.r;
+  }
+  vec4 c = texture(u_mask, uv);
+  hs += height(c) * c.r;
+  n += c.r;
+  if (n < 0.5) {
+    o = vec4(0.0);
+    return;
+  }
+  // px above the floor, and the spread in shadow map texels (u_texel px each)
+  float h = hs / n * u_hmax;
+  float r = clamp(0.6 + 0.09 * h / u_texel, 0.6, 14.0);
+  float cover = c.r;
+  for (int i = 0; i < 12; i++) cover += texture(u_mask, uv + DISC[i] * r / size).r;
+  cover /= 13.0;
+  // resting paper is darkest; the higher it stands the fainter, as the light gets in round it
+  o = vec4(cover * u_shadowA * mix(1.6, 0.7, smoothstep(0.0, 0.25 * u_hmax, h)), 0.0, 0.0, 1.0);
+}
+`
+
+// The floor shadow laid over the page under the paper, at full size, one smooth texel a pixel.
+export const SHADE_FS = /* glsl */ `#version 300 es
+precision highp float;
+uniform sampler2D u_soft;
+uniform vec2 u_px;
+uniform vec3 u_char;
+out vec4 o;
+void main() {
+  float a = texture(u_soft, gl_FragCoord.xy * u_px).r;
+  o = vec4(u_char * a, a);
 }
 `

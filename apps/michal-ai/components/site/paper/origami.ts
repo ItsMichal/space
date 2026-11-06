@@ -74,14 +74,16 @@ export const PATTERNS: Record<string, (w: number, h: number) => Design> = {
   // are left a little open
   tulip: (w, h) => {
     const t = triangle(w, h)
-    // in the triangle's shares its point is (0, -1), here turned to the top; a corner (1, 0) goes to `to`, folded on the line
-    // halfway between them
-    const petal = (side: 1 | -1, to: [number, number]) => {
+    // in the triangle's shares its point is (0, -1), here turned to the top. A corner (1, 0) swings up about a pivot on the base
+    // a little to its own side, so the two flaps never cross, and stands `tilt` off upright beside the point
+    const petal = (side: 1 | -1) => {
+      const [b, tilt] = [0.06, 0.4]
+      const r = 1 - b
+      const to: [number, number] = [side * (b + r * Math.sin(tilt)), -r * Math.cos(tilt)]
       const m: [number, number] = [(side + to[0]) / 2, to[1] / 2]
-      const d: [number, number] = [-(to[1] - 0), to[0] - side]
-      return crease(t, m, [m[0] + d[0], m[1] + d[1]], [side, 0], true, 0.96)
+      return crease(t, [side * b, 0], m, [side, 0], true, 0.96)
     }
-    return { turn: t.turn + Math.PI, folds: [...t.folds, petal(1, [0.42, -1.08]), petal(-1, [-0.42, -1.08])] }
+    return { turn: t.turn + Math.PI, folds: [...t.folds, petal(1), petal(-1)] }
   },
 }
 

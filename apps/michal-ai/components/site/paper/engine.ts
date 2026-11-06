@@ -12,7 +12,7 @@ import { paintPage } from '@/lib/paint/page'
 import { BACKDROP_DRAW } from '../backdrop/config'
 import { IGNITE_MS, LEAD_MS, PAPER_ASH, PAPER_FPS, PAPER_MS } from './config'
 import { type Blast, air, embers, seeded, spawn, STEP_MS, step } from './embers'
-import { ASH_FS, EMBER_FS, EMBER_VS, QUAD_VS, SHEET_FS, SHEET_VS } from './shaders'
+import { ASH_FS, EMBER_FS, EMBER_VS, QUAD_VS, SHADE_FS, SHEET_FS, SHEET_VS, SOFT_FS } from './shaders'
 import { type Design, PATTERNS, type Piece, foldsAt, mesh, packet, pieces, place, pose, reaches } from './origami'
 import { flickerAt, frameAt, type Frame, randomCrumple, waitingAt } from './timeline'
 
@@ -53,7 +53,13 @@ const LEAN = 0.3
  * so while the new route loads the old page overhangs every edge and still covers it all. */
 const LIFT = 0.05
 /** The most of the screen's width or height the finished flower takes. */
-const FIT = 0.78
+const FIT = 0.7
+/** The shadow map's size, one texel for this many screen pixels each way. */
+const SHADOW_DOWN = 4
+/** The way a shadow is thrown, px along the floor for each px of height: the key light from the upper left, high over the page. */
+const LIGHT: [number, number] = [0.32, -0.4]
+/** How dark the paper's shadow on itself gets, 0 to 1 of the key light. */
+const SELF_SHADOW = 0.55
 
 const mono = () => getComputedStyle(document.documentElement).getPropertyValue('--font-mono').trim() || 'ui-monospace, monospace'
 
@@ -155,12 +161,14 @@ function createStage(w: number, h: number, dpr: number) {
   canvas.setAttribute('aria-hidden', 'true')
   canvas.width = Math.round(w * dpr)
   canvas.height = Math.round(h * dpr)
-  const gl = canvas.getContext('webgl2', { alpha: true, antialias: true, premultipliedAlpha: true, depth: true, stencil: true })
+  const gl = canvas.getContext('webgl2', { alpha: true, antialias: true, premultipliedAlpha: true, depth: true, stencil: false })
   if (!gl) throw new Error('[paper] no WebGL2')
 
   const sheet = program(gl, SHEET_VS, SHEET_FS)
   const ash = program(gl, QUAD_VS, ASH_FS)
   const ember = program(gl, EMBER_VS, EMBER_FS)
+  const soft = program(gl, QUAD_VS, SOFT_FS)
+  const shade = program(gl, QUAD_VS, SHADE_FS)
 
   // sheet mesh: a grid of uv, the inner vertices nudged off the grid so it does not read as one, the edges kept straight
   const cols = w >= h ? CELLS : Math.max(8, Math.round((CELLS * w) / h))
@@ -242,6 +250,34 @@ function createStage(w: number, h: number, dpr: number) {
   gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, gridW, gridH)
   gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, cellsDepth)
   gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+
+  // the shadow map at a quarter of the screen (its depth the paper's height, so the highest wins), and the floor shadow blurred
+  // from it at the same size: small enough that both cost next to nothing
+  const maskW = Math.max(1, Math.ceil(canvas.width / SHADOW_DOWN))
+  const maskH = Math.max(1, Math.ceil(canvas.height / SHADOW_DOWN))
+  const target = (unit: number, smooth: boolean, depth: boolean) => {
+    const tex = gl.createTexture()
+    gl.activeTexture(gl.TEXTURE0 + unit)
+    gl.bindTexture(gl.TEXTURE_2D, tex)
+    gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, maskW, maskH)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, smooth ? gl.LINEAR : gl.NEAREST)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, smooth ? gl.LINEAR : gl.NEAREST)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+    const fb = gl.createFramebuffer()
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0)
+    if (depth) {
+      const rb = gl.createRenderbuffer()
+      gl.bindRenderbuffer(gl.RENDERBUFFER, rb)
+      gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, maskW, maskH)
+      gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, rb)
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    return { tex, fb }
+  }
+  const mask = target(4, false, true)
+  const softShadow = target(5, true, false)
 
   // the embers: a unit quad, and per ember its place, glyph and colour (7 floats)
   const emberVao = gl.createVertexArray()
@@ -379,7 +415,10 @@ function createStage(w: number, h: number, dpr: number) {
   }
   resetSim()
 
-  /** state: 0 the sheet, 1 the burn state per glyph cell, 2 the cast shadow. */
+  /** Whether the sheet throws a shadow: once it is lifted off the page or gathered. */
+  const shadows = (s: Frame) => s.ball > 0 || s.lift > 0
+
+  /** state: 0 the sheet, 1 the burn state per glyph cell, 2 the shadow map. */
   const drawSheet = (s: Frame, state: 0 | 1 | 2) => {
     gl.useProgram(sheet.p)
     const u = sheet.u
@@ -413,7 +452,8 @@ function createStage(w: number, h: number, dpr: number) {
     // a folded flower is not a ball: it keeps only a little of the crumple's tumble, a slight lean that shows its relief
     const spin = s.spin.map((v) => v * (1 - (1 - LEAN) * e)) as [number, number, number]
     gl.uniformMatrix3fv(u.u_rot, false, rotation(...spin).map((v, i) => v * (i % 3 === 1 ? sy : sxz)))
-    gl.uniform3f(u.u_center, 0, 0, R * 0.5 * s.ball + LIFT * D * s.lift)
+    const cz = R * 0.5 * s.ball + LIFT * D * s.lift
+    gl.uniform3f(u.u_center, 0, 0, cz)
     gl.uniformMatrix4fv(u.u_vp, false, vp)
     gl.uniform1i(u.u_a, 0)
     gl.uniform1f(u.u_burn, s.burn)
@@ -421,10 +461,15 @@ function createStage(w: number, h: number, dpr: number) {
     gl.uniform1f(u.u_edge, EDGE)
     gl.uniform1f(u.u_state, state)
     gl.uniform1f(u.u_shadow, state === 2 ? 1 : 0)
-    // the floor the shadow falls on, behind the ball; it comes in as the sheet lifts off the page
-    gl.uniform1f(u.u_floor, -0.55 * R * s.ball)
-    // it comes in as the sheet lifts off the page, or gathers
-    gl.uniform1f(u.u_shadowA, Math.max(0.14 * Math.min(1, s.ball / 0.3), 0.08 * s.lift))
+    // the floor the shadow falls on: behind the crumpled ball, and as the flower closes it comes up under it, so the flower rests
+    // on it with a close shadow, its petals standing a little off it
+    gl.uniform1f(u.u_floor, -0.55 * R * s.ball * (1 - e) + (cz - 0.1 * R) * e)
+    gl.uniform1f(u.u_hmax, minDim)
+    gl.uniform2f(u.u_light, ...LIGHT)
+    gl.uniform1i(u.u_mask, 4)
+    gl.uniform1f(u.u_texel, (SHADOW_DOWN * w) / canvas.width)
+    // the paper shades itself only while the shadow map is drawn
+    gl.uniform1f(u.u_selfA, shadows(s) ? SELF_SHADOW : 0)
     gl.uniform3fv(u.u_back, back)
     gl.uniform3fv(u.u_char, fire.char)
     gl.activeTexture(gl.TEXTURE0)
@@ -540,19 +585,44 @@ function createStage(w: number, h: number, dpr: number) {
     if (lit) burnCells(s, false)
     gl.disable(gl.BLEND)
     gl.enable(gl.DEPTH_TEST)
+    if (shadows(s)) {
+      // the shadow map: unbound from its sampler while it is drawn into
+      gl.activeTexture(gl.TEXTURE4)
+      gl.bindTexture(gl.TEXTURE_2D, null)
+      gl.bindFramebuffer(gl.FRAMEBUFFER, mask.fb)
+      gl.viewport(0, 0, maskW, maskH)
+      gl.clearColor(0, 0, 0, 0)
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+      drawSheet(s, 2)
+      gl.activeTexture(gl.TEXTURE4)
+      gl.bindTexture(gl.TEXTURE_2D, mask.tex)
+      // the floor shadow blurred from it, as wide as the paper is high
+      gl.disable(gl.DEPTH_TEST)
+      gl.bindFramebuffer(gl.FRAMEBUFFER, softShadow.fb)
+      gl.useProgram(soft.p)
+      gl.uniform1i(soft.u.u_mask, 4)
+      gl.uniform1f(soft.u.u_hmax, minDim)
+      gl.uniform1f(soft.u.u_texel, (SHADOW_DOWN * w) / canvas.width)
+      // it comes in as the sheet lifts off the page, or gathers
+      gl.uniform1f(soft.u.u_shadowA, Math.max(0.16 * Math.min(1, s.ball / 0.3), 0.1 * s.lift))
+      gl.bindVertexArray(quadVao)
+      gl.drawArrays(gl.TRIANGLES, 0, 3)
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    }
     gl.viewport(0, 0, canvas.width, canvas.height)
     gl.clearColor(0, 0, 0, 0)
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
-    if (s.ball > 0 || s.lift > 0) {
-      // the shadow first, under the sheet: one flat tone, each pixel darkened once however many folds land on it
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+    if (shadows(s)) {
+      // the floor shadow first, under the sheet
       gl.disable(gl.DEPTH_TEST)
       gl.enable(gl.BLEND)
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
-      gl.enable(gl.STENCIL_TEST)
-      gl.stencilFunc(gl.EQUAL, 0, 0xff)
-      gl.stencilOp(gl.KEEP, gl.KEEP, gl.INCR)
-      drawSheet(s, 2)
-      gl.disable(gl.STENCIL_TEST)
+      gl.useProgram(shade.p)
+      gl.uniform1i(shade.u.u_soft, 5)
+      gl.uniform2f(shade.u.u_px, 1 / (maskW * SHADOW_DOWN), 1 / (maskH * SHADOW_DOWN))
+      gl.uniform3fv(shade.u.u_char, fire.char)
+      gl.bindVertexArray(quadVao)
+      gl.drawArrays(gl.TRIANGLES, 0, 3)
       gl.disable(gl.BLEND)
       gl.enable(gl.DEPTH_TEST)
     }
