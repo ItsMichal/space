@@ -2,8 +2,8 @@ import { IndexEntry } from '@/components/ui/IndexEntry'
 import type { CSSProperties, ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
 
-/** `extra` sits under the entry, outside its link (something that belongs to the row, with its own controls). `logo` is a one-colour mask; `icon` stands in for it where an entry has no mark (an award by its type). `highlight` sets the entry on a card (components/site/about.css, `.xp__card`). */
-export type ExperienceItem = { id: string; org: ReactNode; role: string; years: string; href?: string; extra?: ReactNode; logo?: string; icon?: LucideIcon; highlight?: boolean }
+/** `extra` sits under the entry, outside its link (something that belongs to the row, with its own controls). `logo` is a one-colour mask; `icon` stands in for it where an entry has no mark (an award by its type). `highlight` sets the entry on a card (components/site/about.css, `.xp__card`). `external` opens `href` in a new tab. */
+export type ExperienceItem = { id: string; org: ReactNode; role: string; years: string; href?: string; external?: boolean; extra?: ReactNode; logo?: string; icon?: LucideIcon; highlight?: boolean }
 
 /**
  * Experience as entries of the shared text index (app/styles/type.css, `.ix`), most recent first: the organisation, the role
@@ -26,7 +26,7 @@ export function ExperienceList({ items, label, timeline }: { items: readonly Exp
                 ) : null}
               </span>
             ) : null}
-            <IndexEntry href={it.href} title={it.org} desc={it.role} meta={it.years} ui />
+            <IndexEntry href={it.href} external={it.external} title={it.org} desc={it.role} meta={it.years} ui />
             {it.extra}
           </li>
         )
