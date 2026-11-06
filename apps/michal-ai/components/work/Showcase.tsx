@@ -2,6 +2,7 @@ import Link from '@/lib/nav'
 import { ArrowRight } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { Post } from '@/lib/content/types'
+import { cardPicture } from '@/lib/content/picture'
 import { Picture } from '@/components/media/Picture'
 import { hasDemo, ProjectDemo } from '@/components/demos/ProjectDemo'
 import { cardOf, isFeature, siteLayout, type SiteLayout } from '@/lib/content/layout'
@@ -69,13 +70,14 @@ export function ProjectCard({
   /** Every entry shows its picture as part of the row (left of the text from 840px, above the title on phones), not as a
    *  separate card block, and no year or date unless `dated` (with or without a picture). */
   thumb?: boolean
-  /** With `thumb`, still show the year (or the date) under the description. */
+  /** With `thumb`, still show the year (or the date; on the /projects timeline, a span of years) under the description. */
   dated?: boolean
   /** The `thumb` picture's `sizes` (a grid column is wider than the row's thumb column). */
   sizes?: string
 }) {
-  const src = post.cardImage === 'none' ? undefined : (post.cardImage ?? post.cover)
-  const alt = post.cardImage ? (post.cardImageAlt ?? '') : (post.coverAlt ?? '')
+  const picture = cardPicture(post)
+  const src = picture?.src
+  const alt = picture?.alt ?? ''
   // dates only: no eyebrows (role, series, venue) over the title
   const metaParts: ReactNode[] = article ? [<time key="d" dateTime={post.date}>{monthYear(post.date)}</time>] : [year(post)]
   const id = `pc-${post.slug}`
@@ -108,7 +110,7 @@ export function ProjectCard({
               sizes={sizes}
               priority={priority}
               aspect="16 / 10"
-              focus={focus ?? (post.cardImage ? undefined : post.coverFocus)}
+              focus={focus ?? picture?.focus}
             />,
           )}
         </div>
@@ -122,7 +124,7 @@ export function ProjectCard({
               priority={priority}
               className="tile__img"
               aspect={hasDemo(post.slug) ? '16 / 10' : '16 / 9'}
-              focus={focus ?? (post.cardImage ? undefined : post.coverFocus)}
+              focus={focus ?? picture?.focus}
             />,
           )}
         </div>
@@ -134,7 +136,7 @@ export function ProjectCard({
 /**
  * Projects (home) as a text index, in the order given (the site's priority order, led by the layout file's pins). The first
  * entry is the feature (with its image) unless the layout file sets a card's size. `variant` and `glass` are accepted for
- * older callers and change nothing: the home page and /projects show the same list.
+ * older callers and change nothing. /projects shows the same entries as a timeline (ProjectTimeline, below).
  */
 export function Showcase({
   posts,
@@ -170,6 +172,36 @@ export function Showcase({
         })}
       </ul>
       {limit && posts.length > shown.length ? <MoreLink href={base}>{viewMore(posts.length - shown.length, 'project')}</MoreLink> : null}
+    </div>
+  )
+}
+
+/** The year a project starts: the first year of its `years` span, else of its date. */
+const startYear = (p: Post) => (/\d{4}/.exec(p.years ?? '') ?? [p.date.slice(0, 4)])[0]
+
+/**
+ * /projects as a vertical timeline in the Experience list's language (components/site/about.css `.xp--timeline`): a hairline
+ * rail on the left, a round node with the year where a new year starts and a small one at each project, and every project
+ * with its picture in the row (and its span of years when it has one). Newest first by start year, then date. A year row
+ * carries the filter buckets of its projects, so the /projects filter hides a year with nothing left in it.
+ */
+export function ProjectTimeline({ posts, base, priority = false }: { posts: Post[]; base: string; priority?: boolean }) {
+  const sorted = [...posts].sort((a, b) => startYear(b).localeCompare(startYear(a)) || b.date.localeCompare(a.date))
+  const years = [...new Set(sorted.map(startYear))].map((y) => [y, sorted.filter((p) => startYear(p) === y)] as const)
+  return (
+    <div className="work">
+      <ol className="tl">
+        {years.flatMap(([y, ps]) => [
+          <li key={y} className="tl__year" data-buckets={[...new Set(ps.flatMap((p) => buckets(p).split(' ').filter(Boolean)))].join(' ')}>
+            <h2 className="tl__node t-meta">{y}</h2>
+          </li>,
+          ...ps.map((p) => (
+            <li key={p.slug} className="tl__item" data-buckets={buckets(p)}>
+              <ProjectCard post={p} href={`${base}/${p.slug}`} priority={priority && p === sorted[0]} thumb dated={Boolean(p.years) && p.years !== startYear(p)} />
+            </li>
+          )),
+        ])}
+      </ol>
     </div>
   )
 }

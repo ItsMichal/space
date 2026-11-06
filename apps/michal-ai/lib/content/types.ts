@@ -53,4 +53,6 @@ export type Post = PostFrontmatter & {
   readingMinutes: number
   /* First markdown image in the body (derived at load time, not frontmatter); lets list views show a picture without the body. */
   firstImage?: { src: string; alt: string }
+  /* A child with no picture of its own borrows its parent's for cards (derived at load time, see lib/content/picture.ts). */
+  parentImage?: { src: string; alt: string; focus?: string }
 }

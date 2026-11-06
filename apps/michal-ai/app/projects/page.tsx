@@ -1,6 +1,6 @@
 import type { Metadata } from '@/lib/meta-types'
 import { getProjectIndex } from '@/lib/content'
-import { Showcase } from '@/components/work/Showcase'
+import { ProjectTimeline } from '@/components/work/Showcase'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { listJsonLd, listMetadata } from '@/lib/seo'
 import { FilteredWork } from '@/components/ui/FilteredWork'
@@ -19,7 +19,7 @@ export default function Page() {
       <JsonLd data={listJsonLd('project', TITLE, posts)} />
       <h1 className="mb-space-12 font-display text-title">Projects</h1>
       <FilteredWork options={availableFilters(posts.map((p) => p.tags)).map((f) => f.value)}>
-        <Showcase posts={posts} base="/projects" priority />
+        <ProjectTimeline posts={posts} base="/projects" priority />
       </FilteredWork>
     </div>
   )
