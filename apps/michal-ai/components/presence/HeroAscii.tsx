@@ -4,8 +4,9 @@ import { useEffect, useRef } from 'react'
 import { positionEcef } from '@/lib/starlink/orbit.mjs'
 import { loadLand, type Ring } from './globe/data'
 import { loadStarlinkWithIds, type Identities, type Packed } from './globe/starlink'
-import { BRAILLE_BIT, calloutLines, dither, GLYPHS, landDot, SAT, SAT_FRONT, SAT_LINKED, SAT_MARKED, satFacts, seaDot, strokeGlyph, TERMINAL, greeting, WAVE_SITE_LL, waveFade, wavePose } from './ascii/field'
+import { balloon, BRAILLE_BIT, calloutLines, dither, GLYPHS, landDot, SAT, SAT_FRONT, SAT_LINKED, SAT_MARKED, satFacts, seaDot, strokeGlyph, TERMINAL, greeting, WAVE_SITE_LL, waveFade, wavePose } from './ascii/field'
 import { drawHeroMarks } from './heroMarks'
+import { siteConfig } from '@/site.config'
 import './presence.css'
 import './ascii/ascii.css'
 
@@ -24,9 +25,11 @@ import './ascii/ascii.css'
  * - Every 6 to 10 s one visible satellite gets a callout (name, NORAD number, launch, height, speed, inclination). A tap or click
  *   near a satellite pins its callout.
  * - A small figure stands on Los Angeles and waves while it is on the visible face, in finer type than the globe and in front of
- *   it: it leans out with the globe's curve, its shadow stays on the ground while it shifts against the pointer, and hovered (or
- *   tapped) it says hello in turn in English, Polish and Japanese. It steps aside (fades) when the terminal, its counter or a
- *   callout comes over it, and callouts are placed off it.
+ *   it. He keeps to the globe's land: he moves with each step its land is redrawn at, his feet on its braille dot grid, and his
+ *   arm swings on the same beat. He leans out with the globe's curve, his shadow stays on the ground while he shifts against the
+ *   pointer, and hovered (or tapped) he says hello in turn in English, Polish and Japanese, in a cowsay balloon with X and LinkedIn under it to tap
+ *   (opened from the window's pointer handler, since the hero text lies over this layer). He steps aside (fades) when the
+ *   terminal, its counter or a callout comes over him, and callouts are placed off him.
  * Decorative: aria-hidden, the canvas takes no pointer events (window listeners, passive, never preventDefault), and cells behind
  * the hero text are thinned so the text keeps its contrast. Paused offscreen and in hidden tabs; one static frame under reduced
  * motion.
@@ -54,6 +57,11 @@ const CALLOUT_MS = 5200
 const NAV_CLEAR = 72
 const POS_SLICE = 1600 // satellites re-propagated per frame
 const REST = { u: 0.12, v: -0.34 }
+/** Under the figure's greeting, where to find him. */
+const CONTACT = [
+  { label: 'X', href: siteConfig.x },
+  { label: 'LinkedIn', href: siteConfig.linkedin },
+]
 const WAVE_SITE = (() => {
   const la = (WAVE_SITE_LL.lat * Math.PI) / 180
   const lo = (WAVE_SITE_LL.lon * Math.PI) / 180
@@ -151,6 +159,8 @@ export function HeroAscii({ className = '' }: { className?: string }) {
     // ---- motion state ----
     let lonC = START_LON
     let lastLonCol = NaN
+    // the spin the Earth layer was last drawn at, which the figure stands on
+    let earthLon = START_LON
     let raf = 0
     let last = 0
     let lastDraw = 0
@@ -168,7 +178,11 @@ export function HeroAscii({ className = '' }: { className?: string }) {
     const labelBox: Box = { on: false, l: 0, t: 0, r: 0, b: 0 }
     let figA = 1
     // the figure's greeting: shown while hovered or for a while after a tap, a new one each time
-    const hi = { on: false, until: 0, turn: Math.floor(Math.random() * 3), text: '', a: 0, spot: null as [number, number] | null }
+    const hi = { on: false, until: 0, turn: Math.floor(Math.random() * 3), text: '', a: 0, spot: null as [number, number, number] | null }
+    // the bubble's last box and its links' (canvas px), for hovering and tapping them
+    const hiBox: Box = { on: false, l: 0, t: 0, r: 0, b: 0 }
+    const hiLinks = CONTACT.map((c) => ({ ...c, l: 0, t: 0, r: 0, b: 0 }))
+    let hiHover = -1
     // the pointer's parallax on the figure, eased, px
     const par = { x: 0, y: 0 }
     // per-frame projection of the drawn satellites (screen x, y, visible flag), reused by hit tests and the callout picker
@@ -412,6 +426,7 @@ export function HeroAscii({ className = '' }: { className?: string }) {
     // ---- Earth layer ----
     const drawEarth = () => {
       stats.earthDraws++
+      earthLon = lonC
       ectx.setTransform(1, 0, 0, 1, 0, 0)
       ectx.clearRect(0, 0, earth.width, earth.height)
       const la = atlas.land
@@ -454,8 +469,8 @@ export function HeroAscii({ className = '' }: { className?: string }) {
     }
 
     // ---- projection: earth-fixed unit vector -> view (u right, v up, z towards the viewer) ----
-    const toView = (x: number, y: number, z: number, out: Float32Array | number[]) => {
-      const lam = (lonC * Math.PI) / 180
+    const toView = (x: number, y: number, z: number, out: Float32Array | number[], lon = lonC) => {
+      const lam = (lon * Math.PI) / 180
       const cl = Math.cos(lam)
       const sl = Math.sin(lam)
       // rotate about the pole so lonC faces the viewer: X east, Z towards the viewer, Y north
@@ -802,10 +817,15 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       hi.on = true
       hi.until = Math.max(hi.until, now + ms)
     }
+    const onFigure = (x: number, y: number, pad: number) => fig.on && figA > 0.5 && x > fig.l - pad && x < fig.r + pad && y > fig.t - pad && y < fig.b + pad
+    const onBubble = (x: number, y: number) => hiBox.on && x > hiBox.l && x < hiBox.r && y > hiBox.t && y < hiBox.b
+    const linkAt = (x: number, y: number, pad: number) =>
+      onBubble(x, y) ? hiLinks.findIndex((c) => x > c.l - pad && x < c.r + pad && y > c.t - pad && y < c.b + pad) : -1
     const drawWave = (now: number, dt: number) => {
-      toView(WAVE_SITE[0], WAVE_SITE[1], WAVE_SITE[2], w3)
+      toView(WAVE_SITE[0], WAVE_SITE[1], WAVE_SITE[2], w3, earthLon)
       const face = waveFade(w3[2])
       fig.on = face > 0
+      hiBox.on = false
       if (!fig.on) {
         hi.on = false
         return
@@ -814,10 +834,11 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       const fs = ch * 0.88
       const fw = fs * 0.6
       const lh = fs * 0.92
-      const pose = wavePose(now, reduced)
+      const pose = wavePose(Math.floor(earthLon * 2), reduced)
       const fh = pose.length * lh
-      const fx = W / 2 + w3[0] * R
-      const fy = W / 2 - w3[1] * R
+      // feet on the nearest of the land's braille dots, which sit on a half-cell by quarter-cell grid
+      const fx = (Math.floor((W / 2 + w3[0] * R) / (cw / 2)) + 0.5) * (cw / 2)
+      const fy = (Math.floor((W / 2 - w3[1] * R) / (ch / 4)) + 0.5) * (ch / 4)
       // he stands up off the surface: upright on screen, leaning out with the globe's curve toward the limb
       let ux = w3[0] * 0.55
       let uy = -1 + w3[1] * 0.25
@@ -844,7 +865,7 @@ export function HeroAscii({ className = '' }: { className?: string }) {
         return
       }
       // hovered by a mouse or pen, he says hello while it stays; a tap says it for a while (onUp)
-      const over = ptr.inside && ptr.hover && ptr.x > fig.l - 6 && ptr.x < fig.r + 6 && ptr.y > fig.t - 6 && ptr.y < fig.b + 6
+      const over = ptr.inside && ptr.hover && (onFigure(ptr.x, ptr.y, 6) || onBubble(ptr.x, ptr.y))
       if (over) greet(now, 900)
       if (hi.on && now > hi.until) hi.on = false
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
@@ -871,66 +892,86 @@ export function HeroAscii({ className = '' }: { className?: string }) {
         for (let c = 0; c < pose[i].length; c++) if (pose[i][c] !== ' ') ctx.fillText(pose[i][c], (c - 2) * fw, -fh + (i + 0.5) * lh)
       ctx.textAlign = 'start'
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      // the greeting, in a bubble beside his head, on whichever side is on screen and clear of the hero text
+      // the greeting, then the links, in a cowsay balloon over his head, its trail stepping down to him
       hi.a = reduced ? (hi.on ? 1 : 0) : Math.max(0, Math.min(1, hi.a + (hi.on ? dt * 8 : -dt * 5)))
       if (hi.a > 0.01 && hi.text) {
-        const bs = Math.max(11, Math.min(12, ch))
-        ctx.font = `${bs}px ${font}`
-        ctx.textBaseline = 'middle'
-        const bw = ctx.measureText(hi.text).width + bs * 1.1
-        const bh = bs * 1.7
+        const rows = balloon([hi.text, hiLinks.map((c) => c.label).join(' · ')])
+        const n = rows[0].length
+        // a character to a cell, the cells a whole number of the land's braille dots (half a column by a quarter row), so it sits on
+        // the globe's own grid: the globe's cells on a wide screen, a little larger where they would be too small to read
+        const bs = Math.max(11, ch * 0.86)
+        const bcw = (cw / 2) * Math.ceil((bs * 0.6) / (cw / 2))
+        const bch = (ch / 4) * Math.ceil((bs * 1.12) / (ch / 4))
+        const dotX = (x: number) => Math.round(x / (cw / 2)) * (cw / 2)
+        const dotY = (y: number) => Math.round(y / (ch / 4)) * (ch / 4)
         const vr = visibleRect()
-        // beside his head if that is clear, else the nearest clear place along his line, keeping it while it stays clear so it
-        // never hops as the globe turns
-        const clearAt = (x0: number, y0: number) => {
-          let m = x0 > vr.l + 6 && x0 + bw < vr.r - 6 && y0 > vr.t + 4 && y0 + bh < vr.b - 4 ? 1 : 0
-          for (let yy = y0 - ch / 2; yy <= y0 + bh + ch / 2 && m > 0; yy += ch / 2)
-            for (let xx = x0 - cw / 2; xx <= x0 + bw + cw / 2; xx += cw / 2) m = Math.min(m, dimTargetAt(xx, yy))
+        // on screen, off a satellite's callout and the terminal, and as far from the hero text as it can be
+        const clearAt = (x0: number, y0: number, w: number, h: number) => {
+          const box = { on: true, l: x0, t: y0, r: x0 + w, b: y0 + h }
+          let m = x0 > vr.l + 6 && x0 + w < vr.r - 6 && y0 > vr.t + 4 && y0 + h < vr.b - 4 && !overlaps(box, labelBox) && !overlaps(box, termBox) ? 1 : 0
+          for (let yy = y0 - ch / 2; yy <= y0 + h + ch / 2 && m > 0; yy += ch / 2)
+            for (let xx = x0 - cw / 2; xx <= x0 + w + cw / 2; xx += cw / 2) m = Math.min(m, dimTargetAt(xx, yy))
           return m
         }
-        const up = hy - bh - lh * 0.5
-        const near = [hx + fw * 1.6, hx - fw * 1.6 - bw]
-        // (kept relative to his head, so it rides along with him)
-        if (!hi.spot || clearAt(hx + hi.spot[0], hy + hi.spot[1]) < 0.8) {
-          let best: [number, number] = [near[0], up]
-          let bs2 = -1
-          for (const y0 of [up, hy + lh * 0.6, up - lh * 2]) {
-            for (let d = 0; d < W; d += cw) {
-              for (const x0 of [near[0] + d, near[1] - d]) {
-                const m = clearAt(x0, y0) - d / W - (y0 === up ? 0 : 0.1)
-                if (m > bs2) {
-                  bs2 = m
-                  best = [x0, y0]
+        // the trail is `steps` cells of \ down and right from column `col` under the balloon to just above his head, or of / down
+        // and left (dir -1); where the balloon then sits
+        const place = (steps: number, dir: number, col: number) => {
+          const end = col + dir * (steps - 1)
+          return [dotX(hx - dir * bcw * 0.4 - (end + 0.5) * bcw), dotY(hy - bch * 0.5 - (rows.length + steps - 0.5) * bch)]
+        }
+        const score = (steps: number, dir: number, col: number) => {
+          const [x0, y0] = place(steps, dir, col)
+          return clearAt(x0, y0, n * bcw, rows.length * bch)
+        }
+        // kept while it stays clear, so it never hops as the globe turns; else the shortest clear trail, nearest cowsay's own
+        if (!hi.spot || score(hi.spot[0], hi.spot[1], hi.spot[2]) < 0.8) {
+          let best: [number, number, number] = [2, 1, Math.min(8, n - 3)]
+          let top = -1
+          for (let steps = 2; steps <= 6 && top <= 0.8; steps++)
+            for (const dir of [1, -1])
+              for (let col = 2; col < n - 2; col++) {
+                const m = score(steps, dir, col) - (steps - 2) * 0.03 - Math.abs(col - (dir > 0 ? 8 : n - 9)) * 0.004
+                if (m > top) {
+                  top = m
+                  best = [steps, dir, col]
                 }
               }
-              if (bs2 > 0.8) break
-            }
-            if (bs2 > 0.8) break
-          }
-          hi.spot = [best[0] - hx, best[1] - hy]
+          hi.spot = best
         }
-        const bx = hx + hi.spot[0]
-        const bestScore = clearAt(bx, hy + hi.spot[1])
-        const by = hy + hi.spot[1] - (1 - hi.a) * 3
-        // the bubble is solid paper, as sure as he is on the globe, so its words read
-        ctx.globalAlpha = face * figA * hi.a * Math.max(0.3, bestScore)
+        const [steps, dir, col] = hi.spot
+        const [bx, by0] = place(steps, dir, col)
+        const by = by0 - (1 - hi.a) * 3
+        // fainter where it has to sit by the hero text (which reads over it), never so faint its links do not
+        const fade = face * figA * hi.a * Math.max(0.75, score(steps, dir, col))
+        const cell = (r: number, c: number, g: string) => ctx.fillText(g, bx + (c + 0.5) * bcw, by + (r + 0.5) * bch)
+        // on plain paper, as ASCII art is, so the globe's dots do not run through the words
+        ctx.globalAlpha = fade
         ctx.fillStyle = halo
-        ctx.strokeStyle = ink
-        ctx.lineWidth = 1
-        ctx.beginPath()
-        ctx.roundRect(bx, by, bw, bh, bh / 2)
-        // the tail, from the edge nearest his head toward it
-        const below = by + bh < hy
-        const ex = Math.max(bx + bh * 0.5, Math.min(bx + bw - bh * 0.8, hx))
-        const ey = below ? by + bh - 0.5 : by + 0.5
-        const side = hx > ex ? 1 : -1
-        ctx.moveTo(ex, ey)
-        ctx.lineTo(hx - side * fw * 0.8, below ? hy - lh * 0.15 : hy + lh * 0.2)
-        ctx.lineTo(ex + bh * 0.35, ey)
-        ctx.fill()
-        ctx.stroke()
+        ctx.fillRect(bx, by + bch * 0.3, n * bcw, (rows.length - 0.5) * bch)
+        for (let i = 0; i < steps; i++) ctx.fillRect(bx + (col + dir * i) * bcw, by + (rows.length + i) * bch, bcw, bch)
+        ctx.font = `${bs}px ${font}`
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
         ctx.fillStyle = ink
-        ctx.fillText(hi.text, bx + bs * 0.55, by + bh / 2 + 0.5)
+        for (let r = 0; r < rows.length; r++) for (let c = 0; c < n; c++) if (rows[r][c] !== ' ') cell(r, c, rows[r][c])
+        for (let i = 0; i < steps; i++) cell(rows.length + i, col + dir * i, dir > 0 ? '\\' : '/')
+        Object.assign(hiBox, { on: hi.a > 0.5, l: bx, t: by, r: bx + n * bcw, b: by + rows.length * bch })
+        // the links, in the accent and underlined while hovered, on the balloon's last line
+        let c0 = 2
+        for (let i = 0; i < hiLinks.length; i++) {
+          const c = hiLinks[i]
+          const len = [...c.label].length
+          const x = bx + c0 * bcw
+          const y = by + 2.5 * bch
+          Object.assign(c, { l: x - 2, t: y - bch * 0.6, r: x + len * bcw + 2, b: y + bch * 0.6 })
+          ctx.fillStyle = halo
+          ctx.fillRect(x, y - bch * 0.5, len * bcw, bch)
+          ctx.fillStyle = accent
+          for (let k = 0; k < len; k++) cell(2, c0 + k, c.label[k])
+          if (i === hiHover) ctx.fillRect(x, y + bs * 0.55, len * bcw, 1)
+          c0 += len + 3
+        }
+        ctx.textAlign = 'start'
       }
       ctx.setTransform(1, 0, 0, 1, 0, 0)
       ctx.globalAlpha = 1
@@ -1149,7 +1190,8 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       const hovering = e.pointerType !== 'touch'
       ptr.hover = hovering
       // over the figure the terminal stays put, so it never covers him while he says hello
-      const onFig = fig.on && figA > 0.5 && x > fig.l - 6 && x < fig.r + 6 && y > fig.t - 6 && y < fig.b + 6
+      const onFig = onFigure(x, y, 6) || onBubble(x, y)
+      hiHover = hovering ? linkAt(x, y, 0) : -1
       if ((hovering || ptr.down) && !onFig) setTerminal(x, y, false)
       if (reduced) redrawOnce()
     }
@@ -1166,12 +1208,18 @@ export function HeroAscii({ className = '' }: { className?: string }) {
       if (target?.closest?.('a, button, input, textarea, select, label, [role="button"]')) return
       const [x, y] = toCanvas(e)
       if (Math.hypot(x - d.x, y - d.y) > 12 || performance.now() - d.t > 600) return
-      // a tap on the figure has him say hello; near a satellite it pins its callout; elsewhere on the globe it moves the terminal
-      // there
-      if (fig.on && figA > 0.5 && x > fig.l - 8 && x < fig.r + 8 && y > fig.t - 8 && y < fig.b + 8) {
-        greet(performance.now(), 2600)
+      // a tap on one of his links opens it; on the figure he says hello, long enough to reach them; near a satellite it pins its
+      // callout; elsewhere on the globe it moves the terminal there
+      const link = linkAt(x, y, e.pointerType === 'mouse' ? 0 : 6)
+      if (link >= 0) {
+        window.open(hiLinks[link].href, '_blank', 'noopener')
+        return
+      }
+      if (onBubble(x, y)) return
+      if (onFigure(x, y, 8)) {
+        greet(performance.now(), 5000)
         redrawOnce()
-        if (reduced) setTimeout(redrawOnce, 2700)
+        if (reduced) setTimeout(redrawOnce, 5100)
         return
       }
       const hit = (e.pointerType === 'mouse' ? 14 : 26) * (W / (cv.getBoundingClientRect().width || 1))
@@ -1293,7 +1341,7 @@ export function HeroAscii({ className = '' }: { className?: string }) {
     Object.defineProperty(window, '__asciiHero', {
       configurable: true,
       enumerable: false,
-      value: () => ({ ...stats, avgMs: stats.frames ? +(stats.totalMs / stats.frames).toFixed(3) : 0, box, W, dpr, cols, rows, satellites: sat?.count ?? 0, refEpoch: sat?.refEpoch ?? 0, callout: callout.sat >= 0 ? callout.lines : [], wave: fig.on ? { ...fig, alpha: figA } : null, pinned: callout.sat >= 0 && callout.pinned }),
+      value: () => ({ ...stats, avgMs: stats.frames ? +(stats.totalMs / stats.frames).toFixed(3) : 0, box, W, dpr, cols, rows, satellites: sat?.count ?? 0, refEpoch: sat?.refEpoch ?? 0, callout: callout.sat >= 0 ? callout.lines : [], wave: fig.on ? { ...fig, alpha: figA } : null, bubble: hiBox.on ? { ...hiBox, links: hiLinks.map((c) => ({ ...c })) } : null, pinned: callout.sat >= 0 && callout.pinned }),
     })
 
     return () => {

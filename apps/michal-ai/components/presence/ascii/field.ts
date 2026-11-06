@@ -41,15 +41,26 @@ export const WAVE_POSES = [
   ['\\ o ', ' \\|\\', '  | ', ' / \\'],
   [' |o ', ' \\|\\', '  | ', ' / \\'],
 ]
-export const WAVE_STEP_MS = 420
-export function wavePose(now: number, reduced: boolean): string[] {
-  return WAVE_POSES[reduced ? 0 : Math.floor(now / WAVE_STEP_MS) % 2]
+/** The pose for the globe's turn step (it redraws its land each half degree), so he waves in time with it. */
+export function wavePose(step: number, reduced: boolean): string[] {
+  return WAVE_POSES[reduced ? 0 : ((step % 2) + 2) % 2]
 }
 /** What the figure says when greeted: in turn hello, cześć and a Japanese greeting for the viewer's local hour. */
 export function greeting(turn: number, hour: number): string {
   const ja = hour >= 4 && hour < 11 ? 'ohayou!' : hour >= 17 || hour < 4 ? 'konbanwa!' : 'konnichiwa!'
   return ['hello!', 'cześć!', ja][((turn % 3) + 3) % 3]
 }
+/**
+ * A speech balloon as cowsay draws one (Tony Monroe, 1999): the lines padded to one width between / and \ (the first), | and |
+ * (the middle ones) and \ and / (the last), or < and > round a single line, under a row of _ and over a row of -, each two
+ * wider than the text.
+ */
+export function balloon(lines: string[]): string[] {
+  const n = Math.max(...lines.map((l) => [...l].length))
+  const edge = (i: number) => (lines.length < 2 ? '<>' : i === 0 ? '/\\' : i === lines.length - 1 ? '\\/' : '||')
+  return [` ${'_'.repeat(n + 2)} `, ...lines.map((l, i) => `${edge(i)[0]} ${l}${' '.repeat(n - [...l].length)} ${edge(i)[1]}`), ` ${'-'.repeat(n + 2)} `]
+}
+
 /** How much of the figure shows for a site at view depth z (1 facing the viewer, 0 on the limb): none near the limb. */
 export function waveFade(z: number): number {
   const t = Math.max(0, Math.min(1, (z - 0.3) / 0.2))
