@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BRAILLE_BIT, calloutLines, dither, greeting, strokeGlyph, WAVE_POSES, WAVE_STEP_MS, waveFade, wavePose, type SatFacts } from '../field'
+import { balloon, BRAILLE_BIT, calloutLines, dither, greeting, strokeGlyph, WAVE_POSES, waveFade, wavePose, type SatFacts } from '../field'
 
 const facts: SatFacts = { name: 'STARLINK-2343', norad: 47884, launch: '2021-021', altKm: 449.4, speedKms: 7.6412, incDeg: 53.21 }
 
@@ -37,10 +37,12 @@ describe('glyphs', () => {
 })
 
 describe('the Los Angeles wave', () => {
-  it('steps between two poses and holds one under reduced motion', () => {
-    expect(wavePose(0, false)).not.toEqual(wavePose(WAVE_STEP_MS, false))
-    expect(wavePose(0, false)).toEqual(wavePose(2 * WAVE_STEP_MS, false))
-    expect(wavePose(0, true)).toEqual(wavePose(WAVE_STEP_MS, true))
+  it('steps between two poses with the globe, west or east, and holds one under reduced motion', () => {
+    expect(wavePose(0, false)).not.toEqual(wavePose(1, false))
+    expect(wavePose(0, false)).toEqual(wavePose(2, false))
+    expect(wavePose(-1, false)).toEqual(wavePose(1, false))
+    expect(wavePose(-240, false)).toEqual(wavePose(0, false))
+    expect(wavePose(0, true)).toEqual(wavePose(1, true))
   })
   it('waves the same hand, on his left, every frame', () => {
     for (const p of WAVE_POSES) {
@@ -60,5 +62,13 @@ describe('the Los Angeles wave', () => {
     expect(waveFade(-0.5)).toBe(0)
     expect(waveFade(0.2)).toBe(0)
     expect(waveFade(0.9)).toBe(1)
+  })
+})
+
+describe('balloon', () => {
+  it('draws one the way cowsay does', () => {
+    expect(balloon(['cześć!', 'X · LinkedIn'])).toEqual([' ______________ ', '/ cześć!       \\', '\\ X · LinkedIn /', ' -------------- '])
+    expect(balloon(['hi'])).toEqual([' ____ ', '< hi >', ' ---- '])
+    expect(balloon(['a', 'bb', 'c'])[2]).toBe('| bb |')
   })
 })
