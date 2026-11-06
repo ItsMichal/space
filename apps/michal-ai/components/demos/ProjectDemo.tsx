@@ -17,10 +17,10 @@ const CLIPS = [
   'ai-crofty', // AI Croft Funny Moment (YouTube Qt-6oOMb4NQ), 0:02
   'airplane-game', // the game itself (public/play/airplane-game), played
   'analog-experiments-screaming-robot', // the post's LED demo (YouTube 1_BN7k59j90), 0:02
-  'beer-in-space', // the post's coverage reel (media/beer-in-space/beer-in-space-highlights.mp4), 1:32
+  'beer-in-space', // the experiment being prepared, from the post's full coverage part one (ABC7, 4:41 to 4:52), cut above the captions
   'creatle', // creatle.vercel.app, live
   'frogchamp', // the real dashboard (ItsMichal/frogchamp) replaying a chat, recorded
-  'grocerybot', // Robo-Shopper 3000 demo (YouTube YaHhRhEKA_I), 0:40
+  'grocerybot', // Robo-Shopper 3000 demo (YouTube YaHhRhEKA_I), 0:53: the arm takes a duck off the shelf
   'intro-to-web-dev', // the workshop's checkpoint pages 1 to 4 (ItsMichal/IntroToWebDev/examples)
   'jia-webapp', // the post's own screenshots
   'medpuck-pcb-prototype', // the post's own build photos
