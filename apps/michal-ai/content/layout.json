@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "work": ["starlink", "project-mountaintop", "office-wizards", "jia-webapp", "grocerybot"],
+  "work": ["starlink", "project-mountaintop", "jia-webapp", "ai-crofty", "office-wizards", "grocerybot"],
   "writing": ["p5-js-punching-bag-game", "analog-experiments-screaming-robot", "beer-in-space", "medpuck-pcb-prototype"],
   "hooks": ["order-flow"]
 }
