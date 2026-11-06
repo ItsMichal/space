@@ -67,7 +67,7 @@ function crease(t: ReturnType<typeof triangle>, a: [number, number], b: [number,
   return fold(t.at(...a), t.dir(np, nq), valley, angle)
 }
 
-/** The flowers for a sheet `w` by `h` px. */
+/** The models for a sheet `w` by `h` px, one picked per run. */
 export const PATTERNS: Record<string, (w: number, h: number) => Design> = {
   // the classic flat tulip: the triangle stood point up on its folded edge, and its two bottom corners folded up beside the point,
   // so three tips stand at the top (a petal each side of the middle one) over shoulders that narrow to the base; the side petals
@@ -84,6 +84,26 @@ export const PATTERNS: Record<string, (w: number, h: number) => Design> = {
       return crease(t, [side * b, 0], m, [side, 0], true, 0.96)
     }
     return { turn: t.turn + Math.PI, folds: [...t.folds, petal(1), petal(-1)] }
+  },
+  // the paper cup: the triangle point up, each bottom corner folded across to touch the opposite side so its top edge lies level,
+  // then the point folded down in front over them, a tab on the cup's rim. Worked out with the point up, in the triangle's shares
+  // turned half round (x = -p, y = -q): a corner lands level on the far side when its crease leans 67.5 degrees, which puts it
+  // through (0.171, 0) and (0.414, 0.586)
+  cup: (w, h) => {
+    const t = triangle(w, h)
+    const up = (x: number, y: number): [number, number] => [-x, -y]
+    const corner = (side: 1 | -1) => crease(t, up(side * 0.171, 0), up(side * 0.414, 0.586), up(side, 0), true, 0.97)
+    const rim = crease(t, up(0, 0.586), up(1, 0.586), up(0, 1), true, 0.96)
+    return { turn: t.turn + Math.PI, folds: [...t.folds, corner(1), corner(-1), rim] }
+  },
+  // the dog's face: the triangle point down, its two top corners folded down beside the face as ears that hang a little past its
+  // sides, and the point folded up a little for the nose. The ears' creases leave the top edge 35 degrees down, so each ear hangs
+  // 70 degrees down; they are left a little open, floppy
+  dog: (w, h) => {
+    const t = triangle(w, h)
+    const ear = (side: 1 | -1) => crease(t, [side * 0.4, 0], [side * 0.753, -0.247], [side, 0], true, 0.9)
+    const nose = crease(t, [0, -0.76], [1, -0.76], [0, -1], true, 0.97)
+    return { turn: t.turn, folds: [...t.folds, ear(1), ear(-1), nose] }
   },
 }
 

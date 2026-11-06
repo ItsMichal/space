@@ -443,6 +443,7 @@ function createStage(w: number, h: number, dpr: number) {
     // the flower drawn to the middle as it closes, so it finishes centred
     const e = t * t * (3 - 2 * t)
     gl.uniform2f(u.u_shift, bloom[0] * e, bloom[1] * e)
+    gl.uniform1f(u.u_paper, e)
     gl.uniform1f(u.u_turn, flower.turn * e)
     gl.uniform1f(u.u_fit, 1 + (fit - 1) * e)
     gl.uniform1f(u.u_R, R)

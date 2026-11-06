@@ -208,7 +208,7 @@ precision highp float;
 in vec2 v_uv;
 in vec3 v_wp, v_n;
 uniform sampler2D u_a;
-uniform float u_burn, u_ash, u_edge, u_state, u_fold, u_lit, u_floor, u_hmax, u_selfA, u_texel;
+uniform float u_burn, u_ash, u_edge, u_state, u_fold, u_lit, u_paper, u_floor, u_hmax, u_selfA, u_texel;
 uniform vec2 u_size, u_light;
 uniform mat4 u_vp;
 uniform highp sampler2D u_mask;
@@ -269,6 +269,11 @@ void main() {
   float cut = min(min(px.x, u_size.x - px.x), min(px.y, u_size.y - px.y));
   float paper = (1.0 + 0.035 * grain) * (1.0 - 0.18 * (1.0 - smoothstep(0.2, 1.4, cut)));
   vec3 col = mix(base, u_char, ink * 0.6) * mix(1.0, light * paper, u_lit);
+  // (u_paper) as it folds the page shows more and more as a sheet of paper: its fibres, laid two ways and crossing, a fine tooth,
+  // and a little brighter, the white of the sheet coming up under the page
+  float fibre = gnoise(vec2(px.x * 0.06, px.y * 0.7) + 2.3) * 0.5 + gnoise(vec2(px.x * 0.6, px.y * 0.05) + 7.9) * 0.5;
+  float tooth = gnoise(px * 1.6 + 3.3);
+  col = mix(col, mix(col, vec3(1.0), 0.1) * (1.0 + 0.045 * fibre + 0.025 * tooth), u_paper);
   // the paper scorches just ahead of the fire, so it darkens into the burning edge instead of meeting it bare
   col = mix(col, u_char, 0.55 * smoothstep(-3.0 * u_edge, 0.0, age));
   if (u_state > 0.5) {
