@@ -2,7 +2,7 @@
  * Page snapshot for the lens on engines without a backdrop lens (Safari, iOS, Firefox).
  *
  * Those engines cannot refract the real backdrop (no `backdrop-filter: url()`), so the page content is rendered once
- * into a canvas (html2canvas-pro, the capture liquid-glass-js uses) and the glass shader samples it, bent by the same
+ * into a canvas (lib/paint, the site's own capture) and the glass shader samples it, bent by the same
  * Snell rim as the svg engine. The snapshot covers the whole document in document coordinates, so scrolling never
  * recaptures: the shader only moves its lookup. Fixed layers (the page backdrop canvas) and the glass itself are left
  * out; where the snapshot is transparent the live frost box underneath shows through.
@@ -110,36 +110,19 @@ function patch(img: HTMLImageElement) {
   }, 250)
 }
 
-function skip(el: Element): boolean {
-  if (el.hasAttribute('data-glass-engine')) return true
-  if (el.tagName === 'SCRIPT' || el.tagName === 'NOSCRIPT') return true
-  return getComputedStyle(el).position === 'fixed'
-}
+const skip = (el: Element, cs: CSSStyleDeclaration) => el.hasAttribute('data-glass-engine') || cs.position === 'fixed'
 
 async function capture() {
   busy = true
   const t0 = performance.now()
   try {
-    const { default: html2canvas } = await import('html2canvas-pro')
+    const { paintPage } = await import('@/lib/paint/page')
     const de = document.documentElement
     const w = de.scrollWidth
     const h = de.scrollHeight
     const scale = Math.min(1, MAX_PX / h, MAX_PX / w)
-    const canvas = await html2canvas(document.body, {
-      backgroundColor: null,
-      scale,
-      logging: false,
-      useCORS: true,
-      x: 0,
-      y: 0,
-      width: w,
-      height: h,
-      windowWidth: de.clientWidth,
-      windowHeight: innerHeight,
-      scrollX: 0,
-      scrollY: 0,
-      ignoreElements: skip,
-    })
+    // the whole document, in document coordinates: it starts above and left of the viewport by the scroll
+    const canvas = await paintPage({ x: -scrollX, y: -scrollY, width: w, height: h, scale, skip })
     const ms = performance.now() - t0
     if (ms > SLOW_MS) {
       disabled = true

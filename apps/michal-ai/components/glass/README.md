@@ -65,7 +65,7 @@ Field (one per container, or per lone glass element)
                             surface shader adds a rim bevel (light side lifts, far side sinks), two-lobed specular,
                             water-drop gloss and soft shadow to suggest thickness
       + snapshot lens       (engine 'auto' only) snapshot.ts renders the page once into a canvas on idle
-                            (html2canvas-pro, fixed layers and the glass left out), uploaded as a mipmapped texture;
+                            (lib/paint, fixed layers and the glass left out), uploaded as a mipmapped texture;
                             the shader samples it at the rim, bent by the same Snell profile with R/G/B dispersion,
                             so text and photos really bend at the edge. Scrolling only moves the lookup; recapture on
                             document resize or route change; late images are painted into the snapshot. A capture

@@ -259,11 +259,13 @@
 
 /* ============================== Status slot (inside the nav pill) ============================== */
 /* Desktop: a slot at the right of the pill opens on a sampled spring, so the pill itself grows (the gap it would leave
-   is cancelled by the negative margin while shut). Phones: the pill is already full width, so the slot is the free
-   space between mark and menu button and only fades. */
+   is cancelled by the negative margin while shut). The pill never grows past the screen (NavBar caps it at its row's
+   width): between the phone layout and a wide window the slot gives way first and its title ellipsises. Phones: the
+   pill is already full width, so the slot is the free space between mark and menu button and only fades. */
 .st-slot {
   position: relative;
-  flex: none;
+  flex: 0 1 auto;
+  min-width: 0;
   align-self: center;
   box-sizing: content-box;
   width: 0;
@@ -420,4 +422,11 @@
   mask-image: none;
   cursor: default;
   touch-action: auto;
+}
+
+/* ExternalLink's arrow: sits on the text, just after the last word */
+.ext-arrow {
+  display: inline;
+  margin-left: 0.15em;
+  vertical-align: -0.1em;
 }

@@ -14,8 +14,8 @@
      ui        body     Newsreader 18 / 17            500     ink            item titles in a list, nav, buttons
      meta      small    Newsreader 15                 400     ink-muted      dates, years, roles, venue lines, captions
 
-   Item titles sit one level below their section's head. Under a `title` head (home: Projects, Writing, Publications) an item title
-   is `heading`; under a `heading` sub-head (.ix-sec: Experience, /writing, /about) it is `ui` (body at 500).
+   Item titles sit one level below their section's head. Under a `title` head (home: Projects, Writing) an item title
+   is `heading`; under a `heading` sub-head (.ix-sec: Experience, Recognition, Publications, /writing, /about) it is `ui` (body at 500).
 
    The index language (home, /projects, /writing, /about) is below: `.ix`. */
 .t-title {
@@ -66,6 +66,7 @@
    column on the left, so a list reads as a column of dates beside a column of titles (and the text keeps a book measure).
 
      .ix-list       a list of entries (ul / ol), generous gap between them
+     .ix-grid       an .ix-list of entries side by side, two across from 640px, each with its picture above the text (home)
      .ix            one entry (a link or a plain block): __title, __desc, __meta, optional __media (one picture) or __body
      .ix--ui        an entry whose title drops to `ui` (body 500) inside an .ix-sec; under a `title` head it stays `heading`
      .ix-sec        a section whose heading sits in that same left column from 840px (/about, /writing)
@@ -88,6 +89,9 @@
 }
 .ix-list > li {
   min-width: 0;
+}
+.ix-grid {
+  gap: var(--space-8);
 }
 .ix {
   display: grid;
@@ -161,8 +165,14 @@ a.ix:focus-visible {
   scroll-margin-top: 96px;
 }
 .ix-sec > h2,
-.ix-sec > h3 {
+.ix-sec > h3,
+.ix-sec__head > * {
   margin: 0;
+}
+/* a quiet line under the heading (IndexSection `aside`: the Experience total) */
+.ix-sec__head > .t-meta {
+  margin-top: var(--space-1);
+  font-variant-numeric: tabular-nums lining-nums;
 }
 .ix-sec__body {
   min-width: 0;
@@ -215,7 +225,8 @@ a.ix:focus-visible {
     column-gap: var(--ix-gap);
   }
   .ix-sec > h2,
-  .ix-sec > h3 {
+  .ix-sec > h3,
+  .ix-sec__head {
     padding-top: 0.1em;
   }
   /* entries inside a section already have the left column for the heading: they stack */
@@ -226,6 +237,32 @@ a.ix:focus-visible {
     grid-column: 1;
   }
   .ix-sec .ix > .ix__meta {
+    grid-row: auto;
+    margin-top: var(--space-1);
+    padding-top: 0;
+  }
+}
+
+@media (min-width: 640px) {
+  .ix-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: var(--space-12);
+  }
+}
+/* in a grid every entry stacks, picture first, whatever the row layout above does from 840px */
+@media (min-width: 840px) {
+  .ix-grid .ix {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ix-grid .ix > * {
+    grid-column: 1;
+  }
+  .ix-grid .ix > .ix__thumb {
+    grid-row: auto;
+    order: -1;
+    margin: 0 0 var(--space-3);
+  }
+  .ix-grid .ix > .ix__meta {
     grid-row: auto;
     margin-top: var(--space-1);
     padding-top: 0;

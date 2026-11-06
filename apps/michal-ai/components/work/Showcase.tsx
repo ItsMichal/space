@@ -7,6 +7,8 @@ import { Picture } from '@/components/media/Picture'
 import { hasDemo, ProjectDemo } from '@/components/demos/ProjectDemo'
 import { cardOf, isFeature, siteLayout, type SiteLayout } from '@/lib/content/layout'
 import { matchesFilter, PROJECT_FILTERS } from '@/components/ui/segments'
+import { postPath } from '@/lib/seo'
+import { monthYear } from '@/lib/dates'
 import './cards.css'
 
 /** Filter buckets a post belongs to, for the /projects segmented control (all items stay in the HTML). */
@@ -27,8 +29,6 @@ function MetaParts({ parts }: { parts: ReactNode[] }) {
     </>
   )
 }
-
-const monthYear = (iso: string) => new Date(iso + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
 
 export type CardVariant = 'newsroom' | 'fill' | 'cap'
 
@@ -51,6 +51,7 @@ export function ProjectCard({
   textOnly = false,
   thumb = false,
   dated = false,
+  sizes = '(min-width: 840px) 240px, calc(100vw - 32px)',
 }: {
   post: Post
   href: string
@@ -67,10 +68,12 @@ export function ProjectCard({
   /** No picture, even on the feature entry. */
   textOnly?: boolean
   /** Every entry shows its picture as part of the row (left of the text from 840px, above the title on phones), not as a
-   *  separate card block, and no year (the home page). */
+   *  separate card block, and no year or date unless `dated` (with or without a picture). */
   thumb?: boolean
-  /** With `thumb`, still show the secondary line under the description (the /projects timeline shows a span of years). */
+  /** With `thumb`, still show the year (or the date; on the /projects timeline, a span of years) under the description. */
   dated?: boolean
+  /** The `thumb` picture's `sizes` (a grid column is wider than the row's thumb column). */
+  sizes?: string
 }) {
   const picture = cardPicture(post)
   const src = picture?.src
@@ -79,7 +82,7 @@ export function ProjectCard({
   const metaParts: ReactNode[] = article ? [<time key="d" dateTime={post.date}>{monthYear(post.date)}</time>] : [year(post)]
   const id = `pc-${post.slug}`
   // A project with a preview (real footage or its own code, see ProjectDemo) plays it in the picture's place; the picture stays as its fallback (prerender, no JS)
-  const withDemo = (picture: ReactNode) => (hasDemo(post.slug) ? <ProjectDemo slug={post.slug} label={alt || post.title} fallback={picture} /> : picture)
+  const withDemo = (picture: ReactNode) => (hasDemo(post.slug) ? <ProjectDemo slug={post.slug} label={alt || post.title} fallback={picture} captions /> : picture)
   return (
     <Link
       href={href}
@@ -90,11 +93,11 @@ export function ProjectCard({
       <h3 id={`${id}-t`} className="ix__title tile__title" data-card-title>
         {post.title}
       </h3>
-      <p id={`${id}-d`} className="ix__desc t-text">
+      <p id={`${id}-d`} className="ix__desc">
         {post.description}
       </p>
-      {thumb && src && !dated ? null : (
-        <p className="ix__meta t-meta">
+      {thumb && !dated ? null : (
+        <p className="ix__meta">
           <MetaParts parts={metaParts} />
         </p>
       )}
@@ -104,7 +107,7 @@ export function ProjectCard({
             <Picture
               src={src}
               alt={alt}
-              sizes="(min-width: 840px) 240px, calc(100vw - 32px)"
+              sizes={sizes}
               priority={priority}
               aspect="16 / 10"
               focus={focus ?? picture?.focus}
@@ -141,7 +144,6 @@ export function Showcase({
   limit,
   priority = false,
   textOnly = false,
-  thumbs = false,
   layout = siteLayout,
 }: {
   posts: Post[]
@@ -152,8 +154,6 @@ export function Showcase({
   glass?: boolean
   /** No pictures, even on the feature entry (see ProjectCard). */
   textOnly?: boolean
-  /** Every entry's picture inside its row (see ProjectCard `thumb`). */
-  thumbs?: boolean
   /** Card presentation (the site's layout file; the editor's Arrange preview passes its draft). */
   layout?: SiteLayout
 }) {
@@ -166,16 +166,12 @@ export function Showcase({
           const card = cardOf(p.slug, layout)
           return (
             <li key={p.slug} className={feature ? 'tiles__feature' : undefined} data-buckets={buckets(p)}>
-              <ProjectCard post={p} href={`${base}/${p.slug}`} feature={feature} priority={priority && (feature || thumbs)} variant={card.variant} focus={card.focus} textOnly={textOnly} thumb={thumbs} />
+              <ProjectCard post={p} href={`${base}/${p.slug}`} feature={feature} priority={priority && feature} variant={card.variant} focus={card.focus} textOnly={textOnly} />
             </li>
           )
         })}
       </ul>
-      {limit && posts.length > shown.length ? (
-        <Link href={base} className="ix-more link">
-          View {posts.length - shown.length} more {posts.length - shown.length === 1 ? 'project' : 'projects'} <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
-        </Link>
-      ) : null}
+      {limit && posts.length > shown.length ? <MoreLink href={base}>{viewMore(posts.length - shown.length, 'project')}</MoreLink> : null}
     </div>
   )
 }
@@ -207,5 +203,37 @@ export function ProjectTimeline({ posts, base, priority = false }: { posts: Post
         ])}
       </ol>
     </div>
+  )
+}
+
+/** The link under a shortened list to the whole of it ("View 4 more projects", "All projects"). */
+export function MoreLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Link href={href} className="ix-more link">
+      {children} <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
+    </Link>
+  )
+}
+
+const viewMore = (count: number, noun: string) => `View ${count} more ${count === 1 ? noun : `${noun}s`}`
+
+/**
+ * The home page's Projects and Writing: the first `limit` posts as the same entry (ProjectCard with its picture above the
+ * text, and a project's year under the description; a post shows no date), two across from 640px (`.ix-grid`,
+ * app/styles/type.css), then a link to the full list, counting what it holds beyond these (`total`, every post by default).
+ */
+export function CardGrid({ posts, total = posts.length, limit = 4, more, noun, priority = false }: { posts: Post[]; total?: number; limit?: number; more: string; noun: string; priority?: boolean }) {
+  const shown = posts.slice(0, limit)
+  return (
+    <>
+      <ul className="ix-list ix-grid">
+        {shown.map((p) => (
+          <li key={p.slug}>
+            <ProjectCard post={p} href={postPath(p)} priority={priority} article={p.kind === 'article'} thumb dated={p.kind !== 'article'} sizes="(min-width: 1120px) 512px, (min-width: 640px) 50vw, calc(100vw - 32px)" />
+          </li>
+        ))}
+      </ul>
+      {total > shown.length ? <MoreLink href={more}>{viewMore(total - shown.length, noun)}</MoreLink> : null}
+    </>
   )
 }

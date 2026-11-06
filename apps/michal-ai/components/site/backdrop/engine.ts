@@ -1,4 +1,4 @@
-import { BACKDROP as C, PIGMENT } from './config'
+import { BACKDROP as C, BACKDROP_DRAW, PIGMENT } from './config'
 import { makeTooth, TOOTH_SIZE } from './tooth'
 import { FS_COMP, FS_LOW, NB, NL, VERT } from './shaders'
 
@@ -456,6 +456,8 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
   }
   canvas.addEventListener('webglcontextlost', onLost)
   canvas.addEventListener('webglcontextrestored', onRestored)
+  // the paper transition copies this canvas: its bitmap is cleared once shown (opaque black), so it asks for a fresh draw first
+  canvas.addEventListener(BACKDROP_DRAW, drawNow)
   document.addEventListener('visibilitychange', onVis)
   darkMq.addEventListener('change', onDarkChange)
   attrMo.observe(html, { attributes: true, attributeFilter: ['data-reading'] })
@@ -479,6 +481,7 @@ export function createBackdrop(canvas: HTMLCanvasElement, hooks: EngineHooks): (
     clearTimeout(rescanTimer)
     canvas.removeEventListener('webglcontextlost', onLost)
     canvas.removeEventListener('webglcontextrestored', onRestored)
+    canvas.removeEventListener(BACKDROP_DRAW, drawNow)
     document.removeEventListener('visibilitychange', onVis)
     darkMq.removeEventListener('change', onDarkChange)
     window.removeEventListener('resize', onResize)

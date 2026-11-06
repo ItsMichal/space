@@ -49,6 +49,8 @@ export type CareerEntry = {
   org: string
   role: string
   orgUrl?: string
+  /** The employer's mark, one colour, on the /about timeline's node (the same file as `experience`). */
+  logo?: string
   /** Display dates and ISO months (for <time>). `end` omitted means current. */
   dates: string
   start: string
@@ -65,8 +67,8 @@ export type CareerEntry = {
 export type Skill = { group: string; items: readonly string[] }
 
 export type VolunteerEntry = { org: string; role: string; dates: string; start: string; end: string; note?: string }
-/** `press` marks coverage rather than a prize: it sits with the awards on the home page and the resume, and in Press on /about. */
-export type Award = { id: string; title: string; context: string; year: string; postId?: string; hackathonId?: string; url?: string; kind?: 'press' }
+/** `kind` sets the entry's icon on the home page. `press` marks coverage rather than a prize: it sits with the awards on the home page and the resume, and in Press on /about. */
+export type Award = { id: string; title: string; context: string; year: string; postId?: string; hackathonId?: string; url?: string; kind: 'honor' | 'award' | 'hackathon' | 'press' }
 
 export const profile = {
   /** Displayed name (Polish ł). */
@@ -92,6 +94,17 @@ export const profile = {
   ],
   /** Current employer for JSON-LD `worksFor`. Empty: no current employer is stated (SpaceX ended in 2026); lib/seo omits the property then. */
   worksFor: [] as readonly { name: string; url: string }[],
+  /** The hero's affiliations beside the role: each place's own mark, a one-colour mask (public/media/about/logos/) drawn faint in
+   *  the ink colour. `aspect` is the mark's width over its height; `cap` and `mid` are where its capital letters sit, as a
+   *  fraction of its height (their height, and their centre from the top), measured from the SVG, so every mark's capitals are
+   *  drawn the same height on one line: SpaceX's under its swoosh, Starlink's the whole mark, CU's beside its shield. `trail` is how much
+   *  of the width, at the right, hangs over the gap after it: most of SpaceX's swoosh past the X's leg (0.178 of the width), so
+   *  that gap reads from the letters, a little wider than the others. */
+  alumOf: [
+    { name: 'SpaceX', logo: '/media/about/logos/spacex-wordmark.svg', aspect: 8, cap: 0.64, mid: 0.668, trail: 0.13 },
+    { name: 'Starlink', logo: '/media/about/logos/starlink-wordmark.svg', aspect: 8.15, cap: 0.976, mid: 0.5 },
+    { name: 'University of Colorado Boulder', logo: '/media/about/logos/cu-boulder-wordmark.svg', aspect: 10.9, cap: 0.509, mid: 0.506 },
+  ],
   /** Past schools and employers for JSON-LD `alumniOf`. */
   alumniOf: [
     { type: 'CollegeOrUniversity', name: 'University of Colorado Boulder', url: 'https://www.colorado.edu' },
@@ -151,6 +164,7 @@ export const profile = {
       org: 'SpaceX',
       role: 'Software Engineer',
       orgUrl: 'https://www.spacex.com',
+      logo: '/media/about/logos/spacex.svg',
       dates: 'Apr 2024 to 2026',
       start: '2024-04',
       end: '2026',
@@ -173,6 +187,7 @@ export const profile = {
       org: 'CU Boulder, Institute of Cognitive Science',
       role: 'Software Engineer',
       orgUrl: 'https://www.colorado.edu/research/ai-institute/',
+      logo: '/media/about/logos/cu-boulder.svg',
       dates: 'Aug 2020 to Apr 2024',
       start: '2020-08',
       end: '2024-04',
@@ -192,6 +207,7 @@ export const profile = {
       company: 'AmedicaRx',
       org: 'AmedicaRx',
       role: 'Full Stack Developer (contract)',
+      logo: '/media/about/logos/amedicarx.webp',
       dates: 'Aug 2022 to Feb 2023',
       start: '2022-08',
       end: '2023-02',
@@ -207,6 +223,7 @@ export const profile = {
       company: 'Windward Studios',
       org: 'Windward Studios',
       role: 'Software Development Intern',
+      logo: '/media/about/logos/windward.webp',
       dates: 'Sep 2019 to Feb 2020',
       start: '2019-09',
       end: '2020-02',
@@ -218,6 +235,7 @@ export const profile = {
       company: 'Panther Industries, Inc.',
       org: 'Panther Industries',
       role: 'Marketing and Augmented Reality Intern',
+      logo: '/media/about/logos/panther.webp',
       dates: 'Jun to Aug 2018',
       start: '2018-06',
       end: '2018-08',
@@ -284,14 +302,15 @@ export const profile = {
     // The Congressional Record tribute leads (featured on the home page's About section too).
     {
       id: 'congressional-record-2014',
+      kind: 'honor',
       title: 'Tribute in the Congressional Record',
       context: 'by Rep. Mike Coffman of Colorado, Extensions of Remarks, Vol. 160, p. E1105, for winning the Student Spaceflight Experiments Program',
       year: '2014',
       url: 'https://www.govinfo.gov/link/crec/160/e/1105',
       postId: 'beer-in-space-ssep-2014',
     },
-    { id: 'aied-2022', title: 'Best Interactive Event', context: 'AI in Education Conference (AIED), for the iSAT dashboard display', year: '2022', postId: 'isat-dashboard' },
-    { id: 'hackcu-8', title: 'HackCU 8: 2nd place overall, and Best Games, Music, and Entertainment Hack', context: 'for Creatle, a solo project', year: '2022', hackathonId: 'hackcu-8-creatle' },
+    { id: 'aied-2022', kind: 'award', title: 'Best Interactive Event', context: 'AI in Education Conference (AIED), for the iSAT dashboard display', year: '2022', postId: 'isat-dashboard' },
+    { id: 'hackcu-8', kind: 'hackathon', title: 'HackCU 8: 2nd place overall, and Best Games, Music, and Entertainment Hack', context: 'for Creatle, a solo project', year: '2022', hackathonId: 'hackcu-8-creatle' },
     // content/press.ts, denver-post-2017-kaiser and cpr-2017-kaiser; his own README (ItsMichal/pilsudski) links the Post article.
     {
       id: 'denver-post-2017',

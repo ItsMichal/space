@@ -4,7 +4,7 @@ import { CaptionOverlay, useCaptionsPref, useCues } from '@/components/mdx/Capti
 import './demos.css'
 
 /**
- * A project's preview, and only ever real material: a short silent loop cut from the project's own footage (its demo
+ * A project's (or a home page post's) preview, and only ever real material: a short silent loop cut from the project's own footage (its demo
  * videos, a recording of the live site or game, its own screenshots), or its own source code written out line by line
  * (Stageshow kit, components/stageshow). Nothing here shows a made-up result. Projects with neither keep their cover.
  *
@@ -16,26 +16,41 @@ import './demos.css'
 const CLIPS = [
   'ai-crofty', // AI Croft Funny Moment (YouTube Qt-6oOMb4NQ), 0:02
   'airplane-game', // the game itself (public/play/airplane-game), played
+  'analog-experiments-screaming-robot', // the post's LED demo (YouTube 1_BN7k59j90), 0:02
+  'beer-in-space', // the post's coverage reel (media/beer-in-space/beer-in-space-highlights.mp4), 1:32
   'creatle', // creatle.vercel.app, live
   'frogchamp', // the real dashboard (ItsMichal/frogchamp) replaying a chat, recorded
   'grocerybot', // Robo-Shopper 3000 demo (YouTube YaHhRhEKA_I), 0:40
   'intro-to-web-dev', // the workshop's checkpoint pages 1 to 4 (ItsMichal/IntroToWebDev/examples)
   'jia-webapp', // the post's own screenshots
+  'medpuck-pcb-prototype', // the post's own build photos
   'office-wizards', // Barcode Game playthrough (YouTube hSZSht_D7hM), 1:13
   'ohisee', // the bot's SGDQ 2019 notes page with its real notes (ItsMichal/ohisee sgdq19.html)
+  'p5-js-punching-bag-game', // Lane Defense punching bag demo (YouTube hdnndI1rcKc), 0:02
   'pilsudski', // the kAIser pitch (YouTube a09E8_-fFIc), 0:25
   'playsafe', // the post's own screenshots
   'project-mountaintop', // ATLAS Expo 2023 demo video (YouTube Gv-xMeMM8m4), 0:31
+  'starlink', // starlink.com, live: the Roam order flow and its product detail cards, recorded
 ] as const
 
 /**
  * What is said over a clip, from the post's own cue file (the one its ::youtube or ::video names, checked by
  * lib/content/rules.mjs parseCaptions). `from` is where the clip starts in the footage the cues are timed to, so the
- * loop shows the lines of its own seconds. Only in the project page's hero, and only while the reader has captions on
+ * loop shows the lines of its own seconds. In the project page's hero and on its cards, only while the reader has captions on
  * (the toggle under the post's player).
  */
 const CLIP_CAPTIONS: Partial<Record<Clip, { src: string; from: number }>> = {
   'ai-crofty': { src: '/media/realtime-ai-f1-comentator/demo.vtt', from: 2 },
+}
+
+/**
+ * How far a clip is zoomed into its box. The recordings of a live site (a Stageshow Window on its light stage) have the
+ * stage around the window and the window's own rounded corners at about 16px in; zooming 10% puts the window's edges
+ * outside the box, so the box's own rounded corners are the clip's.
+ */
+const CLIP_ZOOM: Partial<Record<Clip, number>> = {
+  'jia-webapp': 1.1,
+  starlink: 1.1,
 }
 
 const CODE = {
@@ -104,6 +119,7 @@ function Loop({ slug, fallback, captions }: { slug: Clip; fallback: ReactNode; c
         playsInline
         preload="auto"
         aria-hidden
+        style={CLIP_ZOOM[slug] ? { scale: String(CLIP_ZOOM[slug]) } : undefined}
         data-ready={ready || undefined}
         onLoadedData={() => setReady(true)}
       />

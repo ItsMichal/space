@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BRAILLE_BIT, calloutLines, dither, strokeGlyph, type SatFacts } from '../field'
+import { BRAILLE_BIT, calloutLines, dither, greeting, strokeGlyph, WAVE_POSES, WAVE_STEP_MS, waveFade, wavePose, type SatFacts } from '../field'
 
 const facts: SatFacts = { name: 'STARLINK-2343', norad: 47884, launch: '2021-021', altKm: 449.4, speedKms: 7.6412, incDeg: 53.21 }
 
@@ -33,5 +33,32 @@ describe('glyphs', () => {
     expect(strokeGlyph(0, 1)).toBe('|')
     expect(strokeGlyph(1, 1)).toBe('\\')
     expect(strokeGlyph(1, -1)).toBe('/')
+  })
+})
+
+describe('the Los Angeles wave', () => {
+  it('steps between two poses and holds one under reduced motion', () => {
+    expect(wavePose(0, false)).not.toEqual(wavePose(WAVE_STEP_MS, false))
+    expect(wavePose(0, false)).toEqual(wavePose(2 * WAVE_STEP_MS, false))
+    expect(wavePose(0, true)).toEqual(wavePose(WAVE_STEP_MS, true))
+  })
+  it('waves the same hand, on his left, every frame', () => {
+    for (const p of WAVE_POSES) {
+      expect(p[0].slice(0, 2).trim()).not.toBe('')
+      expect(p[1][1]).toBe('\\')
+      expect(p[0].slice(2)).toBe('o ')
+    }
+  })
+  it('says hello in turn, the Japanese by the time of day', () => {
+    expect(new Set([0, 1, 2].map((t) => greeting(t, 12)))).toEqual(new Set(['hello!', 'cześć!', 'konnichiwa!']))
+    expect(greeting(3, 8)).toBe(greeting(0, 8))
+    expect([0, 1, 2].map((t) => greeting(t, 7))).toContain('ohayou!')
+    expect([0, 1, 2].map((t) => greeting(t, 21))).toContain('konbanwa!')
+    expect([0, 1, 2].map((t) => greeting(t, 2))).toContain('konbanwa!')
+  })
+  it('hides near and past the limb', () => {
+    expect(waveFade(-0.5)).toBe(0)
+    expect(waveFade(0.2)).toBe(0)
+    expect(waveFade(0.9)).toBe(1)
   })
 })

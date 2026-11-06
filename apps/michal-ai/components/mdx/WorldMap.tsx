@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { mapById } from '@/content/maps'
 import { dither, SAT_MARKED, seaDot, TERMINAL } from '@/components/presence/ascii/field'
 import { cellFor, decodeWorld, dotRadius, type World } from '@/lib/maps/geometry'
+import { ExternalLink } from '@/components/ui/ExternalLink'
 import './world-map.css'
 
 /**
@@ -208,10 +209,9 @@ export function WorldMap({ id }: { id: string }) {
           {data.sources.map((s, i) => (
             <span key={s.url}>
               {i ? ', ' : null}
-              <a href={s.url} className="link" target="_blank" rel="noopener noreferrer">
+              <ExternalLink href={s.url} arrow={false}>
                 {s.label}
-                <span className="sr-only"> (opens in a new tab)</span>
-              </a>
+              </ExternalLink>
             </span>
           ))}
           {' '}(Wayback Machine). Map: Natural Earth.

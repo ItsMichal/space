@@ -44,7 +44,7 @@
   --radius-card: 24px;
   --radius-lg: 28px;
   --radius-pill: 999px;
-  --glass-blur: 10px;
+  --glass-blur: 16px;
   --glass-refraction: 36;
   --glass-saturate: 1.6;
   --paper: #f4f1e8;
@@ -57,7 +57,7 @@
   --dot: #c2c2ab;
   --accent: #3d6a35;
   --focus: #1d6b74;
-  --glass-tint: rgba(251, 249, 243, 0.62);
+  --glass-tint: rgba(251, 249, 243, 0.8);
   --glass-rim: rgba(255, 255, 255, 0.95);
   --glass-edge: rgba(24, 33, 27, 0.10);
   --presence-1: #4f7d3c;
@@ -102,7 +102,7 @@
     --dot: #363e35;
     --accent: #9cc68a;
     --focus: #7fc6cf;
-    --glass-tint: rgba(18, 22, 18, 0.8);
+    --glass-tint: rgba(18, 22, 18, 0.88);
     --glass-rim: rgba(255, 255, 255, 0.28);
     --glass-edge: rgba(0, 0, 0, 0.55);
     --presence-1: #a9d08f;

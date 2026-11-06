@@ -1,44 +1,21 @@
 import Link from '@/lib/nav'
 import type { Post } from '@/lib/content/types'
-import { cardPicture } from '@/lib/content/picture'
 import type { SeriesGroup } from '@/lib/content'
 import { ProjectCard } from '@/components/work/Showcase'
 import { Disclosure } from '@/components/ui/Disclosure'
+import { IndexEntry } from '@/components/ui/IndexEntry'
+import { IndexSection } from '@/components/ui/IndexSection'
 import { postPath } from '@/lib/seo'
-import { Picture } from '@/components/media/Picture'
+import { monthYear } from '@/lib/dates'
 import './writing.css'
 
-const month = (iso: string) =>
-  new Date(iso + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
-
-/** One post as an index entry: title, one-line description, date, and with `thumb` its picture inside the row. */
-function Row({ post, thumb = false }: { post: Post; thumb?: boolean }) {
-  const picture = thumb ? cardPicture(post) : undefined
-  const src = picture?.src
-  const alt = picture?.alt ?? ''
+/** Posts as index entries (the home page shows the newest as cards instead: CardGrid, components/work/Showcase.tsx). */
+export function WritingRows({ posts, className = '' }: { posts: Post[]; className?: string }) {
   return (
-    <Link href={postPath(post)} className={`wrt ix ix--ui${src ? ' ix--thumb' : ''}`}>
-      {src ? (
-        <span className="ix__media ix__thumb">
-          <Picture src={src} alt={alt} sizes="(min-width: 840px) 240px, calc(100vw - 32px)" aspect="16 / 10" focus={picture?.focus} />
-        </span>
-      ) : null}
-      <span className="ix__title wrt__title">{post.title}</span>
-      <span className="ix__desc wrt__desc">{post.description}</span>
-      <time className="ix__meta" dateTime={post.date}>
-        {month(post.date)}
-      </time>
-    </Link>
-  )
-}
-
-/** Posts as index entries (the home page's Writing section uses the same rows, with `thumbs`). */
-export function WritingRows({ posts, className = '', thumbs = false }: { posts: Post[]; className?: string; thumbs?: boolean }) {
-  return (
-    <ul className={`ix-list wlist ${className}`}>
+    <ul className={`ix-list ${className}`}>
       {posts.map((p) => (
         <li key={p.slug}>
-          <Row post={p} thumb={thumbs} />
+          <IndexEntry href={postPath(p)} title={p.title} desc={p.description} meta={monthYear(p.date)} dateTime={p.date} ui />
         </li>
       ))}
     </ul>
@@ -85,38 +62,29 @@ export function WritingIndex({ featured, series, years }: { featured: Post[]; se
   return (
     <div className="writing">
       {featured.length ? (
-        <section aria-labelledby="w-featured" className="ix-sec">
-          <h2 id="w-featured" className="t-heading">
-            Featured
-          </h2>
-          <ul className="ix-list ix-sec__body">
+        <IndexSection id="featured" title="Featured">
+          <ul className="ix-list">
             {featured.map((p) => (
               <li key={p.slug}>
                 <ProjectCard post={p} href={postPath(p)} article />
               </li>
             ))}
           </ul>
-        </section>
+        </IndexSection>
       ) : null}
       {series.length ? (
-        <section aria-labelledby="w-series" className="ix-sec">
-          <h2 id="w-series" className="t-heading">
-            Series
-          </h2>
-          <div className="writing__stack ix-sec__body">
+        <IndexSection id="series" title="Series">
+          <div className="writing__stack">
             {series.map((g) => (
               <SeriesBlock key={g.id} group={g} />
             ))}
           </div>
-        </section>
+        </IndexSection>
       ) : null}
       {years.map(({ year, posts }) => (
-        <section key={year} aria-labelledby={`w-${year}`} className="ix-sec">
-          <h2 id={`w-${year}`} className="t-heading">
-            {year}
-          </h2>
-          <WritingRows posts={posts} className="ix-sec__body" />
-        </section>
+        <IndexSection key={year} id={`year-${year}`} title={year}>
+          <WritingRows posts={posts} />
+        </IndexSection>
       ))}
     </div>
   )

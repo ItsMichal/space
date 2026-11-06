@@ -77,22 +77,38 @@ a.about__more:focus-visible .about__more-go {
   transform: translateX(3px);
 }
 
-/* The coverage clip under the award row it belongs to (app/page.tsx): the row's own inset, a breath above and below. */
-.xp-reel {
-  margin: var(--space-2) 0 var(--space-4);
+/* A highlighted entry (ExperienceItem `highlight`, the Congressional Record tribute on the home page): the accolade card's surface
+   (components/accolade/accolade.css, `.acc`): paper-raised, a hairline, the medium radius. It is drawn behind the row's text, out
+   past its edges, so the row keeps the list's spacing and its text stays on the edge of the rows around it. It reaches out by
+   half the list's gap, so it clears the next row and, in a timeline, its own node on the rail. (`::after` is the rail.) */
+.xp > li.xp__card {
+  --xp-card: var(--space-2);
+  position: relative;
+  isolation: isolate;
 }
-
-/* Experience heading with the total years under it (app/page.tsx); from 840px it is the section's left column. */
-.xp-head > * {
-  margin: 0;
+.xp > li.xp__card::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: calc(var(--xp-card) * -1);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+  pointer-events: none;
 }
-.xp-head > .t-meta {
-  margin-top: var(--space-1);
-  font-variant-numeric: tabular-nums lining-nums;
+/* In a timeline the card opens towards the rail: no left edge, and the surface and its hairline fade in from the left, so it
+   is three sided (top, right, bottom). */
+.xp--timeline > li.xp__card::before {
+  left: calc(var(--xp-node) + var(--space-4) - var(--xp-card));
+  border-left: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 var(--space-12));
+  mask-image: linear-gradient(90deg, transparent, #000 var(--space-12));
 }
-@media (min-width: 840px) {
-  .xp-head {
-    padding-top: 0.1em;
+@media (min-width: 640px) {
+  .xp > li.xp__card::before {
+    right: calc(var(--space-4) * -1);
   }
 }
 
@@ -147,4 +163,12 @@ a.about__more:focus-visible .about__more-go {
 }
 .xp--timeline > li:has(a.ix:hover, a.ix:focus-visible) .xp__logo {
   background: var(--accent);
+}
+/* a type icon in place of a logo (an award), in the logo's ink */
+.xp__icon {
+  color: var(--ink-muted);
+  transition: color var(--motion-fast) var(--ease-out-soft);
+}
+.xp--timeline > li:has(a.ix:hover, a.ix:focus-visible) .xp__icon {
+  color: var(--accent);
 }

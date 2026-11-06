@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import Link from '@/lib/nav'
 import { ArrowUpRight } from 'lucide-react'
+import { fullDate } from '@/lib/dates'
 import type { GalleryItem, PostLink } from '@/lib/content/types'
 import { Zoomable } from '@/components/media/Zoomable'
 import { Lightbox } from '@/components/media/Lightbox'
@@ -34,14 +35,6 @@ type Props = {
   after?: ReactNode
   children: ReactNode
 }
-
-const fmt = (iso: string) =>
-  new Date(iso + 'T00:00:00Z').toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
-  })
 
 export function ArticleLayout({
   title,
@@ -80,11 +73,11 @@ export function ArticleLayout({
         </h1>
         <p className="lede mt-space-6 max-w-[40ch]">{description}</p>
         <p className="mt-space-6 font-serif text-small italic text-ink-muted">
-          <time dateTime={date}>{fmt(date)}</time>
+          <time dateTime={date}>{fullDate(date)}</time>
           {updated && updated !== date ? (
             <>
               {' · updated '}
-              <time dateTime={updated}>{fmt(updated)}</time>
+              <time dateTime={updated}>{fullDate(updated)}</time>
             </>
           ) : null}
         </p>
@@ -147,6 +140,8 @@ export function ArticleLayout({
         </section>
       ) : null}
       <div className="prose">{children}</div>
+      {/* the end of the article's text: the reading list's End (components/ui/ReadingToc.tsx) */}
+      <div id="end" />
       {after}
       <ReadingToc />
       <Lightbox />

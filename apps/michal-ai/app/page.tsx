@@ -1,20 +1,21 @@
+import type { ReactNode } from 'react'
 import Link from '@/lib/nav'
-import { ArrowRight } from 'lucide-react'
-import { getAllPosts, getBlogPosts, getMainProjects } from '@/lib/content'
+import { Award, ArrowRight, Landmark, Newspaper, Trophy } from 'lucide-react'
+import { getAllPosts, getBlogPosts, getMainProjects, getProjectIndex } from '@/lib/content'
 import { HeroBackdrop } from '@/components/presence/HeroBackdrop'
 import { HeroHook } from '@/components/site/HeroHook'
 import '@/components/site/hero.css'
 import { postPath } from '@/lib/seo'
 import { heroHooks, homeWriting } from '@/lib/content/layout'
 import { NameHeader } from '@/components/site/NameHeader'
-import { WritingRows } from '@/components/writing/WritingIndex'
-import { Showcase } from '@/components/work/Showcase'
+import { CardGrid } from '@/components/work/Showcase'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { profile } from '@/content/profile'
 import { citationLabel, citationsSource, doiUrl, venueLine } from '@/lib/publications'
 import { ExperienceList, type ExperienceItem } from '@/components/ui/ExperienceList'
+import { IndexEntry } from '@/components/ui/IndexEntry'
+import { IndexSection } from '@/components/ui/IndexSection'
 import { Picture } from '@/components/media/Picture'
-import { Video } from '@/components/mdx/Video'
 import { careerYears, hrefById, portraitAlt } from '@/lib/about'
 import '@/components/site/about.css'
 import { homeMetadata, homePageJsonLd, personJsonLd, websiteJsonLd } from '@/lib/seo'
@@ -35,40 +36,44 @@ const experience: ExperienceItem[] = profile.experience.map((e) => ({
   logo: e.logo,
 }))
 
-// Awards and press as one list (profile.awards order), the Congressional Record tribute first. A row links to its post, or to
-// the record itself. The post's clip of the coverage plays under the row for the story it belongs to, not as a section of its
-// own. Built at render, not at module load: posts are only available once the route's data is in (module scope throws on the client).
-const awardItems = (reel?: HomeReel | null): ExperienceItem[] =>
-  profile.awards.map((a) => ({
+// Each kind of recognition by its icon in the list's node, as the experience above has its logos.
+const AWARD_ICONS = { honor: Landmark, award: Award, hackathon: Trophy, press: Newspaper } as const
+
+// Awards and press as one list (profile.awards order), the Congressional Record tribute first and set on a card. A row links to
+// its post, or to the record itself. Built at render, not at module load: posts are only available once the route's data is in
+// (module scope throws on the client).
+const awardItems = (): ExperienceItem[] =>
+  profile.awards.map((a, i) => ({
     id: a.id,
     org: a.title,
     role: a.context,
     years: a.year,
     href: a.postId ? hrefById(a.postId) : a.url,
-    extra:
-      reel && a.postId && hrefById(a.postId) === reel.href ? (
-        <div className="home-reel xp-reel">
-          <Video src={reel.src} poster={reel.poster} title={reel.caption} />
-        </div>
-      ) : undefined,
+    icon: AWARD_ICONS[a.kind],
+    highlight: i === 0,
   }))
 
-const h2 = 'mb-space-6 font-display text-title'
+/** A top-level section of the home page: its title, then the content. The heading is named `${id}-h` (the hero's ink finds `work-h`). */
+const HomeSection = ({ id, title, className = '', children }: { id: string; title: string; className?: string; children: ReactNode }) => (
+  <section id={id} aria-labelledby={`${id}-h`} className={`home-sec ${className}`.trim()}>
+    <h2 id={`${id}-h`} className="mb-space-6 font-display text-title">
+      {title}
+    </h2>
+    {children}
+  </section>
+)
 
-/** A clip from a post, played under the award row that links to the same post: where it plays, its caption, and the post. */
-export type HomeReel = { src: string; poster?: string; caption?: string; href: string; post: string }
-
-export default function Home({ reel }: { reel?: HomeReel | null }) {
+export default function Home() {
   const projects = getMainProjects()
   const articles = getBlogPosts()
   const latest = homeWriting(articles)
-  const awards = awardItems(reel)
+  const awards = awardItems()
   // Rotating hero line: every post that sets `hook`, the layout file's `hooks` first, then the site's own order (priority, then newest).
   const hookPosts = heroHooks(getAllPosts().filter((p) => p.hook))
   const hooks = hookPosts.map((p) => ({ text: p.hook!, href: postPath(p) }))
 
   return (
-    <div className="mx-auto max-w-content px-space-4 md:px-space-8">
+    <div data-sections className="mx-auto max-w-content px-space-4 md:px-space-8">
       <JsonLd data={[personJsonLd, websiteJsonLd, homePageJsonLd]} />
       {/* Hero background slot: a positioned layer behind the text and above the tint cross-fade, empty by default. A decorative
           component (aria-hidden, pointer-events none) can be dropped in here; the hero text keeps its own contrast. */}
@@ -79,34 +84,21 @@ export default function Home({ reel }: { reel?: HomeReel | null }) {
         first={profile.firstName}
         last={profile.lastName}
         role={profile.role}
+        alum={profile.alumOf}
         intro={hooks.length ? <HeroHook stem={profile.hookStem} items={hooks} /> : undefined}
       />
 
-      <section id="work" aria-labelledby="work-h" className="home-sec home-ground mt-space-16">
-        <h2 id="work-h" className={h2}>
-          Projects
-        </h2>
-        <Showcase posts={projects} base="/projects" limit={3} priority thumbs />
-      </section>
+      <HomeSection id="work" title="Projects" className="home-ground mt-space-16">
+        <CardGrid posts={projects} total={getProjectIndex().length} limit={6} more="/projects" noun="project" priority />
+      </HomeSection>
 
       {articles.length > 0 ? (
-        <section id="writing" aria-labelledby="writing-h" className="home-sec">
-          <h2 id="writing-h" className={h2}>
-            Writing
-          </h2>
-          <WritingRows posts={latest.slice(0, 3)} thumbs />
-          {articles.length > 3 ? (
-            <Link href="/writing" className="ix-more link">
-              View {articles.length - 3} more {articles.length - 3 === 1 ? 'post' : 'posts'} <ArrowRight size={16} strokeWidth={1.5} aria-hidden className="ml-space-2" />
-            </Link>
-          ) : null}
-        </section>
+        <HomeSection id="writing" title="Writing">
+          <CardGrid posts={latest} more="/writing" noun="post" />
+        </HomeSection>
       ) : null}
 
-      <section id="about" aria-labelledby="about-h" className="home-sec">
-        <h2 id="about-h" className={h2}>
-          About
-        </h2>
+      <HomeSection id="about" title="About">
         <div className="about">
           <div className="about__intro">
             <div className="about__photo">
@@ -117,52 +109,38 @@ export default function Home({ reel }: { reel?: HomeReel | null }) {
               <p className="t-text">{profile.about[1]}</p>
             </div>
           </div>
-          <section aria-labelledby="xp-h" className="ix-sec">
-            <div className="xp-head">
-              <h3 id="xp-h" className="t-heading">
-                Experience
-              </h3>
-              <p className="t-meta">{careerYears()}+ years</p>
-            </div>
-            <div className="ix-sec__body">
-              <ExperienceList items={experience} label="Experience" timeline />
-            </div>
-          </section>
-          <section aria-labelledby="awards-h" className="ix-sec">
-            <h3 id="awards-h" className="t-heading">
-              Recognition
-            </h3>
-            <div className="ix-sec__body">
-              <ExperienceList items={awards} label="Recognition" />
-            </div>
-          </section>
+          <IndexSection id="experience" title="Experience" level={3} aside={`${careerYears()}+ years`}>
+            <ExperienceList items={experience} label="Experience" timeline />
+          </IndexSection>
+          <IndexSection id="recognition" title="Recognition" level={3}>
+            <ExperienceList items={awards} label="Recognition" timeline />
+          </IndexSection>
           {profile.publications.length ? (
-            <section id="publications" aria-labelledby="pubs-h" className="ix-sec">
-              <h3 id="pubs-h" className="t-heading">
-                Publications
-              </h3>
-              <div className="ix-sec__body">
-                <ul className="ix-list">
-                  {profile.publications.map((p) => (
-                    <li key={p.id}>
-                      <a href={doiUrl(p)} className="ix" target="_blank" rel="noopener noreferrer">
-                        <span className="ix__title">{p.title}</span>
-                        <span className="ix__desc t-text">
+            <IndexSection id="publications" title="Publications" level={3}>
+              <ul className="ix-list ix-list--tight">
+                {profile.publications.map((p) => (
+                  <li key={p.id}>
+                    <IndexEntry
+                      href={doiUrl(p)}
+                      external
+                      title={p.title}
+                      desc={
+                        <>
                           {p.shortAuthors ? `${p.shortAuthors} ` : ''}
                           {venueLine(p)}
                           {p.shortAuthors ? '.' : ''}
                           {p.authorCount ? ` ${p.authorCount.toLocaleString('en-US')} authors.` : ''}
                           {citationLabel(p.doi) ? <span title={citationsSource}>{`${p.shortAuthors || p.authorCount ? ' ' : '. '}${citationLabel(p.doi)}.`}</span> : null}
-                        </span>
-                        <time className="ix__meta t-meta" dateTime={p.published}>
-                          {p.year}
-                        </time>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </section>
+                        </>
+                      }
+                      meta={p.year}
+                      dateTime={p.published}
+                      ui
+                    />
+                  </li>
+                ))}
+              </ul>
+            </IndexSection>
           ) : null}
           <Link href="/about" className="about__more ix" aria-labelledby="about-more-h" aria-describedby="about-more-d">
             <span id="about-more-h" className="ix__title">
@@ -174,7 +152,7 @@ export default function Home({ reel }: { reel?: HomeReel | null }) {
             </span>
           </Link>
         </div>
-      </section>
+      </HomeSection>
     </div>
   )
 }

@@ -108,3 +108,6 @@ export const BACKDROP = {
   /** Static frame used for reduced motion and the baked fallback images (seconds). Outside any shooting star window. */
   staticTime: 37,
 } as const
+
+/** Dispatched on the backdrop canvas to have it draw now, in this task, so a copy of it (drawImage) is not the cleared bitmap. */
+export const BACKDROP_DRAW = 'backdrop:draw'

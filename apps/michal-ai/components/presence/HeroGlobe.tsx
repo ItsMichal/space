@@ -10,6 +10,7 @@ import { buildLinks } from '@/lib/starlink/links.mjs'
 import { loadLand } from './globe/data'
 import { loadStarlink, type Packed } from './globe/starlink'
 import { createRenderer, PING_CAP, projectPoint, rotation, SHELL_SCALE, SPHERE_FRACTION, type GlobeRenderer, type PingSet } from './globe/renderer'
+import { drawHeroMarks } from './heroMarks'
 import './presence.css'
 
 const DEG_PER_S = 2.4
@@ -174,6 +175,7 @@ export function HeroGlobe({ pins = PRESENCE_PINS, mock = false, variant = 'slot'
       } else drawIn(t)
     })
     drawIn(document.getElementById('work-h'))
+    drawHeroMarks(g, w.left, w.top, k, () => measureText())
     const fade = animate && !s.reduced && s.active
     s.r.setMask(c, fade)
     s.sr?.setMask(c, fade)
