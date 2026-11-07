@@ -135,7 +135,7 @@ describe('paper origami', () => {
   })
 
   it('folds a baked model from the squared page without a jump, its sheet covering the page whole', () => {
-    for (const name of ['crane', 'bird', 'lily'])
+    for (const name of ['crane', 'bird', 'lily', 'orchid'])
       for (const [w, h] of [
         [390, 844],
         [1440, 900],

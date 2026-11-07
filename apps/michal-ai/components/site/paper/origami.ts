@@ -11,7 +11,7 @@
 // Paper does not hinge: a flap being folded rolls over a soft bend that tightens into the crease as it is pressed down, and a petal
 // left standing keeps a little of that curl.
 
-import { BIRD, CRANE, LILY } from './models'
+import { BIRD, CRANE, LILY, ORCHID } from './models'
 
 export type Fold = {
   c: [number, number]
@@ -124,13 +124,15 @@ function bloom(w: number, h: number, tilt: number, angle: number): Design {
   return { turn: t.turn + Math.PI, folds: [...t.folds, petal(1), petal(-1)] }
 }
 
-/** The models for a sheet `w` by `h` px, one picked per run, all traditional: the crane and flapping bird from their crease patterns, the lily from the frog base, the tulip, the bud, the swan and the dog's face. */
+/** The models for a sheet `w` by `h` px, one picked per run, all traditional: the crane and flapping bird from their crease patterns, the lily from the frog base, Lang's orchid, the tulip, the bud, the swan and the dog's face. */
 export const PATTERNS: Record<string, (w: number, h: number) => Design> = {
   // the traditional crane and flapping bird, folded from their crease patterns
   crane: (w, h) => baked(w, h, CRANE),
   bird: (w, h) => baked(w, h, BIRD),
   // the traditional lily, folded from the frog base
   lily: (w, h) => baked(w, h, LILY),
+  // Robert J. Lang's orchid blossom, folded from his crease pattern and opened out
+  orchid: (w, h) => baked(w, h, ORCHID),
   // the classic flat tulip: the triangle stood point up on its folded edge, and its two bottom corners folded up beside the point,
   // so three tips stand at the top (a petal each side of the middle one) over shoulders that narrow to the base; the side petals
   // are left a little open
