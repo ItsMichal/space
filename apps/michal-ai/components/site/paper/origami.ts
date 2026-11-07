@@ -11,7 +11,7 @@
 // Paper does not hinge: a flap being folded rolls over a soft bend that tightens into the crease as it is pressed down, and a petal
 // left standing keeps a little of that curl.
 
-import { BIRD, CRANE } from './models'
+import { BIRD, CRANE, LILY } from './models'
 
 export type Fold = {
   c: [number, number]
@@ -124,11 +124,13 @@ function bloom(w: number, h: number, tilt: number, angle: number): Design {
   return { turn: t.turn + Math.PI, folds: [...t.folds, petal(1), petal(-1)] }
 }
 
-/** The models for a sheet `w` by `h` px, one picked per run, all traditional: the crane and flapping bird from their crease patterns, the tulip, the bud, the swan and the dog's face. */
+/** The models for a sheet `w` by `h` px, one picked per run, all traditional: the crane and flapping bird from their crease patterns, the lily from the frog base, the tulip, the bud, the swan and the dog's face. */
 export const PATTERNS: Record<string, (w: number, h: number) => Design> = {
   // the traditional crane and flapping bird, folded from their crease patterns
   crane: (w, h) => baked(w, h, CRANE),
   bird: (w, h) => baked(w, h, BIRD),
+  // the traditional lily, folded from the frog base
+  lily: (w, h) => baked(w, h, LILY),
   // the classic flat tulip: the triangle stood point up on its folded edge, and its two bottom corners folded up beside the point,
   // so three tips stand at the top (a petal each side of the middle one) over shoulders that narrow to the base; the side petals
   // are left a little open
@@ -351,14 +353,18 @@ export function bakedMesh(
   }
 }
 
-/** The pattern's corners in 3D at `t` (0 flat to 1 folded), between its baked steps. */
+/** The pattern's corners in 3D at `t` (0 flat to 1 folded), between its baked steps on a curve through them (Catmull-Rom), so a
+ * flap turning over a few steps swings round rather than cutting across. */
 export function bakedAt(model: Baked, t: number): Float32Array<ArrayBuffer> {
-  const g = Math.min(1, Math.max(0, t)) * (model.keys.length - 1)
-  const k = Math.min(model.keys.length - 2, Math.floor(g))
+  const { keys } = model
+  const g = Math.min(1, Math.max(0, t)) * (keys.length - 1)
+  const k = Math.min(keys.length - 2, Math.floor(g))
   const f = g - k
-  const [a, b] = [model.keys[k], model.keys[k + 1]]
-  const out = new Float32Array(a.length)
-  for (let i = 0; i < a.length; i++) out[i] = a[i] + (b[i] - a[i]) * f
+  const [p0, p1, p2, p3] = [keys[Math.max(0, k - 1)], keys[k], keys[k + 1], keys[Math.min(keys.length - 1, k + 2)]]
+  const [f2, f3] = [f * f, f * f * f]
+  const [w0, w1, w2, w3] = [(-f3 + 2 * f2 - f) / 2, (3 * f3 - 5 * f2 + 2) / 2, (-3 * f3 + 4 * f2 + f) / 2, (f3 - f2) / 2]
+  const out = new Float32Array(p1.length)
+  for (let i = 0; i < p1.length; i++) out[i] = w0 * p0[i] + w1 * p1[i] + w2 * p2[i] + w3 * p3[i]
   return out
 }
 
