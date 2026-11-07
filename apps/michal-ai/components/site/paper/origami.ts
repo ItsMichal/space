@@ -11,10 +11,29 @@
 // Paper does not hinge: a flap being folded rolls over a soft bend that tightens into the crease as it is pressed down, and a petal
 // left standing keeps a little of that curl.
 
-export type Fold = { c: [number, number]; n: [number, number]; valley: boolean; angle: number; only?: [number, boolean][]; with?: boolean }
+import { BIRD, CRANE } from './models'
 
-/** A model: its folds, and how far it is turned in the sheet's plane to stand the right way up once folded, radians. */
-export type Design = { folds: Fold[]; turn: number }
+export type Fold = {
+  c: [number, number]
+  n: [number, number]
+  valley: boolean
+  angle: number
+  only?: [number, boolean][]
+  with?: boolean
+}
+
+/** A model folded from its real crease pattern, every crease at once, as no list of flat folds can make it (a crane's petal
+ * folds): the pattern's flat corners (x, y in a square of side 2 about its middle, y up), its triangles, counter-clockwise, and
+ * where its corners are in 3D at even steps of the folding, in the same units (./models.ts). */
+export type Baked = { flat: number[]; tris: number[]; keys: number[][] }
+
+/** A model: its folds, and how far it is turned in the sheet's plane to stand the right way up once folded, radians. A baked one's
+ * folds only square the page, and the pattern is folded from that square, its middle `c` and side `a`, px. */
+export type Design = {
+  folds: Fold[]
+  turn: number
+  baked?: { model: Baked; c: [number, number]; a: number }
+}
 
 /** The most folds a flower has. */
 export const MAX_FOLDS = 16
@@ -83,6 +102,12 @@ function crease(t: ReturnType<typeof diamond>, a: [number, number], b: [number, 
   return fold(t.at(...a), t.dir(np, nq), valley, angle)
 }
 
+/** The page squared, then folded from the crease pattern `model`. */
+function baked(w: number, h: number, model: Baked): Design {
+  const s = square(w, h)
+  return { folds: s.folds, turn: 0, baked: { model, c: s.c, a: s.a } }
+}
+
 /** The tulip and its kin: the triangle stood point up on its folded edge, and its two bottom corners folded up beside the point,
  * so three tips stand at the top (a petal each side of the middle one) over shoulders that narrow to the base. In the triangle's
  * shares its point is (0, -1), here turned to the top. A corner (1, 0) swings up about a pivot on the base a little to its own side,
@@ -99,8 +124,11 @@ function bloom(w: number, h: number, tilt: number, angle: number): Design {
   return { turn: t.turn + Math.PI, folds: [...t.folds, petal(1), petal(-1)] }
 }
 
-/** The models for a sheet `w` by `h` px, one picked per run: traditional models, the tulip, the swan and the dog's face. */
+/** The models for a sheet `w` by `h` px, one picked per run, all traditional: the crane and flapping bird from their crease patterns, the tulip, the bud, the swan and the dog's face. */
 export const PATTERNS: Record<string, (w: number, h: number) => Design> = {
+  // the traditional crane and flapping bird, folded from their crease patterns
+  crane: (w, h) => baked(w, h, CRANE),
+  bird: (w, h) => baked(w, h, BIRD),
   // the classic flat tulip: the triangle stood point up on its folded edge, and its two bottom corners folded up beside the point,
   // so three tips stand at the top (a petal each side of the middle one) over shoulders that narrow to the base; the side petals
   // are left a little open
@@ -149,7 +177,19 @@ export const PATTERNS: Record<string, (w: number, h: number) => Design> = {
     // the head forward and a little down, out of the neck's last stretch
     const head: [number, number] = [tip[0] - rise[0] * 0.17, tip[1] - rise[1] * 0.17]
     const look = norm(0.3, -0.95)
-    reverse(head, norm(rise[0] + look[0], rise[1] + look[1]), tip, [[half, false], [neck, true]], [[half, true], [neck + 1, true]])
+    reverse(
+      head,
+      norm(rise[0] + look[0], rise[1] + look[1]),
+      tip,
+      [
+        [half, false],
+        [neck, true],
+      ],
+      [
+        [half, true],
+        [neck + 1, true],
+      ],
+    )
     return { turn: t.turn - Math.PI / 2, folds }
   },
   // the traditional dog's face: the triangle point down, its two top corners folded down beside the face as ears that hang a little past its
@@ -196,6 +236,166 @@ export function foldsMade(folds: Fold[], t: number): number[] {
   folds.forEach((f, k) => step.push(k > 0 && f.with ? step[k - 1] : (step[k - 1] ?? -1) + 1))
   const at = foldsAt(t, (step.at(-1) ?? -1) + 1)
   return step.map((k) => at[k])
+}
+
+/** The share of the folding a baked model spends squaring the page before its pattern folds. */
+export const SQUARING = 0.2
+
+/** A baked model's sheet in triangles: the page cut along the squaring folds and along the pattern's triangles where it lies on
+ * them once squared, so every triangle rides one of the pattern's. Each vertex's flat point on the page (x, y), the pattern
+ * triangle it rides, its weights on that triangle's corners, and how far off it it lies, px (the squaring's layers behind it). */
+export function bakedMesh(
+  d: Design,
+  w: number,
+  h: number,
+  cell: number,
+): {
+  flat: Float32Array<ArrayBuffer>
+  of: Uint16Array<ArrayBuffer>
+  on: Uint16Array<ArrayBuffer>
+  weights: Float32Array<ArrayBuffer>
+  off: Float32Array<ArrayBuffer>
+  index: Uint32Array<ArrayBuffer>
+} {
+  const { folds } = d
+  const { model, c, a } = d.baked!
+  const half = a / 2
+  const all = pieces(folds, w, h)
+  const done = pose(
+    folds,
+    folds.map(() => 1),
+    reaches(folds, all),
+  )
+  const F = model.flat
+  const flat: number[] = []
+  const on: number[] = []
+  const weights: number[] = []
+  const off: number[] = []
+  const index: number[] = []
+  const of: number[] = []
+  // the pattern's outer edges, each in one triangle only
+  const edge = (i: number, j: number) => Math.min(i, j) * 65536 + Math.max(i, j)
+  const rim = new Set<number>()
+  for (let t = 0; t < model.tris.length; t += 3)
+    for (let i = 0; i < 3; i++) {
+      const e = edge(model.tris[t + i], model.tris[t + ((i + 1) % 3)])
+      if (rim.has(e)) rim.delete(e)
+      else rim.add(e)
+    }
+  all.forEach((p, piece) => {
+    // the piece where the squaring lays it, in the pattern's units: mirrored about the creases themselves, not past the layers
+    // they wrap, so the layers behind lie on the square
+    const mirror = (x: number, y: number, back: boolean): [number, number] => {
+      for (let j = 0; j < folds.length; j++) {
+        const f = folds[back ? folds.length - 1 - j : j]
+        if (!p.moves[back ? folds.length - 1 - j : j]) continue
+        const d = (x - f.c[0]) * f.n[0] + (y - f.c[1]) * f.n[1]
+        x -= 2 * d * f.n[0]
+        y -= 2 * d * f.n[1]
+      }
+      return [x, y]
+    }
+    const there = p.poly.map(([x, y]): [number, number] => {
+      const [fx, fy] = mirror(x, y, false)
+      return [(fx - c[0]) / half, (fy - c[1]) / half]
+    })
+    for (let t = 0; t < model.tris.length; t += 3) {
+      const [A, B, C] = [0, 1, 2].map((j): [number, number] => [F[2 * model.tris[t + j]], F[2 * model.tris[t + j] + 1]])
+      const det = (B[0] - A[0]) * (C[1] - A[1]) - (B[1] - A[1]) * (C[0] - A[0])
+      // cut by its inner edges only: past the pattern's own edge lie the layers wrapped round a squaring crease, a hair over it
+      let poly = there
+      for (const [i, j] of [
+        [0, 1],
+        [1, 2],
+        [2, 0],
+      ]) {
+        if (rim.has(edge(model.tris[t + i], model.tris[t + j]))) continue
+        const [P, Q] = [[A, B, C][i], [A, B, C][j]]
+        poly = clip(poly, ([x, y]) => Math.sign(det) * ((Q[0] - P[0]) * (y - P[1]) - (Q[1] - P[1]) * (x - P[0])))
+      }
+      if (poly.length < 3 || area(poly) < 1e-7) continue
+      // cut fine too, so the squaring's bends curve
+      const g = cell / half
+      const [u0, u1] = [Math.min(...poly.map(([u]) => u)), Math.max(...poly.map(([u]) => u))]
+      const [v0, v1] = [Math.min(...poly.map(([, v]) => v)), Math.max(...poly.map(([, v]) => v))]
+      for (let gy = Math.floor(v0 / g); gy * g < v1; gy++)
+        for (let gx = Math.floor(u0 / g); gx * g < u1; gx++) {
+          let bit = poly
+          bit = clip(bit, ([u]) => u - gx * g)
+          bit = clip(bit, ([u]) => (gx + 1) * g - u)
+          bit = clip(bit, ([, v]) => v - gy * g)
+          bit = clip(bit, ([, v]) => (gy + 1) * g - v)
+          if (bit.length < 3 || area(bit) < 1e-9) continue
+          const first = on.length
+          for (const [u, v] of bit) {
+            const [x, y] = unmirrored(folds, p.moves, c[0] + u * half, c[1] + v * half)
+            const wb = ((u - A[0]) * (C[1] - A[1]) - (v - A[1]) * (C[0] - A[0])) / det
+            const wc = ((B[0] - A[0]) * (v - A[1]) - (B[1] - A[1]) * (u - A[0])) / det
+            flat.push(x, y)
+            of.push(piece)
+            on.push(t / 3)
+            weights.push(1 - wb - wc, wb, wc)
+            off.push(place(folds, p.moves, done, x, y)[2])
+          }
+          for (let i = 1; i + 1 < bit.length; i++) index.push(first, first + i, first + i + 1)
+        }
+    }
+  })
+  return {
+    flat: new Float32Array(flat),
+    of: new Uint16Array(of),
+    on: new Uint16Array(on),
+    weights: new Float32Array(weights),
+    off: new Float32Array(off),
+    index: new Uint32Array(index),
+  }
+}
+
+/** The pattern's corners in 3D at `t` (0 flat to 1 folded), between its baked steps. */
+export function bakedAt(model: Baked, t: number): Float32Array<ArrayBuffer> {
+  const g = Math.min(1, Math.max(0, t)) * (model.keys.length - 1)
+  const k = Math.min(model.keys.length - 2, Math.floor(g))
+  const f = g - k
+  const [a, b] = [model.keys[k], model.keys[k + 1]]
+  const out = new Float32Array(a.length)
+  for (let i = 0; i < a.length; i++) out[i] = a[i] + (b[i] - a[i]) * f
+  return out
+}
+
+/** Where every vertex of a baked mesh is at `t` (0 the page flat, 1 the model folded), px: the squaring folds made first, as the
+ * flat folds are, then the pattern folds the square, the layers the squaring laid behind it riding along on their triangles. */
+export function bakedPlace(d: Design, m: ReturnType<typeof bakedMesh>, all: Piece[], reach: number[], t: number, out: Float32Array) {
+  const { folds } = d
+  const { model, c, a } = d.baked!
+  const half = a / 2
+  const n = m.on.length
+  if (t < SQUARING) {
+    const at = pose(folds, foldsAt(t / SQUARING, folds.length), reach)
+    for (let v = 0; v < n; v++) out.set(place(folds, all[m.of[v]].moves, at, m.flat[2 * v], m.flat[2 * v + 1]), 3 * v)
+    return
+  }
+  const P = bakedAt(model, (t - SQUARING) / (1 - SQUARING))
+  // the pattern's first step is the square flat about its middle; recentred steps keep it there
+  for (let v = 0; v < n; v++) {
+    const tri = 3 * m.on[v]
+    const [i, j, k] = [3 * model.tris[tri], 3 * model.tris[tri + 1], 3 * model.tris[tri + 2]]
+    const [wa, wb, wc] = [m.weights[3 * v], m.weights[3 * v + 1], m.weights[3 * v + 2]]
+    const ux = P[j] - P[i]
+    const uy = P[j + 1] - P[i + 1]
+    const uz = P[j + 2] - P[i + 2]
+    const vx = P[k] - P[i]
+    const vy = P[k + 1] - P[i + 1]
+    const vz = P[k + 2] - P[i + 2]
+    let [nx, ny, nz] = [uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx]
+    const l = Math.hypot(nx, ny, nz) || 1
+    nx /= l
+    ny /= l
+    nz /= l
+    const o = m.off[v]
+    out[3 * v] = c[0] + half * (wa * P[i] + wb * P[j] + wc * P[k]) + o * nx
+    out[3 * v + 1] = c[1] + half * (wa * P[i + 1] + wb * P[j + 1] + wc * P[k + 1]) + o * ny
+    out[3 * v + 2] = half * (wa * P[i + 2] + wb * P[j + 2] + wc * P[k + 2]) + o * nz
+  }
 }
 
 /** The paper's thickness, px: each full fold lands its layers on top of all those under them, so the stack doubles. */
@@ -275,7 +475,15 @@ export function reaches(folds: Fold[], all: Piece[]): number[] {
  * belongs to, and the triangles, counter-clockwise from the front. The grid is laid on the folded model, not the open sheet, so the
  * layers stacked at a spot are cut at the same places and bend along the same chords: cut apart, a curl's chords would sag through
  * the layer under it. */
-export function mesh(folds: Fold[], all: Piece[], cell: number): { flat: Float32Array<ArrayBuffer>; of: Uint16Array<ArrayBuffer>; index: Uint32Array<ArrayBuffer> } {
+export function mesh(
+  folds: Fold[],
+  all: Piece[],
+  cell: number,
+): {
+  flat: Float32Array<ArrayBuffer>
+  of: Uint16Array<ArrayBuffer>
+  index: Uint32Array<ArrayBuffer>
+} {
   const flat: number[] = []
   const of: number[] = []
   const index: number[] = []
@@ -308,7 +516,11 @@ export function mesh(folds: Fold[], all: Piece[], cell: number): { flat: Float32
         for (let i = 1; i + 1 < ids.length; i++) index.push(ids[0], ids[i], ids[i + 1])
       }
   })
-  return { flat: new Float32Array(flat), of: new Uint16Array(of), index: new Uint32Array(index) }
+  return {
+    flat: new Float32Array(flat),
+    of: new Uint16Array(of),
+    index: new Uint32Array(index),
+  }
 }
 
 /** Where a point of piece `moves` is in 3D in pose `at`, the layers stacked: what the sheet draws. Each fold rolls the flap over a
@@ -366,7 +578,10 @@ export function packet(folds: Fold[], w: number, h: number, turn = 0): { center:
       y1 = Math.max(y1, y)
     }
   const [mx, my] = [(x0 + x1) / 2, (y0 + y1) / 2]
-  return { center: [mx * c + my * s, -mx * s + my * c], size: [x1 - x0, y1 - y0] }
+  return {
+    center: [mx * c + my * s, -mx * s + my * c],
+    size: [x1 - x0, y1 - y0],
+  }
 }
 
 /** Where a point of the flat sheet is in 3D in pose `at`, as `place` puts it on its own piece. */

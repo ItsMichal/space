@@ -13,7 +13,7 @@ import { BACKDROP_DRAW } from '../backdrop/config'
 import { IGNITE_MS, LEAD_MS, PAPER_ASH, PAPER_FPS, PAPER_MS } from './config'
 import { type Blast, air, embers, seeded, spawn, STEP_MS, step } from './embers'
 import { ASH_FS, EMBER_FS, EMBER_VS, QUAD_VS, SHADE_FS, SHEET_FS, SHEET_VS, SOFT_FS } from './shaders'
-import { type Design, PATTERNS, type Piece, foldsMade, mesh, packet, pieces, place, pose, reaches } from './origami'
+import { type Design, PATTERNS, type Piece, bakedMesh, bakedPlace, foldsMade, mesh, packet, pieces, place, pose, reaches } from './origami'
 import { flickerAt, frameAt, type Frame, randomCrumple, waitingAt } from './timeline'
 
 const MAX_DPR = 2
@@ -25,7 +25,7 @@ const GLYPH_H = 13
 /** The glyphs of the burning edge, sparse to dense. */
 const RAMP = '.:-=+*#%@'
 /** The embers' glyphs, in tiers sparse to dense: each ember picks its own within its tier, so no two drift alike. */
-const TIERS = ['.`\',', ':;-~^"', '=+!|/\\<>', '*()?{}[]', '#%&$', '@&#']
+const TIERS = [".`',", ':;-~^"', '=+!|/\\<>', '*()?{}[]', '#%&$', '@&#']
 /** Every glyph drawn: the edge's ramp first, then the embers' (one atlas). */
 const ATLAS = RAMP + [...new Set(TIERS.join(''))].join('')
 const TIER_AT = TIERS.map((t) => [...t].map((c) => ATLAS.indexOf(c)))
@@ -117,7 +117,16 @@ async function capture(w: number, h: number, scale: number): Promise<HTMLCanvasE
     ctx.globalAlpha = 1
   }
   // the page as it is on screen now (lib/paint), pictures it has to fetch again given a moment at most
-  return paintPage({ x: 0, y: 0, width: w, height: h, scale, skip, canvas: out, wait: 300 })
+  return paintPage({
+    x: 0,
+    y: 0,
+    width: w,
+    height: h,
+    scale,
+    skip,
+    canvas: out,
+    wait: 300,
+  })
 }
 
 function perspective(fov: number, aspect: number, near: number, far: number) {
@@ -146,7 +155,9 @@ function program(gl: WebGL2RenderingContext, vs: string, fs: string) {
   }
   gl.linkProgram(p)
   if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(`[paper] link: ${gl.getProgramInfoLog(p)}`)
-  const u = new Proxy({} as Record<string, WebGLUniformLocation | null>, { get: (c, k: string) => (k in c ? c[k] : (c[k] = gl.getUniformLocation(p, k))) })
+  const u = new Proxy({} as Record<string, WebGLUniformLocation | null>, {
+    get: (c, k: string) => (k in c ? c[k] : (c[k] = gl.getUniformLocation(p, k))),
+  })
   return { p, u }
 }
 /** A fixed jitter for a mesh vertex, -0.5 to 0.5. */
@@ -161,7 +172,13 @@ function createStage(w: number, h: number, dpr: number) {
   canvas.setAttribute('aria-hidden', 'true')
   canvas.width = Math.round(w * dpr)
   canvas.height = Math.round(h * dpr)
-  const gl = canvas.getContext('webgl2', { alpha: true, antialias: true, premultipliedAlpha: true, depth: true, stencil: false })
+  const gl = canvas.getContext('webgl2', {
+    alpha: true,
+    antialias: true,
+    premultipliedAlpha: true,
+    depth: true,
+    stencil: false,
+  })
   if (!gl) throw new Error('[paper] no WebGL2')
 
   const sheet = program(gl, SHEET_VS, SHEET_FS)
@@ -363,17 +380,42 @@ function createStage(w: number, h: number, dpr: number) {
   }
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, plateIdxBuffer)
   gl.bindVertexArray(null)
+  let bakedSheet: ReturnType<typeof bakedMesh> | null = null
   const fold = (name: string) => {
     flowerName = name
     flower = PATTERNS[name](w, h)
-    const box = packet(flower.folds, w, h, flower.turn)
-    bloom = box.center
-    // a flower wider or taller than the screen leaves room round it, so no petal is cut by the edge
-    fit = Math.min(1, (FIT * w) / box.size[0], (FIT * h) / box.size[1])
     // the folding sheet is drawn as its pieces cut fine, so the bends curve, placed every frame
     plates = pieces(flower.folds, w, h)
     reach = reaches(flower.folds, plates)
-    const m = mesh(flower.folds, plates, Math.max(6, minDim / 64))
+    const cell = Math.max(6, minDim / 64)
+    let box: { center: [number, number]; size: [number, number] }
+    let m: {
+      flat: Float32Array<ArrayBuffer>
+      of: Uint16Array<ArrayBuffer>
+      index: Uint32Array<ArrayBuffer>
+    }
+    if (flower.baked) {
+      bakedSheet = bakedMesh(flower, w, h, cell)
+      m = bakedSheet
+      // the finished model's middle and size, from its last step
+      const end = new Float32Array(bakedSheet.on.length * 3)
+      bakedPlace(flower, bakedSheet, plates, reach, 1, end)
+      let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity]
+      for (let v = 0; v < end.length; v += 3) {
+        x0 = Math.min(x0, end[v])
+        x1 = Math.max(x1, end[v])
+        y0 = Math.min(y0, end[v + 1])
+        y1 = Math.max(y1, end[v + 1])
+      }
+      box = { center: [(x0 + x1) / 2, (y0 + y1) / 2], size: [x1 - x0, y1 - y0] }
+    } else {
+      bakedSheet = null
+      m = mesh(flower.folds, plates, cell)
+      box = packet(flower.folds, w, h, flower.turn)
+    }
+    bloom = box.center
+    // a flower wider or taller than the screen leaves room round it, so no petal is cut by the edge
+    fit = Math.min(1, (FIT * w) / box.size[0], (FIT * h) / box.size[1])
     plateFlat = m.flat
     plateOf = m.of
     plateIndex = m.index
@@ -399,7 +441,13 @@ function createStage(w: number, h: number, dpr: number) {
   // the embers' sim: the blast from the middle of the ball as it lands, this run's air, and the burnt cells read back to spawn from
   const runSeed = Math.floor(Math.random() * 2 ** 31)
   const scale = Math.min(canvas.width, canvas.height)
-  const blast: Blast = { cx: canvas.width / 2, cy: canvas.height / 2, at: IGNITE_MS, scale, waves: air(scale, seeded(runSeed)) }
+  const blast: Blast = {
+    cx: canvas.width / 2,
+    cy: canvas.height / 2,
+    at: IGNITE_MS,
+    scale,
+    waves: air(scale, seeded(runSeed)),
+  }
   const sparks = embers()
   const instances = new Float32Array(sparks.x.length * 7)
   const read = new Uint8Array(gridW * gridH * 4)
@@ -452,7 +500,11 @@ function createStage(w: number, h: number, dpr: number) {
     const sxz = 1 / Math.sqrt(sy)
     // a folded flower is not a ball: it keeps only a little of the crumple's tumble, a slight lean that shows its relief
     const spin = s.spin.map((v) => v * (1 - (1 - LEAN) * e)) as [number, number, number]
-    gl.uniformMatrix3fv(u.u_rot, false, rotation(...spin).map((v, i) => v * (i % 3 === 1 ? sy : sxz)))
+    gl.uniformMatrix3fv(
+      u.u_rot,
+      false,
+      rotation(...spin).map((v, i) => v * (i % 3 === 1 ? sy : sxz)),
+    )
     const cz = R * 0.5 * s.ball + LIFT * D * s.lift
     gl.uniform3f(u.u_center, 0, 0, cz)
     gl.uniformMatrix4fv(u.u_vp, false, vp)
@@ -483,12 +535,15 @@ function createStage(w: number, h: number, dpr: number) {
     }
     // placed once a frame, not again for the burn cells and the shadow drawn from the same frame; each vertex's normal the sum of
     // its triangles' (weighted by their size), so the bends shade smoothly and a vertex on a crease takes its own side's
-    const key = flowerName + made.join()
+    const key = flowerName + (bakedSheet ? folding : made.join())
     if (placedFor !== key) {
       placedFor = key
-      const at = pose(flower.folds, made, reach)
-      for (let v = 0; v < plateOf.length; v++)
-        platePos.set(place(flower.folds, plates[plateOf[v]].moves, at, plateFlat[2 * v], plateFlat[2 * v + 1]), 3 * v)
+      if (bakedSheet) bakedPlace(flower, bakedSheet, plates, reach, folding, platePos)
+      else {
+        const at = pose(flower.folds, made, reach)
+        for (let v = 0; v < plateOf.length; v++)
+          platePos.set(place(flower.folds, plates[plateOf[v]].moves, at, plateFlat[2 * v], plateFlat[2 * v + 1]), 3 * v)
+      }
       plateNrm.fill(0)
       const P = platePos
       for (let i = 0; i < plateIndex.length; i += 3) {
@@ -553,7 +608,8 @@ function createStage(w: number, h: number, dpr: number) {
   }
   /** Hot to cold in the site's palette (the theme's own values, so it reads on the paper in light and in dark): gold, rust, rose,
    * then the faint ink of ash. */
-  const emberColor = (u: number) => mix3(mix3(mix3(fire.hot, fire.flame, smooth(0.05, 0.3, u)), fire.rose, smooth(0.3, 0.65, u)), fire.cool, smooth(0.65, 0.95, u))
+  const emberColor = (u: number) =>
+    mix3(mix3(mix3(fire.hot, fire.flame, smooth(0.05, 0.3, u)), fire.rose, smooth(0.3, 0.65, u)), fire.cool, smooth(0.65, 0.95, u))
 
   const drawEmbers = () => {
     const e = sparks
@@ -679,7 +735,8 @@ function createStage(w: number, h: number, dpr: number) {
       }
       const ms = Math.min(now - t0, PAPER_MS)
       const fade = waited > 0 ? Math.max(0, 1 - (now - leftAt) / SWING_OUT_MS) : 0
-      const at = (T: number) => (fade > 0 ? waitingAt(frameAt(T, crumple), waited + (now - leftAt), fade * fade * (3 - 2 * fade)) : frameAt(T, crumple))
+      const at = (T: number) =>
+        fade > 0 ? waitingAt(frameAt(T, crumple), waited + (now - leftAt), fade * fade * (3 - 2 * fade)) : frameAt(T, crumple)
       const T = ms / PAPER_MS
       if (hold != null && T >= hold) {
         // the embers are a sim: a held or scrubbed point replays it from the start

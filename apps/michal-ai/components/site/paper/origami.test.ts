@@ -1,5 +1,23 @@
 import { describe, expect, it } from 'vitest'
-import { type Fold, MAX_FOLDS, PATTERNS, foldPoint, folded, foldsAt, foldsMade, mesh, packet, pieces, place, pose, reaches, sides } from './origami'
+import {
+  type Fold,
+  MAX_FOLDS,
+  PATTERNS,
+  SQUARING,
+  bakedMesh,
+  bakedPlace,
+  foldPoint,
+  folded,
+  foldsAt,
+  foldsMade,
+  mesh,
+  packet,
+  pieces,
+  place,
+  pose,
+  reaches,
+  sides,
+} from './origami'
 
 const area = (poly: [number, number][]) => {
   let a = 0
@@ -114,5 +132,29 @@ describe('paper origami', () => {
       })
     }
     expect(foldsMade(folds, 1).every((m) => m === 1)).toBe(true)
+  })
+
+  it('folds a baked model from the squared page without a jump, its sheet covering the page whole', () => {
+    for (const name of ['crane', 'bird'])
+      for (const [w, h] of [
+        [390, 844],
+        [1440, 900],
+      ]) {
+        const d = PATTERNS[name](w, h)
+        const all = pieces(d.folds, w, h)
+        const reach = reaches(d.folds, all)
+        const m = bakedMesh(d, w, h, 12)
+        let sum = 0
+        for (let i = 0; i < m.index.length; i += 3)
+          sum += area([0, 1, 2].map((j) => [m.flat[2 * m.index[i + j]], m.flat[2 * m.index[i + j] + 1]] as [number, number]))
+        expect(sum / (w * h), name).toBeCloseTo(1, 3)
+        const before = new Float32Array(m.on.length * 3)
+        const after = new Float32Array(m.on.length * 3)
+        bakedPlace(d, m, all, reach, SQUARING - 1e-6, before)
+        bakedPlace(d, m, all, reach, SQUARING + 1e-6, after)
+        let worst = 0
+        for (let i = 0; i < before.length; i++) worst = Math.max(worst, Math.abs(before[i] - after[i]))
+        expect(worst, `${name} ${w}x${h}`).toBeLessThan(4)
+      }
   })
 })
