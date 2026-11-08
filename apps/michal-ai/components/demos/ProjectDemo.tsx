@@ -98,32 +98,66 @@ function Loop({ slug, fallback, captions }: { slug: Clip; fallback: ReactNode; c
     return all?.filter((c) => c.start < end) ?? null
   }, [all, ready, from])
   const time = useCallback(() => (ready && ref.current ? ref.current.currentTime + from : null), [ready, from])
-  // the preference is read after mount, so the loop is started and stopped here rather than by the autoplay attribute
+  // Safari refuses every video autoplay, muted or not, in Low Power Mode (play() rejects with NotAllowedError, and a reload
+  // does not help), but it plays an MP4 named by an <img> as an animated image even then. So a refused loop becomes that
+  // image; a browser that cannot show an MP4 as an image fails to load it and keeps the cover.
+  const [asImage, setAsImage] = useState(false)
+  // the preference is read after mount, so the loop is started and stopped here rather than by the autoplay attribute.
+  // Safari also pauses clips in the background and the back/forward cache, so the loop asks again whenever it could be
+  // playing: on screen, the page visible, data in, a page show. Off screen it pauses, which also keeps a long list from
+  // decoding every clip at once.
   useEffect(() => {
     const v = ref.current
-    if (!v) return
+    if (!v || asImage) return
     v.muted = true // React does not always set the muted attribute, and an unmuted video may not autoplay
-    if (still) v.pause()
-    else v.play().catch(() => {})
-  }, [still])
+    if (still) return void v.pause()
+    let seen = typeof IntersectionObserver === 'undefined'
+    const sync = () => {
+      if (!seen || document.visibilityState !== 'visible') v.pause()
+      else if (v.paused) v.play().catch((e: unknown) => (e as Error | null)?.name === 'NotAllowedError' && setAsImage(true))
+    }
+    const io = seen
+      ? null
+      : new IntersectionObserver((es) => {
+          seen = es[es.length - 1].isIntersecting
+          sync()
+        })
+    io?.observe(v)
+    v.addEventListener('loadeddata', sync)
+    document.addEventListener('visibilitychange', sync)
+    addEventListener('pageshow', sync)
+    sync()
+    return () => {
+      io?.disconnect()
+      v.removeEventListener('loadeddata', sync)
+      document.removeEventListener('visibilitychange', sync)
+      removeEventListener('pageshow', sync)
+    }
+  }, [still, asImage])
+  const src = `/media/previews/${slug}.mp4`
+  const style = CLIP_ZOOM[slug] ? { scale: String(CLIP_ZOOM[slug]) } : undefined
   // the cover (with its blur placeholder) stays underneath until the clip has a frame, and stays if the clip never loads
   return (
     <>
       {fallback}
-      <video
-        ref={ref}
-        className="pdemo__clip"
-        src={`/media/previews/${slug}.mp4`}
-        muted
-        loop
-        playsInline
-        preload="auto"
-        aria-hidden
-        style={CLIP_ZOOM[slug] ? { scale: String(CLIP_ZOOM[slug]) } : undefined}
-        data-ready={ready || undefined}
-        onLoadedData={() => setReady(true)}
-      />
-      {cues?.length && on ? <CaptionOverlay cues={cues} time={time} running={ready && !still} /> : null}
+      {asImage ? (
+        <img className="pdemo__clip" src={src} alt="" aria-hidden style={style} data-ready={ready || undefined} onLoad={() => setReady(true)} />
+      ) : (
+        <video
+          ref={ref}
+          className="pdemo__clip"
+          src={src}
+          muted
+          loop
+          playsInline
+          preload="auto"
+          aria-hidden
+          style={style}
+          data-ready={ready || undefined}
+          onLoadedData={() => setReady(true)}
+        />
+      )}
+      {cues?.length && on && !asImage ? <CaptionOverlay cues={cues} time={time} running={ready && !still} /> : null}
     </>
   )
 }
