@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // npm run content:pull: bring posts, post media and the layout file in from ItsMichal/space-content (private) and lay them out where
-// the build reads them, content/posts/*.md, public/media/<slug>/* and content/layout.json. The site keeps reading those places; this script is the only way
+// the build reads them, content/posts/*.md, public/media/<slug>/*, content/layout.json and the private pages, content/pages/*.md (gitignored). The site keeps reading those places; this script is the only way
 // content gets there once the content repo is the source of truth (docs/content-repo.md).
 //
 // Source, in order:
@@ -40,12 +40,13 @@ if (src) {
 const posts = path.join(src, 'posts')
 const media = path.join(src, 'media')
 const layout = path.join(src, 'site', 'layout.json')
+const pages = path.join(src, 'pages')
 if (!fs.existsSync(posts)) {
   console.error(`content: ${src} has no posts/ folder. Is it a checkout of ItsMichal/space-content?`)
   process.exit(1)
 }
 
-run(process.execPath, [path.join(app, 'scripts', 'content', 'validate.mjs'), '--posts', posts, '--media', media, '--layout', layout], { cwd: app })
+run(process.execPath, [path.join(app, 'scripts', 'content', 'validate.mjs'), '--posts', posts, '--media', media, '--layout', layout, '--pages', pages], { cwd: app })
 
 // Posts: the folder becomes exactly the content repo's posts.
 const outPosts = path.join(app, 'content', 'posts')
@@ -79,6 +80,23 @@ if (fs.existsSync(media)) {
     }
   }
 }
+// Private pages (docs/private-pages.md): the folder becomes exactly the content repo's pages, regular files only. Gitignored here.
+const outPages = path.join(app, 'content', 'pages')
+fs.rmSync(outPages, { recursive: true, force: true })
+let pn = 0
+if (fs.existsSync(pages)) {
+  fs.mkdirSync(outPages, { recursive: true })
+  for (const f of fs.readdirSync(pages)) {
+    if (!f.endsWith('.md')) continue
+    if (!fs.lstatSync(path.join(pages, f)).isFile()) {
+      console.error('content: a file in pages/ is not a regular file')
+      process.exit(1)
+    }
+    fs.copyFileSync(path.join(pages, f), path.join(outPages, f))
+    pn++
+  }
+}
+
 // Layout: the content repo's site/layout.json, or the default order when it has none.
 const outLayout = path.join(app, 'content', 'layout.json')
 if (fs.existsSync(layout)) {
@@ -96,4 +114,4 @@ const sha = (() => {
     return 'unknown'
   }
 })()
-console.log(`content: ${n} posts, ${m} media files and ${fs.existsSync(layout) ? 'the layout file' : 'the default layout'} from space-content ${sha}`)
+console.log(`content: ${n} posts, ${m} media files, ${pn} private page${pn === 1 ? '' : 's'} and ${fs.existsSync(layout) ? 'the layout file' : 'the default layout'} from space-content ${sha}`)

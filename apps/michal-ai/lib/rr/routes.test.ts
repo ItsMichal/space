@@ -36,6 +36,10 @@ describe('route table', () => {
     }
   })
 
+  it('has the private page route (docs/private-pages.md), which the Worker serves only at /p/<token>', async () => {
+    expect((await table('production')).find((r) => r.path === 'p/:key')?.file).toBe('routes/private-page.tsx')
+  })
+
   it('always has every public route', async () => {
     const paths = (await table('production')).map((r) => r.path)
     for (const p of ['projects', 'projects/:slug', 'projects/:slug/:child', 'writing', 'writing/:slug', 'about', 'resume', 'sitemap.xml', 'robots.txt', 'feed.xml', 'feed.json', '*']) {

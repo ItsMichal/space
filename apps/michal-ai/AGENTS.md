@@ -35,6 +35,9 @@ here, so keep diffs narrow and fetch before branching.
 - Card order and presentation (Selected work, /projects, the writing list, the hero's rotating line; per card size,
   look, image focus, home) come from `content/layout.json`, checked by `parseLayout` in `rules.mjs` and read through
   `lib/content/layout.ts`. Change the order there, not in components. Details: `docs/content-repo.md`.
+- Private pages: link-only pages at `/p/<token>` (`pages/<id>.md` in space-content, pulled to `content/pages/`), never in the
+  sitemap, feeds, search or any listing; served and counted by `worker/pages.ts` and `worker/page-stats-room.ts`, edited
+  and read from the editor's Pages screen. Details and the threat model: `docs/private-pages.md`.
 - No em dash or en dash anywhere in shipped copy or source (`npm run check:dashes`).
 
 ## Build pipeline

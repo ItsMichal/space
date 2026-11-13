@@ -32,11 +32,11 @@ export const MIGRATIONS: readonly { v: number; note: string; sql: readonly strin
 
 export const SCHEMA_VERSION = MIGRATIONS[MIGRATIONS.length - 1].v
 
-/** Bring a room's database up to SCHEMA_VERSION. Returns the version it ended at. Safe to call on every start. */
-export function migrate(sql: SqlLike): number {
+/** Bring a room's database up to SCHEMA_VERSION (or the last of `migrations`: worker/page-stats-room.ts has its own list). Returns the version it ended at. Safe to call on every start. */
+export function migrate(sql: SqlLike, migrations: readonly { v: number; sql: readonly string[] }[] = MIGRATIONS): number {
   sql.exec('CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT NOT NULL) WITHOUT ROWID')
   let cur = Number(sql.exec("SELECT v FROM meta WHERE k = 'schema'").toArray()[0]?.v ?? 0)
-  for (const m of MIGRATIONS) {
+  for (const m of migrations) {
     if (m.v <= cur) continue
     for (const stmt of m.sql) sql.exec(stmt)
     sql.exec("INSERT INTO meta (k, v) VALUES ('schema', ?) ON CONFLICT (k) DO UPDATE SET v = excluded.v", String(m.v))

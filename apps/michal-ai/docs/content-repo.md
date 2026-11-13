@@ -15,6 +15,7 @@ definition of what content may contain. The editor's threat model and the owner 
 | Structured data | `content/*.ts`, `content/redirects.json` | none |
 | Content rules | `lib/content/rules.mjs`, `scripts/content/validate.mjs` | runs them from a checkout of space main |
 | Editor | none | `editor/` (Worker `write` plus the SPA) |
+| Private pages | `content/pages/` filled by `content:pull` (gitignored); rules in `lib/content/pages.mjs` ([private-pages.md](private-pages.md)) | `pages/*.md` |
 
 ## The content rules, in three places
 

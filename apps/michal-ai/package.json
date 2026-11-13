@@ -11,7 +11,7 @@
     "content:pull": "node scripts/content/pull.mjs",
     "content:check": "node scripts/content/validate.mjs",
     "prebuild": "node scripts/content/validate.mjs && node scripts/build-images.mjs && node scripts/build-embeds.mjs && node scripts/build-live-slugs.mjs && node scripts/build-starlink.mjs && node scripts/build-worker-redirects.mjs && node scripts/build-share-cards.mjs",
-    "build": "react-router build && node scripts/build-share-cards.mjs --after-build",
+    "build": "react-router build && node scripts/build-share-cards.mjs --after-build && node scripts/build-pages-manifest.mjs",
     "start": "wrangler dev --port 3100",
     "lint": "eslint app components lib worker",
     "tokens": "node scripts/tokens-to-css.mjs",

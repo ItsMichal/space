@@ -132,7 +132,7 @@ These describe the sandboxed agent harness used on this repo; they may not apply
   Shared steps are in `.github/actions/` (`setup`, `checks`, `content`, `media-cache`).
 - Posts, post media and the writing editor (write.michal.ai) live in the private repo ItsMichal/space-content. The content
   rules, `npm run content:pull` and the cutover order: `apps/michal-ai/docs/content-repo.md`. Editor threat model and owner
-  setup: the space-content `README.md`.
+  setup: the space-content `README.md`. Link-only private pages (`/p/<token>`, edited there): `apps/michal-ai/docs/private-pages.md`.
 - `packages/config` shared tsconfig/eslint/prettier bases; `packages/tokens` token generator; `packages/motion` spring and
   stroke maths; `packages/crosslinks` the switcher, marks and pair map (plain ESM, tested with `npm test -w @space/crosslinks`).
 - `.claude/launch.json` is gitignored and local. It has `halmic` (port 4310) and `halmic-worker` (`wrangler dev` on 8788) entries

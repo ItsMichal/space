@@ -38,6 +38,8 @@ export default [
   route('feed.xml', 'routes/feed-xml.ts'),
   route('feed.json', 'routes/feed-json.ts'),
   route('projects/:slug/feed.xml', 'routes/project-feed.ts'),
+  // Private pages (docs/private-pages.md): prerendered under a key, served by the Worker only at /p/<token>.
+  route('p/:key', 'routes/private-page.tsx'),
   ...dev,
   route('*', 'routes/not-found.tsx'),
 ] satisfies RouteConfig
