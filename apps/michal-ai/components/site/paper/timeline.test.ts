@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CRUMPLE_MS, FIRE_MS, FRONT_MS, LEAD_MS, PAPER_ASH, PAPER_FPS, PAPER_MS } from './config'
+import { CRUMPLE_MS, DROP_AT, FIRE_MS, FOLD_MS, FRONT_MS, LEAD_MS, PAPER_ASH, PAPER_FPS, PAPER_MS } from './config'
 import { FALL_MS, IGNITE_MS, STILL, flickerAt, frameAt, randomCrumple } from './timeline'
 
 const at = (T: number) => frameAt(T)
@@ -7,14 +7,18 @@ const ms = (m: number) => m / PAPER_MS
 const each = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, i) => at(ms(from + i)))
 
 describe('paper transition timeline', () => {
-  it('crumples in 780ms and burns for two seconds, overlapping', () => {
-    expect(CRUMPLE_MS).toBe(780)
+  it('folds, drops the flower, lets it rest, then burns for two seconds', () => {
     expect(FIRE_MS).toBe(2000)
-    expect(PAPER_MS).toBeLessThan(LEAD_MS + CRUMPLE_MS + FIRE_MS)
+    expect(PAPER_MS).toBe(IGNITE_MS + FIRE_MS)
+    // the flower is folded by the time it lands, and lit only after its second landing
+    expect(LEAD_MS + FOLD_MS).toBeLessThan(DROP_AT + FALL_MS)
+    expect(IGNITE_MS).toBeGreaterThan(DROP_AT + 658)
+    expect(at(ms(LEAD_MS)).bloom).toBe(0)
+    expect(at(ms(LEAD_MS + FOLD_MS)).bloom).toBe(1)
   })
 
   it('starts on the flat page exactly where it is, not yet lit', () => {
-    expect(at(0)).toMatchObject({ ball: 0, fold: 0, squash: 0, lift: 0, spin: [0, 0, 0] })
+    expect(at(0)).toMatchObject({ ball: 0, fold: 0, squash: 0, lift: 0, bloom: 0, spin: [0, 0, 0] })
     expect(at(0).burn).toBeLessThan(0)
   })
 
@@ -28,7 +32,7 @@ describe('paper transition timeline', () => {
   it('lifts the page toward the camera in the lead-in, and drops it back down with the ball', () => {
     expect(at(ms(LEAD_MS)).lift).toBeCloseTo(1, 5)
     expect(at(ms(LEAD_MS / 2)).lift).toBeGreaterThan(0.3)
-    expect(at(ms(LEAD_MS + FALL_MS)).lift).toBeLessThan(0.01)
+    expect(at(ms(DROP_AT + FALL_MS)).lift).toBeLessThan(0.01)
     expect(at(1).lift).toBe(0)
   })
 
@@ -43,14 +47,14 @@ describe('paper transition timeline', () => {
   })
 
   it('leaves gently and gathers speed, like a dropped ball', () => {
-    const early = at(ms(LEAD_MS + FALL_MS * 0.25)).ball
-    const late = at(ms(LEAD_MS + FALL_MS * 0.9)).ball
+    const early = at(ms(DROP_AT + FALL_MS * 0.25)).ball
+    const late = at(ms(DROP_AT + FALL_MS * 0.9)).ball
     expect(early).toBeLessThan(0.2)
     expect(late).toBeGreaterThan(0.7)
   })
 
   it('lands, springs back once and settles without a second bounce, never past the ball', () => {
-    const after = each(LEAD_MS + FALL_MS + 30, PAPER_MS).map((f) => f.ball)
+    const after = each(DROP_AT + FALL_MS + 30, PAPER_MS).map((f) => f.ball)
     const low = after.indexOf(Math.min(...after))
     expect(1 - after[low]).toBeGreaterThan(0.08)
     expect(1 - after[low]).toBeLessThan(0.25)
@@ -58,13 +62,13 @@ describe('paper transition timeline', () => {
     const down = after.findIndex((b, i) => i > low && b > 0.999)
     for (const b of after.slice(down)) expect(b).toBeGreaterThan(0.999)
     for (const f of each(0, PAPER_MS)) expect(f.ball).toBeLessThanOrEqual(1)
-    expect(at(ms(LEAD_MS + CRUMPLE_MS)).ball).toBeCloseTo(1, 2)
-    expect(Math.abs(at(ms(LEAD_MS + CRUMPLE_MS)).squash)).toBeLessThan(0.01)
+    expect(at(ms(DROP_AT + CRUMPLE_MS)).ball).toBeCloseTo(1, 2)
+    expect(Math.abs(at(ms(DROP_AT + CRUMPLE_MS)).squash)).toBeLessThan(0.01)
     expect(at(1).ball).toBe(1)
   })
 
   it('is wrung back and forth from the landing, still by the end of the crumple', () => {
-    const turns = each(LEAD_MS + FALL_MS, LEAD_MS + CRUMPLE_MS).map((f) => f.spin[2] - 0.5 * f.ball - 0.1)
+    const turns = each(DROP_AT + FALL_MS, DROP_AT + CRUMPLE_MS).map((f) => f.spin[2] - 0.5 * f.ball - 0.1)
     let flips = 0
     for (let i = 1; i < turns.length; i++) if (Math.sign(turns[i]) !== Math.sign(turns[i - 1]) && turns[i] !== 0) flips++
     expect(flips).toBeGreaterThanOrEqual(2)
@@ -73,7 +77,7 @@ describe('paper transition timeline', () => {
   })
 
   it('squishes on landing and stretches a little in the air', () => {
-    const most = Math.max(...each(LEAD_MS + FALL_MS - 10, LEAD_MS + FALL_MS + 60).map((f) => f.squash))
+    const most = Math.max(...each(DROP_AT + FALL_MS - 10, DROP_AT + FALL_MS + 60).map((f) => f.squash))
     expect(most).toBeGreaterThan(0.08)
     expect(most).toBeLessThan(0.2)
     const stretch = Math.min(...each(0, PAPER_MS).map((f) => f.squash))
@@ -82,14 +86,11 @@ describe('paper transition timeline', () => {
     expect(at(1).squash).toBe(0)
   })
 
-  it('is burning before it is fully crumpled, and burns until the last ash is gone', () => {
-    expect(IGNITE_MS).toBeLessThan(LEAD_MS + FALL_MS)
+  it('lets the folded flower rest a moment before it catches, then burns until the last ash is gone', () => {
     expect(at(ms(IGNITE_MS)).burn).toBeLessThan(0)
-    // lit in the fall, the front still crossing the sheet as it lands and across it as the impact ends
-    expect(IGNITE_MS).toBeGreaterThan(LEAD_MS)
-    expect(IGNITE_MS).toBeLessThan(LEAD_MS + FALL_MS)
-    expect(at(ms(LEAD_MS + FALL_MS)).burn).toBeGreaterThan(0)
-    expect(at(ms(LEAD_MS + FALL_MS)).burn).toBeLessThan(1)
+    // folded, and still, for a beat before the fire
+    expect(Math.abs(at(ms(IGNITE_MS - 60)).ball - 1)).toBeLessThan(0.01)
+    expect(Math.abs(at(ms(IGNITE_MS - 60)).squash)).toBeLessThan(0.03)
     expect(at(ms(FRONT_MS)).burn).toBeCloseTo(1, 5)
     const burns = each(0, PAPER_MS).map((f) => f.burn)
     for (let i = 1; i < burns.length; i++) expect(burns[i]).toBeGreaterThanOrEqual(burns[i - 1])
