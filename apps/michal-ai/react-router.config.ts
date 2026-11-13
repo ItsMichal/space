@@ -1,5 +1,5 @@
 import type { Config } from '@react-router/dev/config'
-import { readPages } from './lib/pages/build.mjs'
+import { pagePaths, readPages } from './lib/pages/build.mjs'
 import { readPostPaths } from './lib/redirects.mjs'
 
 // Static site: every route is prerendered to HTML at build time and served as Workers static assets (worker/index.ts).
@@ -26,7 +26,7 @@ export default {
       ...withFeeds.map((slug) => `/projects/${slug}/feed.xml`),
       '/404',
       // Private pages (docs/private-pages.md): built under a key, served only at /p/<token> by the Worker. Never in the sitemap or feeds.
-      ...readPages().map((p) => `/p/${p.key}`),
+      ...pagePaths(readPages()),
     ]
   },
 } satisfies Config

@@ -46,6 +46,8 @@ Markdown, under the same rules as a post (no raw HTML, safe links, the dash rule
    `sha256("space-private-page\n" + id + "\n" + tokens)`: nothing anyone can work back to a token or the page id, and it
    changes whenever the links change. `build/client/_private/pages.json` maps each open token to its page, key and last
    day. Revoked links and disabled pages are left out of it; expiry is checked at request time.
+   The build also prerenders an empty stub at `/p/none` (a route with a loader needs a prerendered path under `ssr:false`, and
+   there may be no pages); the Worker answers 404 there too.
 2. The Worker runs first for every request (`run_worker_first`). It claims `/p/*` and `/_private/*`:
    `GET /p/<token>` (and `/p/<token>.data`, React Router's loader data for client navigation back to the page) fetches
    `/p/<key>` from the assets when the token is open today; everything else under those paths, the key path included,

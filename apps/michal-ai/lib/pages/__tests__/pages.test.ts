@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { linkOpen, linkUntil, pageIdProblem, pageProblems, pageTokenClashes, parsePageData, PAGES } from '../../content/pages.mjs'
 import { newToken, pageUrl, parsePage, serializePage, type PageData } from '../page'
-import { pageKey, pagesManifest } from '../build.mjs'
+import { PAGE_STUB_KEY, pageKey, pagePaths, pagesManifest } from '../build.mjs'
 
 const T1 = 'AAAAAAAAAAAAAAAAAAAAAA'
 const T2 = 'BBBBBBBBBBBBBBBBBBBBBB_-'
@@ -97,6 +97,13 @@ describe('page files', () => {
 })
 
 describe('build manifest', () => {
+  it('always prerenders the stub path, so the route builds with no pages, and it is never a key or a token', () => {
+    expect(pagePaths([])).toEqual(['/p/none'])
+    expect(pagePaths([{ key: 'ab' }])).toEqual(['/p/none', '/p/ab'])
+    expect(PAGE_STUB_KEY).not.toMatch(/^[0-9a-f]{24}$/)
+    expect(PAGE_STUB_KEY).not.toMatch(/^[A-Za-z0-9_-]{22}$/)
+  })
+
   it('keys a page by a hash that says nothing about its id or tokens, and changes with its links', () => {
     const k = pageKey('acme', page())
     expect(k).toMatch(/^[0-9a-f]{24}$/)

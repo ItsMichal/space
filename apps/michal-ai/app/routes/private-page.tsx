@@ -11,11 +11,14 @@ import { ReadingTheme } from '@/components/site/ReadingTheme'
 import { usePageBeacon } from '@/lib/pages/beacon'
 
 export async function loader({ params }: LoaderFunctionArgs) {
-  const { readPages } = await import('@/lib/pages/build.mjs')
+  const { readPages, PAGE_STUB_KEY } = await import('@/lib/pages/build.mjs')
   const { markdownToHast } = await import('@/lib/content/render')
   const { headFor, imagesFor } = await import('@/lib/rr/content.server')
   const { readingViewport } = await import('@/components/content/PostPage')
   const p = readPages().find((x) => x.key === params.key)
+  const notFound = [{ title: 'Not found' }, { name: 'robots', content: 'noindex, nofollow' }]
+  // The stub path (lib/pages/build.mjs) builds as an empty page; the Worker never serves it.
+  if (!p && params.key === PAGE_STUB_KEY) return { title: 'Not found', description: '', date: '', readingMinutes: 1, hast: { type: 'root', children: [] } as Root, head: notFound, images: {} as ReturnType<typeof imagesFor> }
   if (!p) throw new Response('Not found', { status: 404 })
   const hast = await (await import('@/lib/captions/inline.server')).inlineCaptions(await (await import('@/lib/ink/inline.server')).inlineHandwriting(await markdownToHast(p.body)))
   const words = p.body.split(/\s+/).filter(Boolean).length

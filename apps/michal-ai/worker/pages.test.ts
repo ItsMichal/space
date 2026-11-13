@@ -90,7 +90,7 @@ describe('serving /p/<token>', () => {
     expect(assets).toContain(`/p/${KEY}.data?_routes=routes%2Fprivate-page`)
   })
 
-  it.each([`/p/${T2}`, `/p/${T3}`, `/p/${KEY}`, `/p/${KEY}.data`, `/p/${T1}/`, `/p/${T1}/x`, '/p/'])('refuses %s', async (p) => {
+  it.each([`/p/${T2}`, `/p/${T3}`, `/p/${KEY}`, `/p/${KEY}.data`, `/p/${T1}/`, `/p/${T1}/x`, '/p/', '/p/none', '/p/none.data'])('refuses %s', async (p) => {
     const { env } = fakeEnv()
     expect(await servePrivatePage(new Request(`https://michal.ai${p}`), env)).toBeNull()
   })

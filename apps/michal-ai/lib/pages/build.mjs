@@ -11,6 +11,13 @@ import matter from 'gray-matter'
 import { SAFE_MATTER } from '../content/rules.mjs'
 import { linkUntil, pageIdProblem, parsePageData } from '../content/pages.mjs'
 
+// Always prerendered too, as a stub that names no page: a route with a loader must have a prerendered path under ssr:false, and
+// there may be no pages at all. Never a real key (24 hex characters) or a token (22), so the Worker answers 404 there like any other.
+export const PAGE_STUB_KEY = 'none'
+
+/** Every path the build prerenders for private pages: the stub, then each page's key. */
+export const pagePaths = (pages) => [`/p/${PAGE_STUB_KEY}`, ...pages.map((p) => `/p/${p.key}`)]
+
 export const pagesDir = (root = process.cwd()) => path.join(root, 'content', 'pages')
 
 /** The key a page's HTML is built under: 24 hex characters of sha256 over its id and every token. */
