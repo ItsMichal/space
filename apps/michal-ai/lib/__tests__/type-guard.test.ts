@@ -18,6 +18,9 @@ describe('type guard: CSS', () => {
     expect(css('a { font-size: var(--type-display-name-size) }')).toEqual([])
     expect(css('a { font-size: inherit; }')).toEqual([])
     expect(css('@media print { a { font-size: 11pt; } }')).toEqual([])
+    expect(css('.rs-paper { font-size: calc(10pt * var(--rs-k)); }')).toEqual([])
+    expect(css('a { font: 600 calc(9pt * var(--rs-k))/1.3 var(--font-serif); }')).toEqual([])
+    expect(css('a { font-size: calc(10px * var(--k)); }')).toHaveLength(1)
   })
   it('checks the size part of the font shorthand', () => {
     expect(css('a { font: 400 15px/22px var(--font-serif); }')).toHaveLength(1)
