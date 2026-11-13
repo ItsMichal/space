@@ -71,16 +71,19 @@ export function ArticleLayout({
         <h1 className="font-display text-title">
           {title}
         </h1>
-        <p className="lede mt-space-6 max-w-[40ch]">{description}</p>
-        <p className="mt-space-6 font-serif text-small italic text-ink-muted">
-          <time dateTime={date}>{fullDate(date)}</time>
-          {updated && updated !== date ? (
-            <>
-              {' · updated '}
-              <time dateTime={updated}>{fullDate(updated)}</time>
-            </>
-          ) : null}
-        </p>
+        {description ? <p className="lede mt-space-6 max-w-[40ch]">{description}</p> : null}
+        {/* Posts always have a date; a private page (app/routes/private-page.tsx) may not. */}
+        {date ? (
+          <p className="mt-space-6 font-serif text-small italic text-ink-muted">
+            <time dateTime={date}>{fullDate(date)}</time>
+            {updated && updated !== date ? (
+              <>
+                {' · updated '}
+                <time dateTime={updated}>{fullDate(updated)}</time>
+              </>
+            ) : null}
+          </p>
+        ) : null}
         {/* The page's end of the card-to-page transition: the card surface opens into this box (CardTransitions). */}
         <span aria-hidden className="reading__surface" />
       </header>

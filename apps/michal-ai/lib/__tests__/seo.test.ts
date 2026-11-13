@@ -22,7 +22,8 @@ describe('share card metadata', () => {
 
   it('gives every route module that builds head tags a generated card', () => {
     const routes = join(appDir, 'routes')
-    const heads = readdirSync(routes).filter((f) => f.endsWith('.tsx') && readFileSync(join(routes, f), 'utf8').includes('headFor('))
+    // A private page (docs/private-pages.md) is never shared as a card: it has no Open Graph or Twitter tags at all.
+    const heads = readdirSync(routes).filter((f) => f.endsWith('.tsx') && f !== 'private-page.tsx' && readFileSync(join(routes, f), 'utf8').includes('headFor('))
     expect(heads.length).toBeGreaterThan(5)
     for (const f of heads) expect(readFileSync(join(routes, f), 'utf8'), f).toContain('shareFor(')
   })

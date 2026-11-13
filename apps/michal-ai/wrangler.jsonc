@@ -16,7 +16,8 @@
   "durable_objects": {
     "bindings": [
       { "name": "PRESENCE", "class_name": "PresenceRoom" },
-      { "name": "REACTIONS", "class_name": "ReactionsRoom" }
+      { "name": "REACTIONS", "class_name": "ReactionsRoom" },
+      { "name": "PAGE_STATS", "class_name": "PageStatsRoom" }
     ]
   },
   // Live features (docs/presence.md). Reactions and views are on; presence pins stay off (PRESENCE_PINS in lib/presence/flag.ts).
@@ -28,7 +29,9 @@
   },
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["PresenceRoom"] },
-    { "tag": "v2", "new_sqlite_classes": ["ReactionsRoom"] }
+    { "tag": "v2", "new_sqlite_classes": ["ReactionsRoom"] },
+    // Private page analytics (docs/private-pages.md): one SQLite object per page id, read by the editor through PageStatsApi.
+    { "tag": "v3", "new_sqlite_classes": ["PageStatsRoom"] }
   ],
   "triggers": { "crons": ["17 */6 * * *"] },
   // Pull request Previews (.github/workflows/preview.yml, `wrangler preview --name pr-<n>`). Previews inherit nothing from the
@@ -39,7 +42,8 @@
     "durable_objects": {
       "bindings": [
         { "name": "PRESENCE", "class_name": "PresenceRoom" },
-        { "name": "REACTIONS", "class_name": "ReactionsRoom" }
+        { "name": "REACTIONS", "class_name": "ReactionsRoom" },
+        { "name": "PAGE_STATS", "class_name": "PageStatsRoom" }
       ]
     }
   },

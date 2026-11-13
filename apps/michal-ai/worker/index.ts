@@ -1,11 +1,16 @@
-// Worker entry: host redirects, legacy redirects, live features (reactions, views, presence), the Starlink binary, then the
-// prerendered site from the static assets binding. Durable Objects and the cron handler are unchanged from before the migration.
+// Worker entry: host redirects, legacy redirects, live features (reactions, views, presence), the Starlink binary, private pages
+// (worker/pages.ts), then the prerendered site from the static assets binding. Durable Objects and the cron handler are unchanged
+// from before the migration; PageStatsApi is the editor's read-only door to private page analytics.
+import { WorkerEntrypoint } from 'cloudflare:workers'
 import { canonicalRedirect, isPreviewHost } from './host'
 import { handleLive, isLivePath, type LiveEnv } from './live'
+import { handlePageEvent, isPageEventPath, isPrivatePath, manifestOf, servePrivatePage, type PagesEnv } from './pages'
 import { handleStarlinkRead, refreshStarlink, STARLINK_LIVE_IDS_PATH, STARLINK_LIVE_PATH } from './starlink'
+import { STRICT_SLUG_RE } from '../lib/content/rules.mjs'
+import type { PageStats } from '../lib/pages/stats'
 import { contentTypeFor, isDataRequest, isHtmlFilePath, parseRange, redirectFor, shareCardAsset } from './static'
 
-export interface Env extends LiveEnv {
+export interface Env extends LiveEnv, PagesEnv {
   ASSETS: Fetcher
   [key: string]: unknown
 }
@@ -24,10 +29,7 @@ async function site(request: Request, env: Env): Promise<Response> {
   if (res.status === 404) {
     // The prerendered not-found page, with the right status. Data and asset requests get a bare 404.
     if (isDataRequest(url.pathname) || /\.[a-z0-9]{2,5}$/i.test(url.pathname) || card) return new Response(null, { status: 404, headers: { 'Cache-Control': 'no-store' } })
-    const page = await env.ASSETS.fetch(new Request(new URL('/404', url), { headers: request.headers }))
-    const out = new Response(request.method === 'HEAD' ? null : page.body, { status: 404, headers: page.headers })
-    out.headers.set('Cache-Control', 'no-store')
-    return out
+    return notFound(request, url, env)
   }
   const type = card ? 'image/png' : contentTypeFor(url.pathname)
   let out = res
@@ -36,6 +38,14 @@ async function site(request: Request, env: Env): Promise<Response> {
     out.headers.set('Content-Type', type)
   }
   return withRange(request, out)
+}
+
+/** The prerendered not-found page with a 404 status. */
+async function notFound(request: Request, url: URL, env: Env): Promise<Response> {
+  const page = await env.ASSETS.fetch(new Request(new URL('/404', url), { headers: request.headers }))
+  const out = new Response(request.method === 'HEAD' ? null : page.body, { status: 404, headers: page.headers })
+  out.headers.set('Cache-Control', 'no-store')
+  return out
 }
 
 /** The asset binding ignores `Range` locally and may for some paths; honour a single range on small non-HTML files (PDFs, images) so downloads resume. */
@@ -69,6 +79,19 @@ export default {
         return new Response(null, { status: 503, headers: { 'Cache-Control': 'no-store' } })
       }
     }
+    // Private pages: /p/<token> for an open link, the beacon, and nothing else under /p/ or /_private/ (docs/private-pages.md).
+    if (isPageEventPath(url.pathname)) {
+      try {
+        return await handlePageEvent(request, env, ctx)
+      } catch {
+        return new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store' } })
+      }
+    }
+    if (isPrivatePath(url.pathname)) {
+      const page = await servePrivatePage(request, env).catch(() => null)
+      if (page) return page
+      return notFound(request, url, env)
+    }
     const res = await site(request, env)
     if (!isPreviewHost(url.hostname)) return res
     // Preview deployments are never indexed.
@@ -82,5 +105,32 @@ export default {
   },
 } satisfies ExportedHandler<Env>
 
+/**
+ * Private page analytics for the editor (write.michal.ai), over a service binding: the editor's wrangler.jsonc names this
+ * Worker and this entrypoint, so only Workers on the same account that are configured to can call it. It has no URL, no route
+ * and nothing the public internet can reach, so there is no shared secret to set or leak. Read only.
+ */
+export class PageStatsApi extends WorkerEntrypoint<Env> {
+  /** Stats for each page id the editor asks about (at most 100). Unknown ids still answer, with empty stats. */
+  async stats(ids: string[]): Promise<Record<string, PageStats>> {
+    const want = [...new Set((Array.isArray(ids) ? ids : []).filter((id) => typeof id === 'string' && STRICT_SLUG_RE.test(id) && id.length <= 60))].slice(0, 100)
+    const out: Record<string, PageStats> = {}
+    const now = Date.now()
+    await Promise.all(
+      want.map(async (id) => {
+        const stub = this.env.PAGE_STATS.get(this.env.PAGE_STATS.idFromName(id))
+        out[id] = await stub.stats(now)
+      })
+    )
+    return out
+  }
+
+  /** The page ids in the deployed build (so the editor can tell a page that is live from one that is still in a pull request). */
+  async live(): Promise<string[]> {
+    return (await manifestOf(this.env, 'https://michal.ai')).pages
+  }
+}
+
+export { PageStatsRoom } from './page-stats-room'
 export { PresenceRoom } from './presence-room'
 export { ReactionsRoom } from './reactions-room'

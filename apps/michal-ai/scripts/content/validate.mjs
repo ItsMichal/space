@@ -5,9 +5,13 @@
 //   - here, by hand: npm run content:check, or with --posts <dir> --media <dir> against any checkout
 //   - in ItsMichal/space-content CI, where make-seed.mjs copies this file and rules.mjs (defaults: posts/ and media/)
 // Needs Node 22 and gray-matter, nothing else. No network, no secrets.
+// Private pages (pages/<id>.md, docs/private-pages.md) are checked too, from --pages or the pages folder beside the posts folder.
+// Their file names and problems are never printed in a public repository's Actions log: the names of the people a page is for
+// are nobody else's business, and the space repo's logs are public.
 import fs from 'node:fs'
 import path from 'node:path'
 import matter from 'gray-matter'
+import { pageIdProblem, pageProblems, pageTokenClashes, parsePageData } from '../../lib/content/pages.mjs'
 import { SAFE_MATTER, bodyProblems, captionsSources, dashLines, frontmatterProblem, handwritingSources, layoutRefProblems, mediaProblem, parseLayout, rawPostProblem, slugProblem } from '../../lib/content/rules.mjs'
 
 // Media folders that belong to the site, not to posts (they stay in the space repo).
@@ -25,6 +29,9 @@ const mediaDir = path.resolve(arg('--media', inApp ? 'public/media' : 'media'))
 // space-content checkout, layout.json in the app's content folder. Found from the posts folder so --posts on its own stays self-contained.
 const besidePosts = [path.join(path.dirname(postsDir), 'site', 'layout.json'), path.join(path.dirname(postsDir), 'layout.json')]
 const layoutFile = path.resolve(arg('--layout', besidePosts.find((f) => fs.existsSync(f)) ?? besidePosts[0]))
+const pagesDir = path.resolve(arg('--pages', path.join(path.dirname(postsDir), 'pages')))
+// A public repository's Actions log (the space repo's deploy and preview builds) shows that pages exist and whether they pass, nothing more.
+const publicLog = process.env.GITHUB_ACTIONS === 'true' && process.env.GITHUB_REPOSITORY !== 'ItsMichal/space-content'
 
 /** Frontmatter as the site sees it: the same normalisation as lib/content/serialize.ts frontmatterFromData, for the checked fields. */
 function normalise(data, id) {
@@ -114,6 +121,43 @@ if (fs.existsSync(mediaDir)) {
   }
 }
 
+let pageCount = 0
+let pageProblemCount = 0
+if (fs.existsSync(pagesDir)) {
+  const pages = []
+  const reportPage = (file, msg) => {
+    pageProblemCount++
+    if (!publicLog) report(file, msg)
+  }
+  for (const e of fs.readdirSync(pagesDir, { withFileTypes: true })) {
+    if (e.name.startsWith('.')) continue
+    const rel = path.join(path.basename(pagesDir), e.name)
+    if (!e.isFile() || !e.name.endsWith('.md')) {
+      reportPage(rel, 'only <id>.md files belong in the pages folder')
+      continue
+    }
+    pageCount++
+    const id = e.name.slice(0, -3)
+    const ip = pageIdProblem(id)
+    if (ip) reportPage(rel, ip)
+    const raw = fs.readFileSync(path.join(pagesDir, e.name), 'utf8')
+    let parsed
+    try {
+      parsed = matter(raw, SAFE_MATTER)
+    } catch {
+      reportPage(rel, 'front matter does not parse as YAML')
+      continue
+    }
+    for (const p of pageProblems(raw, parsed.data, parsed.content)) reportPage(rel, p)
+    for (const h of handwritingSources(parsed.content)) if (!fs.existsSync(path.join(mediaDir, h.src.slice('/media/'.length)))) reportPage(rel, `::handwriting src ${h.src} is not in the media folder`)
+    for (const c of captionsSources(parsed.content)) if (!fs.existsSync(path.join(mediaDir, c.src.slice('/media/'.length)))) reportPage(rel, `line ${c.line}: captions ${c.src} is not in the media folder`)
+    const r = parsePageData(parsed.data)
+    if (r.page) pages.push({ id, page: r.page })
+  }
+  for (const c of pageTokenClashes(pages)) reportPage(path.basename(pagesDir), c)
+  if (publicLog && pageProblemCount) report(path.basename(pagesDir), `${pageProblemCount} problem${pageProblemCount > 1 ? 's' : ''} in private pages (details are not printed in public logs; run npm run content:check locally)`)
+}
+
 let layoutNote = ''
 if (fs.existsSync(layoutFile)) {
   const rel = path.relative(process.cwd(), layoutFile)
@@ -131,4 +175,5 @@ if (problems.length) {
   console.error(`content: ${problems.length} problem${problems.length > 1 ? 's' : ''}\n${problems.map((p) => `  ${p}`).join('\n')}`)
   process.exit(1)
 }
-console.log(`content: ${ids.size} posts and their media${layoutNote} pass the content rules`)
+const pagesNote = pageCount ? ` and ${pageCount} private page${pageCount > 1 ? 's' : ''}` : ''
+console.log(`content: ${ids.size} posts and their media${layoutNote}${pagesNote} pass the content rules`)
