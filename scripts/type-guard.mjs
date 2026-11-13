@@ -7,7 +7,7 @@
 //                        font: <shorthand> whose size part is not var(--type-*-size) (system keywords and `inherit` pass)
 //   Tailwind (tsx/ts)    text-[<length or clamp()>] arbitrary sizes, and text-xs|sm|base|lg|xl|2xl..9xl at any breakpoint
 //   Inline styles        fontSize: ... and font: '<size>/...' in style objects
-// Not flagged: `pt` sizes (print stylesheets keep their own), custom-property definitions (--type-body-size: 18px), the
+// Not flagged: `pt` sizes, plain or scaled as calc(<n>pt * var(--x)) (print stylesheets keep their own), custom-property definitions (--type-body-size: 18px), the
 // generated tokens.css, and anything listed in scripts/type-allowlist.txt (see that file for the format).
 import fs from 'node:fs'
 import path from 'node:path'
@@ -41,7 +41,8 @@ function shorthandSize(value) {
   return t.find((x) => /^(\d|\.\d|calc\(|clamp\(|min\(|max\(|var\(--type-)/.test(x) && !/^\d{3}$/.test(x) && x !== '1' && x !== '0')
 }
 
-const isPt = (v) => /^[\d.]+pt$/.test(v.trim())
+/** A print size: `11pt`, or one scaled by a custom property, `calc(11pt * var(--rs-k))` (the resume's fitted type). */
+const isPt = (v) => /^([\d.]+pt|calc\(\s*[\d.]+pt\s*\*\s*var\(--[\w-]+\)\s*\))$/.test(v.trim())
 
 /**
  * @param {string} text file contents
