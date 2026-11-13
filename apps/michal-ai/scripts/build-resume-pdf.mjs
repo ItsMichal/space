@@ -50,6 +50,8 @@ try {
   await send('Page.navigate', { url: `${base}/resume` })
   await sleep(2500)
   await send('Emulation.setEmulatedMedia', { media: 'print' })
+  // beforeprint does not fire under emulation, so set the sheet in its paper sizes here (components/about/resume.css, .rs-paper).
+  await send('Runtime.evaluate', { expression: "document.querySelector('.rs')?.classList.add('rs-paper')" })
   await send('Runtime.evaluate', { expression: 'document.fonts.ready.then(() => true)', awaitPromise: true })
   const sizes = [
     [preview ? 'resume-letter.pdf' : 'resume.pdf', 8.5, 11],
