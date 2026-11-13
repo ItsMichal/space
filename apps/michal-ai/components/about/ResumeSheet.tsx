@@ -1,4 +1,4 @@
-// One resume document as the sheet: /resume renders the site's own (lib/resume/doc.ts defaultResume), the editor renders a tailored
+// One resume document as the sheet: /resume renders the site's own (lib/resume/site.ts defaultResume), the editor renders a tailored
 // one with its own hooks for editing in place. Class names are components/about/resume.css; `.rs-paper` on the article sets it in
 // print sizes (pt) scaled by --rs-k (type) and --rs-g (space), which is what both the PDF and the editor's page box show.
 import { Fragment, type CSSProperties, type ReactNode } from 'react'

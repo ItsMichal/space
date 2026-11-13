@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { defaultResume, LIMITS, parseResume, serializeResume } from '../doc'
+import { LIMITS, parseResume, serializeResume } from '../doc'
+import { defaultResume } from '../site'
 import { Inline, parseInline, plainText } from '../inline'
 import { along, fitSheet, widowHint } from '../fit'
 import { ResumeSheet } from '@/components/about/ResumeSheet'

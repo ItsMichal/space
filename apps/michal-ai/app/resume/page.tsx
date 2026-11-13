@@ -3,7 +3,7 @@ import Link from '@/lib/nav'
 import { Download } from 'lucide-react'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { ResumeSheet } from '@/components/about/ResumeSheet'
-import { defaultResume } from '@/lib/resume/doc'
+import { defaultResume } from '@/lib/resume/site'
 import { breadcrumbJsonLd, resumeMetadata } from '@/lib/seo'
 import '@/components/about/resume.css'
 
