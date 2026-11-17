@@ -12,8 +12,9 @@ import { paintPage } from '@/lib/paint/page'
 import { BACKDROP_DRAW } from '../backdrop/config'
 import { IGNITE_MS, LEAD_MS, PAPER_ASH, PAPER_FPS, PAPER_MS } from './config'
 import { type Blast, air, embers, seeded, spawn, STEP_MS, step } from './embers'
-import { ASH_FS, EMBER_FS, EMBER_VS, QUAD_VS, SHEET_FS, SHEET_VS } from './shaders'
-import { DROPS, FALL_MS, flickerAt, frameAt, type Frame, randomCrumple, waitingAt } from './timeline'
+import { ASH_FS, EMBER_FS, EMBER_VS, QUAD_VS, SHADE_FS, SHEET_FS, SHEET_VS, SOFT_FS } from './shaders'
+import { type Design, PATTERNS, type Piece, bakedMesh, bakedPlace, foldsMade, mesh, packet, pieces, place, pose, reaches } from './origami'
+import { flickerAt, frameAt, type Frame, randomCrumple, waitingAt } from './timeline'
 
 const MAX_DPR = 2
 /** Cells along the sheet's long side: fine enough that the creases are lines and the paper between them curves. */
@@ -24,7 +25,7 @@ const GLYPH_H = 13
 /** The glyphs of the burning edge, sparse to dense. */
 const RAMP = '.:-=+*#%@'
 /** The embers' glyphs, in tiers sparse to dense: each ember picks its own within its tier, so no two drift alike. */
-const TIERS = ['.`\',', ':;-~^"', '=+!|/\\<>', '*()?{}[]', '#%&$', '@&#']
+const TIERS = [".`',", ':;-~^"', '=+!|/\\<>', '*()?{}[]', '#%&$', '@&#']
 /** Every glyph drawn: the edge's ramp first, then the embers' (one atlas). */
 const ATLAS = RAMP + [...new Set(TIERS.join(''))].join('')
 const TIER_AT = TIERS.map((t) => [...t].map((c) => ATLAS.indexOf(c)))
@@ -42,9 +43,23 @@ const SWING_OUT_MS = 120
 /** The longest the drop waits for the new page's images on screen, ms. */
 const IMAGES_MS = 1500
 const FOV = (32 * Math.PI) / 180
+/** How much of the bloom the edge curl takes to let go, before the first fold starts. */
+const CURL_OUT = 0.06
+/** The most of the lead-in's and the wait's edge curl, in the timeline's ball (LEAD_BALL + WAIT_BALL); it lets go as the folding starts. */
+const FOLD_FROM = 0.105
+/** How much of the crumple's turn the finished flower keeps. */
+const LEAN = 0.3
 /** How far the page is lifted toward the camera before it crumples, as a share of the camera's distance: a little, about 5% larger,
  * so while the new route loads the old page overhangs every edge and still covers it all. */
 const LIFT = 0.05
+/** The most of the screen's width or height the finished flower takes. */
+const FIT = 0.7
+/** The shadow map's size, one texel for this many screen pixels each way. */
+const SHADOW_DOWN = 4
+/** The way a shadow is thrown, px along the floor for each px of height: the key light from the upper left, high over the page. */
+const LIGHT: [number, number] = [0.32, -0.4]
+/** How dark the paper's shadow on itself gets, 0 to 1 of the key light. */
+const SELF_SHADOW = 0.55
 
 const mono = () => getComputedStyle(document.documentElement).getPropertyValue('--font-mono').trim() || 'ui-monospace, monospace'
 
@@ -102,7 +117,16 @@ async function capture(w: number, h: number, scale: number): Promise<HTMLCanvasE
     ctx.globalAlpha = 1
   }
   // the page as it is on screen now (lib/paint), pictures it has to fetch again given a moment at most
-  return paintPage({ x: 0, y: 0, width: w, height: h, scale, skip, canvas: out, wait: 300 })
+  return paintPage({
+    x: 0,
+    y: 0,
+    width: w,
+    height: h,
+    scale,
+    skip,
+    canvas: out,
+    wait: 300,
+  })
 }
 
 function perspective(fov: number, aspect: number, near: number, far: number) {
@@ -131,7 +155,9 @@ function program(gl: WebGL2RenderingContext, vs: string, fs: string) {
   }
   gl.linkProgram(p)
   if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(`[paper] link: ${gl.getProgramInfoLog(p)}`)
-  const u = new Proxy({} as Record<string, WebGLUniformLocation | null>, { get: (c, k: string) => (k in c ? c[k] : (c[k] = gl.getUniformLocation(p, k))) })
+  const u = new Proxy({} as Record<string, WebGLUniformLocation | null>, {
+    get: (c, k: string) => (k in c ? c[k] : (c[k] = gl.getUniformLocation(p, k))),
+  })
   return { p, u }
 }
 /** A fixed jitter for a mesh vertex, -0.5 to 0.5. */
@@ -146,12 +172,20 @@ function createStage(w: number, h: number, dpr: number) {
   canvas.setAttribute('aria-hidden', 'true')
   canvas.width = Math.round(w * dpr)
   canvas.height = Math.round(h * dpr)
-  const gl = canvas.getContext('webgl2', { alpha: true, antialias: true, premultipliedAlpha: true, depth: true, stencil: true })
+  const gl = canvas.getContext('webgl2', {
+    alpha: true,
+    antialias: true,
+    premultipliedAlpha: true,
+    depth: true,
+    stencil: false,
+  })
   if (!gl) throw new Error('[paper] no WebGL2')
 
   const sheet = program(gl, SHEET_VS, SHEET_FS)
   const ash = program(gl, QUAD_VS, ASH_FS)
   const ember = program(gl, EMBER_VS, EMBER_FS)
+  const soft = program(gl, QUAD_VS, SOFT_FS)
+  const shade = program(gl, QUAD_VS, SHADE_FS)
 
   // sheet mesh: a grid of uv, the inner vertices nudged off the grid so it does not read as one, the edges kept straight
   const cols = w >= h ? CELLS : Math.max(8, Math.round((CELLS * w) / h))
@@ -234,6 +268,34 @@ function createStage(w: number, h: number, dpr: number) {
   gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, cellsDepth)
   gl.bindFramebuffer(gl.FRAMEBUFFER, null)
 
+  // the shadow map at a quarter of the screen (its depth the paper's height, so the highest wins), and the floor shadow blurred
+  // from it at the same size: small enough that both cost next to nothing
+  const maskW = Math.max(1, Math.ceil(canvas.width / SHADOW_DOWN))
+  const maskH = Math.max(1, Math.ceil(canvas.height / SHADOW_DOWN))
+  const target = (unit: number, smooth: boolean, depth: boolean) => {
+    const tex = gl.createTexture()
+    gl.activeTexture(gl.TEXTURE0 + unit)
+    gl.bindTexture(gl.TEXTURE_2D, tex)
+    gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, maskW, maskH)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, smooth ? gl.LINEAR : gl.NEAREST)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, smooth ? gl.LINEAR : gl.NEAREST)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+    const fb = gl.createFramebuffer()
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0)
+    if (depth) {
+      const rb = gl.createRenderbuffer()
+      gl.bindRenderbuffer(gl.RENDERBUFFER, rb)
+      gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, maskW, maskH)
+      gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, rb)
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    return { tex, fb }
+  }
+  const mask = target(4, false, true)
+  const softShadow = target(5, true, false)
+
   // the embers: a unit quad, and per ember its place, glyph and colour (7 floats)
   const emberVao = gl.createVertexArray()
   gl.bindVertexArray(emberVao)
@@ -284,11 +346,108 @@ function createStage(w: number, h: number, dpr: number) {
   let stopped = false
   // this run's own crumple: which way it turns, twirls and gathers, and where its folds fall
   const crumple = randomCrumple()
+  // and the flower it folds into: its folds, fixed for the run, and how far each is made, set per frame
+  let placedFor = ''
+  let flowerName = ''
+  let flower: Design = { folds: [], turn: 0 }
+  let bloom: [number, number] = [0, 0]
+  let fit = 1
+  let plates: Piece[] = []
+  let reach: number[] = []
+  let plateFlat = new Float32Array(0)
+  let plateOf = new Uint16Array(0)
+  let plateIndex = new Uint32Array(0)
+  let platePos = new Float32Array(0)
+  let plateNrm = new Float32Array(0)
+  let plateCount = 0
+  const plateUvBuffer = gl.createBuffer()
+  const platePosBuffer = gl.createBuffer()
+  const plateNrmBuffer = gl.createBuffer()
+  const plateIdxBuffer = gl.createBuffer()
+  const platesVao = gl.createVertexArray()
+  gl.bindVertexArray(platesVao)
+  gl.bindBuffer(gl.ARRAY_BUFFER, plateUvBuffer)
+  gl.enableVertexAttribArray(aUv)
+  gl.vertexAttribPointer(aUv, 2, gl.FLOAT, false, 0, 0)
+  for (const [buffer, name] of [
+    [platePosBuffer, 'a_pos'],
+    [plateNrmBuffer, 'a_nrm'],
+  ] as const) {
+    const at = gl.getAttribLocation(sheet.p, name)
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+    gl.enableVertexAttribArray(at)
+    gl.vertexAttribPointer(at, 3, gl.FLOAT, false, 0, 0)
+  }
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, plateIdxBuffer)
+  gl.bindVertexArray(null)
+  let bakedSheet: ReturnType<typeof bakedMesh> | null = null
+  const fold = (name: string) => {
+    flowerName = name
+    flower = PATTERNS[name](w, h)
+    // the folding sheet is drawn as its pieces cut fine, so the bends curve, placed every frame
+    plates = pieces(flower.folds, w, h)
+    reach = reaches(flower.folds, plates)
+    const cell = Math.max(6, minDim / 64)
+    let box: { center: [number, number]; size: [number, number] }
+    let m: {
+      flat: Float32Array<ArrayBuffer>
+      of: Uint16Array<ArrayBuffer>
+      index: Uint32Array<ArrayBuffer>
+    }
+    if (flower.baked) {
+      bakedSheet = bakedMesh(flower, w, h, cell)
+      m = bakedSheet
+      // the finished model's middle and size, from its last step
+      const end = new Float32Array(bakedSheet.on.length * 3)
+      bakedPlace(flower, bakedSheet, plates, reach, 1, end)
+      let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity]
+      for (let v = 0; v < end.length; v += 3) {
+        x0 = Math.min(x0, end[v])
+        x1 = Math.max(x1, end[v])
+        y0 = Math.min(y0, end[v + 1])
+        y1 = Math.max(y1, end[v + 1])
+      }
+      box = { center: [(x0 + x1) / 2, (y0 + y1) / 2], size: [x1 - x0, y1 - y0] }
+    } else {
+      bakedSheet = null
+      m = mesh(flower.folds, plates, cell)
+      box = packet(flower.folds, w, h, flower.turn)
+    }
+    bloom = box.center
+    // a flower wider or taller than the screen leaves room round it, so no petal is cut by the edge
+    fit = Math.min(1, (FIT * w) / box.size[0], (FIT * h) / box.size[1])
+    plateFlat = m.flat
+    plateOf = m.of
+    plateIndex = m.index
+    plateCount = m.index.length
+    platePos = new Float32Array(m.of.length * 3)
+    plateNrm = new Float32Array(m.of.length * 3)
+    const plateUv = new Float32Array(m.of.length * 2)
+    for (let v = 0; v < m.of.length; v++) plateUv.set([m.flat[2 * v] / w + 0.5, 0.5 - m.flat[2 * v + 1] / h], 2 * v)
+    gl.bindVertexArray(null)
+    gl.bindBuffer(gl.ARRAY_BUFFER, plateUvBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, plateUv, gl.STATIC_DRAW)
+    gl.bindBuffer(gl.ARRAY_BUFFER, platePosBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, platePos, gl.DYNAMIC_DRAW)
+    gl.bindBuffer(gl.ARRAY_BUFFER, plateNrmBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, plateNrm, gl.DYNAMIC_DRAW)
+    gl.bindVertexArray(platesVao)
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, m.index, gl.STATIC_DRAW)
+    gl.bindVertexArray(null)
+    placedFor = ''
+  }
+  fold(crumple.flower)
 
   // the embers' sim: the blast from the middle of the ball as it lands, this run's air, and the burnt cells read back to spawn from
   const runSeed = Math.floor(Math.random() * 2 ** 31)
   const scale = Math.min(canvas.width, canvas.height)
-  const blast: Blast = { cx: canvas.width / 2, cy: canvas.height / 2, at: DROPS[0].at + FALL_MS, scale, waves: air(scale, seeded(runSeed)) }
+  const blast: Blast = {
+    cx: canvas.width / 2,
+    cy: canvas.height / 2,
+    at: IGNITE_MS,
+    scale,
+    waves: air(scale, seeded(runSeed)),
+  }
   const sparks = embers()
   const instances = new Float32Array(sparks.x.length * 7)
   const read = new Uint8Array(gridW * gridH * 4)
@@ -304,22 +463,50 @@ function createStage(w: number, h: number, dpr: number) {
   }
   resetSim()
 
-  /** state: 0 the sheet, 1 the burn state per glyph cell, 2 the cast shadow. */
+  /** Whether the sheet throws a shadow: once it is lifted off the page or gathered. */
+  const shadows = (s: Frame) => s.ball > 0 || s.lift > 0
+
+  /** state: 0 the sheet, 1 the burn state per glyph cell, 2 the shadow map. */
   const drawSheet = (s: Frame, state: 0 | 1 | 2) => {
     gl.useProgram(sheet.p)
     const u = sheet.u
     gl.uniform2f(u.u_size, w, h)
-    gl.uniform1f(u.u_ball, s.ball)
+    // in development `window.__paperFlower = '<name>'` swaps the flower, for screenshots
+    if (process.env.NODE_ENV !== 'production') {
+      const want = (window as { __paperFlower?: string }).__paperFlower
+      if (want && want !== flowerName && want in PATTERNS) fold(want)
+    }
+    // the lead-in and the wait only curl the edges, as the crumple did; past that the folding takes over and the curl lets go
+    // the curl lets go over the first of the bloom, before any fold is made, so the flat sheet hands over to its plates unchanged
+    const t = s.bloom
+    const curl = Math.min(s.ball, FOLD_FROM) * (1 - Math.min(1, t / CURL_OUT))
+    const folding = Math.max(0, (t - CURL_OUT) / (1 - CURL_OUT))
+    gl.uniform1f(u.u_ball, curl)
     gl.uniform2f(u.u_seed, ...crumple.seed)
     gl.uniform1f(u.u_twirl, crumple.twirl)
     gl.uniform2f(u.u_lead, ...crumple.lead)
-    gl.uniform1f(u.u_fold, s.fold)
+    gl.uniform1f(u.u_fold, curl)
+    gl.uniform1f(u.u_lit, Math.min(1, folding * 4))
+    const made = foldsMade(flower.folds, folding)
+    // the flower drawn to the middle as it closes, so it finishes centred
+    const e = t * t * (3 - 2 * t)
+    gl.uniform2f(u.u_shift, bloom[0] * e, bloom[1] * e)
+    gl.uniform1f(u.u_paper, e)
+    gl.uniform1f(u.u_turn, flower.turn * e)
+    gl.uniform1f(u.u_fit, 1 + (fit - 1) * e)
     gl.uniform1f(u.u_R, R)
     // squash and stretch on screen, volume kept: wider and shorter when squished (rows of the column-major matrix)
     const sy = 1 - s.squash
     const sxz = 1 / Math.sqrt(sy)
-    gl.uniformMatrix3fv(u.u_rot, false, rotation(...s.spin).map((v, i) => v * (i % 3 === 1 ? sy : sxz)))
-    gl.uniform3f(u.u_center, 0, 0, R * 0.5 * s.ball + LIFT * D * s.lift)
+    // a folded flower is not a ball: it keeps only a little of the crumple's tumble, a slight lean that shows its relief
+    const spin = s.spin.map((v) => v * (1 - (1 - LEAN) * e)) as [number, number, number]
+    gl.uniformMatrix3fv(
+      u.u_rot,
+      false,
+      rotation(...spin).map((v, i) => v * (i % 3 === 1 ? sy : sxz)),
+    )
+    const cz = R * 0.5 * s.ball + LIFT * D * s.lift
+    gl.uniform3f(u.u_center, 0, 0, cz)
     gl.uniformMatrix4fv(u.u_vp, false, vp)
     gl.uniform1i(u.u_a, 0)
     gl.uniform1f(u.u_burn, s.burn)
@@ -327,16 +514,52 @@ function createStage(w: number, h: number, dpr: number) {
     gl.uniform1f(u.u_edge, EDGE)
     gl.uniform1f(u.u_state, state)
     gl.uniform1f(u.u_shadow, state === 2 ? 1 : 0)
-    // the floor the shadow falls on, behind the ball; it comes in as the sheet lifts off the page
-    gl.uniform1f(u.u_floor, -0.55 * R * s.ball)
-    // it comes in as the sheet lifts off the page, or gathers
-    gl.uniform1f(u.u_shadowA, Math.max(0.14 * Math.min(1, s.ball / 0.3), 0.08 * s.lift))
+    // the floor the shadow falls on: behind the crumpled ball, and as the flower closes it comes up under it, so the flower rests
+    // on it with a close shadow, its petals standing a little off it
+    gl.uniform1f(u.u_floor, -0.55 * R * s.ball * (1 - e) + (cz - 0.1 * R) * e)
+    gl.uniform1f(u.u_hmax, minDim)
+    gl.uniform2f(u.u_light, ...LIGHT)
+    gl.uniform1i(u.u_mask, 4)
+    gl.uniform1f(u.u_texel, (SHADOW_DOWN * w) / canvas.width)
+    // the paper shades itself only while the shadow map is drawn
+    gl.uniform1f(u.u_selfA, shadows(s) ? SELF_SHADOW : 0)
     gl.uniform3fv(u.u_back, back)
     gl.uniform3fv(u.u_char, fire.char)
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, page)
-    gl.bindVertexArray(sheetVao)
-    gl.drawElements(gl.TRIANGLES, idx.length, gl.UNSIGNED_SHORT, 0)
+    gl.uniform1f(u.u_plates, curl > 0 ? 0 : 1)
+    if (curl > 0) {
+      gl.bindVertexArray(sheetVao)
+      gl.drawElements(gl.TRIANGLES, idx.length, gl.UNSIGNED_SHORT, 0)
+      return
+    }
+    // placed once a frame, not again for the burn cells and the shadow drawn from the same frame; each vertex's normal the sum of
+    // its triangles' (weighted by their size), so the bends shade smoothly and a vertex on a crease takes its own side's
+    const key = flowerName + (bakedSheet ? folding : made.join())
+    if (placedFor !== key) {
+      placedFor = key
+      if (bakedSheet) bakedPlace(flower, bakedSheet, plates, reach, folding, platePos)
+      else {
+        const at = pose(flower.folds, made, reach)
+        for (let v = 0; v < plateOf.length; v++)
+          platePos.set(place(flower.folds, plates[plateOf[v]].moves, at, plateFlat[2 * v], plateFlat[2 * v + 1]), 3 * v)
+      }
+      plateNrm.fill(0)
+      const P = platePos
+      for (let i = 0; i < plateIndex.length; i += 3) {
+        const [a, b, c] = [3 * plateIndex[i], 3 * plateIndex[i + 1], 3 * plateIndex[i + 2]]
+        const [ax, ay, az] = [P[b] - P[a], P[b + 1] - P[a + 1], P[b + 2] - P[a + 2]]
+        const [bx, by, bz] = [P[c] - P[a], P[c + 1] - P[a + 1], P[c + 2] - P[a + 2]]
+        const n = [ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx]
+        for (const v of [a, b, c]) for (let j = 0; j < 3; j++) plateNrm[v + j] += n[j]
+      }
+      gl.bindBuffer(gl.ARRAY_BUFFER, platePosBuffer)
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, platePos)
+      gl.bindBuffer(gl.ARRAY_BUFFER, plateNrmBuffer)
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, plateNrm)
+    }
+    gl.bindVertexArray(platesVao)
+    gl.drawElements(gl.TRIANGLES, plateCount, gl.UNSIGNED_INT, 0)
   }
 
   /** The burn state per glyph cell, into `cells`; read back into `read` too when asked. */
@@ -385,7 +608,8 @@ function createStage(w: number, h: number, dpr: number) {
   }
   /** Hot to cold in the site's palette (the theme's own values, so it reads on the paper in light and in dark): gold, rust, rose,
    * then the faint ink of ash. */
-  const emberColor = (u: number) => mix3(mix3(mix3(fire.hot, fire.flame, smooth(0.05, 0.3, u)), fire.rose, smooth(0.3, 0.65, u)), fire.cool, smooth(0.65, 0.95, u))
+  const emberColor = (u: number) =>
+    mix3(mix3(mix3(fire.hot, fire.flame, smooth(0.05, 0.3, u)), fire.rose, smooth(0.3, 0.65, u)), fire.cool, smooth(0.65, 0.95, u))
 
   const drawEmbers = () => {
     const e = sparks
@@ -418,19 +642,44 @@ function createStage(w: number, h: number, dpr: number) {
     if (lit) burnCells(s, false)
     gl.disable(gl.BLEND)
     gl.enable(gl.DEPTH_TEST)
+    if (shadows(s)) {
+      // the shadow map: unbound from its sampler while it is drawn into
+      gl.activeTexture(gl.TEXTURE4)
+      gl.bindTexture(gl.TEXTURE_2D, null)
+      gl.bindFramebuffer(gl.FRAMEBUFFER, mask.fb)
+      gl.viewport(0, 0, maskW, maskH)
+      gl.clearColor(0, 0, 0, 0)
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+      drawSheet(s, 2)
+      gl.activeTexture(gl.TEXTURE4)
+      gl.bindTexture(gl.TEXTURE_2D, mask.tex)
+      // the floor shadow blurred from it, as wide as the paper is high
+      gl.disable(gl.DEPTH_TEST)
+      gl.bindFramebuffer(gl.FRAMEBUFFER, softShadow.fb)
+      gl.useProgram(soft.p)
+      gl.uniform1i(soft.u.u_mask, 4)
+      gl.uniform1f(soft.u.u_hmax, minDim)
+      gl.uniform1f(soft.u.u_texel, (SHADOW_DOWN * w) / canvas.width)
+      // it comes in as the sheet lifts off the page, or gathers
+      gl.uniform1f(soft.u.u_shadowA, Math.max(0.16 * Math.min(1, s.ball / 0.3), 0.1 * s.lift))
+      gl.bindVertexArray(quadVao)
+      gl.drawArrays(gl.TRIANGLES, 0, 3)
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    }
     gl.viewport(0, 0, canvas.width, canvas.height)
     gl.clearColor(0, 0, 0, 0)
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
-    if (s.ball > 0 || s.lift > 0) {
-      // the shadow first, under the sheet: one flat tone, each pixel darkened once however many folds land on it
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+    if (shadows(s)) {
+      // the floor shadow first, under the sheet
       gl.disable(gl.DEPTH_TEST)
       gl.enable(gl.BLEND)
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
-      gl.enable(gl.STENCIL_TEST)
-      gl.stencilFunc(gl.EQUAL, 0, 0xff)
-      gl.stencilOp(gl.KEEP, gl.KEEP, gl.INCR)
-      drawSheet(s, 2)
-      gl.disable(gl.STENCIL_TEST)
+      gl.useProgram(shade.p)
+      gl.uniform1i(shade.u.u_soft, 5)
+      gl.uniform2f(shade.u.u_px, 1 / (maskW * SHADOW_DOWN), 1 / (maskH * SHADOW_DOWN))
+      gl.uniform3fv(shade.u.u_char, fire.char)
+      gl.bindVertexArray(quadVao)
+      gl.drawArrays(gl.TRIANGLES, 0, 3)
       gl.disable(gl.BLEND)
       gl.enable(gl.DEPTH_TEST)
     }
@@ -448,7 +697,6 @@ function createStage(w: number, h: number, dpr: number) {
       gl.uniform1f(ash.u.u_drawing, drawing)
       gl.uniform3fv(ash.u.u_hot, fire.hot)
       gl.uniform3fv(ash.u.u_flame, fire.flame)
-      gl.uniform3fv(ash.u.u_char, fire.char)
       gl.activeTexture(gl.TEXTURE2)
       gl.bindTexture(gl.TEXTURE_2D, glyphs)
       gl.activeTexture(gl.TEXTURE3)
@@ -487,7 +735,8 @@ function createStage(w: number, h: number, dpr: number) {
       }
       const ms = Math.min(now - t0, PAPER_MS)
       const fade = waited > 0 ? Math.max(0, 1 - (now - leftAt) / SWING_OUT_MS) : 0
-      const at = (T: number) => (fade > 0 ? waitingAt(frameAt(T, crumple), waited + (now - leftAt), fade * fade * (3 - 2 * fade)) : frameAt(T, crumple))
+      const at = (T: number) =>
+        fade > 0 ? waitingAt(frameAt(T, crumple), waited + (now - leftAt), fade * fade * (3 - 2 * fade)) : frameAt(T, crumple)
       const T = ms / PAPER_MS
       if (hold != null && T >= hold) {
         // the embers are a sim: a held or scrubbed point replays it from the start
