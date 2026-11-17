@@ -1,8 +1,8 @@
-// The resume's inline markup: **bold**, *italic*, [text](https://...), and a backslash to keep any of * [ ] \ literal. Nothing else
+// The resume's inline markup: **bold**, *italic*, ==highlight==, [text](https://...), and a backslash to keep any of * [ ] = \ literal. Nothing else
 // is special, so a pasted line reads as written. Links are kept to https, mailto and tel (lib/resume/doc.ts checks saved files too).
 import type { ReactNode } from 'react'
 
-export type Run = { t: 'text'; s: string } | { t: 'b' | 'i'; c: Run[] } | { t: 'a'; href: string; c: Run[] }
+export type Run = { t: 'text'; s: string } | { t: 'b' | 'i' | 'm'; c: Run[] } | { t: 'a'; href: string; c: Run[] }
 
 const SAFE = /^(https:\/\/|mailto:|tel:)/
 
@@ -25,6 +25,16 @@ export function parseInline(src: string): Run[] {
         continue
       }
       if (stop && src.startsWith(stop, i)) return flush(), out
+      if (src.startsWith('==', i) && stop !== '==') {
+        const end = findClose(src, i + 2, '==')
+        if (end > i + 2) {
+          flush()
+          i += 2
+          out.push({ t: 'm', c: read('==') })
+          i += 2
+          continue
+        }
+      }
       if (src.startsWith('**', i) && stop !== '*') {
         const end = findClose(src, i + 2, '**')
         if (end > i + 2) {
@@ -94,6 +104,7 @@ export function renderRuns(runs: Run[], key = ''): ReactNode[] {
     if (r.t === 'text') return r.s
     if (r.t === 'b') return <strong key={k}>{renderRuns(r.c, `${k}.`)}</strong>
     if (r.t === 'i') return <em key={k}>{renderRuns(r.c, `${k}.`)}</em>
+    if (r.t === 'm') return <mark key={k}>{renderRuns(r.c, `${k}.`)}</mark>
     if (r.t !== 'a') return null
     return (
       <a key={k} href={r.href}>

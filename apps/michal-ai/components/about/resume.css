@@ -184,6 +184,29 @@
 .rs a:hover {
   text-decoration-color: currentColor;
 }
+/* ==highlight==: a marker stroke behind the words, kept in print. */
+.rs mark {
+  padding: 0 0.15em;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: inherit;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+/* A line under a heading ("43 citations across 4 papers, and counting"), and the label over a cites section's short list. */
+.rs-sum {
+  margin: 0 0 var(--space-2);
+  color: var(--ink-muted);
+}
+.rs-more {
+  margin: var(--space-3) 0 var(--space-1);
+  color: var(--ink-muted);
+  font-style: italic;
+}
+.rs-brief .rs-k {
+  font-weight: 400;
+  color: var(--ink);
+}
 .rs-skills {
   margin: 0;
 }
@@ -209,6 +232,10 @@
 .rs-paper {
   --rs-k: 1;
   --rs-g: 1;
+  /* Paper is always black on white: the theme's colors (cream ink in the dark theme) must not reach anything on the sheet. */
+  --ink: #111;
+  --ink-muted: #444;
+  --hairline: #bbb;
   max-width: none;
   padding: 0;
   border-radius: 0;
@@ -310,6 +337,21 @@
 }
 .rs-paper a {
   text-decoration: none;
+}
+.rs-paper mark {
+  background: #fff1a8;
+}
+.rs-paper .rs-sum {
+  margin-bottom: calc(3pt * var(--rs-g));
+  color: #444;
+}
+.rs-paper .rs-more {
+  margin: calc(5pt * var(--rs-g)) 0 calc(2pt * var(--rs-g));
+  color: #444;
+}
+.rs-paper .rs-brief .rs-k {
+  font-weight: 400;
+  color: #111;
 }
 
 /* ---- print: only the sheet. Chrome (nav, footer, page end, backdrop, grid, buttons) is hidden; margins come from @page (or the

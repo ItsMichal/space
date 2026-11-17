@@ -1,6 +1,8 @@
 // The site's own resume as a document (lib/resume/doc.ts), built from content/profile.ts and the featured posts. /resume prints
 // it, and the editor starts a tailored copy from it.
 import { profile, type Publication } from '@/content/profile'
+import { accoladeById } from '@/content/accolades'
+import { press } from '@/content/press'
 import { doiUrl, venueLine } from '@/lib/publications'
 import { featuredProjects } from '@/lib/about'
 import { postPath, SITE_URL } from '@/lib/seo'
@@ -44,8 +46,41 @@ function leadership(): ResumeItem {
   }
 }
 
+/** "In the news": four links, oldest first, one of them the Congressional Record itself (so the award is not listed twice). Outlet
+ *  as the title (linked), headline as the line; an entry can set its own outlet, line or year (the iSAT newsletter prints no date,
+ *  and its title is the issue's, so the line says what it reports). Ids are checked, so a renamed source fails the build instead
+ *  of dropping a row. */
+const RECORD = 'congressional-record-2014'
+type News = { from: 'accolade' | 'press' | 'award'; id: string; outlet?: string; line?: string; year?: string }
+const NEWS: readonly News[] = [
+  { from: 'award', id: RECORD },
+  { from: 'press', id: 'denver-post-2017-kaiser' },
+  { from: 'press', id: 'atlas-hackcu-2022' },
+  {
+    from: 'press',
+    id: 'isat-snapshot-summer-2022',
+    outlet: 'NSF AI Institute for Student-AI Teaming (iSAT)',
+    line: 'iSAT Snapshot newsletter, Summer 2022: the AIED 2022 Best Interactive Event award',
+    year: '2022',
+  },
+]
+export function newsItems(): ResumeItem[] {
+  const ssep = accoladeById('ssep-2014')?.sources ?? []
+  return NEWS.map(({ from, id, outlet, line, year }) => {
+    if (from === 'award') {
+      const a = profile.awards.find((x) => x.id === id)
+      if (!a?.url) throw new Error(`resume: no linked award "${id}"`)
+      return { id, title: 'Congressional Record', href: a.url, body: esc(`${a.title.replace(/ in the Congressional Record$/, '')} ${a.context}`), dates: a.year }
+    }
+    const src = from === 'accolade' ? ssep.find((s) => s.id === id) : press.find((p) => p.id === id)
+    const dates = year ?? src?.date?.slice(0, 4)
+    if (!src || !dates) throw new Error(`resume: no coverage "${id}"`)
+    return { id, title: outlet ?? src.outlet, href: src.url, body: esc(line ?? src.title), dates }
+  })
+}
+
 /** The site's own resume, from content/profile.ts and the featured posts. Order: Experience, Education, Leadership, Publications,
- *  Selected projects, Awards and press, Skills. Privacy bar: state only, no phone, street address, email or birthday. */
+ *  Selected projects, Awards, In the news, Skills. Privacy bar: state only, no phone, street address, email or birthday. */
 export function defaultResume(): ResumeDoc {
   const ed = profile.education
   const projects = featuredProjects().filter((p) => p.id !== 'spacex-starlink-general-projects')
@@ -55,9 +90,9 @@ export function defaultResume(): ResumeDoc {
     contact: [
       { text: profile.jobTitle },
       { text: profile.status.location },
+      { text: strip(SITE_URL), href: SITE_URL },
       { text: strip(siteConfig.linkedin), href: siteConfig.linkedin },
       { text: strip(siteConfig.github), href: siteConfig.github },
-      { text: strip(SITE_URL), href: SITE_URL },
     ],
     sections: [
       {
@@ -84,10 +119,12 @@ export function defaultResume(): ResumeDoc {
         id: 'publications',
         title: 'Publications',
         kind: 'cites',
-        items: profile.publications.map((p) => ({
+        // The first paper in full; the rest as short lines under "Also an author on".
+        items: profile.publications.map((p, i) => ({
           id: p.id,
           title: p.title,
           dates: p.year,
+          ...(i > 0 ? { brief: true, detail: venueLine(p), href: doiUrl(p) } : {}),
           body: `${authorsMarkup(p)}. *${esc(venueLine(p))}*. [${p.doi ? `doi:${p.doi}` : host(doiUrl(p))}](${doiUrl(p)})`,
         })),
       },
@@ -103,11 +140,12 @@ export function defaultResume(): ResumeDoc {
       },
       {
         id: 'awards',
-        title: 'Awards and press',
+        title: 'Awards',
         kind: 'list',
         sep: ', ',
-        items: profile.awards.map((a) => ({ id: a.id, title: a.title, body: esc(a.context), dates: a.year })),
+        items: profile.awards.filter((a) => a.kind !== 'press' && a.id !== RECORD).map((a) => ({ id: a.id, title: a.title, body: esc(a.context), dates: a.year })),
       },
+      { id: 'news', title: 'In the news', kind: 'list', sep: ', ', items: newsItems() },
       { id: 'skills', title: 'Skills', kind: 'skills', items: profile.skills.map((s) => ({ id: s.group.toLowerCase().replace(/\W+/g, '-'), title: s.group, body: s.items.join(', ') })) },
     ],
     setting: { ...SETTING },

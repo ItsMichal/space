@@ -23,6 +23,11 @@ describe('inline markup', () => {
   })
   it('flattens to plain text', () => {
     expect(plainText('**A** *b* [c](https://d.e)')).toBe('A b c')
+    expect(plainText('a ==b== c')).toBe('a b c')
+  })
+  it('reads ==highlight==, and leaves a lone == alone', () => {
+    expect(html('a ==**43** cites== b')).toBe('a <mark><strong>43</strong> cites</mark> b')
+    expect(html('x == y')).toBe('x == y')
   })
 })
 
@@ -37,6 +42,33 @@ describe('the site resume as a document', () => {
     const text = JSON.stringify(doc)
     expect(text).not.toMatch(/@[a-z]+\.(com|ai)|mailto:|tel:|\(\d{3}\)|\b\d{3}[-.]\d{3}[-.]\d{4}\b/i)
     expect(doc.contact.map((c) => c.text)).toContain('California')
+  })
+  it('puts the site first among the links and GitHub last', () => {
+    const links = doc.contact.filter((c) => c.href).map((c) => c.href!)
+    expect(links[0]).toMatch(/michal\.ai/)
+    expect(links[links.length - 1]).toMatch(/github\.com/)
+  })
+  it('lists four pieces of coverage, linked, and keeps press out of Awards', () => {
+    const news = doc.sections.find((s) => s.id === 'news')!
+    expect(news.items).toHaveLength(4)
+    expect(news.items.at(-1)).toMatchObject({ id: 'isat-snapshot-summer-2022', dates: '2022' })
+    for (const it of news.items) expect(it.href).toMatch(/^https:/)
+    const awards = doc.sections.find((s) => s.id === 'awards')!
+    expect(awards.items.map((a) => a.id)).not.toContain('denver-post-2017')
+    expect(news.items.find((i) => i.title === 'Congressional Record')?.href).toBe('https://www.govinfo.gov/link/crec/160/e/1105')
+    expect(awards.items.map((a) => a.id)).not.toContain('congressional-record-2014')
+  })
+  it('sets the first paper in full and the rest as short lines under the label', () => {
+    const pubs = structuredClone(doc.sections.find((s) => s.id === 'publications')!)
+    pubs.summary = '**43** citations across 4 papers, and counting'
+    const out = renderToStaticMarkup(<ResumeSheet doc={{ ...doc, sections: [pubs] }} />)
+    expect(out).toContain('class="rs-sum"><strong>43</strong> citations')
+    expect(out).toContain('Also an author on')
+    expect(out.split('rs-cite').length - 1).toBe(pubs.items.filter((i) => !i.brief).length)
+    const back = parseResume(serializeResume({ ...doc, sections: [{ ...pubs, more: 'Also on' }] }))
+    expect(back.doc?.sections[0].summary).toBe(pubs.summary)
+    expect(back.doc?.sections[0].more).toBe('Also on')
+    expect(back.doc?.sections[0].items[1].brief).toBe(true)
   })
   it('renders every section, and hidden things are left out', () => {
     const out = renderToStaticMarkup(<ResumeSheet doc={doc} />)
@@ -54,7 +86,7 @@ describe('the file check', () => {
   const good = () => JSON.parse(serializeResume(defaultResume()))
   it('rejects unsafe links and out-of-range knobs', () => {
     const b = good()
-    b.contact[2].href = 'javascript:alert(1)'
+    b.contact[3].href = 'javascript:alert(1)'
     expect(parseResume(JSON.stringify(b)).problem).toMatch(/https/)
     const c = good()
     c.sections[0].items[0].body = 'see [x](http://insecure.example)'

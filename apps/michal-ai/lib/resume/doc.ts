@@ -1,6 +1,7 @@
 // A resume as plain data: what /resume prints, and what the editor (write.michal.ai, Resume) tailors per job and saves as
 // resumes/<id>.json in the content repo. lib/resume/site.ts builds the site's own from content/profile.ts; a tailored one is a
-// copy of it edited by hand. Text fields take a small inline markup (lib/resume/inline.tsx): **bold**, *italic*, [text](url).
+// copy of it edited by hand. Text fields take a small inline markup (lib/resume/inline.tsx): **bold**, *italic*, ==highlight==,
+// [text](url).
 // No imports: the editor's Worker checks saved files with parseResume and must not pull in the site's content.
 
 export type ResumeBullet = { text: string; hidden?: boolean }
@@ -17,6 +18,8 @@ export type ResumeItem = {
   bullets?: ResumeBullet[]
   meta?: string
   hidden?: boolean
+  /** In a `cites` section: one short line (title, detail, dates) under the section's `more` label instead of the full citation. */
+  brief?: boolean
 }
 
 export type ResumeSection = {
@@ -26,6 +29,10 @@ export type ResumeSection = {
   /** In a `list` section, what joins the title (or its detail) to the body: ". " or ", ". */
   sep?: string
   hidden?: boolean
+  /** A line under the heading: "**43** citations across 4 papers, and counting". */
+  summary?: string
+  /** In a `cites` section, the label over its brief items: "Also an author on". */
+  more?: string
   items: ResumeItem[]
 }
 
@@ -135,6 +142,7 @@ export function parseResume(text: string): { doc: ResumeDoc; problem?: undefined
           ? { bullets: it.bullets.slice(0, 20).map((b, bi) => ({ text: str(isObj(b) ? b.text : undefined, `${wi} bullet ${bi + 1}`) ?? '', ...(isObj(b) && b.hidden === true ? { hidden: true } : {}) })) }
           : {}),
         ...(it.hidden === true ? { hidden: true } : {}),
+        ...(it.brief === true ? { brief: true } : {}),
       })
     }
     doc.sections.push({
@@ -143,6 +151,8 @@ export function parseResume(text: string): { doc: ResumeDoc; problem?: undefined
       kind: sec.kind as ResumeSection['kind'],
       ...(sec.sep !== undefined ? { sep: sec.sep === ', ' ? ', ' : '. ' } : {}),
       ...(sec.hidden === true ? { hidden: true } : {}),
+      ...(sec.summary !== undefined ? { summary: str(sec.summary, `${w} summary`) } : {}),
+      ...(sec.more !== undefined ? { more: str(sec.more, `${w} label`) } : {}),
       items,
     })
   }

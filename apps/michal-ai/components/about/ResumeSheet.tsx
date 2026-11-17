@@ -6,7 +6,7 @@ import type { ResumeDoc, ResumeItem, ResumeSection } from '@/lib/resume/doc'
 import { Inline } from '@/lib/resume/inline'
 
 /** Where a piece of text lives in the document, for the editor's edit-in-place: section index, item index and field. */
-export type Field = { s: number; i?: number; f: 'name' | 'contact' | 'title' | 'detail' | 'dates' | 'body' | 'meta' | 'bullet' | 'section'; n?: number }
+export type Field = { s: number; i?: number; f: 'name' | 'contact' | 'title' | 'detail' | 'dates' | 'body' | 'meta' | 'bullet' | 'section' | 'summary' | 'more'; n?: number }
 
 export type SheetHooks = {
   /** Render one text field; the default prints its markup. */
@@ -14,6 +14,9 @@ export type SheetHooks = {
   /** Wrap an item (to add hover controls); the default is the item itself. */
   item?: (node: ReactNode, s: number, i: number) => ReactNode
 }
+
+/** The label over a cites section's brief items when it has none of its own. */
+export const MORE = 'Also an author on'
 
 const shown = <T extends { hidden?: boolean }>(xs: T[] | undefined) => (xs ?? []).map((x, n) => [x, n] as const).filter(([x]) => !x.hidden)
 
@@ -42,6 +45,7 @@ export function ResumeSheet({ doc, paper, hooks = {}, style, className = '' }: {
           <h2 id={`rs-${sec.id}`} className="rs-h">
             {t(sec.title, { s, f: 'section' })}
           </h2>
+          {sec.summary ? <p className="rs-sum">{t(sec.summary, { s, f: 'summary' })}</p> : null}
           <Section sec={sec} s={s} t={t} wrap={wrap} />
         </section>
       ))}
@@ -72,11 +76,41 @@ function Section({ sec, s, t, wrap }: { sec: ResumeSection; s: number; t: T; wra
       </dl>
     )
   if (sec.kind === 'entries') return <>{items.map(([it, i]) => <Fragment key={it.id}>{wrap(<Entry it={it} s={s} i={i} t={t} />, s, i)}</Fragment>)}</>
+  if (sec.kind === 'cites') {
+    const full = items.filter(([it]) => !it.brief)
+    const brief = items.filter(([it]) => it.brief)
+    return (
+      <>
+        {full.length ? (
+          <ul className="rs-list">
+            {full.map(([it, i]) => (
+              <li key={it.id} className="rs-item rs-cite" data-item={i}>
+                {wrap(<Cite it={it} s={s} i={i} t={t} />, s, i)}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {brief.length ? (
+          <>
+            <p className="rs-more">{t(sec.more ?? MORE, { s, f: 'more' })}</p>
+            <ul className="rs-list rs-compact rs-brief">
+              {brief.map(([it, i]) => (
+                <li key={it.id} className="rs-item" data-item={i}>
+                  {/* The full citation stays in `body` (switching back to Full restores it) but a short line leaves it out. */}
+                  {wrap(<Line it={{ ...it, body: undefined }} s={s} i={i} t={t} sep=". " />, s, i)}
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
+      </>
+    )
+  }
   return (
-    <ul className={`rs-list${sec.kind === 'list' ? ' rs-compact' : ''}`}>
+    <ul className="rs-list rs-compact">
       {items.map(([it, i]) => (
-        <li key={it.id} className={`rs-item${sec.kind === 'cites' ? ' rs-cite' : ''}`} data-item={i}>
-          {wrap(sec.kind === 'cites' ? <Cite it={it} s={s} i={i} t={t} /> : <Line it={it} s={s} i={i} t={t} sep={sec.sep ?? '. '} />, s, i)}
+        <li key={it.id} className="rs-item" data-item={i}>
+          {wrap(<Line it={it} s={s} i={i} t={t} sep={sec.sep ?? '. '} />, s, i)}
         </li>
       ))}
     </ul>
