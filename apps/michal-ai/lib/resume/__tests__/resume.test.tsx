@@ -50,7 +50,7 @@ describe('the site resume as a document', () => {
   })
   it('lists five pieces of coverage, linked, and keeps press out of Awards', () => {
     const news = doc.sections.find((s) => s.id === 'news')!
-    expect(news.items).toHaveLength(5)
+    expect(news.items).toHaveLength(3)
     for (const it of news.items) expect(it.href).toMatch(/^https:/)
     const awards = doc.sections.find((s) => s.id === 'awards')!
     expect(awards.items.map((a) => a.id)).not.toContain('denver-post-2017')

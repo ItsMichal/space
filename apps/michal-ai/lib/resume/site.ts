@@ -46,12 +46,10 @@ function leadership(): ResumeItem {
   }
 }
 
-/** "In the news": five links, oldest first, one of them the Congressional Record itself (so the award is not listed twice). Outlet
+/** "In the news": three links, oldest first, one of them the Congressional Record itself (so the award is not listed twice). Outlet
  *  as the title (linked), headline as the line. Ids are checked, so a renamed source fails the build instead of dropping a row. */
 const RECORD = 'congressional-record-2014'
 const NEWS: readonly { from: 'accolade' | 'press' | 'award'; id: string }[] = [
-  { from: 'accolade', id: 'nbc-news' },
-  { from: 'accolade', id: 'csmonitor' },
   { from: 'award', id: RECORD },
   { from: 'press', id: 'denver-post-2017-kaiser' },
   { from: 'press', id: 'atlas-hackcu-2022' },
