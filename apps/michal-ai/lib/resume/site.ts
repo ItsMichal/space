@@ -46,18 +46,24 @@ function leadership(): ResumeItem {
   }
 }
 
-/** "In the news": five pieces of coverage, the national outlets first, then oldest to newest. Outlet as the title (linked),
- *  headline as the line. Ids are checked, so a renamed source fails the build instead of dropping a row. */
-const NEWS: readonly { from: 'accolade' | 'press'; id: string }[] = [
+/** "In the news": five links, oldest first, one of them the Congressional Record itself (so the award is not listed twice). Outlet
+ *  as the title (linked), headline as the line. Ids are checked, so a renamed source fails the build instead of dropping a row. */
+const RECORD = 'congressional-record-2014'
+const NEWS: readonly { from: 'accolade' | 'press' | 'award'; id: string }[] = [
   { from: 'accolade', id: 'nbc-news' },
   { from: 'accolade', id: 'csmonitor' },
-  { from: 'accolade', id: 'huffpost-live' },
+  { from: 'award', id: RECORD },
   { from: 'press', id: 'denver-post-2017-kaiser' },
   { from: 'press', id: 'atlas-hackcu-2022' },
 ]
 export function newsItems(): ResumeItem[] {
   const ssep = accoladeById('ssep-2014')?.sources ?? []
   return NEWS.map(({ from, id }) => {
+    if (from === 'award') {
+      const a = profile.awards.find((x) => x.id === id)
+      if (!a?.url) throw new Error(`resume: no linked award "${id}"`)
+      return { id, title: 'Congressional Record', href: a.url, body: esc(`${a.title.replace(/ in the Congressional Record$/, '')} ${a.context}`), dates: a.year }
+    }
     const src = from === 'accolade' ? ssep.find((s) => s.id === id) : press.find((p) => p.id === id)
     if (!src || !src.date) throw new Error(`resume: no coverage "${id}"`)
     return { id, title: src.outlet, href: src.url, body: esc(src.title), dates: src.date.slice(0, 4) }
@@ -128,7 +134,7 @@ export function defaultResume(): ResumeDoc {
         title: 'Awards',
         kind: 'list',
         sep: ', ',
-        items: profile.awards.filter((a) => a.kind !== 'press').map((a) => ({ id: a.id, title: a.title, body: esc(a.context), dates: a.year })),
+        items: profile.awards.filter((a) => a.kind !== 'press' && a.id !== RECORD).map((a) => ({ id: a.id, title: a.title, body: esc(a.context), dates: a.year })),
       },
       { id: 'news', title: 'In the news', kind: 'list', sep: ', ', items: newsItems() },
       { id: 'skills', title: 'Skills', kind: 'skills', items: profile.skills.map((s) => ({ id: s.group.toLowerCase().replace(/\W+/g, '-'), title: s.group, body: s.items.join(', ') })) },

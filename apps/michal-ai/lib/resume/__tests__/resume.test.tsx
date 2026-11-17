@@ -54,6 +54,8 @@ describe('the site resume as a document', () => {
     for (const it of news.items) expect(it.href).toMatch(/^https:/)
     const awards = doc.sections.find((s) => s.id === 'awards')!
     expect(awards.items.map((a) => a.id)).not.toContain('denver-post-2017')
+    expect(news.items.find((i) => i.title === 'Congressional Record')?.href).toBe('https://www.govinfo.gov/link/crec/160/e/1105')
+    expect(awards.items.map((a) => a.id)).not.toContain('congressional-record-2014')
   })
   it('sets the first paper in full and the rest as short lines under the label', () => {
     const pubs = structuredClone(doc.sections.find((s) => s.id === 'publications')!)
