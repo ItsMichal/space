@@ -46,25 +46,36 @@ function leadership(): ResumeItem {
   }
 }
 
-/** "In the news": three links, oldest first, one of them the Congressional Record itself (so the award is not listed twice). Outlet
- *  as the title (linked), headline as the line. Ids are checked, so a renamed source fails the build instead of dropping a row. */
+/** "In the news": four links, oldest first, one of them the Congressional Record itself (so the award is not listed twice). Outlet
+ *  as the title (linked), headline as the line; an entry can set its own outlet, line or year (the iSAT newsletter prints no date,
+ *  and its title is the issue's, so the line says what it reports). Ids are checked, so a renamed source fails the build instead
+ *  of dropping a row. */
 const RECORD = 'congressional-record-2014'
-const NEWS: readonly { from: 'accolade' | 'press' | 'award'; id: string }[] = [
+type News = { from: 'accolade' | 'press' | 'award'; id: string; outlet?: string; line?: string; year?: string }
+const NEWS: readonly News[] = [
   { from: 'award', id: RECORD },
   { from: 'press', id: 'denver-post-2017-kaiser' },
   { from: 'press', id: 'atlas-hackcu-2022' },
+  {
+    from: 'press',
+    id: 'isat-snapshot-summer-2022',
+    outlet: 'NSF AI Institute for Student-AI Teaming (iSAT)',
+    line: 'iSAT Snapshot newsletter, Summer 2022: the AIED 2022 Best Interactive Event award',
+    year: '2022',
+  },
 ]
 export function newsItems(): ResumeItem[] {
   const ssep = accoladeById('ssep-2014')?.sources ?? []
-  return NEWS.map(({ from, id }) => {
+  return NEWS.map(({ from, id, outlet, line, year }) => {
     if (from === 'award') {
       const a = profile.awards.find((x) => x.id === id)
       if (!a?.url) throw new Error(`resume: no linked award "${id}"`)
       return { id, title: 'Congressional Record', href: a.url, body: esc(`${a.title.replace(/ in the Congressional Record$/, '')} ${a.context}`), dates: a.year }
     }
     const src = from === 'accolade' ? ssep.find((s) => s.id === id) : press.find((p) => p.id === id)
-    if (!src || !src.date) throw new Error(`resume: no coverage "${id}"`)
-    return { id, title: src.outlet, href: src.url, body: esc(src.title), dates: src.date.slice(0, 4) }
+    const dates = year ?? src?.date?.slice(0, 4)
+    if (!src || !dates) throw new Error(`resume: no coverage "${id}"`)
+    return { id, title: outlet ?? src.outlet, href: src.url, body: esc(line ?? src.title), dates }
   })
 }
 

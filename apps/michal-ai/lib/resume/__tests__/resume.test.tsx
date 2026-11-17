@@ -48,9 +48,10 @@ describe('the site resume as a document', () => {
     expect(links[0]).toMatch(/michal\.ai/)
     expect(links[links.length - 1]).toMatch(/github\.com/)
   })
-  it('lists five pieces of coverage, linked, and keeps press out of Awards', () => {
+  it('lists four pieces of coverage, linked, and keeps press out of Awards', () => {
     const news = doc.sections.find((s) => s.id === 'news')!
-    expect(news.items).toHaveLength(3)
+    expect(news.items).toHaveLength(4)
+    expect(news.items.at(-1)).toMatchObject({ id: 'isat-snapshot-summer-2022', dates: '2022' })
     for (const it of news.items) expect(it.href).toMatch(/^https:/)
     const awards = doc.sections.find((s) => s.id === 'awards')!
     expect(awards.items.map((a) => a.id)).not.toContain('denver-post-2017')
