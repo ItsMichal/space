@@ -1,6 +1,8 @@
 // The site's own resume as a document (lib/resume/doc.ts), built from content/profile.ts and the featured posts. /resume prints
 // it, and the editor starts a tailored copy from it.
 import { profile, type Publication } from '@/content/profile'
+import { accoladeById } from '@/content/accolades'
+import { press } from '@/content/press'
 import { doiUrl, venueLine } from '@/lib/publications'
 import { featuredProjects } from '@/lib/about'
 import { postPath, SITE_URL } from '@/lib/seo'
@@ -44,8 +46,26 @@ function leadership(): ResumeItem {
   }
 }
 
+/** "In the news": five pieces of coverage, the national outlets first, then oldest to newest. Outlet as the title (linked),
+ *  headline as the line. Ids are checked, so a renamed source fails the build instead of dropping a row. */
+const NEWS: readonly { from: 'accolade' | 'press'; id: string }[] = [
+  { from: 'accolade', id: 'nbc-news' },
+  { from: 'accolade', id: 'csmonitor' },
+  { from: 'accolade', id: 'huffpost-live' },
+  { from: 'press', id: 'denver-post-2017-kaiser' },
+  { from: 'press', id: 'atlas-hackcu-2022' },
+]
+export function newsItems(): ResumeItem[] {
+  const ssep = accoladeById('ssep-2014')?.sources ?? []
+  return NEWS.map(({ from, id }) => {
+    const src = from === 'accolade' ? ssep.find((s) => s.id === id) : press.find((p) => p.id === id)
+    if (!src || !src.date) throw new Error(`resume: no coverage "${id}"`)
+    return { id, title: src.outlet, href: src.url, body: esc(src.title), dates: src.date.slice(0, 4) }
+  })
+}
+
 /** The site's own resume, from content/profile.ts and the featured posts. Order: Experience, Education, Leadership, Publications,
- *  Selected projects, Awards and press, Skills. Privacy bar: state only, no phone, street address, email or birthday. */
+ *  Selected projects, Awards, In the news, Skills. Privacy bar: state only, no phone, street address, email or birthday. */
 export function defaultResume(): ResumeDoc {
   const ed = profile.education
   const projects = featuredProjects().filter((p) => p.id !== 'spacex-starlink-general-projects')
@@ -55,9 +75,9 @@ export function defaultResume(): ResumeDoc {
     contact: [
       { text: profile.jobTitle },
       { text: profile.status.location },
+      { text: strip(SITE_URL), href: SITE_URL },
       { text: strip(siteConfig.linkedin), href: siteConfig.linkedin },
       { text: strip(siteConfig.github), href: siteConfig.github },
-      { text: strip(SITE_URL), href: SITE_URL },
     ],
     sections: [
       {
@@ -84,10 +104,12 @@ export function defaultResume(): ResumeDoc {
         id: 'publications',
         title: 'Publications',
         kind: 'cites',
-        items: profile.publications.map((p) => ({
+        // The first paper in full; the rest as short lines under "Also an author on".
+        items: profile.publications.map((p, i) => ({
           id: p.id,
           title: p.title,
           dates: p.year,
+          ...(i > 0 ? { brief: true, detail: venueLine(p), href: doiUrl(p) } : {}),
           body: `${authorsMarkup(p)}. *${esc(venueLine(p))}*. [${p.doi ? `doi:${p.doi}` : host(doiUrl(p))}](${doiUrl(p)})`,
         })),
       },
@@ -103,11 +125,12 @@ export function defaultResume(): ResumeDoc {
       },
       {
         id: 'awards',
-        title: 'Awards and press',
+        title: 'Awards',
         kind: 'list',
         sep: ', ',
-        items: profile.awards.map((a) => ({ id: a.id, title: a.title, body: esc(a.context), dates: a.year })),
+        items: profile.awards.filter((a) => a.kind !== 'press').map((a) => ({ id: a.id, title: a.title, body: esc(a.context), dates: a.year })),
       },
+      { id: 'news', title: 'In the news', kind: 'list', sep: ', ', items: newsItems() },
       { id: 'skills', title: 'Skills', kind: 'skills', items: profile.skills.map((s) => ({ id: s.group.toLowerCase().replace(/\W+/g, '-'), title: s.group, body: s.items.join(', ') })) },
     ],
     setting: { ...SETTING },
